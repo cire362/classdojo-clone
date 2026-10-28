@@ -10,7 +10,7 @@ import { HttpError, notFound, parse } from '../lib/errors.js';
 import { teacherGroup, teacherStudent } from '../services/access.js';
 import { saveAttendance } from '../services/attendance.js';
 import { countPeople } from '../services/detector.js';
-import { awardPoints, cardSummaries } from '../services/points.js';
+import { awardPoints, cardSummaries, deletePointEvents } from '../services/points.js';
 import { studentProfile } from '../services/profile.js';
 import { createDefaultReasons } from '../services/reasons.js';
 import { groupStats, statsWorkbook } from '../services/stats.js';
@@ -243,17 +243,12 @@ export const teacherRoutes = new Hono<AppEnv>()
   })
   .post('/points/undo', async (c) => {
     const { eventIds } = parse(z.object({ eventIds: z.array(id).min(1).max(200) }), await c.req.json().catch(() => null));
-    const events = await prisma.pointEvent.findMany({
-      where: {
-        id: { in: eventIds },
-        attendanceSessionId: null,
-        student: { group: { teacherId: c.get('user').teacherId! } },
-      },
-      select: { id: true, studentId: true },
-    });
-    if (events.length !== eventIds.length) throw notFound('Начисление не найдено');
-    await prisma.pointEvent.deleteMany({ where: { id: { in: events.map((e) => e.id) } } });
-    const summaries = await cardSummaries([...new Set(events.map((e) => e.studentId))]);
+    const summaries = await deletePointEvents(c.get('user').teacherId!, eventIds);
+    return c.json({ summaries: Object.fromEntries(summaries) });
+  })
+  // Удаление ошибочной записи из истории ученика
+  .delete('/points/:id', async (c) => {
+    const summaries = await deletePointEvents(c.get('user').teacherId!, [c.req.param('id')]);
     return c.json({ summaries: Object.fromEntries(summaries) });
   })
 

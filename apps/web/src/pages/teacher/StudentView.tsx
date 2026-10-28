@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, KeyIcon, PaintBrushIcon } from '@phosphor-icons/react';
-import { api, type Credentials, type Hero, type Profile } from '../../api';
+import { api, type Credentials, type Hero, type HistoryEvent, type Profile } from '../../api';
 import { HeroEditor } from '../../components/HeroEditor';
 import { ProfileView } from '../../components/ProfileView';
 import { useToast } from '../../components/Toast';
 import { ErrorBox, Modal, Skeleton } from '../../components/ui';
-import { useLoad } from '../../hooks';
+import { formatDateTime, useLoad } from '../../hooks';
 import { ProfileSkeleton } from '../student/Cabinet';
 import { CredentialsTable } from './Print';
 
@@ -14,6 +14,8 @@ export function StudentViewPage() {
   const { studentId } = useParams();
   const toast = useToast();
   const [issued, setIssued] = useState<Credentials | null>(null);
+  const [toDelete, setToDelete] = useState<HistoryEvent | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { data, error, reload } = useLoad(() => api<Profile>('GET', `/teacher/students/${studentId}/profile`), [studentId]);
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <ProfileSkeleton />;
@@ -25,6 +27,7 @@ export function StudentViewPage() {
       <ProfileView
         profile={data}
         isOwn={false}
+        onDeleteEvent={setToDelete}
         actions={
           <>
             <Link to={`/s/${data.student.id}/hero`} className="btn btn-primary">
@@ -45,6 +48,51 @@ export function StudentViewPage() {
           </>
         }
       />
+      <Modal open={!!toDelete} title="Удалить запись?" onClose={() => setToDelete(null)}>
+        {toDelete && (
+          <div className="space-y-5">
+            <div className="flex items-center gap-3 rounded-xl bg-surface-2 px-4 py-3">
+              <span className="text-2xl" aria-hidden>
+                {toDelete.emoji}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">{toDelete.reasonName}</span>
+                <span className="block text-sm text-ink-soft">{formatDateTime(toDelete.createdAt)}</span>
+              </span>
+              <span className={`chip ${toDelete.value > 0 ? 'bg-plus-bg text-plus' : 'bg-minus-bg text-minus'}`}>
+                {toDelete.value > 0 ? `+${toDelete.value}` : `−${Math.abs(toDelete.value)}`}
+              </span>
+            </div>
+            <p className="text-sm text-ink-soft">
+              Запись исчезнет из истории ученика и статистики, баллы пересчитаются.
+            </p>
+            <div className="flex gap-2">
+              <button
+                className="btn btn-danger"
+                disabled={deleting}
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    await api('DELETE', `/teacher/points/${toDelete.id}`);
+                    setToDelete(null);
+                    await reload();
+                    toast({ text: 'Запись удалена', tone: 'neutral' });
+                  } catch (e) {
+                    toast({ text: (e as Error).message, tone: 'error' });
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+              >
+                Удалить
+              </button>
+              <button className="btn btn-secondary" onClick={() => setToDelete(null)}>
+                Отмена
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
       <Modal open={!!issued} title="Новый пароль" onClose={() => setIssued(null)}>
         {issued && (
           <div className="space-y-4">

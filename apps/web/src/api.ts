@@ -91,12 +91,22 @@ export interface PointsSum {
   net: number;
 }
 
+export interface HistoryEvent {
+  id: string;
+  value: number;
+  reasonName: string;
+  emoji: string;
+  createdAt: string;
+  /** Баллы за посещение: меняются только через отметку посещаемости */
+  attendance: boolean;
+}
+
 export interface Profile {
   student: { id: string; name: string; login: string; group: { id: string; name: string } };
   hero: Hero;
   level: LevelInfo;
   points: { today: PointsSum; week: PointsSum; total: PointsSum };
-  history: { id: string; value: number; reasonName: string; emoji: string; createdAt: string }[];
+  history: HistoryEvent[];
   attendance: { attended: number; total: number; records: { date: string; present: boolean }[] };
 }
 

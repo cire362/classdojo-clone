@@ -27,7 +27,7 @@ export async function studentProfile(studentId: string) {
       where: { studentId },
       orderBy: { createdAt: 'desc' },
       take: 300,
-      select: { id: true, value: true, reasonName: true, emoji: true, createdAt: true },
+      select: { id: true, value: true, reasonName: true, emoji: true, createdAt: true, attendanceSessionId: true },
     }),
     prisma.attendance.findMany({
       where: { studentId },
@@ -41,7 +41,8 @@ export async function studentProfile(studentId: string) {
     hero: { name: student.hero?.name ?? '', parts: normalizeHero(student.hero?.parts) },
     level: levelForPoints(total.earned),
     points: { today, week, total },
-    history,
+    // Баллы за посещение меняются только через отметку посещаемости
+    history: history.map(({ attendanceSessionId, ...e }) => ({ ...e, attendance: attendanceSessionId !== null })),
     attendance: {
       attended,
       total: attendance.length,

@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { CalendarCheckIcon, ClockCounterClockwiseIcon, StarIcon, TrophyIcon } from '@phosphor-icons/react';
+import { CalendarCheckIcon, ClockCounterClockwiseIcon, StarIcon, TrashIcon, TrophyIcon } from '@phosphor-icons/react';
 import { MAX_LEVEL } from '@heroes/shared';
-import type { PointsSum, Profile } from '../api';
+import type { HistoryEvent, PointsSum, Profile } from '../api';
 import { formatDate, pluralize } from '../hooks';
 import { HeroAvatar } from './HeroAvatar';
 import { EmptyState, ProgressBar } from './ui';
@@ -18,7 +18,18 @@ function PointsTile({ label, sum, featured = false }: { label: string; sum: Poin
   );
 }
 
-export function ProfileView({ profile, actions, isOwn }: { profile: Profile; actions?: ReactNode; isOwn: boolean }) {
+export function ProfileView({
+  profile,
+  actions,
+  isOwn,
+  onDeleteEvent,
+}: {
+  profile: Profile;
+  actions?: ReactNode;
+  isOwn: boolean;
+  /** Только для преподавателя: удаление ошибочной записи */
+  onDeleteEvent?: (e: HistoryEvent) => void;
+}) {
   const [tab, setTab] = useState<'history' | 'attendance'>('history');
   const { level, points, hero } = profile;
 
@@ -97,6 +108,12 @@ export function ProfileView({ profile, actions, isOwn }: { profile: Profile; act
               {isOwn ? 'Работай на уроке, и здесь появятся первые звёзды.' : 'Начисления появятся здесь.'}
             </EmptyState>
           ) : (
+            <div className="space-y-3">
+            {onDeleteEvent && (
+              <p className="text-sm text-ink-soft">
+                Ошибочную запись можно удалить. Баллы за посещение меняются через отметку посещаемости.
+              </p>
+            )}
             <div className="grid gap-4 lg:grid-cols-2">
               {historyByDay.map((g) => (
                 <div key={g.day} className="card p-4">
@@ -114,11 +131,25 @@ export function ProfileView({ profile, actions, isOwn }: { profile: Profile; act
                         <span className={`chip w-12 justify-center ${e.value > 0 ? 'bg-plus-bg text-plus' : 'bg-minus-bg text-minus'}`}>
                           {e.value > 0 ? `+${e.value}` : `−${Math.abs(e.value)}`}
                         </span>
+                        {onDeleteEvent &&
+                          (e.attendance ? (
+                            <span className="size-9 shrink-0" />
+                          ) : (
+                            <button
+                              className="icon-btn size-9 hover:text-minus"
+                              aria-label={`Удалить запись «${e.reasonName}»`}
+                              title="Удалить запись"
+                              onClick={() => onDeleteEvent(e)}
+                            >
+                              <TrashIcon size={18} />
+                            </button>
+                          ))}
                       </li>
                     ))}
                   </ul>
                 </div>
               ))}
+            </div>
             </div>
           ))}
 

@@ -31,6 +31,24 @@ export async function cardSummaries(studentIds: string[]) {
 }
 
 /**
+ * Удаление ошибочных начислений преподавателем. Чужие ученики выглядят как
+ * несуществующие (404); баллы за посещение удаляются только через отметку посещаемости (409).
+ */
+export async function deletePointEvents(teacherId: string, eventIds: string[]) {
+  const ids = [...new Set(eventIds)];
+  const events = await prisma.pointEvent.findMany({
+    where: { id: { in: ids }, student: { group: { teacherId } } },
+    select: { id: true, studentId: true, attendanceSessionId: true },
+  });
+  if (events.length !== ids.length) throw new HttpError(404, 'Начисление не найдено');
+  if (events.some((e) => e.attendanceSessionId)) {
+    throw new HttpError(409, 'Баллы за посещение меняются через отметку посещаемости');
+  }
+  await prisma.pointEvent.deleteMany({ where: { id: { in: ids } } });
+  return cardSummaries([...new Set(events.map((e) => e.studentId))]);
+}
+
+/**
  * Начисление/списание баллов нескольким ученикам по причине.
  * Все ученики должны быть из этой группы, причина — ручная и не в архиве.
  */
