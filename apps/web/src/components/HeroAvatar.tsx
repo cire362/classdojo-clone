@@ -17,10 +17,16 @@ export const HeroAvatar = memo(function HeroAvatar({
   crop?: 'full' | 'head';
 }) {
   const svg = useMemo(() => {
-    const full = renderHeroSvg(parts);
+    // Подпись даёт обёртка; у самого svg роль не нужна
+    const full = renderHeroSvg(parts).replace(' role="img"', ' aria-hidden="true" focusable="false"');
     return crop === 'head' ? full.replace('viewBox="0 0 200 240"', 'viewBox="38 8 124 124"') : full;
   }, [parts, crop]);
-  return <div className={`hero-avatar ${className}`} role="img" aria-label={title} dangerouslySetInnerHTML={{ __html: svg }} />;
+  // Без подписи герой — просто украшение рядом с именем, экранный диктор его пропускает
+  return title ? (
+    <div className={`hero-avatar ${className}`} role="img" aria-label={title} dangerouslySetInnerHTML={{ __html: svg }} />
+  ) : (
+    <div className={`hero-avatar ${className}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: svg }} />
+  );
 });
 
 /** Мягкий фон карточки в тон костюму героя */

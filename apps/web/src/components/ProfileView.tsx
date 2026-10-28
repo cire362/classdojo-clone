@@ -102,6 +102,7 @@ export function ProfileView({
           </button>
         </div>
 
+        <h2 className="sr-only">{tab === 'history' ? 'История начислений' : 'Посещаемость'}</h2>
         {tab === 'history' &&
           (historyByDay.length === 0 ? (
             <EmptyState icon={<StarIcon size={28} weight="fill" />} title="Баллов пока нет">

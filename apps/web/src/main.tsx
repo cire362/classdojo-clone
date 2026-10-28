@@ -28,6 +28,7 @@ import {
   StudentViewPage,
   StudentsPage,
   prefetchPages,
+  preloadRoute,
 } from './pages';
 import { ChunkErrorBoundary } from './components/ChunkErrorBoundary';
 
@@ -58,6 +59,8 @@ function Home() {
 
 const teacher = (el: ReactNode) => <RequireRole role="TEACHER">{el}</RequireRole>;
 const student = (el: ReactNode) => <RequireRole role="STUDENT">{el}</RequireRole>;
+
+preloadRoute(window.location.pathname);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

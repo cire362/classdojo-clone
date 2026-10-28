@@ -29,7 +29,7 @@ describe('экран урока', () => {
     await user.click(within(dialog).getByRole('button', { name: /Отличная работа/ }));
     expect(api).toHaveBeenCalledWith('POST', '/teacher/groups/g1/points', { studentIds: ['s1'], reasonId: 'r1' });
     expect(await screen.findByText('Маша: +2, отличная работа')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^Маша Иванова, всего 10/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Маша Иванова всего 10/ })).toBeInTheDocument();
   });
 
   it('списание на общем экране показывается без числа и причины', async () => {

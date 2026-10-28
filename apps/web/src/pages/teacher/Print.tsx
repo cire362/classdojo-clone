@@ -58,7 +58,7 @@ export function PrintPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+    <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <div className="no-print mb-6 space-y-4">
         <Link to={`/g/${groupId}/students`} className="btn btn-ghost btn-sm -ml-3">
           <ArrowLeftIcon size={18} /> К ученикам
@@ -118,6 +118,6 @@ export function PrintPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </main>
   );
 }

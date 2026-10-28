@@ -4,6 +4,8 @@ import { WarningIcon, XIcon } from '@phosphor-icons/react';
 
 const spring = { type: 'spring', stiffness: 380, damping: 34 } as const;
 
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 /** Диалог: на телефоне — шторка снизу, на широком экране — окно по центру */
 export function Modal({
   open,
@@ -20,18 +22,41 @@ export function Modal({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  // Фокус: при открытии — в окно, Tab не уходит за его пределы, при закрытии — обратно на кнопку,
+  // которой окно открыли. Esc закрывает.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const opener = document.activeElement as HTMLElement | null;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCloseRef.current();
+        return;
+      }
+      if (e.key !== 'Tab' || !ref.current) return;
+      const focusable = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.offsetParent !== null || el === document.activeElement);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === ref.current)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     window.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    ref.current?.focus();
+    requestAnimationFrame(() => ref.current?.focus());
     return () => {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
+      if (opener && document.contains(opener)) opener.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   return (
     <AnimatePresence>

@@ -148,6 +148,8 @@ export function StudentsPage() {
             ref={fileInput}
             type="file"
             accept=".xlsx,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+            aria-label="Файл со списком учеников"
+            tabIndex={-1}
             className="sr-only"
             onChange={(e) => onImportFile(e.target.files?.[0])}
           />

@@ -142,7 +142,7 @@ export function StatsPage() {
           )}
 
           <section className="space-y-3">
-            <h3 className="text-lg">Уроки за период</h3>
+            <h2 className="text-lg">Уроки за период</h2>
             {data.sessions.length === 0 ? (
               <p className="text-ink-soft">Посещаемость за этот период не отмечалась.</p>
             ) : (

@@ -221,8 +221,8 @@ export function AttendancePage() {
 
   const inputs = (
     <>
-      <input ref={cameraInput} type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
-      <input ref={galleryInput} type="file" accept="image/*" className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
+      <input ref={cameraInput} type="file" accept="image/*" capture="environment" aria-label="Сфотографировать группу" tabIndex={-1} className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
+      <input ref={galleryInput} type="file" accept="image/*" aria-label="Выбрать фото группы" tabIndex={-1} className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
     </>
   );
 

@@ -59,7 +59,7 @@ test('сценарий преподавателя и ученика', async ({ p
       await page.getByRole('button', { name: /Опоздал/ }).click();
       // Минусы на общем экране не показываются
       await expect(page.getByText('Записано')).toBeVisible();
-      await expect(page.getByRole('button', { name: /^Соня Белова, всего 3/ })).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Соня Белова всего 3/ })).toBeVisible();
     });
 
     await test.step('статистика и Excel', async () => {

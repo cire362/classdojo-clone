@@ -47,12 +47,35 @@ const byRole = {
 
 const prefetched = new Set<string>();
 
-/** Фоновая подгрузка страниц роли, когда браузер свободен */
+/**
+ * Фоновая подгрузка страниц роли. Начинаем после загрузки текущей страницы и паузы,
+ * чтобы не отнимать канал у того, что пользователь ждёт прямо сейчас.
+ */
 export function prefetchPages(role: keyof typeof byRole) {
   if (prefetched.has(role)) return;
   prefetched.add(role);
   const run = () => byRole[role].forEach((load) => load().catch(() => prefetched.delete(role)));
-  const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback;
-  if (idle) idle(run);
-  else setTimeout(run, 500);
+  const idle = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void }).requestIdleCallback;
+  const later = () => setTimeout(() => (idle ? idle(run, { timeout: 5000 }) : run()), 3000);
+  if (document.readyState === 'complete') later();
+  else window.addEventListener('load', later, { once: true });
+}
+
+/** Код открытой страницы начинаем грузить сразу при старте, не дожидаясь проверки входа */
+export function preloadRoute(pathname: string) {
+  const routes: [RegExp, (() => Promise<unknown>)[]][] = [
+    [/^\/login$/, [loaders.login]],
+    [/^\/$/, [loaders.groups, loaders.cabinet]],
+    [/^\/hero$/, [loaders.myHero]],
+    [/^\/settings$/, [loaders.settings]],
+    [/^\/s\//, [loaders.studentView]],
+    [/^\/g\/[^/]+\/print$/, [loaders.print]],
+    [/^\/g\/[^/]+\/attendance$/, [loaders.groupLayout, loaders.attendance]],
+    [/^\/g\/[^/]+\/students$/, [loaders.groupLayout, loaders.students]],
+    [/^\/g\/[^/]+\/reasons$/, [loaders.groupLayout, loaders.reasons]],
+    [/^\/g\/[^/]+\/stats$/, [loaders.groupLayout, loaders.stats]],
+    [/^\/g\/[^/]+\/?$/, [loaders.groupLayout, loaders.lesson]],
+  ];
+  const match = routes.find(([re]) => re.test(pathname));
+  match?.[1].forEach((load) => load().catch(() => undefined));
 }

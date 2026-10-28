@@ -150,7 +150,6 @@ export function HeroEditor({
                 key={p.id}
                 onClick={() => pick(p)}
                 aria-pressed={active}
-                aria-label={`${p.name}${lock ? `, откроется на ${lock === Infinity ? 'позже' : `${lock} уровне`}` : ''}`}
                 className={`group relative flex flex-col items-center gap-1.5 rounded-2xl border p-2 text-center transition active:scale-[0.97] ${
                   active ? 'border-ink bg-accent/20 ring-2 ring-ink' : 'border-line bg-surface hover:border-ink-soft'
                 }`}
@@ -162,14 +161,18 @@ export function HeroEditor({
                     <HeroAvatar parts={{ ...parts, [slot]: p.id }} className={`aspect-[5/6] w-full ${lock ? 'opacity-35 grayscale' : ''}`} />
                   </span>
                 )}
-                <span className={`text-xs font-medium leading-tight ${lock ? 'text-ink-soft' : ''}`}>{p.name}</span>
+                <span className={`text-xs font-medium leading-tight ${lock ? 'text-ink-soft' : ''}`}>
+                  {p.name}
+                  {lock !== null && <span className="sr-only">, откроется {lock === Infinity ? 'позже' : `на ${lock} уровне`}</span>}
+                  {isNew && <span className="sr-only">, новое</span>}
+                </span>
                 {isNew && (
-                  <span className="absolute left-1.5 top-1.5 rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-bold text-on-accent">
+                  <span aria-hidden className="absolute left-1.5 top-1.5 rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-bold text-on-accent">
                     новое
                   </span>
                 )}
                 {lock !== null && (
-                  <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-full bg-ink px-1.5 py-0.5 text-[11px] font-bold text-bg">
+                  <span aria-hidden className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-full bg-ink px-1.5 py-0.5 text-[11px] font-bold text-bg">
                     <LockSimpleIcon size={11} weight="bold" />
                     {lock === Infinity ? '' : lock}
                   </span>

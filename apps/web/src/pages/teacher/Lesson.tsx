@@ -302,12 +302,12 @@ const StudentCard = memo(function StudentCard({
       whileTap={{ scale: 0.97 }}
       onClick={() => onClick(s)}
       aria-pressed={selectable ? selected : undefined}
-      aria-label={`${s.name}, всего ${s.totalEarned}`}
       className={`card relative flex flex-col items-stretch overflow-hidden p-2.5 text-left transition-[box-shadow,opacity] hover:shadow-[var(--shadow-pop)] ${
         selected ? 'ring-4 ring-accent' : ''
       } ${absent ? 'opacity-55' : ''}`}
     >
-      <div className="relative rounded-xl" style={{ background: heroTint(s.hero.parts) }}>
+      {/* Картинка и значки на ней — оформление; для экранного диктора то же самое есть текстом ниже */}
+      <div className="relative rounded-xl" style={{ background: heroTint(s.hero.parts) }} aria-hidden>
         <HeroAvatar parts={s.hero.parts} className="mx-auto aspect-[5/6] w-[88%]" />
         {s.todayEarned > 0 && (
           <span className={`chip absolute right-2 top-2 bg-plus-bg text-plus ${big ? 'text-lg' : ''}`}>+{s.todayEarned}</span>
@@ -363,11 +363,14 @@ const StudentCard = memo(function StudentCard({
         <div className={`truncate font-semibold ${big ? 'text-xl' : ''}`}>{s.name}</div>
         <div className={`mt-0.5 flex items-center justify-between text-ink-soft ${big ? 'text-base' : 'text-sm'}`}>
           <span className="inline-flex items-center gap-1 font-semibold tabular-nums text-ink">
-            <StarIcon size={big ? 18 : 15} weight="fill" className="text-accent" />
+            <StarIcon size={big ? 18 : 15} weight="fill" className="text-accent" aria-hidden />
+            <span className="sr-only">всего </span>
             {s.totalEarned}
           </span>
           <span>ур. {s.level}</span>
         </div>
+        {s.todayEarned > 0 && <span className="sr-only">, сегодня +{s.todayEarned}</span>}
+        {absent && <span className="sr-only">, нет на уроке</span>}
       </div>
     </motion.button>
   );

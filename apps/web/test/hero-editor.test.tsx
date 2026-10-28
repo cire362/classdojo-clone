@@ -21,7 +21,7 @@ describe('конструктор героя', () => {
     const onSave = vi.fn();
     const { user } = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={1} onSave={onSave} />);
     await user.click(tab('Маска'));
-    const helmet = await screen.findByRole('button', { name: /Шлем, откроется на 5 уровне/ });
+    const helmet = await screen.findByRole('button', { name: /^Шлем.*откроется на 5 уровне/ });
     await user.click(helmet);
     expect(await screen.findByText('Откроется на 5 уровне')).toBeInTheDocument();
     expect(helmet).toHaveAttribute('aria-pressed', 'false');
@@ -44,7 +44,7 @@ describe('конструктор героя', () => {
       <HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={2} newIds={new Set(['mask.bandana'])} onSave={vi.fn()} />,
     );
     expect(tab('Маска')).toHaveAttribute('aria-pressed', 'true');
-    const bandana = screen.getByRole('button', { name: 'Повязка' });
+    const bandana = screen.getByRole('button', { name: /^Повязка/ });
     expect(within(bandana).getByText('новое')).toBeInTheDocument();
   });
 });

@@ -91,7 +91,7 @@ function HeroSlider() {
             aria-selected={i === index}
             aria-label={`Слайд ${i + 1}`}
             onClick={() => setIndex(i)}
-            className="flex h-6 items-center"
+            className="flex h-6 min-w-6 items-center justify-center"
           >
             <span
               className={`block h-2 rounded-full transition-all duration-300 ${
@@ -130,7 +130,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-[100dvh] lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+    <main className="grid min-h-[100dvh] lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <div className="flex items-center px-4 py-10 sm:px-10">
         <form onSubmit={submit} className="mx-auto w-full max-w-sm" noValidate>
           <h1 className="text-3xl leading-[1.1] sm:text-4xl">Вход в класс</h1>
@@ -187,6 +187,6 @@ export function LoginPage() {
         />
         <HeroSlider />
       </div>
-    </div>
+    </main>
   );
 }

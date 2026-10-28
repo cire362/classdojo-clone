@@ -4,6 +4,7 @@ import { ChunkErrorBoundary } from './ChunkErrorBoundary';
 import { GearSixIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
 import { useAuth } from '../auth';
 import { useNews } from '../news';
+import { pluralize } from '../hooks';
 import { Skeleton } from './ui';
 
 export function Logo({ compact = false }: { compact?: boolean }) {
@@ -28,8 +29,9 @@ export function AppLayout() {
     <NavLink to="/hero" className={navClass}>
       Конструктор
       {newCount > 0 && (
-        <span className="chip min-w-6 justify-center bg-accent px-1.5 text-xs text-on-accent" aria-label={`новых деталей: ${newCount}`}>
+        <span className="chip min-w-6 justify-center bg-accent px-1.5 text-xs text-on-accent">
           {newCount}
+          <span className="sr-only"> {pluralize(newCount, 'новая деталь', 'новые детали', 'новых деталей')}</span>
         </span>
       )}
     </NavLink>
@@ -38,7 +40,7 @@ export function AppLayout() {
     <div className="min-h-[100dvh]">
       <header className="no-print sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
-          <Link to="/" className="shrink-0" aria-label="На главную">
+          <Link to="/" className="shrink-0">
             <Logo />
           </Link>
           {user?.role === 'STUDENT' && (
@@ -58,11 +60,11 @@ export function AppLayout() {
                     isActive ? 'bg-surface-2 text-ink' : 'text-ink-soft'
                   }`
                 }
-                aria-label="Настройки"
                 title="Настройки"
               >
                 <span className="hidden max-w-[22ch] truncate sm:block">{user.name}</span>
-                <GearSixIcon size={22} />
+                <GearSixIcon size={22} aria-hidden />
+                <span className="sr-only">Настройки</span>
               </NavLink>
             ) : (
               <span className="hidden max-w-[22ch] truncate text-sm font-medium text-ink-soft sm:block">{user?.name}</span>
