@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeftIcon, KeyIcon, PaintBrushIcon } from '@phosphor-icons/react';
+import { ArrowLeftIcon, ArrowsLeftRightIcon, KeyIcon, PaintBrushIcon } from '@phosphor-icons/react';
 import { api, type Credentials, type Hero, type HistoryEvent, type Profile } from '../../api';
 import { HeroEditor } from '../../components/HeroEditor';
+import { MoveStudentModal } from '../../components/MoveStudentModal';
 import { ProfileView } from '../../components/ProfileView';
 import { useToast } from '../../components/Toast';
 import { ErrorBox, Modal, Skeleton } from '../../components/ui';
@@ -15,6 +16,7 @@ export function StudentViewPage() {
   const toast = useToast();
   const [issued, setIssued] = useState<Credentials | null>(null);
   const [toDelete, setToDelete] = useState<HistoryEvent | null>(null);
+  const [moving, setMoving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { data, error, reload } = useLoad(() => api<Profile>('GET', `/teacher/students/${studentId}/profile`), [studentId]);
   if (error) return <ErrorBox message={error} onRetry={reload} />;
@@ -45,8 +47,20 @@ export function StudentViewPage() {
             >
               <KeyIcon size={20} /> Новый пароль
             </button>
+            <button className="btn btn-secondary" onClick={() => setMoving(true)}>
+              <ArrowsLeftRightIcon size={20} /> Перевести
+            </button>
           </>
         }
+      />
+      <MoveStudentModal
+        student={moving ? { id: data.student.id, name: data.student.name, groupId: data.student.group.id } : null}
+        onClose={() => setMoving(false)}
+        onMoved={async (g) => {
+          setMoving(false);
+          await reload();
+          toast({ text: `${data.student.name.split(' ')[0]} теперь в группе ${g.name}`, tone: 'ok' });
+        }}
       />
       <Modal open={!!toDelete} title="Удалить запись?" onClose={() => setToDelete(null)}>
         {toDelete && (

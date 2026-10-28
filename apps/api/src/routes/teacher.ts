@@ -206,6 +206,18 @@ export const teacherRoutes = new Hono<AppEnv>()
     await deleteStudent(student.id);
     return c.json({ ok: true });
   })
+  // Перевод в другую группу этого же преподавателя: герой, баллы, история и логин остаются при ученике,
+  // прошлые отметки посещаемости остаются в старой группе
+  .post('/students/:id/move', async (c) => {
+    const student = await teacherStudent(c.get('user'), c.req.param('id'));
+    const { groupId } = parse(z.object({ groupId: id }), await c.req.json().catch(() => null));
+    const target = await teacherGroup(c.get('user'), groupId);
+    if (target.id === student.groupId) throw new HttpError(400, 'Ученик уже в этой группе');
+    const total = await prisma.student.count({ where: { groupId: target.id } });
+    if (total >= 200) throw new HttpError(400, 'В группе может быть не больше 200 учеников');
+    await prisma.student.update({ where: { id: student.id }, data: { groupId: target.id } });
+    return c.json({ id: student.id, groupId: target.id, groupName: target.name });
+  })
   .post('/students/:id/reset-password', async (c) => {
     const student = await teacherStudent(c.get('user'), c.req.param('id'));
     return c.json(await resetStudentPassword(student.id));

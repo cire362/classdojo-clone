@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { KeyIcon, PencilSimpleIcon, PrinterIcon, TrashIcon, UserPlusIcon } from '@phosphor-icons/react';
+import { ArrowsLeftRightIcon, KeyIcon, PencilSimpleIcon, PrinterIcon, TrashIcon, UserPlusIcon } from '@phosphor-icons/react';
 import { api, type Credentials, type LessonStudent } from '../../api';
 import { HeroHead } from '../../components/HeroAvatar';
+import { MoveStudentModal } from '../../components/MoveStudentModal';
 import { useToast } from '../../components/Toast';
 import { Modal, PageTitle } from '../../components/ui';
 import { pluralize } from '../../hooks';
@@ -18,6 +19,7 @@ export function StudentsPage() {
   const [issued, setIssued] = useState<Credentials[] | null>(null);
   const [editing, setEditing] = useState<LessonStudent | null>(null);
   const [deleting, setDeleting] = useState<LessonStudent | null>(null);
+  const [moving, setMoving] = useState<LessonStudent | null>(null);
   const [groupEdit, setGroupEdit] = useState(false);
 
   const parsed = names
@@ -78,6 +80,9 @@ export function StudentsPage() {
                 </Link>
                 <button className="icon-btn" title="Переименовать" aria-label={`Переименовать ${s.name}`} onClick={() => setEditing(s)}>
                   <PencilSimpleIcon size={20} />
+                </button>
+                <button className="icon-btn" title="Перевести в другую группу" aria-label={`Перевести ${s.name} в другую группу`} onClick={() => setMoving(s)}>
+                  <ArrowsLeftRightIcon size={20} />
                 </button>
                 <button className="icon-btn" title="Новый пароль" aria-label={`Новый пароль для ${s.name}`} onClick={() => resetPassword(s)}>
                   <KeyIcon size={20} />
@@ -176,6 +181,17 @@ export function StudentsPage() {
       </Modal>
 
       <GroupSettingsModal open={groupEdit} onClose={() => setGroupEdit(false)} />
+
+      <MoveStudentModal
+        student={moving && { id: moving.id, name: moving.name, groupId: data.group.id }}
+        onClose={() => setMoving(null)}
+        onMoved={async (g) => {
+          const name = moving?.name.split(' ')[0];
+          setMoving(null);
+          await reload();
+          toast({ text: `${name} теперь в группе ${g.name}`, tone: 'ok', action: { label: 'Открыть', run: () => navigate(`/g/${g.id}/students`) } });
+        }}
+      />
     </div>
   );
 }
