@@ -12,6 +12,7 @@ export const LAYER_PREVIEW_SLOT: Record<HeroLayer, HeroSlot> = {
   color: 'suitColor',
   skin: 'skin',
   hairColor: 'hairColor',
+  aura: 'aura',
 };
 
 /** Мини-превью детали: свой герой с этой деталью или образец цвета */

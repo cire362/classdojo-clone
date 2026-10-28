@@ -77,7 +77,7 @@ npm run create-teacher -w @heroes/api -- --login ivanova --name "Анна Ива
    ```ts
    {
      id: 'emblem.moon',          // <слой>.<ключ>, уникальный
-     layer: 'emblem',            // pose | suit | mask | cape | emblem | hair | color | skin | hairColor
+     layer: 'emblem',            // pose | suit | mask | cape | emblem | aura | hair | color | skin | hairColor
      name: 'Луна',               // название в конструкторе
      requiredLevel: 4,           // с какого уровня открывается
      front: BADGE + `<path d="..." ${EM}/>`,
@@ -88,7 +88,8 @@ npm run create-teacher -w @heroes/api -- --login ivanova --name "Анна Ива
    - Цвета задавайте плейсхолдерами: `{suit}`, `{suitDark}`, `{accent}`, `{accentDark}`, `{skin}`, `{hair}`, `{outline}`. Тогда деталь подстроится под выбранные учеником цвета.
    - Для единого стиля обводите фигуры контуром: `stroke="{outline}" stroke-width="3" stroke-linejoin="round"` (константа `O` в файле).
    - Для цветов, тонов кожи и цвета волос вместо SVG задаётся `color: '#rrggbb'`.
-   - Флаги масок: `hidesHair`, `hidesEyes`, `hidesMouth`.
+   - Флаги масок: `hidesHair`, `hidesEyes`, `hidesMouth`, `overHair` (рисуется поверх причёски: корона, нимб).
+   - Сияние (`aura`) рисуется самым первым слоем, за плащом и героем.
 2. Перезапустите API (`docker compose up --build api web`): при старте каталог синхронизируется в таблицу `HeroPart`, и сервер начнёт принимать новую деталь.
 3. Проверьте вид в конструкторе.
 

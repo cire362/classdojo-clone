@@ -65,6 +65,7 @@ export function renderHeroSvg(input: unknown, opts: { title?: string } = {}): st
   const mask = get(h.mask);
   const emblem = get(h.emblem);
   const hair = get(h.hair);
+  const aura = get(h.aura);
   const suitC = get(h.suitColor).color!;
   const accentC = get(h.accentColor).color!;
   const skinC = get(h.skin).color!;
@@ -72,6 +73,7 @@ export function renderHeroSvg(input: unknown, opts: { title?: string } = {}): st
 
   const showHair = !mask.hidesHair;
   const layers = [
+    aura.back,
     cape.back,
     showHair ? hair.back : '',
     BASE_BODY,
@@ -83,12 +85,14 @@ export function renderHeroSvg(input: unknown, opts: { title?: string } = {}): st
   ];
   // Порядок лица: маска поверх головы, затем глаза/рот (если маска их не закрывает), затем волосы.
   // Шлемы (hidesHair) рисуются после глаз — визор и «окно» шлема оставляют глаза видимыми.
+  // Корона и нимб (overHair) рисуются последними, поверх причёски.
   const face: string[] = [];
-  if (!mask.hidesHair) face.push(mask.front ?? '');
+  if (!mask.hidesHair && !mask.overHair) face.push(mask.front ?? '');
   if (!mask.hidesEyes) face.push(EYES);
   if (!mask.hidesMouth) face.push(MOUTH);
   if (mask.hidesHair) face.push(mask.front ?? '');
   else if (showHair) face.push(hair.front ?? '');
+  if (mask.overHair) face.push(mask.front ?? '');
 
   const body = [...layers, ...face]
     .filter(Boolean)
