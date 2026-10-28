@@ -6,6 +6,8 @@ interface AuthState {
   loading: boolean;
   login: (login: string, password: string) => Promise<Me>;
   logout: () => Promise<void>;
+  /** Перечитать данные пользователя (после смены имени) */
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -35,7 +37,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>;
+  const refresh = useCallback(async () => {
+    const r = await api<{ user: Me | null }>('GET', '/auth/me');
+    setUser(r.user);
+  }, []);
+
+  return <AuthContext.Provider value={{ user, loading, login, logout, refresh }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthState {

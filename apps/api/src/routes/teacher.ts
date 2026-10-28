@@ -2,10 +2,11 @@ import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { normalizeHero } from '@heroes/shared';
 import { z } from 'zod';
-import { requireRole, type AppEnv } from '../auth.js';
+import { checkLoginRate, requireRole, resetLoginRate, type AppEnv } from '../auth.js';
 import { prisma } from '../db.js';
 import { env } from '../env.js';
 import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../lib/dates.js';
+import { hashPassword, verifyPassword } from '../lib/credentials.js';
 import { HttpError, notFound, parse } from '../lib/errors.js';
 import { teacherGroup, teacherStudent } from '../services/access.js';
 import { attendanceForDate, saveAttendance } from '../services/attendance.js';
@@ -39,6 +40,11 @@ const ReasonBody = z.object({
     .refine((v) => v !== 0, 'Значение не может быть нулём'),
 });
 const AwardBody = z.object({ studentIds: z.array(id).min(1).max(200), reasonId: id });
+const ProfileBody = z.object({ name: z.string().trim().min(1, 'Введите имя').max(80) });
+const PasswordBody = z.object({
+  currentPassword: z.string().min(1).max(200),
+  newPassword: z.string().min(8, 'Пароль должен быть не короче 8 символов').max(200),
+});
 const AttendanceBody = z.object({
   date: z.string().refine(isDateKey, 'Дата в формате ГГГГ-ММ-ДД').optional(),
   presentStudentIds: z.array(id).max(200),
@@ -56,6 +62,32 @@ function period(q: Record<string, string | undefined>) {
 
 export const teacherRoutes = new Hono<AppEnv>()
   .use(requireRole('TEACHER'))
+
+  // ───── Профиль преподавателя ─────
+  .patch('/me', async (c) => {
+    const { name } = parse(ProfileBody, await c.req.json().catch(() => null));
+    const t = await prisma.teacher.update({ where: { id: c.get('user').teacherId! }, data: { name } });
+    return c.json({ name: t.name });
+  })
+  .post('/me/password', async (c) => {
+    const user = c.get('user');
+    const { currentPassword, newPassword } = parse(PasswordBody, await c.req.json().catch(() => null));
+    // Та же защита от перебора, что и при входе
+    const rateKey = `password|${user.accountId}`;
+    checkLoginRate(rateKey);
+    const account = await prisma.account.findUniqueOrThrow({ where: { id: user.accountId } });
+    if (!(await verifyPassword(account.passwordHash, currentPassword))) {
+      throw new HttpError(400, 'Текущий пароль указан неверно');
+    }
+    if (currentPassword === newPassword) throw new HttpError(400, 'Новый пароль совпадает с текущим');
+    resetLoginRate(rateKey);
+    await prisma.$transaction([
+      prisma.account.update({ where: { id: account.id }, data: { passwordHash: await hashPassword(newPassword) } }),
+      // Выходим на всех остальных устройствах, текущая сессия остаётся
+      prisma.session.deleteMany({ where: { accountId: account.id, id: { not: user.sessionId } } }),
+    ]);
+    return c.json({ ok: true });
+  })
 
   // ───── Группы ─────
   .get('/groups', async (c) => {

@@ -9,6 +9,8 @@ import { HttpError } from './lib/errors.js';
 export const SESSION_COOKIE = 'hk_session';
 
 export interface AuthUser {
+  /** id текущей сессии (sha256 токена) */
+  sessionId: string;
   accountId: string;
   login: string;
   role: Role;
@@ -54,6 +56,7 @@ export async function loadUser(c: Context): Promise<AuthUser | null> {
   }
   const a = session.account;
   return {
+    sessionId: session.id,
     accountId: a.id,
     login: a.login,
     role: a.role,

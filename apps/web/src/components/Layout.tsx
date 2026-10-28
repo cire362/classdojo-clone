@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { SignOutIcon, StarIcon } from '@phosphor-icons/react';
+import { GearSixIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
 import { useAuth } from '../auth';
 import { useNews } from '../news';
 
@@ -46,7 +46,23 @@ export function AppLayout() {
             </nav>
           )}
           <div className="ml-auto flex items-center gap-1">
-            <span className="hidden max-w-[22ch] truncate text-sm font-medium text-ink-soft sm:block">{user?.name}</span>
+            {user?.role === 'TEACHER' ? (
+              <NavLink
+                to="/settings"
+                className={({ isActive }) =>
+                  `inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-medium transition hover:bg-surface-2 hover:text-ink ${
+                    isActive ? 'bg-surface-2 text-ink' : 'text-ink-soft'
+                  }`
+                }
+                aria-label="Настройки"
+                title="Настройки"
+              >
+                <span className="hidden max-w-[22ch] truncate sm:block">{user.name}</span>
+                <GearSixIcon size={22} />
+              </NavLink>
+            ) : (
+              <span className="hidden max-w-[22ch] truncate text-sm font-medium text-ink-soft sm:block">{user?.name}</span>
+            )}
             <button
               className="icon-btn"
               aria-label="Выйти"

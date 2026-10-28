@@ -23,6 +23,7 @@ import { StatsPage } from './pages/teacher/Stats';
 import { StudentViewPage, StudentHeroPage } from './pages/teacher/StudentView';
 import { CabinetPage } from './pages/student/Cabinet';
 import { MyHeroPage } from './pages/student/MyHero';
+import { SettingsPage } from './pages/teacher/Settings';
 
 function RequireRole({ role, children }: { role: Role; children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -73,6 +74,7 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="reasons" element={<ReasonsPage />} />
                 <Route path="stats" element={<StatsPage />} />
               </Route>
+              <Route path="/settings" element={teacher(<SettingsPage />)} />
               <Route path="/s/:studentId" element={teacher(<StudentViewPage />)} />
               <Route path="/s/:studentId/hero" element={teacher(<StudentHeroPage />)} />
               <Route path="*" element={<Navigate to="/" replace />} />
