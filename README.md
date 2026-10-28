@@ -13,7 +13,7 @@
 docker compose up --build
 ```
 
-Откройте http://localhost:8080. Первая сборка скачивает модель YOLOX (~100 МБ), поэтому занимает несколько минут.
+Откройте http://localhost:8080. Первая сборка скачивает модели YOLOX (~140 МБ), поэтому занимает несколько минут.
 
 При первом запуске seed создаёт тестовые данные:
 
@@ -105,7 +105,7 @@ npm run create-teacher -w @heroes/api -- --login ivanova --name "Анна Ива
 docker compose --profile test run --rm api-test
 ```
 
-Сервис подсчёта (4, 7 и 37 человек на тестовых фото, пустая сцена, поворот EXIF, ответ быстрее 3 секунд, отсутствие записи на диск):
+Сервис подсчёта (4, 7, 37 и ~57 человек на тестовых фото, большое фото с телефона, пустая сцена, поворот EXIF, ответ быстрее 3 секунд, отсутствие записи на диск):
 
 ```bash
 docker compose run --rm --no-deps detector pytest -q
@@ -121,7 +121,7 @@ DETECTOR_URL=http://localhost:8000 npm run dev:api     # API на :3000
 npm run dev:web                                        # http://localhost:5173, /api проксируется на :3000
 ```
 
-Сервис подсчёта локально: `cd services/detector && pip install -r requirements-dev.txt && python scripts/fetch_model.py yolox_m models && MODEL_PATH=models/yolox_m.onnx uvicorn app.main:app --port 8000`.
+Сервис подсчёта локально: `cd services/detector && pip install -r requirements-dev.txt && python scripts/fetch_model.py yolox_m models && python scripts/fetch_model.py yolox_s models && uvicorn app.main:app --port 8000`.
 
 ## Приватность
 

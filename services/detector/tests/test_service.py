@@ -43,9 +43,11 @@ def test_health(client):
     [
         ("crew_4_people.jpg", 4, 0),
         ("crew_7_people.jpg", 7, 0),
-        # Старое (1897 г.) выцветшее групповое фото, лица в заднем ряду едва различимы —
-        # допускаем погрешность в 4 человека. Преподаватель всё равно сверяет список вручную.
-        ("class_37_people.jpg", 37, 4),
+        # Старые выцветшие групповые фото (1897 и 1882 гг.), лица в заднем ряду едва различимы.
+        # Для второго фото эталон посчитан вручную по рядам (около 57, ±2), поэтому допуск больше.
+        # Преподаватель всё равно сверяет список вручную.
+        ("class_37_people.jpg", 37, 2),
+        ("class_57_people.jpg", 57, 4),
     ],
 )
 def test_counts_people(client, name, expected, tolerance):
@@ -61,6 +63,18 @@ def test_counts_people(client, name, expected, tolerance):
         assert b["w"] > 0 and b["h"] > 0
     # Требование: ответ до ~3 секунд на CPU
     assert elapsed < float(os.environ.get("MAX_SECONDS", "3")), f"{name}: {elapsed:.2f} с"
+
+
+def test_large_phone_photo_is_fast_enough(client):
+    """Фото с телефона после уменьшения в браузере (1600 px по длинной стороне): ответ до ~3 секунд."""
+    img = Image.open(IMAGES / "class_57_people.jpg")
+    big = img.resize((1600, round(img.height * 1600 / img.width)), Image.BILINEAR)
+    started = time.perf_counter()
+    r = post_image(client, jpeg_bytes(big))
+    elapsed = time.perf_counter() - started
+    assert r.status_code == 200
+    assert abs(r.json()["count"] - 57) <= 5
+    assert elapsed < float(os.environ.get("MAX_SECONDS", "3")), f"{elapsed:.2f} с"
 
 
 def test_no_people_on_empty_scene(client):

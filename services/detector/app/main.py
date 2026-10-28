@@ -18,7 +18,10 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .detector import PeopleCounter
 
-MODEL_PATH = os.environ.get("MODEL_PATH", os.path.join(os.path.dirname(__file__), "..", "models", "yolox_m.onnx"))
+MODELS_DIR = os.path.join(os.path.dirname(__file__), "..", "models")
+MODEL_PATH = os.environ.get("MODEL_PATH", os.path.join(MODELS_DIR, "yolox_m.onnx"))
+# Быстрая модель для тайлов на групповых фото; пустая строка — использовать основную
+TILE_MODEL_PATH = os.environ.get("TILE_MODEL_PATH", os.path.join(MODELS_DIR, "yolox_s.onnx"))
 MAX_BYTES = int(os.environ.get("MAX_BYTES", str(15 * 1024 * 1024)))
 MAX_SIDE = int(os.environ.get("MAX_SIDE", "2000"))
 # Защита от «бомб» распаковки
@@ -34,6 +37,9 @@ async def lifespan(_: FastAPI):
         MODEL_PATH,
         score_threshold=float(os.environ.get("SCORE_THRESHOLD", "0.35")),
         nms_threshold=float(os.environ.get("NMS_THRESHOLD", "0.45")),
+        tile_model_path=TILE_MODEL_PATH if TILE_MODEL_PATH and os.path.exists(TILE_MODEL_PATH) else None,
+        tile_score_threshold=float(os.environ.get("TILE_SCORE_THRESHOLD", "0.30")),
+        tile_px=int(os.environ.get("TILE_PX", "448")),
     )
     yield
 

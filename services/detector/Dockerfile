@@ -6,16 +6,19 @@ WORKDIR /srv
 COPY requirements.txt requirements-dev.txt ./
 RUN pip install --no-cache-dir -r requirements-dev.txt
 
-# Модель YOLOX (Apache-2.0) из официального релиза Megvii-BaseDetection/YOLOX.
-# yolox_m — точнее на групповых фото, yolox_s — быстрее и легче.
+# Модели YOLOX (Apache-2.0) из официального релиза Megvii-BaseDetection/YOLOX.
 # Если модель уже лежит в services/detector/models, повторно она не скачивается.
+# Основная модель (общий проход) и быстрая модель для тайлов на групповых фото.
 ARG YOLOX_MODEL=yolox_m
+ARG YOLOX_TILE_MODEL=yolox_s
 COPY models/ ./models/
 COPY scripts ./scripts
 RUN python scripts/fetch_model.py ${YOLOX_MODEL} models \
-  && find models -name '*.onnx' ! -name "${YOLOX_MODEL}.onnx" -delete \
-  && mv models/${YOLOX_MODEL}.onnx models/model.onnx
-ENV MODEL_PATH=/srv/models/model.onnx
+  && python scripts/fetch_model.py ${YOLOX_TILE_MODEL} models \
+  && cp models/${YOLOX_MODEL}.onnx models/model.onnx \
+  && cp models/${YOLOX_TILE_MODEL}.onnx models/tile.onnx \
+  && find models -name '*.onnx' ! -name model.onnx ! -name tile.onnx -delete
+ENV MODEL_PATH=/srv/models/model.onnx TILE_MODEL_PATH=/srv/models/tile.onnx
 
 COPY app ./app
 COPY tests ./tests

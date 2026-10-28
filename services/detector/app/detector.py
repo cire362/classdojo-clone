@@ -1,4 +1,4 @@
-"""Подсчёт людей на фото детектором YOLOX (Apache-2.0) через ONNX Runtime (MIT).
+"""Подсчёт людей на фото детекторами YOLOX-M и YOLOX-S (Apache-2.0) через ONNX Runtime (MIT).
 
 Сервис только находит людей (класс COCO «person») и возвращает их рамки.
 Никакого распознавания лиц и биометрии: нет эмбеддингов, нет сопоставления
@@ -94,19 +94,41 @@ def drop_tile_fragments(boxes: np.ndarray, from_tile: np.ndarray, keep: list[int
     return result
 
 
+def _session(model_path: str) -> ort.InferenceSession:
+    opts = ort.SessionOptions()
+    opts.intra_op_num_threads = int(os.environ.get("ORT_THREADS", "0")) or min(4, os.cpu_count() or 1)
+    opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+    return ort.InferenceSession(model_path, sess_options=opts, providers=["CPUExecutionProvider"])
+
+
 class PeopleCounter:
-    def __init__(self, model_path: str, score_threshold: float = 0.35, nms_threshold: float = 0.45):
-        opts = ort.SessionOptions()
-        opts.intra_op_num_threads = int(os.environ.get("ORT_THREADS", "0")) or min(4, os.cpu_count() or 1)
-        opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-        self.session = ort.InferenceSession(model_path, sess_options=opts, providers=["CPUExecutionProvider"])
-        self.input_name = self.session.get_inputs()[0].name
+    """Общий проход по всему фото — точной моделью (YOLOX-M). На групповых фото
+    дополнительно смотрим фото по кусочкам (тайлам) быстрой моделью (YOLOX-S): мелкие
+    фигуры в заднем ряду при этом «увеличиваются» и находятся заметно лучше."""
+
+    def __init__(
+        self,
+        model_path: str,
+        score_threshold: float = 0.35,
+        nms_threshold: float = 0.45,
+        tile_model_path: str | None = None,
+        tile_score_threshold: float = 0.30,
+        tile_px: int = 448,
+        max_tiles_per_side: int = 4,
+    ):
+        self.session = _session(model_path)
+        self.tile_session = _session(tile_model_path) if tile_model_path else self.session
         self.score_threshold = score_threshold
         self.nms_threshold = nms_threshold
+        self.tile_score_threshold = tile_score_threshold
+        self.tile_px = tile_px
+        self.max_tiles_per_side = max_tiles_per_side
         self._grid, self._stride = _grids(INPUT_SIZE)
 
-    def _infer(self, img: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def _infer(self, img: np.ndarray, session: ort.InferenceSession | None = None, threshold: float | None = None) -> tuple[np.ndarray, np.ndarray]:
         """img — RGB uint8 HxWx3. Возвращает рамки (x1,y1,x2,y2) в координатах img и уверенность."""
+        session = session or self.session
+        threshold = self.score_threshold if threshold is None else threshold
         h, w = img.shape[:2]
         r = min(INPUT_SIZE / h, INPUT_SIZE / w)
         nh, nw = max(1, int(h * r)), max(1, int(w * r))
@@ -116,16 +138,32 @@ class PeopleCounter:
         # Модели YOLOX обучены на BGR без нормализации
         blob = np.ascontiguousarray(padded[:, :, ::-1].transpose(2, 0, 1)[None], dtype=np.float32)
 
-        out = self.session.run(None, {self.input_name: blob})[0][0]
+        out = session.run(None, {session.get_inputs()[0].name: blob})[0][0]
         xy = (out[:, :2] + self._grid[0]) * self._stride[0]
         wh = np.exp(out[:, 2:4]) * self._stride[0]
         scores = out[:, 4] * out[:, 5 + PERSON_CLASS]
-        mask = scores >= self.score_threshold
+        mask = scores >= threshold
         xy, wh, scores = xy[mask], wh[mask], scores[mask]
         boxes = np.concatenate([xy - wh / 2, xy + wh / 2], axis=1) / r
         boxes[:, [0, 2]] = boxes[:, [0, 2]].clip(0, w)
         boxes[:, [1, 3]] = boxes[:, [1, 3]].clip(0, h)
         return boxes, scores
+
+    def _tile_origins(self, w: int, h: int) -> tuple[int, list[int], list[int]]:
+        """Квадратные тайлы ~448 px с перекрытием 25%; на больших фото тайлы крупнее,
+        чтобы их было не больше max_tiles_per_side по каждой стороне (ограничение по времени)."""
+        longer = max(w, h)
+        size = max(self.tile_px, int(np.ceil(longer / (1 + 0.75 * (self.max_tiles_per_side - 1)))))
+        size = min(size, w, h)
+        step = max(1, int(size * 0.75))
+
+        def axis(total: int) -> list[int]:
+            pos = list(range(0, max(1, total - size + 1), step))
+            if pos[-1] != total - size:
+                pos.append(total - size)
+            return pos
+
+        return size, axis(w), axis(h)
 
     def count(self, image: Image.Image, tiles: bool | None = None) -> dict:
         started = time.perf_counter()
@@ -138,8 +176,8 @@ class PeopleCounter:
         all_scores.append(s)
         all_tile.append(np.zeros(len(b), dtype=bool))
 
-        # На групповых фото люди мелкие: дополнительно смотрим 2×2 тайла с перекрытием.
-        # Включаем, если общий проход ничего не нашёл или нашёл в основном мелкие фигуры.
+        # Тайлы включаем на групповых фото: общий проход ничего не нашёл,
+        # нашёл много людей или в основном мелкие фигуры
         if tiles is None:
             people = b[nms(b, s, self.nms_threshold)] if len(b) else b
             heights = (people[:, 3] - people[:, 1]) / h
@@ -147,22 +185,22 @@ class PeopleCounter:
                 len(people) == 0 or len(people) >= 8 or float(np.median(heights)) < 0.35
             )
         if tiles:
-            th, tw = int(h * 0.6), int(w * 0.6)
-            for y0 in (0, h - th):
-                for x0 in (0, w - tw):
-                    tb, ts = self._infer(img[y0 : y0 + th, x0 : x0 + tw])
+            size, xs, ys = self._tile_origins(w, h)
+            for y0 in ys:
+                for x0 in xs:
+                    tb, ts = self._infer(img[y0 : y0 + size, x0 : x0 + size], self.tile_session, self.tile_score_threshold)
                     # Рамки, упирающиеся во внутреннюю границу тайла, — это «обрезанные» люди:
                     # их целиком найдёт общий проход или соседний тайл
-                    mx, my = max(4, 0.03 * tw), max(4, 0.03 * th)
+                    m = max(4, 0.03 * size)
                     cut = np.zeros(len(tb), dtype=bool)
                     if x0 > 0:
-                        cut |= tb[:, 0] <= mx
-                    if x0 + tw < w:
-                        cut |= tb[:, 2] >= tw - mx
+                        cut |= tb[:, 0] <= m
+                    if x0 + size < w:
+                        cut |= tb[:, 2] >= size - m
                     if y0 > 0:
-                        cut |= tb[:, 1] <= my
-                    if y0 + th < h:
-                        cut |= tb[:, 3] >= th - my
+                        cut |= tb[:, 1] <= m
+                    if y0 + size < h:
+                        cut |= tb[:, 3] >= size - m
                     tb, ts = tb[~cut], ts[~cut]
                     tb[:, [0, 2]] += x0
                     tb[:, [1, 3]] += y0
