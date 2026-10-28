@@ -100,7 +100,7 @@ export async function statsWorkbook(groupId: string, groupName: string, from: st
   // Лист 1 — сводка
   const summary = wb.addWorksheet('Сводка', { views: [{ state: 'frozen', ySplit: 3 }] });
   summary.mergeCells('A1:H1');
-  summary.getCell('A1').value = `Группа «${groupName}», ${fmtDate(from)} — ${fmtDate(to)}`;
+  summary.getCell('A1').value = `Группа «${groupName}», ${fmtDate(from)} - ${fmtDate(to)}`;
   summary.getCell('A1').font = { bold: true, size: 14 };
   summary.columns = [
     { key: 'name', width: 28 },
@@ -123,7 +123,7 @@ export async function statsWorkbook(groupId: string, groupName: string, from: st
       lost: s.lost ? -s.lost : 0,
       net: s.net,
       level: s.level,
-      attended: s.sessions ? `${s.attended} из ${s.sessions}` : '—',
+      attended: s.sessions ? `${s.attended} из ${s.sessions}` : 'нет отметок',
       rate: s.attendanceRate,
     });
     row.getCell('rate').numFmt = '0%';
@@ -136,12 +136,12 @@ export async function statsWorkbook(groupId: string, groupName: string, from: st
   attHead.values = ['Ученик', ...stats.sessions.map((s) => fmtDate(s.date)), 'Итого'];
   styleHeader(attHead);
   for (const s of stats.students) {
-    const marks = stats.sessions.map((ses) => (ses.present.includes(s.id) ? '✓' : '—'));
-    const row = att.addRow([s.name, ...marks, s.sessions ? `${s.attended}/${s.sessions}` : '—']);
+    const marks = stats.sessions.map((ses) => (ses.present.includes(s.id) ? '✓' : '✗'));
+    const row = att.addRow([s.name, ...marks, s.sessions ? `${s.attended}/${s.sessions}` : '-']);
     row.eachCell((cell, col) => {
       if (col > 1) cell.alignment = { horizontal: 'center' };
       if (cell.value === '✓') cell.font = { color: { argb: 'FF2A9D55' }, bold: true };
-      if (cell.value === '—' && col <= stats.sessions.length + 1) cell.font = { color: { argb: 'FFE63946' } };
+      if (cell.value === '✗') cell.font = { color: { argb: 'FFE63946' } };
     });
   }
   if (stats.sessions.length) {

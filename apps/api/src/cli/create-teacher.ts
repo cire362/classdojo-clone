@@ -21,7 +21,7 @@ const { values } = parseArgs({
 
 const login = values.login?.trim().toLowerCase();
 if (!login || !/^[a-z0-9._-]{3,64}$/.test(login)) {
-  console.error('Укажите --login (латиница, цифры, точка, дефис; 3–64 символа)');
+  console.error('Укажите --login (латиница, цифры, точка, дефис; от 3 до 64 символов)');
   process.exit(1);
 }
 const password = values.password ?? generatePassword();
@@ -50,5 +50,5 @@ if (existing) {
   });
   console.log(`Преподаватель создан: ${name}, логин «${login}».`);
 }
-if (!values.password) console.log(`Пароль: ${password}  (сохраните — повторно он не показывается)`);
+if (!values.password) console.log(`Пароль: ${password}  (сохраните его: повторно пароль не показывается)`);
 await prisma.$disconnect();

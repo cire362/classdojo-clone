@@ -38,7 +38,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="Герои класса — подсчёт людей", lifespan=lifespan)
+app = FastAPI(title="Герои класса: подсчёт людей", lifespan=lifespan)
 
 
 @app.get("/health")

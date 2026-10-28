@@ -1,0 +1,56 @@
+import { Link, NavLink, Outlet, useOutletContext, useParams } from 'react-router-dom';
+import { ArrowLeftIcon, CameraIcon, ChartBarIcon, ListChecksIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
+import { api, type GroupDetails } from '../../api';
+import { CardGridSkeleton, ErrorBox, Skeleton } from '../../components/ui';
+import { useLoad } from '../../hooks';
+
+export interface GroupCtx {
+  data: GroupDetails;
+  setData: (d: GroupDetails) => void;
+  reload: () => Promise<void>;
+}
+
+export const useGroup = () => useOutletContext<GroupCtx>();
+
+const TABS = [
+  { to: '', end: true, label: 'Урок', icon: SparkleIcon },
+  { to: 'attendance', label: 'Отметка', icon: CameraIcon },
+  { to: 'students', label: 'Ученики', icon: UsersThreeIcon },
+  { to: 'reasons', label: 'Причины', icon: ListChecksIcon },
+  { to: 'stats', label: 'Статистика', icon: ChartBarIcon },
+];
+
+export function GroupLayout() {
+  const { groupId } = useParams();
+  const { data, setData, error, loading, reload } = useLoad(
+    () => api<GroupDetails>('GET', `/teacher/groups/${groupId}`),
+    [groupId],
+  );
+
+  if (error && !data) return <ErrorBox message={error} onRetry={reload} />;
+
+  return (
+    <div className="space-y-6">
+      <div className="no-print space-y-4">
+        <div className="flex items-center gap-2">
+          <Link to="/" className="icon-btn -ml-2" aria-label="Все группы">
+            <ArrowLeftIcon size={22} />
+          </Link>
+          {data ? <h1 className="truncate text-2xl sm:text-3xl">{data.group.name}</h1> : <Skeleton className="h-9 w-48" />}
+        </div>
+        <nav
+          aria-label="Разделы группы"
+          className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0"
+        >
+          {TABS.map(({ to, end, label, icon: Icon }) => (
+            <NavLink key={label} to={to} end={end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
+              <Icon size={18} weight="bold" />
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+      {loading && !data ? <CardGridSkeleton /> : data && <Outlet context={{ data, setData, reload } satisfies GroupCtx} />}
+    </div>
+  );
+}

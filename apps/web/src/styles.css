@@ -1,0 +1,163 @@
+@import 'tailwindcss';
+
+/*
+ * Дизайн-токены «Героев класса».
+ * Один акцент — жёлтый «геройский» (#ffc233). Зелёный и красный используются
+ * только как семантика (плюсы / минусы), а не как акценты.
+ * Скругления (единое правило): карточки 16px (rounded-2xl), поля ввода 12px (rounded-xl),
+ * кнопки и чипы — «пилюли» (rounded-full).
+ * Тема — по системной настройке (prefers-color-scheme), светлая и тёмная.
+ */
+:root {
+  --bg: #f3f4f8;
+  --surface: #fcfcfe;
+  --surface-2: #eaecf4;
+  --ink: #161a33;
+  --ink-soft: #4b5072;
+  --line: #d8dbe8;
+  --accent: #ffc233;
+  --accent-hover: #ffb703;
+  --on-accent: #161a33;
+  --plus: #11804f;
+  --plus-bg: #d9f3e6;
+  --minus: #b8304a;
+  --minus-bg: #fbe3e8;
+  --shadow-rgb: 22 26 51;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1122;
+    --surface: #171b31;
+    --surface-2: #222842;
+    --ink: #eef0fa;
+    --ink-soft: #a9aecb;
+    --line: #2e3454;
+    --plus: #55d6a0;
+    --plus-bg: #12392b;
+    --minus: #ff8a9c;
+    --minus-bg: #43202b;
+    --shadow-rgb: 0 0 0;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --font-display: 'Unbounded Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Onest Variable', ui-sans-serif, system-ui, sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+  --color-plus: var(--plus);
+  --color-plus-bg: var(--plus-bg);
+  --color-minus: var(--minus);
+  --color-minus-bg: var(--minus-bg);
+  --shadow-card: 0 1px 2px rgb(var(--shadow-rgb) / 0.06), 0 8px 24px -12px rgb(var(--shadow-rgb) / 0.18);
+  --shadow-pop: 0 2px 4px rgb(var(--shadow-rgb) / 0.08), 0 24px 48px -16px rgb(var(--shadow-rgb) / 0.35);
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+    font-feature-settings: 'tnum' 0;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+  :focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+  input,
+  textarea,
+  select {
+    @apply text-ink;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)];
+  }
+  .btn {
+    @apply inline-flex min-h-11 select-none items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-[15px] font-semibold transition-[transform,background-color,box-shadow,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-sm {
+    @apply min-h-9 px-4 text-sm;
+  }
+  .btn-lg {
+    @apply min-h-13 px-7 text-base;
+  }
+  .btn-primary {
+    @apply bg-accent text-on-accent shadow-[0_1px_0_rgb(var(--shadow-rgb)/0.25)] hover:bg-accent-hover;
+  }
+  .btn-secondary {
+    @apply border border-line bg-surface text-ink hover:bg-surface-2;
+  }
+  .btn-ghost {
+    @apply text-ink-soft hover:bg-surface-2 hover:text-ink;
+  }
+  .btn-danger {
+    @apply border border-minus/40 bg-surface text-minus hover:bg-minus-bg;
+  }
+  .icon-btn {
+    @apply inline-flex size-11 shrink-0 items-center justify-center rounded-full text-ink-soft transition hover:bg-surface-2 hover:text-ink active:scale-95;
+  }
+  .input {
+    @apply w-full rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink placeholder:text-ink-soft/80 transition focus:border-ink focus:outline-none focus:ring-4 focus:ring-accent/40;
+  }
+  .label {
+    @apply mb-2 block text-sm font-semibold text-ink;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-semibold tabular-nums;
+  }
+  .skeleton {
+    @apply animate-pulse rounded-2xl bg-surface-2 motion-reduce:animate-none;
+  }
+  .tab {
+    @apply inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-semibold text-ink-soft transition hover:text-ink;
+  }
+  .tab.active {
+    @apply bg-ink text-bg;
+  }
+}
+
+/* Печать листа с логинами */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-card {
+    break-inside: avoid;
+    border: 1.5px dashed #555 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+
+.hero-avatar svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

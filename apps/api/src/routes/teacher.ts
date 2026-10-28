@@ -62,10 +62,19 @@ export const teacherRoutes = new Hono<AppEnv>()
     const groups = await prisma.group.findMany({
       where: { teacherId: c.get('user').teacherId! },
       orderBy: { createdAt: 'asc' },
-      include: { _count: { select: { students: true } } },
+      include: {
+        _count: { select: { students: true } },
+        students: { take: 6, orderBy: { name: 'asc' }, select: { hero: { select: { parts: true } } } },
+      },
     });
     return c.json(
-      groups.map((g) => ({ id: g.id, name: g.name, subtractTeacher: g.subtractTeacher, studentsCount: g._count.students })),
+      groups.map((g) => ({
+        id: g.id,
+        name: g.name,
+        subtractTeacher: g.subtractTeacher,
+        studentsCount: g._count.students,
+        previewHeroes: g.students.map((s) => normalizeHero(s.hero?.parts)),
+      })),
     );
   })
   .post('/groups', async (c) => {
@@ -75,7 +84,10 @@ export const teacherRoutes = new Hono<AppEnv>()
       await createDefaultReasons(tx, g.id);
       return g;
     });
-    return c.json({ id: group.id, name: group.name, subtractTeacher: group.subtractTeacher, studentsCount: 0 }, 201);
+    return c.json(
+      { id: group.id, name: group.name, subtractTeacher: group.subtractTeacher, studentsCount: 0, previewHeroes: [] },
+      201,
+    );
   })
   .get('/groups/:id', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
@@ -290,7 +302,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
     const { from, to } = period(c.req.query());
     const buf = await statsWorkbook(group.id, group.name, from, to);
-    const filename = `Статистика ${group.name} ${from} — ${to}.xlsx`;
+    const filename = `Статистика ${group.name} ${from}_${to}.xlsx`;
     return new Response(new Uint8Array(buf), {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
