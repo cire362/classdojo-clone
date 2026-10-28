@@ -71,8 +71,8 @@ export function StudentsPage() {
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-      <section className="space-y-4">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <section className="min-w-0 space-y-4">
         <PageTitle
           actions={
             data.students.length > 0 && (

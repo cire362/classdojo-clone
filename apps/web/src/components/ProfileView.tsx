@@ -47,7 +47,7 @@ export function ProfileView({
 
   return (
     <div className="space-y-8">
-      <section className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+      <section className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <div className="relative overflow-hidden rounded-2xl bg-accent/30 px-6 pt-6">
           <div
             aria-hidden
@@ -114,7 +114,7 @@ export function ProfileView({
                 Ошибочную запись можно удалить. Баллы за посещение меняются через отметку посещаемости.
               </p>
             )}
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {historyByDay.map((g) => (
                 <div key={g.day} className="card p-4">
                   <h3 className="mb-2 font-sans text-sm font-semibold text-ink-soft">{formatDate(g.day)}</h3>

@@ -96,7 +96,7 @@ export function HeroEditor({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
       <div className="space-y-4 lg:sticky lg:top-24 lg:h-fit">
         <div className="relative mx-auto max-w-[320px] rounded-2xl bg-surface-2 px-6 pt-4 lg:max-w-none">
           <motion.div key={JSON.stringify(parts)} initial={{ scale: 0.97 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 18 }}>

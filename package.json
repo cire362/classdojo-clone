@@ -4,12 +4,15 @@
   "version": "0.1.0",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "e2e"
   ],
   "scripts": {
     "dev:api": "npm run dev -w @heroes/api",
     "dev:web": "npm run dev -w @heroes/web",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm test --workspaces --if-present"
+    "typecheck": "npm run prisma:generate -w @heroes/api && npm run typecheck --workspaces --if-present",
+    "e2e": "npm test -w @heroes/e2e",
+    "ci": "sh scripts/ci.sh",
+    "test": "npm test -w @heroes/api"
   }
 }

@@ -9,3 +9,7 @@ __pycache__/
 services/detector/models/*.onnx
 coverage/
 .claude/
+
+# Playwright
+e2e/test-results/
+e2e/playwright-report/

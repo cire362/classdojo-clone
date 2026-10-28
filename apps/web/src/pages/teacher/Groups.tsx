@@ -41,7 +41,7 @@ export function GroupsPage() {
 
       {error && <ErrorBox message={error} onRetry={reload} />}
 
-      <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="grid content-start gap-3 sm:grid-cols-2">
           {loading && !data && [0, 1].map((i) => <Skeleton key={i} className="h-36" />)}
           {active.map((g) => (

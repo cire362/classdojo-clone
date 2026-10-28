@@ -5,7 +5,7 @@ import { CalendarBlankIcon, CameraIcon, CheckIcon, EyeSlashIcon, ImageIcon, Info
 import { api, type AttendanceDay, type Detection } from '../../api';
 import { HeroHead } from '../../components/HeroAvatar';
 import { useToast } from '../../components/Toast';
-import { ErrorBox, Modal, ProgressBar, Skeleton, Toggle } from '../../components/ui';
+import { ErrorBox, Modal, ProgressBar, Skeleton, Switch, Toggle } from '../../components/ui';
 import { CancelledError, uploadForm, withRetry, type RetryStatus } from '../../lib/network';
 import { dateKey, formatDate, pluralize, useLoad } from '../../hooks';
 import { useGroup } from './GroupLayout';
@@ -261,7 +261,7 @@ export function AttendancePage() {
 
   if (phase === 'start' || phase === 'detecting') {
     return (
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         {inputs}
         <div className="space-y-5">
           <h2 className="text-2xl">Отметить присутствующих</h2>
@@ -434,7 +434,7 @@ export function AttendancePage() {
   const mismatch = expected !== null && expected !== present.size;
 
   return (
-    <div className="grid gap-6 pb-24 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:pb-0">
+    <div className="grid grid-cols-1 gap-6 pb-24 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:pb-0">
       {(!isToday || multi) && (
         <p className="flex items-center gap-2 font-semibold lg:col-span-2">
           <CalendarBlankIcon size={20} weight="bold" /> Отметка за {dayLabel(date)}
@@ -512,8 +512,9 @@ export function AttendancePage() {
                   <HeroHead parts={s.hero.parts} className={`size-11 transition ${on ? '' : 'opacity-40 grayscale'}`} />
                   <span className={`flex-1 font-medium ${on ? '' : 'text-ink-soft line-through decoration-1'}`}>{s.name}</span>
                   <span className={`text-sm font-semibold ${on ? 'text-plus' : 'text-ink-soft'}`}>{on ? 'был' : 'не был'}</span>
-                  <Toggle
+                  <Switch
                     checked={on}
+                    label={`${s.name} присутствует`}
                     onChange={(v) =>
                       setPresent((prev) => {
                         const next = new Set(prev);
@@ -522,7 +523,6 @@ export function AttendancePage() {
                         return next;
                       })
                     }
-                    label={<span className="sr-only">{s.name} присутствует</span>}
                   />
                 </label>
               </li>

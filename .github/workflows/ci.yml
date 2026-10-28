@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    name: Проверка типов
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
+  api:
+    name: Тесты API
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: heroes
+          POSTGRES_PASSWORD: heroes
+          POSTGRES_DB: heroes
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U heroes" --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://heroes:heroes@localhost:5432/heroes?schema=public
+      TZ: Europe/Moscow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run prisma:generate -w @heroes/api
+      - run: npm test -w @heroes/api
+
+  detector:
+    name: Тесты сервиса подсчёта
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: services/detector/models
+          key: yolox-models-v1-${{ hashFiles('services/detector/scripts/fetch_model.py') }}
+      - name: Скачать модели (кэшируются между запусками)
+        run: |
+          python3 services/detector/scripts/fetch_model.py yolox_m services/detector/models
+          python3 services/detector/scripts/fetch_model.py yolox_s services/detector/models
+      - run: docker compose build detector
+      # На машинах CI процессор слабее — даём запас по времени ответа
+      - run: docker compose run --rm --no-deps -e MAX_SECONDS=6 detector pytest -q
+
+  e2e:
+    name: Сквозные тесты
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: services/detector/models
+          key: yolox-models-v1-${{ hashFiles('services/detector/scripts/fetch_model.py') }}
+      - name: Скачать модели
+        run: |
+          python3 services/detector/scripts/fetch_model.py yolox_m services/detector/models
+          python3 services/detector/scripts/fetch_model.py yolox_s services/detector/models
+      - name: Поднять стенд
+        run: |
+          docker compose up -d --build db detector api web
+          for i in $(seq 1 90); do curl -sf http://localhost:8080/api/health && break; sleep 2; done
+          curl -sf http://localhost:8080/api/health
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      - name: Логи стенда при ошибке
+        if: failure()
+        run: docker compose logs --tail 200
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7

@@ -135,6 +135,19 @@ export function ProgressBar({ value, label, className = '' }: { value: number; l
   );
 }
 
+/** Сам переключатель без подписи — для мест, где подписью служит вся строка (внешний <label>) */
+export function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
+  return (
+    <>
+      <input type="checkbox" className="peer sr-only" checked={checked} aria-label={label} onChange={(e) => onChange(e.target.checked)} />
+      <span
+        aria-hidden
+        className="relative h-7 w-12 shrink-0 rounded-full bg-surface-2 ring-1 ring-line transition peer-checked:bg-plus peer-focus-visible:ring-4 peer-focus-visible:ring-accent/60 after:absolute after:left-1 after:top-1 after:size-5 after:rounded-full after:bg-surface after:shadow after:transition-transform after:duration-200 peer-checked:after:translate-x-5"
+      />
+    </>
+  );
+}
+
 export function Toggle({
   checked,
   onChange,
