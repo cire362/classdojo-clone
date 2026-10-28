@@ -107,7 +107,7 @@ export interface Profile {
   level: LevelInfo;
   points: { today: PointsSum; week: PointsSum; total: PointsSum };
   history: HistoryEvent[];
-  attendance: { attended: number; total: number; records: { date: string; present: boolean }[] };
+  attendance: { attended: number; total: number; records: { date: string; lesson: number; present: boolean }[] };
 }
 
 export interface Detection {
@@ -136,6 +136,7 @@ export interface Stats {
   sessions: {
     id: string;
     date: string;
+    lesson: number;
     peopleOnPhoto: number | null;
     subtractedTeacher: boolean;
     presentCount: number;
@@ -152,6 +153,8 @@ export interface StudentNews {
 
 export interface AttendanceDay {
   date: string;
+  lesson: number;
+  lessons: { lesson: number; presentCount: number; studentsTotal: number; peopleOnPhoto: number | null }[];
   session: {
     peopleOnPhoto: number | null;
     subtractedTeacher: boolean;

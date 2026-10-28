@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { CalendarBlankIcon, CameraIcon, CheckIcon, EyeSlashIcon, ImageIcon, InfoIcon, ListChecksIcon, WarningIcon } from '@phosphor-icons/react';
+import { CalendarBlankIcon, CameraIcon, CheckIcon, EyeSlashIcon, ImageIcon, InfoIcon, ListChecksIcon, PlusIcon, TrashIcon, WarningIcon } from '@phosphor-icons/react';
 import { api, type AttendanceDay, type Detection } from '../../api';
 import { HeroHead } from '../../components/HeroAvatar';
 import { useToast } from '../../components/Toast';
-import { ErrorBox, Skeleton, Toggle } from '../../components/ui';
+import { ErrorBox, Modal, Skeleton, Toggle } from '../../components/ui';
 import { dateKey, formatDate, pluralize, useLoad } from '../../hooks';
 import { useGroup } from './GroupLayout';
 
@@ -56,12 +56,40 @@ export function AttendancePage() {
   const [subtract, setSubtract] = useState(data.group.subtractTeacher);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<number>(0);
-  const [date, setDate] = useState(dateKey());
+  const [date, setDateState] = useState(dateKey());
+  // null — «последний отмеченный урок этого дня» (решает сервер)
+  const [lesson, setLesson] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const existing = useLoad(
-    () => api<AttendanceDay>('GET', `/teacher/groups/${data.group.id}/attendance?date=${date}`),
-    [data.group.id, date],
+    () =>
+      api<AttendanceDay>('GET', `/teacher/groups/${data.group.id}/attendance?date=${date}${lesson ? `&lesson=${lesson}` : ''}`),
+    [data.group.id, date, lesson],
   );
   const isToday = date === dateKey();
+  const day = existing.data?.date === date ? existing.data : null;
+  const lessons = day?.lessons ?? [];
+  const currentLesson = lesson ?? day?.lesson ?? 1;
+  const nextLesson = Math.max(0, ...lessons.map((l) => l.lesson)) + 1;
+  // Номер урока показываем, только когда в этот день уроков больше одного
+  const multi = lessons.length > 1 || currentLesson > 1;
+  const lessonLabel = multi ? `, ${currentLesson}-й урок` : '';
+
+  function setDate(d: string) {
+    setDateState(d);
+    setLesson(null);
+  }
+
+  async function deleteLesson() {
+    try {
+      await api('DELETE', `/teacher/groups/${data.group.id}/attendance?date=${date}&lesson=${currentLesson}`);
+      setConfirmDelete(false);
+      setLesson(null);
+      await Promise.all([reload(), existing.reload()]);
+      toast({ text: 'Отметка урока удалена', tone: 'neutral' });
+    } catch (e) {
+      toast({ text: (e as Error).message, tone: 'error' });
+    }
+  }
 
   // Фото живёт только в памяти вкладки: при уходе со страницы освобождаем его
   useEffect(() => () => void (preview && URL.revokeObjectURL(preview)), [preview]);
@@ -69,7 +97,7 @@ export function AttendancePage() {
   function startReview(det: Detection | null) {
     setDetection(det);
     // Если за этот день уже отмечали, подставляем прежнюю отметку, иначе все присутствуют
-    const prev = existing.data?.date === date ? existing.data.session : null;
+    const prev = day?.lesson === currentLesson ? day.session : null;
     setPresent(new Set(prev ? prev.presentStudentIds : data.students.map((s) => s.id)));
     setPhase('review');
   }
@@ -109,6 +137,7 @@ export function AttendancePage() {
     try {
       await api('POST', `/teacher/groups/${data.group.id}/attendance`, {
         date,
+        lesson: currentLesson,
         presentStudentIds: [...present],
         peopleOnPhoto: detection?.count ?? null,
         subtractedTeacher: detection ? subtract : false,
@@ -118,6 +147,7 @@ export function AttendancePage() {
       setPreview(null);
       setDetection(null);
       setPhase('saved');
+      setLesson(currentLesson);
       await Promise.all([reload(), existing.reload()]);
     } catch (e) {
       toast({ text: (e as Error).message, tone: 'error' });
@@ -139,7 +169,9 @@ export function AttendancePage() {
         <span className="flex size-14 items-center justify-center rounded-full bg-plus-bg text-plus">
           <CheckIcon size={30} weight="bold" />
         </span>
-        <h2 className="text-2xl">Посещаемость {isToday ? 'сохранена' : `за ${dayLabel(date)} сохранена`}</h2>
+        <h2 className="text-2xl">
+          Посещаемость {isToday && !multi ? 'сохранена' : `за ${dayLabel(date)}${lessonLabel} сохранена`}
+        </h2>
         <p className="text-ink-soft">
           Присутствуют {saved} из {data.students.length}. Каждый получил +1 за посещение
           {isToday ? '' : ' с датой урока'}. Фото удалено.
@@ -193,16 +225,74 @@ export function AttendancePage() {
               </label>
             </div>
           </fieldset>
-          {existing.data?.date === date && existing.data.session && (
-            <p className="flex items-start gap-2 rounded-xl bg-surface-2 px-4 py-3 text-sm">
-              <InfoIcon size={20} className="mt-px shrink-0" />
-              <span>
-                За {dayLabel(date)} уже отмечено: были {existing.data.session.presentStudentIds.length} из{' '}
-                {existing.data.session.markedStudentIds.length}. Новая отметка заменит прежнюю, баллы за посещение не
-                задвоятся. В списке будет подставлена прежняя отметка.
-              </span>
-            </p>
+          {lessons.length > 0 && (
+            <fieldset className="space-y-2">
+              <legend className="label">Урок</legend>
+              <div className="flex flex-wrap items-center gap-2">
+                {lessons.map((l) => (
+                  <button
+                    key={l.lesson}
+                    className={`tab ${currentLesson === l.lesson ? 'active' : 'bg-surface-2'}`}
+                    onClick={() => setLesson(l.lesson)}
+                    aria-pressed={currentLesson === l.lesson}
+                  >
+                    {l.lesson}-й урок
+                    <span className="text-xs opacity-70 tabular-nums">
+                      {l.presentCount}/{l.studentsTotal}
+                    </span>
+                  </button>
+                ))}
+                {nextLesson <= 8 && (
+                  <button
+                    className={`tab ${currentLesson === nextLesson ? 'active' : 'bg-surface-2'}`}
+                    onClick={() => setLesson(nextLesson)}
+                    aria-pressed={currentLesson === nextLesson}
+                  >
+                    <PlusIcon size={16} weight="bold" /> {currentLesson === nextLesson ? `${nextLesson}-й урок` : 'Ещё урок'}
+                  </button>
+                )}
+              </div>
+            </fieldset>
           )}
+          {day?.session && day.lesson === currentLesson ? (
+            <div className="space-y-2 rounded-xl bg-surface-2 px-4 py-3 text-sm">
+              <p className="flex items-start gap-2">
+                <InfoIcon size={20} className="mt-px shrink-0" />
+                <span>
+                  {multi ? `${currentLesson}-й урок уже отмечен` : `За ${dayLabel(date)} уже отмечено`}: были{' '}
+                  {day.session.presentStudentIds.length} из {day.session.markedStudentIds.length}. Новая отметка заменит
+                  прежнюю, баллы за посещение не задвоятся. В списке будет подставлена прежняя отметка.
+                  {nextLesson <= 8 && ' Если это другой урок, выберите «Ещё урок».'}
+                </span>
+              </p>
+              <button className="btn btn-ghost btn-sm -ml-3 text-minus hover:bg-minus-bg hover:text-minus" onClick={() => setConfirmDelete(true)}>
+                <TrashIcon size={16} /> Удалить отметку этого урока
+              </button>
+            </div>
+          ) : (
+            currentLesson > 1 && (
+              <p className="flex items-start gap-2 rounded-xl bg-surface-2 px-4 py-3 text-sm">
+                <InfoIcon size={20} className="mt-px shrink-0" />
+                Новая отметка: {currentLesson}-й урок за {dayLabel(date)}. Каждый отмеченный получит ещё +1 за посещение.
+              </p>
+            )
+          )}
+          <Modal open={confirmDelete} title="Удалить отметку урока?" onClose={() => setConfirmDelete(false)}>
+            <div className="space-y-5">
+              <p>
+                Отметка за {dayLabel(date)}
+                {lessonLabel} и баллы «Посещение» за этот урок будут удалены у всех учеников.
+              </p>
+              <div className="flex gap-2">
+                <button className="btn btn-danger" onClick={deleteLesson}>
+                  Удалить
+                </button>
+                <button className="btn btn-secondary" onClick={() => setConfirmDelete(false)}>
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </Modal>
           {error && <ErrorBox message={error} />}
           {phase === 'detecting' ? (
             <div className="space-y-3" role="status">
@@ -255,9 +345,10 @@ export function AttendancePage() {
 
   return (
     <div className="grid gap-6 pb-24 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:pb-0">
-      {!isToday && (
+      {(!isToday || multi) && (
         <p className="flex items-center gap-2 font-semibold lg:col-span-2">
           <CalendarBlankIcon size={20} weight="bold" /> Отметка за {dayLabel(date)}
+          {lessonLabel}
         </p>
       )}
       {detection && preview ? (

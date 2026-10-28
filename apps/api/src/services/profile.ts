@@ -31,8 +31,8 @@ export async function studentProfile(studentId: string) {
     }),
     prisma.attendance.findMany({
       where: { studentId },
-      include: { session: { select: { date: true } } },
-      orderBy: { session: { date: 'desc' } },
+      include: { session: { select: { date: true, lessonNumber: true } } },
+      orderBy: [{ session: { date: 'desc' } }, { session: { lessonNumber: 'desc' } }],
     }),
   ]);
   const attended = attendance.filter((a) => a.present).length;
@@ -46,7 +46,7 @@ export async function studentProfile(studentId: string) {
     attendance: {
       attended,
       total: attendance.length,
-      records: attendance.map((a) => ({ date: dbDateKey(a.session.date), present: a.present })),
+      records: attendance.map((a) => ({ date: dbDateKey(a.session.date), lesson: a.session.lessonNumber, present: a.present })),
     },
   };
 }

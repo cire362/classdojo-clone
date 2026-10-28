@@ -9,7 +9,7 @@ import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../lib/dates.js
 import { hashPassword, verifyPassword } from '../lib/credentials.js';
 import { HttpError, notFound, parse } from '../lib/errors.js';
 import { teacherGroup, teacherStudent } from '../services/access.js';
-import { attendanceForDate, saveAttendance } from '../services/attendance.js';
+import { MAX_LESSONS_PER_DAY, attendanceForDate, deleteAttendance, saveAttendance } from '../services/attendance.js';
 import { countPeople } from '../services/detector.js';
 import { awardPoints, cardSummaries, deletePointEvents } from '../services/points.js';
 import { studentProfile } from '../services/profile.js';
@@ -46,8 +46,10 @@ const PasswordBody = z.object({
   currentPassword: z.string().min(1).max(200),
   newPassword: z.string().min(8, 'Пароль должен быть не короче 8 символов').max(200),
 });
+const lessonNumber = z.coerce.number().int().min(1).max(MAX_LESSONS_PER_DAY);
 const AttendanceBody = z.object({
   date: z.string().refine(isDateKey, 'Дата в формате ГГГГ-ММ-ДД').optional(),
+  lesson: lessonNumber.default(1),
   presentStudentIds: z.array(id).max(200),
   peopleOnPhoto: z.number().int().min(0).max(500).nullable(),
   subtractedTeacher: z.boolean(),
@@ -134,8 +136,10 @@ export const teacherRoutes = new Hono<AppEnv>()
         where: { groupId: group.id, kind: 'MANUAL', archived: false },
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       }),
-      prisma.attendanceSession.findUnique({
-        where: { groupId_date: { groupId: group.id, date: dbDate(dateKey()) } },
+      // «Сегодня» на экране урока — последний отмеченный сегодня урок
+      prisma.attendanceSession.findFirst({
+        where: { groupId: group.id, date: dbDate(dateKey()) },
+        orderBy: { lessonNumber: 'desc' },
         include: { records: true },
       }),
     ]);
@@ -343,7 +347,16 @@ export const teacherRoutes = new Hono<AppEnv>()
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
     const date = c.req.query('date') ?? dateKey();
     if (!isDateKey(date)) throw new HttpError(400, 'Дата в формате ГГГГ-ММ-ДД');
-    return c.json(await attendanceForDate(group.id, date));
+    const lessonRaw = c.req.query('lesson');
+    const lesson = lessonRaw === undefined ? undefined : parse(lessonNumber, lessonRaw);
+    return c.json(await attendanceForDate(group.id, date, lesson));
+  })
+  .delete('/groups/:id/attendance', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const date = c.req.query('date') ?? '';
+    if (!isDateKey(date)) throw new HttpError(400, 'Дата в формате ГГГГ-ММ-ДД');
+    await deleteAttendance(group.id, date, parse(lessonNumber, c.req.query('lesson')));
+    return c.json({ ok: true });
   })
   .post('/groups/:id/attendance', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
@@ -353,6 +366,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     const result = await saveAttendance({
       groupId: group.id,
       date,
+      lesson: body.lesson ?? 1,
       presentStudentIds: body.presentStudentIds,
       peopleOnPhoto: body.peopleOnPhoto,
       subtractedTeacher: body.subtractedTeacher,

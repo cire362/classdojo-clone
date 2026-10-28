@@ -30,7 +30,7 @@ export async function groupStats(groupId: string, from: string, to: string) {
     }),
     prisma.attendanceSession.findMany({
       where: { groupId, date: { gte: dbDate(from), lte: dbDate(to) } },
-      orderBy: { date: 'asc' },
+      orderBy: [{ date: 'asc' }, { lessonNumber: 'asc' }],
       include: { records: { select: { studentId: true, present: true } } },
     }),
   ]);
@@ -65,6 +65,7 @@ export async function groupStats(groupId: string, from: string, to: string) {
     sessions: sessions.map((s) => ({
       id: s.id,
       date: dbDateKey(s.date),
+      lesson: s.lessonNumber,
       peopleOnPhoto: s.peopleOnPhoto,
       subtractedTeacher: s.subtractedTeacher,
       presentCount: s.records.filter((r) => r.present).length,
@@ -133,7 +134,12 @@ export async function statsWorkbook(groupId: string, groupName: string, from: st
   const att = wb.addWorksheet('Посещаемость', { views: [{ state: 'frozen', xSplit: 1, ySplit: 1 }] });
   att.columns = [{ width: 28 }, ...stats.sessions.map(() => ({ width: 12 })), { width: 10 }];
   const attHead = att.getRow(1);
-  attHead.values = ['Ученик', ...stats.sessions.map((s) => fmtDate(s.date)), 'Итого'];
+  // Если в какой-то день было несколько уроков, добавляем номер урока к дате
+  const perDay = new Map<string, number>();
+  for (const s of stats.sessions) perDay.set(s.date, (perDay.get(s.date) ?? 0) + 1);
+  const sessionLabel = (s: { date: string; lesson: number }) =>
+    (perDay.get(s.date) ?? 0) > 1 || s.lesson > 1 ? `${fmtDate(s.date)}, ${s.lesson}-й урок` : fmtDate(s.date);
+  attHead.values = ['Ученик', ...stats.sessions.map(sessionLabel), 'Итого'];
   styleHeader(attHead);
   for (const s of stats.students) {
     const marks = stats.sessions.map((ses) => (ses.present.includes(s.id) ? '✓' : '✗'));

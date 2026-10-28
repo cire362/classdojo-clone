@@ -35,7 +35,7 @@ describe('посещаемость за прошлую дату', () => {
     const [a, b] = t.students;
     const date = daysAgo(1);
     const empty = await call('GET', `/api/teacher/groups/${t.group.id}/attendance?date=${date}`, { cookie: t.cookie });
-    expect(empty.body).toEqual({ date, session: null });
+    expect(empty.body).toEqual({ date, lesson: 1, lessons: [], session: null });
 
     const save = (present: string[]) =>
       call('POST', `/api/teacher/groups/${t.group.id}/attendance`, {

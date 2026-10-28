@@ -149,7 +149,12 @@ export function StatsPage() {
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {[...data.sessions].reverse().map((s) => (
                   <div key={s.id} className="flex items-center justify-between gap-3 rounded-2xl bg-surface-2 px-4 py-3">
-                    <span className="font-medium">{formatDate(s.date)}</span>
+                    <span className="font-medium">
+                      {formatDate(s.date)}
+                      {(s.lesson > 1 || data.sessions.some((o) => o.date === s.date && o.id !== s.id)) && (
+                        <span className="block text-sm font-normal text-ink-soft">{s.lesson}-й урок</span>
+                      )}
+                    </span>
                     <span className="text-right text-sm text-ink-soft">
                       <span className="block font-semibold text-ink tabular-nums">
                         {s.presentCount} из {s.studentsTotal}

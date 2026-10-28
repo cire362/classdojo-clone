@@ -3,7 +3,7 @@ import ExcelJS from 'exceljs';
 import { call, setupTeacher } from './helpers.js';
 
 /** Кодирование в windows-1251 (только кириллица и ASCII) — так Excel сохраняет CSV в русской Windows */
-function cp1251(s: string): Uint8Array {
+function cp1251(s: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from([...s].map((ch) => {
     const c = ch.charCodeAt(0);
     if (c < 128) return c;

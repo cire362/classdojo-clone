@@ -166,11 +166,14 @@ export function ProfileView({
               <ul className="flex flex-wrap gap-2">
                 {profile.attendance.records.map((r) => (
                   <li
-                    key={r.date}
+                    key={`${r.date}-${r.lesson}`}
                     className={`rounded-full px-3 py-1.5 text-sm font-medium ${r.present ? 'bg-plus-bg text-plus' : 'bg-surface-2 text-ink-soft line-through'}`}
                     title={r.present ? 'Был' : 'Не был'}
                   >
                     {formatDate(r.date)}
+                    {r.lesson > 1 || profile.attendance.records.some((o) => o.date === r.date && o.lesson !== r.lesson)
+                      ? `, ${r.lesson}-й урок`
+                      : ''}
                   </li>
                 ))}
               </ul>

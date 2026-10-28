@@ -160,6 +160,8 @@ model AttendanceSession {
   group             Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   /// Календарная дата урока (в часовом поясе приложения)
   date              DateTime @db.Date
+  /// Номер урока в этот день (у группы может быть несколько уроков в день)
+  lessonNumber      Int      @default(1)
   /// Сколько людей нашлось на фото (null — отметка без фото)
   peopleOnPhoto     Int?
   subtractedTeacher Boolean  @default(false)
@@ -171,7 +173,7 @@ model AttendanceSession {
   records Attendance[]
   points  PointEvent[]
 
-  @@unique([groupId, date])
+  @@unique([groupId, date, lessonNumber])
 }
 
 model Attendance {
