@@ -1,5 +1,5 @@
 #!/bin/sh
-# Полная проверка проекта — то же, что делает CI (.github/workflows/ci.yml).
+# Полная проверка проекта: то же, что делает CI (.github/workflows/ci.yml).
 # Всё запускается в отдельном docker compose проекте «geroi-ci» на порту 8090,
 # поэтому рабочий стенд на :8080 и его база не затрагиваются. В конце стенд удаляется.
 #
@@ -24,6 +24,9 @@ step() { printf '\n==== %s ====\n' "$1"; }
 if [ "$ONLY" = all ]; then
   step "Проверка типов"
   npm run typecheck --silent
+
+  step "Тесты фронтенда"
+  npm test -w @heroes/web --silent
 
   step "Тесты API"
   $COMPOSE --profile test run --build --rm api-test

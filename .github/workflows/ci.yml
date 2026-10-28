@@ -21,6 +21,18 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
 
+  web:
+    name: Тесты фронтенда
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test -w @heroes/web
+
   api:
     name: Тесты API
     runs-on: ubuntu-latest

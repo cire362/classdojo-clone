@@ -10,7 +10,7 @@ export interface ImportPreview {
 }
 
 /** «Иванова Мария Петровна» → «Мария Иванова» (по выбранным настройкам) */
-function formatName(name: string, swap: boolean, dropPatronymic: boolean): string {
+export function formatName(name: string, swap: boolean, dropPatronymic: boolean): string {
   const words = name.split(' ');
   if (words.length < 2) return name;
   let [first, second, ...rest] = words;
