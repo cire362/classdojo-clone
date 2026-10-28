@@ -5,10 +5,10 @@ import { z } from 'zod';
 import { requireRole, type AppEnv } from '../auth.js';
 import { prisma } from '../db.js';
 import { env } from '../env.js';
-import { dateKey, dbDate, isDateKey } from '../lib/dates.js';
+import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../lib/dates.js';
 import { HttpError, notFound, parse } from '../lib/errors.js';
 import { teacherGroup, teacherStudent } from '../services/access.js';
-import { saveAttendance } from '../services/attendance.js';
+import { attendanceForDate, saveAttendance } from '../services/attendance.js';
 import { countPeople } from '../services/detector.js';
 import { awardPoints, cardSummaries, deletePointEvents } from '../services/points.js';
 import { studentProfile } from '../services/profile.js';
@@ -271,11 +271,17 @@ export const teacherRoutes = new Hono<AppEnv>()
       return c.json(await countPeople(photo));
     },
   )
+  .get('/groups/:id/attendance', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const date = c.req.query('date') ?? dateKey();
+    if (!isDateKey(date)) throw new HttpError(400, 'Дата в формате ГГГГ-ММ-ДД');
+    return c.json(await attendanceForDate(group.id, date));
+  })
   .post('/groups/:id/attendance', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
     const body = parse(AttendanceBody, await c.req.json().catch(() => null));
     const date = body.date ?? dateKey();
-    if (date > dateKey()) throw new HttpError(400, 'Нельзя отметить посещаемость в будущем');
+    checkAttendanceDate(date);
     const result = await saveAttendance({
       groupId: group.id,
       date,
@@ -306,6 +312,12 @@ export const teacherRoutes = new Hono<AppEnv>()
       },
     });
   });
+
+/** Отмечать можно сегодня и задним числом, но не в будущем и не старше года */
+function checkAttendanceDate(date: string) {
+  if (date > dateKey()) throw new HttpError(400, 'Нельзя отметить посещаемость в будущем');
+  if (date < dateKey(addDays(startOfDay(), -366))) throw new HttpError(400, 'Можно отметить посещаемость не старше года');
+}
 
 async function ownedReason(teacherId: string, reasonId: string) {
   const reason = await prisma.behaviorReason.findFirst({

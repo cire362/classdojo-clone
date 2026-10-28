@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { CameraIcon, CheckIcon, EyeSlashIcon, ImageIcon, InfoIcon, ListChecksIcon, WarningIcon } from '@phosphor-icons/react';
-import { api, type Detection } from '../../api';
+import { CalendarBlankIcon, CameraIcon, CheckIcon, EyeSlashIcon, ImageIcon, InfoIcon, ListChecksIcon, WarningIcon } from '@phosphor-icons/react';
+import { api, type AttendanceDay, type Detection } from '../../api';
 import { HeroHead } from '../../components/HeroAvatar';
 import { useToast } from '../../components/Toast';
 import { ErrorBox, Skeleton, Toggle } from '../../components/ui';
-import { pluralize } from '../../hooks';
+import { dateKey, formatDate, pluralize, useLoad } from '../../hooks';
 import { useGroup } from './GroupLayout';
 
 const MAX_SIDE = 1600;
@@ -30,6 +30,19 @@ async function prepareImage(file: File): Promise<Blob> {
 
 type Phase = 'start' | 'detecting' | 'review' | 'saved';
 
+const shiftDays = (n: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return dateKey(d);
+};
+
+/** «сегодня», «вчера» или «пн, 26 октября» */
+function dayLabel(key: string): string {
+  if (key === dateKey()) return 'сегодня';
+  if (key === shiftDays(-1)) return 'вчера';
+  return formatDate(key).toLowerCase();
+}
+
 export function AttendancePage() {
   const { data, setData, reload } = useGroup();
   const toast = useToast();
@@ -43,13 +56,21 @@ export function AttendancePage() {
   const [subtract, setSubtract] = useState(data.group.subtractTeacher);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<number>(0);
+  const [date, setDate] = useState(dateKey());
+  const existing = useLoad(
+    () => api<AttendanceDay>('GET', `/teacher/groups/${data.group.id}/attendance?date=${date}`),
+    [data.group.id, date],
+  );
+  const isToday = date === dateKey();
 
   // Фото живёт только в памяти вкладки: при уходе со страницы освобождаем его
   useEffect(() => () => void (preview && URL.revokeObjectURL(preview)), [preview]);
 
   function startReview(det: Detection | null) {
     setDetection(det);
-    setPresent(new Set(data.students.map((s) => s.id)));
+    // Если за этот день уже отмечали, подставляем прежнюю отметку, иначе все присутствуют
+    const prev = existing.data?.date === date ? existing.data.session : null;
+    setPresent(new Set(prev ? prev.presentStudentIds : data.students.map((s) => s.id)));
     setPhase('review');
   }
 
@@ -87,6 +108,7 @@ export function AttendancePage() {
     setSaving(true);
     try {
       await api('POST', `/teacher/groups/${data.group.id}/attendance`, {
+        date,
         presentStudentIds: [...present],
         peopleOnPhoto: detection?.count ?? null,
         subtractedTeacher: detection ? subtract : false,
@@ -96,7 +118,7 @@ export function AttendancePage() {
       setPreview(null);
       setDetection(null);
       setPhase('saved');
-      await reload();
+      await Promise.all([reload(), existing.reload()]);
     } catch (e) {
       toast({ text: (e as Error).message, tone: 'error' });
     } finally {
@@ -117,9 +139,10 @@ export function AttendancePage() {
         <span className="flex size-14 items-center justify-center rounded-full bg-plus-bg text-plus">
           <CheckIcon size={30} weight="bold" />
         </span>
-        <h2 className="text-2xl">Посещаемость сохранена</h2>
+        <h2 className="text-2xl">Посещаемость {isToday ? 'сохранена' : `за ${dayLabel(date)} сохранена`}</h2>
         <p className="text-ink-soft">
-          Присутствуют {saved} из {data.students.length}. Каждый получил +1 за посещение. Фото удалено.
+          Присутствуют {saved} из {data.students.length}. Каждый получил +1 за посещение
+          {isToday ? '' : ' с датой урока'}. Фото удалено.
         </p>
         <div className="flex flex-wrap gap-2">
           <Link to={`/g/${data.group.id}`} className="btn btn-primary">
@@ -143,11 +166,41 @@ export function AttendancePage() {
             Сфотографируйте группу. Сервис посчитает людей на фото, а вы сверите список. Лица не распознаются, фото нигде
             не сохраняется.
           </p>
-          {data.todayAttendance && (
+          <fieldset className="space-y-2">
+            <legend className="label">День урока</legend>
+            <div className="flex flex-wrap items-center gap-2">
+              {[
+                { key: dateKey(), label: 'Сегодня' },
+                { key: shiftDays(-1), label: 'Вчера' },
+              ].map((o) => (
+                <button key={o.key} className={`tab ${date === o.key ? 'active' : 'bg-surface-2'}`} onClick={() => setDate(o.key)} aria-pressed={date === o.key}>
+                  {o.label}
+                </button>
+              ))}
+              <label className={`tab cursor-pointer ${date < shiftDays(-1) ? 'active' : 'bg-surface-2'}`}>
+                <CalendarBlankIcon size={18} weight="bold" />
+                {date < shiftDays(-1) ? formatDate(date) : 'Другой день'}
+                <input
+                  type="date"
+                  className="sr-only"
+                  aria-label="Выбрать день урока"
+                  value={date}
+                  max={dateKey()}
+                  min={shiftDays(-366)}
+                  onChange={(e) => e.target.value && setDate(e.target.value)}
+                  onClick={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
+                />
+              </label>
+            </div>
+          </fieldset>
+          {existing.data?.date === date && existing.data.session && (
             <p className="flex items-start gap-2 rounded-xl bg-surface-2 px-4 py-3 text-sm">
               <InfoIcon size={20} className="mt-px shrink-0" />
-              Сегодня уже отмечено {data.todayAttendance.presentStudentIds.length} из {data.students.length}. Новая отметка
-              заменит прежнюю, баллы за посещение не задвоятся.
+              <span>
+                За {dayLabel(date)} уже отмечено: были {existing.data.session.presentStudentIds.length} из{' '}
+                {existing.data.session.markedStudentIds.length}. Новая отметка заменит прежнюю, баллы за посещение не
+                задвоятся. В списке будет подставлена прежняя отметка.
+              </span>
             </p>
           )}
           {error && <ErrorBox message={error} />}
@@ -202,6 +255,11 @@ export function AttendancePage() {
 
   return (
     <div className="grid gap-6 pb-24 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:pb-0">
+      {!isToday && (
+        <p className="flex items-center gap-2 font-semibold lg:col-span-2">
+          <CalendarBlankIcon size={20} weight="bold" /> Отметка за {dayLabel(date)}
+        </p>
+      )}
       {detection && preview ? (
         <section className="space-y-4">
           <div className="relative overflow-hidden rounded-2xl bg-surface-2">

@@ -149,3 +149,13 @@ export interface StudentNews {
   levelUp: { from: number; to: number } | null;
   newPartIds: string[];
 }
+
+export interface AttendanceDay {
+  date: string;
+  session: {
+    peopleOnPhoto: number | null;
+    subtractedTeacher: boolean;
+    presentStudentIds: string[];
+    markedStudentIds: string[];
+  } | null;
+}
