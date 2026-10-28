@@ -9,6 +9,7 @@ const channel = process.env.PW_CHANNEL || undefined;
 
 export default defineConfig({
   testDir: './tests',
+  globalTeardown: './global-teardown.ts',
   timeout: 90_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,

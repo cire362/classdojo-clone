@@ -38,7 +38,14 @@ test.describe('отметка по фото при плохом интернет
       await expect(page.getByRole('heading', { name: /Здравствуйте/ })).toBeVisible();
       await page.goto(`/g/${g.id}`);
       await expect(page.getByRole('button', { name: /^Офлайн Первый/ })).toBeVisible();
-      // Даём фоновой подгрузке страниц закончиться
+      // Ждём, пока фоновая подгрузка страниц (стартует через ~3 с после загрузки) действительно закончится
+      await page.waitForFunction(
+        () => ['Reasons', 'Students', 'Stats', 'Attendance'].every((n) =>
+          performance.getEntriesByType('resource').some((e) => e.name.includes(`/assets/${n}-`)),
+        ),
+        undefined,
+        { timeout: 20_000 },
+      );
       await page.waitForLoadState('networkidle');
       await context.setOffline(true);
       for (const [tab, marker] of [
