@@ -130,7 +130,7 @@ export function LessonPage() {
     <div
       className={
         projector
-          ? 'grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-5'
+          ? 'grid grid-cols-[repeat(auto-fill,minmax(clamp(220px,15vw,340px),1fr))] gap-5'
           : 'grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(168px,1fr))] sm:gap-4'
       }
     >
