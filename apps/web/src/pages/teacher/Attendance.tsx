@@ -5,7 +5,8 @@ import { CalendarBlankIcon, CameraIcon, CheckIcon, EyeSlashIcon, ImageIcon, Info
 import { api, type AttendanceDay, type Detection } from '../../api';
 import { HeroHead } from '../../components/HeroAvatar';
 import { useToast } from '../../components/Toast';
-import { ErrorBox, Modal, Skeleton, Toggle } from '../../components/ui';
+import { ErrorBox, Modal, ProgressBar, Skeleton, Toggle } from '../../components/ui';
+import { CancelledError, uploadForm, withRetry, type RetryStatus } from '../../lib/network';
 import { dateKey, formatDate, pluralize, useLoad } from '../../hooks';
 import { useGroup } from './GroupLayout';
 
@@ -29,6 +30,14 @@ async function prepareImage(file: File): Promise<Blob> {
 }
 
 type Phase = 'start' | 'detecting' | 'review' | 'saved';
+
+function uploadText({ progress, status }: { progress: number; status: RetryStatus | null }): string {
+  if (!status) return 'Готовим фото…';
+  if (status.state === 'offline') return 'Нет интернета. Отправим фото, как только связь появится';
+  if (status.state === 'retrying') return `Связь прервалась. Пробуем ещё раз (${status.attempt} из ${status.attempts})…`;
+  if (progress < 1) return `Отправляем фото… ${Math.round(progress * 100)}%`;
+  return 'Считаем людей на фото…';
+}
 
 const shiftDays = (n: number) => {
   const d = new Date();
@@ -60,6 +69,16 @@ export function AttendancePage() {
   // null — «последний отмеченный урок этого дня» (решает сервер)
   const [lesson, setLesson] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Подготовленное фото держим в памяти вкладки только для повторной отправки
+  const photoRef = useRef<Blob | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const [upload, setUpload] = useState<{ progress: number; status: RetryStatus | null }>({ progress: 0, status: null });
+  const [saveStatus, setSaveStatus] = useState<RetryStatus | null>(null);
+  // На телефоне статус отправки и ошибка ниже края экрана — прокручиваем к ним
+  const statusRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (phase === 'detecting' || error) statusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [phase, error]);
   const existing = useLoad(
     () =>
       api<AttendanceDay>('GET', `/teacher/groups/${data.group.id}/attendance?date=${date}${lesson ? `&lesson=${lesson}` : ''}`),
@@ -102,24 +121,62 @@ export function AttendancePage() {
     setPhase('review');
   }
 
+  function dropPhoto() {
+    photoRef.current = null;
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(null);
+  }
+
+  /** Отправка фото с повторами: при обрыве связи пробуем ещё дважды, без сети ждём её появления */
+  async function sendPhoto() {
+    const blob = photoRef.current;
+    if (!blob) return;
+    setError(null);
+    setPhase('detecting');
+    setUpload({ progress: 0, status: null });
+    const controller = new AbortController();
+    abortRef.current = controller;
+    try {
+      const det = await withRetry(
+        () => {
+          const form = new FormData();
+          form.append('photo', blob, 'photo.jpg');
+          setUpload((u) => ({ ...u, progress: 0 }));
+          return uploadForm<Detection>(`/teacher/groups/${data.group.id}/attendance/detect`, form, {
+            signal: controller.signal,
+            timeoutMs: 45_000,
+            onProgress: (progress) => setUpload((u) => ({ ...u, progress })),
+          });
+        },
+        { signal: controller.signal, onStatus: (status) => setUpload((u) => ({ ...u, status })) },
+      );
+      startReview(det);
+    } catch (e) {
+      if (!(e instanceof CancelledError)) setError((e as Error).message);
+      setPhase('start');
+    } finally {
+      abortRef.current = null;
+    }
+  }
+
   async function onFile(file: File | undefined) {
     if (!file) return;
     setError(null);
     setPhase('detecting');
     try {
       const blob = await prepareImage(file);
+      dropPhoto();
+      photoRef.current = blob;
       setPreview(URL.createObjectURL(blob));
-      const form = new FormData();
-      form.append('photo', blob, 'photo.jpg');
-      const det = await api<Detection>('POST', `/teacher/groups/${data.group.id}/attendance/detect`, form);
-      startReview(det);
     } catch (e) {
       setError((e as Error).message);
       setPhase('start');
+      return;
     } finally {
       if (cameraInput.current) cameraInput.current.value = '';
       if (galleryInput.current) galleryInput.current.value = '';
     }
+    await sendPhoto();
   }
 
   async function changeSubtract(v: boolean) {
@@ -134,25 +191,31 @@ export function AttendancePage() {
 
   async function save() {
     setSaving(true);
+    setSaveStatus(null);
     try {
-      await api('POST', `/teacher/groups/${data.group.id}/attendance`, {
-        date,
-        lesson: currentLesson,
-        presentStudentIds: [...present],
-        peopleOnPhoto: detection?.count ?? null,
-        subtractedTeacher: detection ? subtract : false,
-      });
+      // Сохранение идемпотентно (отметка дня перезаписывается), поэтому его безопасно повторять
+      await withRetry(
+        () =>
+          api('POST', `/teacher/groups/${data.group.id}/attendance`, {
+            date,
+            lesson: currentLesson,
+            presentStudentIds: [...present],
+            peopleOnPhoto: detection?.count ?? null,
+            subtractedTeacher: detection ? subtract : false,
+          }),
+        { onStatus: setSaveStatus },
+      );
       setSaved(present.size);
-      if (preview) URL.revokeObjectURL(preview);
-      setPreview(null);
+      dropPhoto();
       setDetection(null);
       setPhase('saved');
       setLesson(currentLesson);
       await Promise.all([reload(), existing.reload()]);
     } catch (e) {
-      toast({ text: (e as Error).message, tone: 'error' });
+      toast({ text: `${(e as Error).message}. Отметка не потерялась, нажмите «Сохранить» ещё раз`, tone: 'error' });
     } finally {
       setSaving(false);
+      setSaveStatus(null);
     }
   }
 
@@ -301,11 +364,29 @@ export function AttendancePage() {
               </div>
             </div>
           </Modal>
-          {error && <ErrorBox message={error} />}
+          <div ref={statusRef} className="scroll-mb-6 space-y-5">
+          {error && (
+            <div className="space-y-2">
+              <ErrorBox message={error} onRetry={photoRef.current ? () => void sendPhoto() : undefined} />
+              <p className="text-sm text-ink-soft">Если связь не появится, можно отметить учеников вручную: «Без фото».</p>
+            </div>
+          )}
           {phase === 'detecting' ? (
-            <div className="space-y-3" role="status">
-              <Skeleton className="aspect-[4/3] max-w-xl" />
-              <p className="font-medium text-ink-soft">Считаем людей на фото…</p>
+            <div className="max-w-xl space-y-3" role="status" aria-live="polite">
+              {preview ? (
+                <img src={preview} alt="" className="max-h-44 w-full rounded-2xl object-cover opacity-60" />
+              ) : (
+                <Skeleton className="aspect-[4/3]" />
+              )}
+              {upload.status?.state === 'sending' && upload.progress < 1 && (
+                <ProgressBar value={upload.progress} label="Отправка фото" />
+              )}
+              <p className="font-medium text-ink-soft">{uploadText(upload)}</p>
+              {upload.status && (
+                <button className="btn btn-secondary btn-sm" onClick={() => abortRef.current?.abort()}>
+                  Отменить
+                </button>
+              )}
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -320,6 +401,7 @@ export function AttendancePage() {
               </button>
             </div>
           )}
+          </div>
         </div>
         <div className="space-y-4">
         <div className="flex flex-wrap gap-1.5" aria-hidden>
@@ -450,13 +532,13 @@ export function AttendancePage() {
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
           <div className="mx-auto flex max-w-7xl gap-2">
             <button className="btn btn-primary btn-lg flex-1 lg:flex-none" onClick={save} disabled={saving}>
-              {saving ? 'Сохраняем…' : 'Сохранить'}
+              {saving ? (saveStatus?.state === 'offline' ? 'Ждём интернет…' : saveStatus?.state === 'retrying' ? 'Повторяем…' : 'Сохраняем…') : 'Сохранить'}
             </button>
             <button
               className="btn btn-secondary btn-lg"
               onClick={() => {
                 if (preview) URL.revokeObjectURL(preview);
-                setPreview(null);
+                dropPhoto();
                 setDetection(null);
                 setPhase('start');
               }}
