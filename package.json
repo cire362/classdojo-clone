@@ -1,0 +1,15 @@
+{
+  "name": "geroi-klassa",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w @heroes/api",
+    "dev:web": "npm run dev -w @heroes/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm test --workspaces --if-present"
+  }
+}

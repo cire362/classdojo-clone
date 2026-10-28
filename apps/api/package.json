@@ -1,0 +1,32 @@
+{
+  "name": "@heroes/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "create-teacher": "tsx src/cli/create-teacher.ts",
+    "prisma:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@heroes/shared": "0.1.0",
+    "@hono/node-server": "1.19.17",
+    "@node-rs/argon2": "2.2.2",
+    "@prisma/client": "6.19.3",
+    "exceljs": "4.4.0",
+    "hono": "4.13.14",
+    "prisma": "6.19.3",
+    "tsx": "4.23.15",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

@@ -1,0 +1,183 @@
+// «Герои класса» — схема данных.
+// Учётные записи вынесены в Account, чтобы позже добавить родителей и других ролей
+// без изменения таблиц учителей и учеников.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  TEACHER
+  STUDENT
+}
+
+enum ReasonKind {
+  /// Обычная причина, которую преподаватель выбирает вручную
+  MANUAL
+  /// Системная причина «Посещение» — начисляется автоматически при отметке
+  ATTENDANCE
+}
+
+model Account {
+  id           String   @id @default(cuid())
+  login        String   @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+
+  teacher  Teacher?
+  student  Student?
+  sessions Session[]
+  awarded  PointEvent[] @relation("AwardedBy")
+}
+
+model Session {
+  /// sha256 от токена из cookie — сам токен в БД не хранится
+  id        String   @id
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([accountId])
+}
+
+model Teacher {
+  id        String   @id @default(cuid())
+  accountId String   @unique
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+
+  groups Group[]
+}
+
+model Group {
+  id              String   @id @default(cuid())
+  name            String
+  teacherId       String
+  teacher         Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  /// Вычитать преподавателя из числа людей на фото
+  subtractTeacher Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  students           Student[]
+  reasons            BehaviorReason[]
+  attendanceSessions AttendanceSession[]
+
+  @@index([teacherId])
+}
+
+model Student {
+  id        String   @id @default(cuid())
+  accountId String   @unique
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  name      String
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  hero        Hero?
+  pointEvents PointEvent[]
+  attendance  Attendance[]
+
+  @@index([groupId])
+}
+
+model Hero {
+  id        String   @id @default(cuid())
+  studentId String   @unique
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  name      String   @default("")
+  /// Выбранные детали: { pose, suit, suitColor, ... } → id детали
+  parts     Json
+  updatedAt DateTime @updatedAt
+}
+
+/// Справочник деталей. Синхронизируется из packages/shared/src/hero/catalog.ts при старте.
+model HeroPart {
+  id            String  @id
+  layer         String
+  name          String
+  requiredLevel Int
+  sortOrder     Int     @default(0)
+  /// Задел под платные детали
+  isPremium     Boolean @default(false)
+  active        Boolean @default(true)
+}
+
+model BehaviorReason {
+  id        String     @id @default(cuid())
+  groupId   String
+  group     Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name      String
+  emoji     String
+  value     Int
+  kind      ReasonKind @default(MANUAL)
+  sortOrder Int        @default(0)
+  /// Удалённые причины архивируются, чтобы история не теряла названия
+  archived  Boolean    @default(false)
+  createdAt DateTime   @default(now())
+
+  events PointEvent[]
+
+  @@index([groupId])
+}
+
+model PointEvent {
+  id                  String             @id @default(cuid())
+  studentId           String
+  student             Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reasonId            String?
+  reason              BehaviorReason?    @relation(fields: [reasonId], references: [id], onDelete: SetNull)
+  /// Снимок названия и эмодзи причины на момент начисления
+  reasonName          String
+  emoji               String
+  value               Int
+  createdAt           DateTime           @default(now())
+  awardedById         String?
+  awardedBy           Account?           @relation("AwardedBy", fields: [awardedById], references: [id], onDelete: SetNull)
+  attendanceSessionId String?
+  attendanceSession   AttendanceSession? @relation(fields: [attendanceSessionId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, createdAt])
+  @@index([attendanceSessionId])
+}
+
+model AttendanceSession {
+  id                String   @id @default(cuid())
+  groupId           String
+  group             Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  /// Календарная дата урока (в часовом поясе приложения)
+  date              DateTime @db.Date
+  /// Сколько людей нашлось на фото (null — отметка без фото)
+  peopleOnPhoto     Int?
+  subtractedTeacher Boolean  @default(false)
+  studentsTotal     Int
+  createdById       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  records Attendance[]
+  points  PointEvent[]
+
+  @@unique([groupId, date])
+}
+
+model Attendance {
+  id        String            @id @default(cuid())
+  sessionId String
+  session   AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  present   Boolean
+
+  @@unique([sessionId, studentId])
+  @@index([studentId])
+}

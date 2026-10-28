@@ -1,0 +1,6 @@
+# Все зависимости — с разрешительными лицензиями (MIT / BSD / Apache-2.0 / HPND)
+fastapi==0.115.12        # MIT
+uvicorn==0.34.2          # BSD-3-Clause
+onnxruntime==1.22.0      # MIT
+numpy==2.2.6             # BSD-3-Clause
+pillow==11.2.1           # MIT-CMU (HPND)

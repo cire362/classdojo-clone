@@ -1,0 +1,81 @@
+name: geroi-klassa
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: heroes
+      POSTGRES_PASSWORD: heroes
+      POSTGRES_DB: heroes
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U heroes -d heroes"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  detector:
+    build: ./services/detector
+    environment:
+      # Порог уверенности детектора (0..1)
+      SCORE_THRESHOLD: "0.35"
+    # Фото обрабатываются только в памяти; файловая система контейнера — только для чтения
+    read_only: true
+    tmpfs:
+      - /tmp:size=1m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://heroes:heroes@db:5432/heroes?schema=public
+      DETECTOR_URL: http://detector:8000
+      TZ: Europe/Moscow
+      PORT: "3000"
+      # Включите, если сайт открывается по HTTPS
+      COOKIE_SECURE: "false"
+      SEED_TEACHER_LOGIN: teacher
+      SEED_TEACHER_PASSWORD: teacher123
+      SEED_STUDENT_PASSWORD: hero12345
+    depends_on:
+      db:
+        condition: service_healthy
+      detector:
+        condition: service_started
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # Тесты бэкенда: docker compose --profile test run --rm api-test
+  # (каждый прогон создаёт временную схему в БД и удаляет её после себя)
+  api-test:
+    profiles: ["test"]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.test
+    environment:
+      DATABASE_URL: postgresql://heroes:heroes@db:5432/heroes?schema=public
+      TZ: Europe/Moscow
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
