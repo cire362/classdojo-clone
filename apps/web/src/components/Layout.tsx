@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { SignOutIcon, StarIcon } from '@phosphor-icons/react';
 import { useAuth } from '../auth';
+import { useNews } from '../news';
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
@@ -16,7 +17,19 @@ export function Logo({ compact = false }: { compact?: boolean }) {
 export function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { news } = useNews();
   const navClass = ({ isActive }: { isActive: boolean }) => `tab ${isActive ? 'active' : ''}`;
+  const newCount = news?.newPartIds.length ?? 0;
+  const heroLink = (
+    <NavLink to="/hero" className={navClass}>
+      Конструктор
+      {newCount > 0 && (
+        <span className="chip min-w-6 justify-center bg-accent px-1.5 text-xs text-on-accent" aria-label={`новых деталей: ${newCount}`}>
+          {newCount}
+        </span>
+      )}
+    </NavLink>
+  );
   return (
     <div className="min-h-[100dvh]">
       <header className="no-print sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur-md">
@@ -29,9 +42,7 @@ export function AppLayout() {
               <NavLink to="/" end className={navClass}>
                 Мой герой
               </NavLink>
-              <NavLink to="/hero" className={navClass}>
-                Конструктор
-              </NavLink>
+              {heroLink}
             </nav>
           )}
           <div className="ml-auto flex items-center gap-1">
@@ -54,9 +65,7 @@ export function AppLayout() {
             <NavLink to="/" end className={navClass}>
               Мой герой
             </NavLink>
-            <NavLink to="/hero" className={navClass}>
-              Конструктор
-            </NavLink>
+            {heroLink}
           </nav>
         )}
       </header>

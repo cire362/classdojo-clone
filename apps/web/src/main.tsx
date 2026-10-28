@@ -6,6 +6,7 @@ import '@fontsource-variable/onest';
 import '@fontsource-variable/unbounded';
 import './styles.css';
 import { AuthProvider, useAuth } from './auth';
+import { NewsProvider } from './news';
 import type { Role } from './api';
 import { AppLayout } from './components/Layout';
 import { Skeleton } from './components/ui';
@@ -55,6 +56,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <MotionConfig reducedMotion="user">
     <AuthProvider>
+      <NewsProvider>
       <ToastProvider>
         <BrowserRouter>
           <Routes>
@@ -78,6 +80,7 @@ createRoot(document.getElementById('root')!).render(
           </Routes>
         </BrowserRouter>
       </ToastProvider>
+      </NewsProvider>
     </AuthProvider>
     </MotionConfig>
   </StrictMode>,

@@ -29,16 +29,27 @@ export function HeroEditor({
   level,
   onSave,
   ownerLabel,
+  newIds,
 }: {
   initial: { name: string; parts: HeroParts };
   level: number;
   onSave: (name: string, parts: HeroParts) => Promise<void>;
   ownerLabel?: string;
+  /** Детали, открывшиеся с прошлого визита: помечаются «новое» */
+  newIds?: Set<string>;
 }) {
   const toast = useToast();
   const [parts, setParts] = useState<HeroParts>(initial.parts);
   const [name, setName] = useState(initial.name);
+  const slotHasNew = (s: HeroSlot) => !!newIds?.size && partsForLayer(HERO_SLOTS[s]).some((p) => newIds.has(p.id));
   const [slot, setSlot] = useState<HeroSlot>('pose');
+  const [autoSlot, setAutoSlot] = useState(false);
+  // Открываем первую вкладку, где есть новые детали
+  if (!autoSlot && newIds) {
+    setAutoSlot(true);
+    const first = SLOTS.find(slotHasNew);
+    if (first) setSlot(first);
+  }
   const [saving, setSaving] = useState(false);
   const access = useLoad(() => api<PartAccess[]>('GET', '/hero-parts'), []);
   const accessById = useMemo(() => new Map(access.data?.map((p) => [p.id, p])), [access.data]);
@@ -118,6 +129,7 @@ export function HeroEditor({
           {SLOTS.map((s) => (
             <button key={s} className={`tab ${slot === s ? 'active' : 'bg-surface-2'}`} onClick={() => setSlot(s)} aria-pressed={slot === s}>
               {HERO_SLOT_LABELS[s]}
+              {slotHasNew(s) && <span className="size-2 rounded-full bg-accent" aria-label="есть новые детали" />}
             </button>
           ))}
         </nav>
@@ -132,6 +144,7 @@ export function HeroEditor({
           {options.map((p) => {
             const lock = lockLevel(p);
             const active = parts[slot] === p.id;
+            const isNew = !!newIds?.has(p.id);
             return (
               <button
                 key={p.id}
@@ -150,6 +163,11 @@ export function HeroEditor({
                   </span>
                 )}
                 <span className={`text-xs font-medium leading-tight ${lock ? 'text-ink-soft' : ''}`}>{p.name}</span>
+                {isNew && (
+                  <span className="absolute left-1.5 top-1.5 rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-bold text-on-accent">
+                    новое
+                  </span>
+                )}
                 {lock !== null && (
                   <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-full bg-ink px-1.5 py-0.5 text-[11px] font-bold text-bg">
                     <LockSimpleIcon size={11} weight="bold" />

@@ -1,10 +1,22 @@
+import { useEffect, useState } from 'react';
 import { api, type Hero, type Profile } from '../../api';
 import { HeroEditor } from '../../components/HeroEditor';
 import { ErrorBox, Skeleton } from '../../components/ui';
 import { useLoad } from '../../hooks';
+import { useNews } from '../../news';
 
 export function MyHeroPage() {
   const { data, setData, error, reload } = useLoad(() => api<Profile>('GET', '/student/profile'), []);
+  const { news, markSeen } = useNews();
+  // Запоминаем новые детали на время визита: метки «новое» видны, пока ученик в конструкторе
+  const [newIds, setNewIds] = useState<Set<string> | null>(null);
+
+  useEffect(() => {
+    if (!news || newIds) return;
+    setNewIds(new Set(news.newPartIds));
+    if (news.newPartIds.length) void markSeen('parts');
+  }, [news, newIds, markSeen]);
+
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <Skeleton className="h-[520px]" />;
   return (
@@ -19,6 +31,7 @@ export function MyHeroPage() {
         key={data.student.id}
         initial={data.hero}
         level={data.level.level}
+        newIds={newIds ?? undefined}
         onSave={async (name, parts) => {
           const hero = await api<Hero>('PUT', '/student/hero', { name, parts });
           setData({ ...data, hero });

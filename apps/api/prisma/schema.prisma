@@ -75,13 +75,17 @@ model Group {
 }
 
 model Student {
-  id        String   @id @default(cuid())
-  accountId String   @unique
-  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  name      String
-  groupId   String
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  id              String   @id @default(cuid())
+  accountId       String   @unique
+  account         Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  name            String
+  groupId         String
+  group           Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  /// До какого уровня ученик уже видел поздравление
+  celebratedLevel Int      @default(1)
+  /// До какого уровня ученик уже видел новые детали в конструкторе
+  partsSeenLevel  Int      @default(1)
 
   hero        Hero?
   pointEvents PointEvent[]

@@ -21,6 +21,8 @@ import { useGroup } from './GroupLayout';
 interface Burst {
   key: number;
   value: number;
+  /** Если ученик перешёл на новый уровень — его номер */
+  level?: number;
 }
 
 export function LessonPage() {
@@ -57,13 +59,22 @@ export function LessonPage() {
         `/teacher/groups/${data.group.id}/points`,
         { studentIds: ids, reasonId: reason.id },
       );
+      const before = new Map(students.map((s) => [s.id, s.level]));
       applySummaries(res.summaries);
       setSelected(new Set());
       setSelectMode(false);
+      const leveled = ids.filter((id) => (res.summaries[id]?.level ?? 0) > (before.get(id) ?? 0));
       if (reason.value > 0) {
         const next: Record<string, Burst> = {};
-        for (const id of ids) next[id] = { key: burstKey.current++, value: reason.value };
+        for (const id of ids) {
+          const up = leveled.includes(id);
+          next[id] = { key: burstKey.current++, value: reason.value, level: up ? res.summaries[id].level : undefined };
+        }
         setBursts((b) => ({ ...b, ...next }));
+      }
+      if (leveled.length) {
+        const names = leveled.map((id) => students.find((s) => s.id === id)?.name.split(' ')[0]).join(', ');
+        toast({ text: `Новый уровень: ${names}!`, tone: 'ok' });
       }
       // На общем экране минусы не показываем: для списаний — нейтральное «Записано»
       const undo = {
@@ -308,6 +319,26 @@ const StudentCard = memo(function StudentCard({
           <span className="chip absolute bottom-2 left-2 bg-surface text-xs text-ink-soft">нет на уроке</span>
         )}
         <AnimatePresence>
+          {burst?.level && (
+            <motion.span
+              key={`lvl-${burst.key}`}
+              className="pointer-events-none absolute inset-0 rounded-xl ring-4 ring-accent"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 1, 0] }}
+              transition={{ duration: 2.4, times: [0, 0.1, 0.8, 1] }}
+            />
+          )}
+          {burst?.level && (
+            <motion.span
+              key={`lvl-text-${burst.key}`}
+              className="pointer-events-none absolute inset-x-0 bottom-3 mx-auto w-fit rounded-full bg-ink px-3 py-1 font-display text-sm text-bg shadow-[var(--shadow-pop)]"
+              initial={{ opacity: 0, y: 12, scale: 0.8 }}
+              animate={{ opacity: [0, 1, 1, 0], y: 0, scale: 1 }}
+              transition={{ duration: 2.4, times: [0, 0.12, 0.85, 1], ease: [0.16, 1, 0.3, 1] }}
+            >
+              Уровень {burst.level}!
+            </motion.span>
+          )}
           {burst && (
             <motion.span
               key={burst.key}

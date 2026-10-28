@@ -132,3 +132,10 @@ export interface Stats {
     studentsTotal: number;
   }[];
 }
+
+export interface StudentNews {
+  level: number;
+  title: string;
+  levelUp: { from: number; to: number } | null;
+  newPartIds: string[];
+}

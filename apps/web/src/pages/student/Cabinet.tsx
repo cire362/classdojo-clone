@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom';
-import { PaintBrushIcon } from '@phosphor-icons/react';
+import { PaintBrushIcon, SparkleIcon } from '@phosphor-icons/react';
 import { api, type Profile } from '../../api';
+import { LevelUpOverlay } from '../../components/LevelUp';
+import { PartPreview } from '../../components/PartPreview';
 import { ProfileView } from '../../components/ProfileView';
 import { ErrorBox, Skeleton } from '../../components/ui';
-import { useLoad } from '../../hooks';
+import { pluralize, useLoad } from '../../hooks';
+import { useNews } from '../../news';
 
 export function ProfileSkeleton() {
   return (
@@ -24,17 +27,54 @@ export function ProfileSkeleton() {
 
 export function CabinetPage() {
   const { data, error, reload } = useLoad(() => api<Profile>('GET', '/student/profile'), []);
+  const { news, markSeen } = useNews();
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <ProfileSkeleton />;
+
+  const newIds = news?.newPartIds ?? [];
   return (
-    <ProfileView
-      profile={data}
-      isOwn
-      actions={
-        <Link to="/hero" className="btn btn-primary">
-          <PaintBrushIcon size={20} weight="bold" /> Собрать героя
+    <div className="space-y-6">
+      {newIds.length > 0 && !news?.levelUp && (
+        <Link
+          to="/hero"
+          className="card flex flex-wrap items-center gap-4 border-accent/60 bg-accent/15 p-4 transition hover:shadow-[var(--shadow-pop)] sm:flex-nowrap"
+        >
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent">
+            <SparkleIcon size={26} weight="fill" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold">
+              {pluralize(newIds.length, 'Открылась', 'Открылись', 'Открылось')} {newIds.length}{' '}
+              {pluralize(newIds.length, 'новая деталь', 'новые детали', 'новых деталей')}
+            </span>
+            <span className="block text-sm text-ink-soft">Загляни в конструктор и примерь их на своего героя.</span>
+          </span>
+          <span className="hidden gap-2 md:flex" aria-hidden>
+            {newIds.slice(0, 4).map((id) => (
+              <PartPreview key={id} partId={id} base={data.hero.parts} className="w-16 [&_figcaption]:hidden" />
+            ))}
+          </span>
+          <span className="btn btn-primary w-full sm:w-auto">В конструктор</span>
         </Link>
-      }
-    />
+      )}
+
+      <ProfileView
+        profile={data}
+        isOwn
+        actions={
+          <Link to="/hero" className="btn btn-primary">
+            <PaintBrushIcon size={20} weight="bold" /> Собрать героя
+          </Link>
+        }
+      />
+
+      <LevelUpOverlay
+        open={!!news?.levelUp}
+        level={news?.levelUp?.to ?? 1}
+        hero={data.hero.parts}
+        newPartIds={newIds}
+        onClose={() => void markSeen('level')}
+      />
+    </div>
   );
 }
