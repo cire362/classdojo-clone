@@ -4,11 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#1b1f4b" />
+    <!-- heroes:early-script -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Герои класса</title>
+    <style>
+      /* Каркас страницы, пока грузится приложение: экран не пустой даже на медленном интернете */
+      body { margin: 0; background: #f3f4f8; }
+      .boot-bar { height: 64px; border-bottom: 1px solid #d8dbe8; box-sizing: border-box; display: flex; align-items: center; gap: 10px; padding: 0 16px; max-width: 1280px; margin: 0 auto; font: 600 17px system-ui, sans-serif; color: #161a33; }
+      .boot-bar svg { width: 36px; height: 36px; }
+      .boot-body { max-width: 1280px; margin: 0 auto; padding: 32px 16px; }
+      .boot-line, .boot-block { border-radius: 16px; background: #eaecf4; }
+      .boot-line { height: 40px; width: 240px; max-width: 70%; margin-bottom: 16px; }
+      .boot-block { height: 192px; }
+      @media (prefers-color-scheme: dark) {
+        body { background: #0e1122; }
+        .boot-bar { border-color: #2e3454; color: #eef0fa; }
+        .boot-line, .boot-block { background: #222842; }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .boot-line, .boot-block { animation: boot 1.6s ease-in-out infinite; }
+      }
+      @keyframes boot { 50% { opacity: 0.5; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div aria-hidden="true"><div class="boot-bar"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#ffc233"/><path d="M18 8.5l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L18 22.3l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" fill="#161a33"/></svg>Герои класса</div><div class="boot-body"><div class="boot-line"></div><div class="boot-block"></div></div></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,28 +1,54 @@
-import { lazy, type ComponentType } from 'react';
+import { createElement, lazy, type ComponentType } from 'react';
+import { pagesFor, type PageKey } from './routes';
 
 /**
  * Страницы загружаются по требованию: ученик не скачивает экраны преподавателя и наоборот.
  * После входа страницы своей роли подгружаются в фоне (prefetchPages), чтобы вкладки
  * открывались мгновенно и даже при пропавшем интернете.
  */
-const loaders = {
-  login: () => import('./pages/Login'),
-  groups: () => import('./pages/teacher/Groups'),
-  groupLayout: () => import('./pages/teacher/GroupLayout'),
-  lesson: () => import('./pages/teacher/Lesson'),
-  students: () => import('./pages/teacher/Students'),
-  print: () => import('./pages/teacher/Print'),
-  reasons: () => import('./pages/teacher/Reasons'),
-  attendance: () => import('./pages/teacher/Attendance'),
-  stats: () => import('./pages/teacher/Stats'),
-  studentView: () => import('./pages/teacher/StudentView'),
-  settings: () => import('./pages/teacher/Settings'),
-  cabinet: () => import('./pages/student/Cabinet'),
-  myHero: () => import('./pages/student/MyHero'),
+// Загруженные модули страниц: как только модуль пришёл (по требованию, ранней или фоновой
+// подгрузкой), страница дальше рисуется без Suspense
+const resolved = new Map<() => Promise<unknown>, unknown>();
+
+function remember<M>(load: () => Promise<M>): () => Promise<M> {
+  const wrapped = () =>
+    load().then((m) => {
+      resolved.set(wrapped, m);
+      return m;
+    });
+  return wrapped;
+}
+
+const loaders: Record<PageKey, () => Promise<any>> = {
+  login: remember(() => import('./pages/Login')),
+  groups: remember(() => import('./pages/teacher/Groups')),
+  groupLayout: remember(() => import('./pages/teacher/GroupLayout')),
+  lesson: remember(() => import('./pages/teacher/Lesson')),
+  students: remember(() => import('./pages/teacher/Students')),
+  print: remember(() => import('./pages/teacher/Print')),
+  reasons: remember(() => import('./pages/teacher/Reasons')),
+  attendance: remember(() => import('./pages/teacher/Attendance')),
+  stats: remember(() => import('./pages/teacher/Stats')),
+  studentView: remember(() => import('./pages/teacher/StudentView')),
+  settings: remember(() => import('./pages/teacher/Settings')),
+  cabinet: remember(() => import('./pages/student/Cabinet')),
+  myHero: remember(() => import('./pages/student/MyHero')),
 };
 
+/**
+ * Ленивая страница без лишней заглушки: если модуль уже загружен, страница рисуется сразу,
+ * иначе — через React.lazy и Suspense. Это важно: React 19 после показа заглушки
+ * придерживает готовое содержимое ~300 мс, а вложенные Suspense складывают задержки.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function page<M, K extends keyof M>(load: () => Promise<M>, name: K) {
-  return lazy(async () => ({ default: (await load())[name] as ComponentType }));
+  const Lazy = lazy(async () => ({ default: (await load())[name] as ComponentType }));
+  function Page(props: Record<string, never>) {
+    const m = resolved.get(load) as M | undefined;
+    return m ? createElement(m[name] as ComponentType, props) : createElement(Lazy, props);
+  }
+  Page.displayName = `Page(${String(name)})`;
+  return Page;
 }
 
 export const LoginPage = page(loaders.login, 'LoginPage');
@@ -62,20 +88,6 @@ export function prefetchPages(role: keyof typeof byRole) {
 }
 
 /** Код открытой страницы начинаем грузить сразу при старте, не дожидаясь проверки входа */
-export function preloadRoute(pathname: string) {
-  const routes: [RegExp, (() => Promise<unknown>)[]][] = [
-    [/^\/login$/, [loaders.login]],
-    [/^\/$/, [loaders.groups, loaders.cabinet]],
-    [/^\/hero$/, [loaders.myHero]],
-    [/^\/settings$/, [loaders.settings]],
-    [/^\/s\//, [loaders.studentView]],
-    [/^\/g\/[^/]+\/print$/, [loaders.print]],
-    [/^\/g\/[^/]+\/attendance$/, [loaders.groupLayout, loaders.attendance]],
-    [/^\/g\/[^/]+\/students$/, [loaders.groupLayout, loaders.students]],
-    [/^\/g\/[^/]+\/reasons$/, [loaders.groupLayout, loaders.reasons]],
-    [/^\/g\/[^/]+\/stats$/, [loaders.groupLayout, loaders.stats]],
-    [/^\/g\/[^/]+\/?$/, [loaders.groupLayout, loaders.lesson]],
-  ];
-  const match = routes.find(([re]) => re.test(pathname));
-  match?.[1].forEach((load) => load().catch(() => undefined));
+export function preloadRoute(pathname: string): Promise<unknown> {
+  return Promise.all(pagesFor(pathname).map((key) => loaders[key]().catch(() => undefined)));
 }

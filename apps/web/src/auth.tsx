@@ -12,13 +12,30 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+// Роль запоминается в браузере только для ускорения: по ней src/early.ts заранее
+// запрашивает данные главной страницы
+const ROLE_KEY = 'heroes:role';
+
+function rememberRole(role: string | null) {
+  try {
+    if (role) localStorage.setItem(ROLE_KEY, role);
+    else localStorage.removeItem(ROLE_KEY);
+  } catch {
+    /* хранилище недоступно — просто без ускорения */
+  }
+}
+
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api<{ user: Me | null }>('GET', '/auth/me')
-      .then((r) => setUser(r.user))
+      .then((r) => {
+        setUser(r.user);
+        rememberRole(r.user?.role ?? null);
+      })
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
     const onUnauthorized = () => setUser(null);
@@ -29,12 +46,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (login: string, password: string) => {
     const r = await api<{ user: Me }>('POST', '/auth/login', { login, password });
     setUser(r.user);
+    rememberRole(r.user.role);
     return r.user;
   }, []);
 
   const logout = useCallback(async () => {
     await api('POST', '/auth/logout').catch(() => undefined);
     setUser(null);
+    rememberRole(null);
   }, []);
 
   const refresh = useCallback(async () => {

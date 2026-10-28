@@ -60,7 +60,9 @@ function Home() {
 const teacher = (el: ReactNode) => <RequireRole role="TEACHER">{el}</RequireRole>;
 const student = (el: ReactNode) => <RequireRole role="STUDENT">{el}</RequireRole>;
 
-preloadRoute(window.location.pathname);
+// Ждём код открытой страницы (он маленький и грузится параллельно с данными), но не дольше 2 с:
+// так первая отрисовка сразу показывает страницу, без промежуточной заглушки
+await Promise.race([preloadRoute(window.location.pathname), new Promise((resolve) => setTimeout(resolve, 2000))]);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
