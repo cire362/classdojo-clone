@@ -1,4 +1,6 @@
-import { Link, NavLink, Outlet, useOutletContext, useParams } from 'react-router-dom';
+import { Suspense } from 'react';
+import { Link, NavLink, Outlet, useLocation, useOutletContext, useParams } from 'react-router-dom';
+import { ChunkErrorBoundary } from '../../components/ChunkErrorBoundary';
 import { ArchiveIcon, ArrowLeftIcon, CameraIcon, ChartBarIcon, ListChecksIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { api, type GroupDetails } from '../../api';
 import { CardGridSkeleton, ErrorBox, Skeleton } from '../../components/ui';
@@ -22,6 +24,7 @@ const TABS = [
 
 export function GroupLayout() {
   const { groupId } = useParams();
+  const location = useLocation();
   const { data, setData, error, loading, reload } = useLoad(
     () => api<GroupDetails>('GET', `/teacher/groups/${groupId}`),
     [groupId],
@@ -68,7 +71,17 @@ export function GroupLayout() {
           ))}
         </nav>
       </div>
-      {loading && !data ? <CardGridSkeleton /> : data && <Outlet context={{ data, setData, reload } satisfies GroupCtx} />}
+      {loading && !data ? (
+        <CardGridSkeleton />
+      ) : (
+        data && (
+          <ChunkErrorBoundary resetKey={location.pathname}>
+            <Suspense fallback={<CardGridSkeleton />}>
+              <Outlet context={{ data, setData, reload } satisfies GroupCtx} />
+            </Suspense>
+          </ChunkErrorBoundary>
+        )
+      )}
     </div>
   );
 }

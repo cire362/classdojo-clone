@@ -1,7 +1,10 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Suspense } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { ChunkErrorBoundary } from './ChunkErrorBoundary';
 import { GearSixIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
 import { useAuth } from '../auth';
 import { useNews } from '../news';
+import { Skeleton } from './ui';
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
@@ -17,6 +20,7 @@ export function Logo({ compact = false }: { compact?: boolean }) {
 export function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { news } = useNews();
   const navClass = ({ isActive }: { isActive: boolean }) => `tab ${isActive ? 'active' : ''}`;
   const newCount = news?.newPartIds.length ?? 0;
@@ -86,7 +90,18 @@ export function AppLayout() {
         )}
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
-        <Outlet />
+        <ChunkErrorBoundary resetKey={location.pathname}>
+        <Suspense
+          fallback={
+            <div className="space-y-4" role="status" aria-label="Загрузка">
+              <Skeleton className="h-10 w-64" />
+              <Skeleton className="h-48" />
+            </div>
+          }
+        >
+          <Outlet />
+        </Suspense>
+        </ChunkErrorBoundary>
       </main>
     </div>
   );

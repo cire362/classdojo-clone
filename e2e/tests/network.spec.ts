@@ -19,11 +19,38 @@ test.describe('отметка по фото при плохом интернет
 
       // Без интернета ждём связь и отправляем сами
       await page.goto(`/g/${g.id}/attendance`);
+      await expect(page.getByText('День урока')).toBeVisible();
       await context.setOffline(true);
       await page.locator('input[type=file]').nth(1).setInputFiles(`${IMAGES}crew_4_people.jpg`);
       await expect(page.getByText(/Нет интернета/)).toBeVisible();
       await context.setOffline(false);
       await expect(page.getByText('На фото 4 человека')).toBeVisible({ timeout: 30_000 });
+    } finally {
+      await context.setOffline(false);
+      await g.remove();
+    }
+  });
+
+  test('после входа вкладки открываются и без интернета', async ({ page, context, request }) => {
+    const g = await tempGroup(request, uniq('E2E офлайн'), ['Офлайн Первый']);
+    try {
+      await loginUi(page, TEACHER.login, TEACHER.password);
+      await expect(page.getByRole('heading', { name: /Здравствуйте/ })).toBeVisible();
+      await page.goto(`/g/${g.id}`);
+      await expect(page.getByRole('button', { name: /^Офлайн Первый/ })).toBeVisible();
+      // Даём фоновой подгрузке страниц закончиться
+      await page.waitForLoadState('networkidle');
+      await context.setOffline(true);
+      for (const [tab, marker] of [
+        ['Причины', 'Причины начисления'],
+        ['Ученики', 'Добавить учеников'],
+        ['Статистика', 'Скачать Excel'],
+        ['Отметка', 'День урока'],
+      ] as const) {
+        await page.getByRole('link', { name: tab }).click();
+        await expect(page.getByText(marker).first(), tab).toBeVisible();
+        await expect(page.getByText('Не удалось загрузить страницу')).toHaveCount(0);
+      }
     } finally {
       await context.setOffline(false);
       await g.remove();
