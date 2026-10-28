@@ -280,6 +280,23 @@ export const teacherRoutes = new Hono<AppEnv>()
     });
     return c.json({ id: r.id, name: r.name, emoji: r.emoji, value: r.value }, 201);
   })
+  // Новый порядок причин: полный список активных причин группы в нужном порядке
+  .put('/groups/:id/reasons/order', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const { reasonIds } = parse(z.object({ reasonIds: z.array(id).min(1).max(200) }), await c.req.json().catch(() => null));
+    const active = await prisma.behaviorReason.findMany({
+      where: { groupId: group.id, kind: 'MANUAL', archived: false },
+      select: { id: true },
+    });
+    const activeIds = new Set(active.map((r) => r.id));
+    if (new Set(reasonIds).size !== reasonIds.length || reasonIds.length !== activeIds.size || reasonIds.some((r) => !activeIds.has(r))) {
+      throw new HttpError(409, 'Список причин изменился, обновите страницу');
+    }
+    await prisma.$transaction(
+      reasonIds.map((rid, i) => prisma.behaviorReason.update({ where: { id: rid }, data: { sortOrder: i } })),
+    );
+    return c.json({ ok: true });
+  })
   .patch('/reasons/:id', async (c) => {
     const reason = await ownedReason(c.get('user').teacherId!, c.req.param('id'));
     const body = parse(ReasonBody, await c.req.json().catch(() => null));
