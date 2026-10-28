@@ -20,13 +20,13 @@ export const authRoutes = new Hono<AppEnv>()
     const { login, password } = parse(LoginBody, await c.req.json().catch(() => null));
     const ip = c.req.header('x-real-ip') ?? c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
     const rateKey = `${ip}|${login}`;
-    checkLoginRate(rateKey);
+    await checkLoginRate(rateKey);
 
     const account = await prisma.account.findUnique({ where: { login } });
     const ok = await verifyPassword(account?.passwordHash ?? (await getDummyHash()), password);
     if (!account || !ok) throw new HttpError(401, 'Неверный логин или пароль');
 
-    resetLoginRate(rateKey);
+    await resetLoginRate(rateKey);
     await createSession(c, account.id);
     const user = await prisma.account.findUniqueOrThrow({
       where: { id: account.id },

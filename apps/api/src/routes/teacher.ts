@@ -77,13 +77,13 @@ export const teacherRoutes = new Hono<AppEnv>()
     const { currentPassword, newPassword } = parse(PasswordBody, await c.req.json().catch(() => null));
     // Та же защита от перебора, что и при входе
     const rateKey = `password|${user.accountId}`;
-    checkLoginRate(rateKey);
+    await checkLoginRate(rateKey);
     const account = await prisma.account.findUniqueOrThrow({ where: { id: user.accountId } });
     if (!(await verifyPassword(account.passwordHash, currentPassword))) {
       throw new HttpError(400, 'Текущий пароль указан неверно');
     }
     if (currentPassword === newPassword) throw new HttpError(400, 'Новый пароль совпадает с текущим');
-    resetLoginRate(rateKey);
+    await resetLoginRate(rateKey);
     await prisma.$transaction([
       prisma.account.update({ where: { id: account.id }, data: { passwordHash: await hashPassword(newPassword) } }),
       // Выходим на всех остальных устройствах, текущая сессия остаётся

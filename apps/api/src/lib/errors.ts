@@ -4,6 +4,7 @@ export class HttpError extends Error {
   constructor(
     public status: 400 | 401 | 403 | 404 | 409 | 413 | 415 | 422 | 429 | 502 | 503,
     message: string,
+    public headers: Record<string, string> = {},
   ) {
     super(message);
   }

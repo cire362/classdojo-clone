@@ -189,3 +189,13 @@ model Attendance {
   @@unique([sessionId, studentId])
   @@index([studentId])
 }
+
+/// Счётчик неудачных попыток входа (защита от перебора паролей). Общий для всех копий API.
+model LoginAttempt {
+  /// sha256 от «IP|логин» — сами IP-адреса и логины здесь не хранятся
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+}

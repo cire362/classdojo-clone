@@ -45,7 +45,7 @@ export function createApp() {
   app.notFound((c) => c.json({ error: 'Не найдено' }, 404));
 
   app.onError((err, c) => {
-    if (err instanceof HttpError) return c.json({ error: err.message }, err.status);
+    if (err instanceof HttpError) return c.json({ error: err.message }, err.status, err.headers);
     if (err instanceof HTTPException) return c.json({ error: err.message || 'Ошибка запроса' }, err.status);
     console.error(err);
     return c.json({ error: 'Внутренняя ошибка сервера' }, 500);

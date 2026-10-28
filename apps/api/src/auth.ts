@@ -80,22 +80,37 @@ export function requireRole(role: Role): MiddlewareHandler<AppEnv> {
   };
 }
 
-/** Простая защита от перебора паролей: N попыток за 15 минут на пару IP+логин */
-const attempts = new Map<string, { count: number; resetAt: number }>();
+/**
+ * Защита от перебора паролей: не больше N попыток за 15 минут на пару «IP + логин».
+ * Счётчик хранится в PostgreSQL, поэтому работает и при нескольких копиях API, и после перезапуска.
+ * Атомарный upsert: одновременные запросы не обходят лимит.
+ */
+const WINDOW_MINUTES = 15;
 
-export function checkLoginRate(key: string): void {
-  const now = Date.now();
-  const rec = attempts.get(key);
-  if (!rec || rec.resetAt < now) {
-    attempts.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 });
-    return;
-  }
-  rec.count++;
-  if (rec.count > env.loginRateLimit) {
-    throw new HttpError(429, 'Слишком много попыток входа. Попробуйте через 15 минут');
+export async function checkLoginRate(key: string, limit = env.loginRateLimit): Promise<void> {
+  const id = sha256(key);
+  // Prisma хранит время в UTC без часового пояса, поэтому и сравниваем с UTC
+  const rows = await prisma.$queryRaw<{ count: number; resetAt: Date }[]>`
+    INSERT INTO "LoginAttempt" ("key", "count", "resetAt")
+    VALUES (${id}, 1, (NOW() AT TIME ZONE 'UTC') + make_interval(mins => ${WINDOW_MINUTES}::int))
+    ON CONFLICT ("key") DO UPDATE SET
+      "count" = CASE WHEN "LoginAttempt"."resetAt" < (NOW() AT TIME ZONE 'UTC') THEN 1 ELSE "LoginAttempt"."count" + 1 END,
+      "resetAt" = CASE WHEN "LoginAttempt"."resetAt" < (NOW() AT TIME ZONE 'UTC') THEN (NOW() AT TIME ZONE 'UTC') + make_interval(mins => ${WINDOW_MINUTES}::int) ELSE "LoginAttempt"."resetAt" END
+    RETURNING "count", "resetAt"`;
+  // Изредка подчищаем давно истёкшие записи
+  if (Math.random() < 0.02) void cleanupLoginAttempts();
+  const { count, resetAt } = rows[0];
+  if (count > limit) {
+    const seconds = Math.max(1, Math.ceil((resetAt.getTime() - Date.now()) / 1000));
+    const minutes = Math.ceil(seconds / 60);
+    throw new HttpError(429, `Слишком много попыток входа. Попробуйте через ${minutes} мин.`, { 'Retry-After': String(seconds) });
   }
 }
 
-export function resetLoginRate(key: string): void {
-  attempts.delete(key);
+export async function resetLoginRate(key: string): Promise<void> {
+  await prisma.loginAttempt.deleteMany({ where: { key: sha256(key) } });
+}
+
+export async function cleanupLoginAttempts(): Promise<void> {
+  await prisma.loginAttempt.deleteMany({ where: { resetAt: { lt: new Date() } } }).catch(() => undefined);
 }
