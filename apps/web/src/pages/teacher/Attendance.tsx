@@ -163,6 +163,14 @@ export function AttendancePage() {
     </>
   );
 
+  if (data.group.archivedAt) {
+    return (
+      <p className="max-w-xl rounded-2xl bg-surface-2 px-5 py-4 text-ink-soft">
+        Группа в архиве, отмечать посещаемость нельзя. Прошлые уроки видны в статистике.
+      </p>
+    );
+  }
+
   if (phase === 'saved') {
     return (
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl space-y-4">

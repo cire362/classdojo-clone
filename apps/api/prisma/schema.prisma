@@ -59,13 +59,15 @@ model Teacher {
 }
 
 model Group {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   name            String
   teacherId       String
-  teacher         Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacher         Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   /// Вычитать преподавателя из числа людей на фото
-  subtractTeacher Boolean  @default(true)
-  createdAt       DateTime @default(now())
+  subtractTeacher Boolean   @default(true)
+  /// Дата переноса в архив; null — группа активна
+  archivedAt      DateTime?
+  createdAt       DateTime  @default(now())
 
   students           Student[]
   reasons            BehaviorReason[]

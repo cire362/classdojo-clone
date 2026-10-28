@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRightIcon, PlusIcon, UsersThreeIcon } from '@phosphor-icons/react';
+import { ArchiveIcon, ArrowCounterClockwiseIcon, ArrowRightIcon, PlusIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { api, type GroupListItem } from '../../api';
 import { useAuth } from '../../auth';
 import { HeroHead } from '../../components/HeroAvatar';
@@ -14,6 +14,9 @@ export function GroupsPage() {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [showArchive, setShowArchive] = useState(false);
+  const active = data?.filter((g) => !g.archivedAt) ?? [];
+  const archived = data?.filter((g) => g.archivedAt) ?? [];
 
   async function create(e: FormEvent) {
     e.preventDefault();
@@ -41,7 +44,7 @@ export function GroupsPage() {
       <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="grid content-start gap-3 sm:grid-cols-2">
           {loading && !data && [0, 1].map((i) => <Skeleton key={i} className="h-36" />)}
-          {data?.map((g) => (
+          {active.map((g) => (
             <Link
               key={g.id}
               to={`/g/${g.id}`}
@@ -68,8 +71,10 @@ export function GroupsPage() {
               </span>
             </Link>
           ))}
-          {data && data.length === 0 && (
-            <p className="text-ink-soft sm:col-span-2">Групп пока нет. Создайте первую, затем добавьте учеников.</p>
+          {data && active.length === 0 && (
+            <p className="text-ink-soft sm:col-span-2">
+              {archived.length ? 'Действующих групп нет.' : 'Групп пока нет.'} Создайте группу, затем добавьте учеников.
+            </p>
           )}
         </div>
 
@@ -94,6 +99,38 @@ export function GroupsPage() {
           </button>
         </form>
       </div>
+
+      {archived.length > 0 && (
+        <section className="space-y-3">
+          <button className="btn btn-ghost -ml-3" onClick={() => setShowArchive((v) => !v)} aria-expanded={showArchive}>
+            <ArchiveIcon size={20} /> Архив ({archived.length})
+          </button>
+          {showArchive && (
+            <ul className="card divide-y divide-line overflow-hidden">
+              {archived.map((g) => (
+                <li key={g.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                  <Link to={`/g/${g.id}/stats`} className="min-w-0 flex-1">
+                    <span className="block font-display">{g.name}</span>
+                    <span className="block text-sm text-ink-soft">
+                      {g.studentsCount} {pluralize(g.studentsCount, 'ученик', 'ученика', 'учеников')}, в архиве с{' '}
+                      {new Date(g.archivedAt!).toLocaleDateString('ru-RU')}
+                    </span>
+                  </Link>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={async () => {
+                      await api('POST', `/teacher/groups/${g.id}/restore`);
+                      await reload();
+                    }}
+                  >
+                    <ArrowCounterClockwiseIcon size={18} /> Вернуть
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </div>
   );
 }

@@ -48,6 +48,7 @@ export interface GroupListItem {
   name: string;
   subtractTeacher: boolean;
   studentsCount: number;
+  archivedAt: string | null;
   previewHeroes: HeroParts[];
 }
 
@@ -72,7 +73,7 @@ export interface LessonStudent extends CardSummary {
 }
 
 export interface GroupDetails {
-  group: { id: string; name: string; subtractTeacher: boolean };
+  group: { id: string; name: string; subtractTeacher: boolean; archivedAt: string | null };
   students: LessonStudent[];
   reasons: Reason[];
   todayAttendance: { peopleOnPhoto: number | null; presentStudentIds: string[] } | null;
@@ -102,7 +103,7 @@ export interface HistoryEvent {
 }
 
 export interface Profile {
-  student: { id: string; name: string; login: string; group: { id: string; name: string } };
+  student: { id: string; name: string; login: string; group: { id: string; name: string; archivedAt: string | null } };
   hero: Hero;
   level: LevelInfo;
   points: { today: PointsSum; week: PointsSum; total: PointsSum };

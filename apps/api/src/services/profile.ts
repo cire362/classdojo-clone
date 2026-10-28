@@ -17,7 +17,7 @@ async function sums(studentId: string, since?: Date) {
 export async function studentProfile(studentId: string) {
   const student = await prisma.student.findUniqueOrThrow({
     where: { id: studentId },
-    include: { account: { select: { login: true } }, group: { select: { id: true, name: true } }, hero: true },
+    include: { account: { select: { login: true } }, group: { select: { id: true, name: true, archivedAt: true } }, hero: true },
   });
   const [today, week, total, history, attendance] = await Promise.all([
     sums(studentId, startOfDay()),

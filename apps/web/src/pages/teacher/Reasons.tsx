@@ -14,6 +14,7 @@ export function ReasonsPage() {
   const { data, reload } = useGroup();
   const toast = useToast();
   const [editing, setEditing] = useState<Reason | 'new' | null>(null);
+  const readOnly = !!data.group.archivedAt;
   // Локальный порядок: меняется сразу при перетаскивании, на сервер уходит после отпускания
   const [plus, setPlus] = useState<Reason[]>([]);
   const [minus, setMinus] = useState<Reason[]>([]);
@@ -64,6 +65,7 @@ export function ReasonsPage() {
         <ReasonRow
           key={r.id}
           reason={r}
+          readOnly={readOnly}
           first={i === 0}
           last={i === items.length - 1}
           onUp={() => move(kind, i, -1)}
@@ -80,14 +82,17 @@ export function ReasonsPage() {
     <div className="max-w-3xl space-y-6">
       <PageTitle
         actions={
-          <button className="btn btn-primary btn-sm" onClick={() => setEditing('new')}>
-            <PlusIcon size={18} weight="bold" /> Новая причина
-          </button>
+          !readOnly && (
+            <button className="btn btn-primary btn-sm" onClick={() => setEditing('new')}>
+              <PlusIcon size={18} weight="bold" /> Новая причина
+            </button>
+          )
         }
       >
         Причины начисления
       </PageTitle>
       <p className="max-w-[60ch] text-ink-soft">
+        {readOnly && 'Группа в архиве, причины только для просмотра. '}
         Перетащите причину за ручку слева, чтобы поменять порядок: так же они будут стоять на экране урока. «Посещение» (+1)
         начисляется автоматически при отметке присутствующих и здесь не показывается.
       </p>
@@ -116,6 +121,7 @@ export function ReasonsPage() {
 
 function ReasonRow({
   reason: r,
+  readOnly,
   first,
   last,
   onUp,
@@ -125,6 +131,7 @@ function ReasonRow({
   onDelete,
 }: {
   reason: Reason;
+  readOnly: boolean;
   first: boolean;
   last: boolean;
   onUp: () => void;
@@ -144,14 +151,14 @@ function ReasonRow({
       className="relative flex items-center gap-2 bg-surface px-2 py-2.5 sm:gap-3 sm:px-3"
       whileDrag={{ scale: 1.02, boxShadow: 'var(--shadow-pop)', zIndex: 1 }}
     >
-      <button
+      {!readOnly && <button
         type="button"
         className="flex size-10 shrink-0 cursor-grab touch-none items-center justify-center rounded-xl text-ink-soft hover:bg-surface-2 active:cursor-grabbing"
         aria-label={`Перетащить «${r.name}»`}
         onPointerDown={(e) => controls.start(e)}
       >
         <DotsSixVerticalIcon size={22} weight="bold" />
-      </button>
+      </button>}
       <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-2xl" aria-hidden>
         {r.emoji}
       </span>
@@ -159,6 +166,7 @@ function ReasonRow({
       <span className={`chip ${r.value > 0 ? 'bg-plus-bg text-plus' : 'bg-minus-bg text-minus'}`}>
         {r.value > 0 ? `+${r.value}` : `−${Math.abs(r.value)}`}
       </span>
+      {!readOnly && <>
       <span className="hidden sm:flex">
         <button className="icon-btn size-9 disabled:opacity-30" aria-label={`Выше: «${r.name}»`} disabled={first} onClick={onUp}>
           <CaretUpIcon size={18} />
@@ -173,6 +181,7 @@ function ReasonRow({
       <button className="icon-btn hover:text-minus" aria-label={`Удалить «${r.name}»`} onClick={onDelete}>
         <TrashIcon size={20} />
       </button>
+      </>}
     </Reorder.Item>
   );
 }

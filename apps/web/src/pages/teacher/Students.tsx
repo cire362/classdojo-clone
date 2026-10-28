@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowsLeftRightIcon, FileArrowUpIcon, KeyIcon, PencilSimpleIcon, PrinterIcon, TrashIcon, UserPlusIcon } from '@phosphor-icons/react';
+import { ArchiveIcon, ArrowsLeftRightIcon, FileArrowUpIcon, KeyIcon, PencilSimpleIcon, PrinterIcon, TrashIcon, UserPlusIcon } from '@phosphor-icons/react';
 import { api, type Credentials, type LessonStudent } from '../../api';
 import { HeroHead } from '../../components/HeroAvatar';
 import { ImportStudentsModal, type ImportPreview } from '../../components/ImportStudentsModal';
@@ -120,6 +120,11 @@ export function StudentsPage() {
         </button>
       </section>
 
+      {data.group.archivedAt ? (
+        <p className="h-fit rounded-2xl bg-surface-2 p-5 text-sm text-ink-soft">
+          Группа в архиве, добавлять учеников нельзя. Перевести ученика в действующую группу можно кнопкой со стрелками.
+        </p>
+      ) : (
       <section className="h-fit rounded-2xl border border-dashed border-line p-5 lg:sticky lg:top-24">
         <h2 className="flex items-center gap-2 text-lg">
           <UserPlusIcon size={22} /> Добавить учеников
@@ -152,6 +157,7 @@ export function StudentsPage() {
           <p className="mt-2 text-sm text-ink-soft">Подойдёт выгрузка из электронного журнала с колонкой «ФИО» или «Фамилия» и «Имя».</p>
         </div>
       </section>
+      )}
 
       <Modal open={!!issued} title="Логины и пароли" onClose={() => setIssued(null)} size="lg">
         {issued && (
@@ -305,6 +311,24 @@ function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: () => v
             Переименовать
           </button>
         </form>
+        {!data.group.archivedAt && (
+          <div className="space-y-3 rounded-2xl border border-line p-4">
+            <h3 className="text-base">Архив</h3>
+            <p className="text-sm text-ink-soft">
+              Для групп, которые закончили занятия. Группа уйдёт из списка на главной, баллы и посещаемость заморозятся, а
+              статистика, профили и Excel останутся. Ученики по-прежнему смогут входить. Вернуть группу можно в любой момент.
+            </p>
+            <button
+              className="btn btn-secondary"
+              onClick={async () => {
+                await api('POST', `/teacher/groups/${data.group.id}/archive`);
+                navigate('/');
+              }}
+            >
+              <ArchiveIcon size={20} /> Перенести в архив
+            </button>
+          </div>
+        )}
         <div className="space-y-3 rounded-2xl border border-minus/30 p-4">
           <h3 className="text-base text-minus">Удаление группы</h3>
           <p className="text-sm text-ink-soft">

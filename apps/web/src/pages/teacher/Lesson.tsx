@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   CheckIcon,
@@ -37,6 +37,8 @@ export function LessonPage() {
   const burstKey = useRef(1);
 
   const students = data.students;
+  const archived = !!data.group.archivedAt;
+  const navigate = useNavigate();
   const present = data.todayAttendance ? new Set(data.todayAttendance.presentStudentIds) : null;
 
   const applySummaries = useCallback(
@@ -99,6 +101,11 @@ export function LessonPage() {
   }
 
   function onCardClick(s: LessonStudent) {
+    // В архивной группе карточка открывает профиль ученика
+    if (archived) {
+      navigate(`/s/${s.id}`);
+      return;
+    }
     if (selectMode) {
       setSelected((prev) => {
         const next = new Set(prev);
@@ -162,7 +169,7 @@ export function LessonPage() {
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2">
+      {!archived && <div className="flex flex-wrap items-center gap-2">
         {selectMode ? (
           <>
             <button className="btn btn-secondary" onClick={() => setSelected(new Set(students.map((s) => s.id)))}>
@@ -194,7 +201,7 @@ export function LessonPage() {
             </button>
           </>
         )}
-      </div>
+      </div>}
 
       {grid}
 

@@ -29,7 +29,7 @@ export function StudentViewPage() {
       <ProfileView
         profile={data}
         isOwn={false}
-        onDeleteEvent={setToDelete}
+        onDeleteEvent={data.student.group.archivedAt ? undefined : setToDelete}
         actions={
           <>
             <Link to={`/s/${data.student.id}/hero`} className="btn btn-primary">

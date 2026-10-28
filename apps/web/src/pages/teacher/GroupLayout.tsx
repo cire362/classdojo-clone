@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useOutletContext, useParams } from 'react-router-dom';
-import { ArrowLeftIcon, CameraIcon, ChartBarIcon, ListChecksIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
+import { ArchiveIcon, ArrowLeftIcon, CameraIcon, ChartBarIcon, ListChecksIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { api, type GroupDetails } from '../../api';
 import { CardGridSkeleton, ErrorBox, Skeleton } from '../../components/ui';
 import { useLoad } from '../../hooks';
@@ -38,6 +38,24 @@ export function GroupLayout() {
           </Link>
           {data ? <h1 className="truncate text-2xl sm:text-3xl">{data.group.name}</h1> : <Skeleton className="h-9 w-48" />}
         </div>
+        {data?.group.archivedAt && (
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface-2 px-4 py-3">
+            <ArchiveIcon size={22} className="shrink-0" />
+            <p className="min-w-0 flex-1 text-sm">
+              <b>Группа в архиве</b> с {new Date(data.group.archivedAt).toLocaleDateString('ru-RU')}. Статистика, профили и
+              Excel доступны, а начислять баллы и отмечать посещаемость нельзя.
+            </p>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={async () => {
+                await api('POST', `/teacher/groups/${data.group.id}/restore`);
+                await reload();
+              }}
+            >
+              Вернуть из архива
+            </button>
+          </div>
+        )}
         <nav
           aria-label="Разделы группы"
           className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0"

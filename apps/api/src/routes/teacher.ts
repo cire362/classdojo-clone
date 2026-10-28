@@ -8,7 +8,7 @@ import { env } from '../env.js';
 import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../lib/dates.js';
 import { hashPassword, verifyPassword } from '../lib/credentials.js';
 import { HttpError, notFound, parse } from '../lib/errors.js';
-import { teacherGroup, teacherStudent } from '../services/access.js';
+import { ARCHIVED_MESSAGE, teacherGroup, teacherStudent } from '../services/access.js';
 import { MAX_LESSONS_PER_DAY, attendanceForDate, deleteAttendance, saveAttendance } from '../services/attendance.js';
 import { countPeople } from '../services/detector.js';
 import { awardPoints, cardSummaries, deletePointEvents } from '../services/points.js';
@@ -107,6 +107,7 @@ export const teacherRoutes = new Hono<AppEnv>()
         id: g.id,
         name: g.name,
         subtractTeacher: g.subtractTeacher,
+        archivedAt: g.archivedAt,
         studentsCount: g._count.students,
         previewHeroes: g.students.map((s) => normalizeHero(s.hero?.parts)),
       })),
@@ -120,7 +121,7 @@ export const teacherRoutes = new Hono<AppEnv>()
       return g;
     });
     return c.json(
-      { id: group.id, name: group.name, subtractTeacher: group.subtractTeacher, studentsCount: 0, previewHeroes: [] },
+      { id: group.id, name: group.name, subtractTeacher: group.subtractTeacher, archivedAt: null, studentsCount: 0, previewHeroes: [] },
       201,
     );
   })
@@ -145,7 +146,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     ]);
     const summaries = await cardSummaries(students.map((s) => s.id));
     return c.json({
-      group: { id: group.id, name: group.name, subtractTeacher: group.subtractTeacher },
+      group: { id: group.id, name: group.name, subtractTeacher: group.subtractTeacher, archivedAt: group.archivedAt },
       students: students.map((s) => ({
         id: s.id,
         name: s.name,
@@ -168,6 +169,17 @@ export const teacherRoutes = new Hono<AppEnv>()
     const g = await prisma.group.update({ where: { id: group.id }, data });
     return c.json({ id: g.id, name: g.name, subtractTeacher: g.subtractTeacher });
   })
+  // Архив: группа скрывается из списка и замораживается (просмотр, статистика и Excel остаются)
+  .post('/groups/:id/archive', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const g = await prisma.group.update({ where: { id: group.id }, data: { archivedAt: group.archivedAt ?? new Date() } });
+    return c.json({ id: g.id, archivedAt: g.archivedAt });
+  })
+  .post('/groups/:id/restore', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    await prisma.group.update({ where: { id: group.id }, data: { archivedAt: null } });
+    return c.json({ id: group.id, archivedAt: null });
+  })
   .delete('/groups/:id', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
     const students = await prisma.student.findMany({ where: { groupId: group.id }, select: { accountId: true } });
@@ -180,7 +192,7 @@ export const teacherRoutes = new Hono<AppEnv>()
 
   // ───── Ученики ─────
   .post('/groups/:id/students', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
     const { names } = parse(StudentsCreate, await c.req.json().catch(() => null));
     const clean = names.filter(Boolean);
     if (!clean.length) throw new HttpError(400, 'Введите хотя бы одно имя');
@@ -198,7 +210,7 @@ export const teacherRoutes = new Hono<AppEnv>()
       },
     }),
     async (c) => {
-      const group = await teacherGroup(c.get('user'), c.req.param('id'));
+      const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
       const body = await c.req.parseBody();
       const file = body['file'];
       if (!(file instanceof File)) throw new HttpError(400, 'Загрузите файл');
@@ -239,7 +251,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   .post('/students/:id/move', async (c) => {
     const student = await teacherStudent(c.get('user'), c.req.param('id'));
     const { groupId } = parse(z.object({ groupId: id }), await c.req.json().catch(() => null));
-    const target = await teacherGroup(c.get('user'), groupId);
+    const target = await teacherGroup(c.get('user'), groupId, { writable: true });
     if (target.id === student.groupId) throw new HttpError(400, 'Ученик уже в этой группе');
     const total = await prisma.student.count({ where: { groupId: target.id } });
     if (total >= 200) throw new HttpError(400, 'В группе может быть не больше 200 учеников');
@@ -269,7 +281,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     return c.json(reasons.map((r) => ({ id: r.id, name: r.name, emoji: r.emoji, value: r.value })));
   })
   .post('/groups/:id/reasons', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
     const body = parse(ReasonBody, await c.req.json().catch(() => null));
     const max = await prisma.behaviorReason.aggregate({
       where: { groupId: group.id, kind: 'MANUAL' },
@@ -282,7 +294,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   })
   // Новый порядок причин: полный список активных причин группы в нужном порядке
   .put('/groups/:id/reasons/order', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
     const { reasonIds } = parse(z.object({ reasonIds: z.array(id).min(1).max(200) }), await c.req.json().catch(() => null));
     const active = await prisma.behaviorReason.findMany({
       where: { groupId: group.id, kind: 'MANUAL', archived: false },
@@ -312,7 +324,7 @@ export const teacherRoutes = new Hono<AppEnv>()
 
   // ───── Баллы ─────
   .post('/groups/:id/points', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
     const body = parse(AwardBody, await c.req.json().catch(() => null));
     const { reason, events } = await awardPoints({
       groupId: group.id,
@@ -351,7 +363,7 @@ export const teacherRoutes = new Hono<AppEnv>()
       },
     }),
     async (c) => {
-      await teacherGroup(c.get('user'), c.req.param('id'));
+      await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
       const body = await c.req.parseBody();
       const photo = body['photo'];
       if (!(photo instanceof File)) throw new HttpError(400, 'Загрузите фото');
@@ -369,14 +381,14 @@ export const teacherRoutes = new Hono<AppEnv>()
     return c.json(await attendanceForDate(group.id, date, lesson));
   })
   .delete('/groups/:id/attendance', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
     const date = c.req.query('date') ?? '';
     if (!isDateKey(date)) throw new HttpError(400, 'Дата в формате ГГГГ-ММ-ДД');
     await deleteAttendance(group.id, date, parse(lessonNumber, c.req.query('lesson')));
     return c.json({ ok: true });
   })
   .post('/groups/:id/attendance', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
     const body = parse(AttendanceBody, await c.req.json().catch(() => null));
     const date = body.date ?? dateKey();
     checkAttendanceDate(date);
@@ -421,7 +433,9 @@ function checkAttendanceDate(date: string) {
 async function ownedReason(teacherId: string, reasonId: string) {
   const reason = await prisma.behaviorReason.findFirst({
     where: { id: reasonId, kind: 'MANUAL', archived: false, group: { teacherId } },
+    include: { group: { select: { archivedAt: true } } },
   });
   if (!reason) throw notFound('Причина не найдена');
+  if (reason.group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
   return reason;
 }

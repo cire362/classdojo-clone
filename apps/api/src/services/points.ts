@@ -38,9 +38,12 @@ export async function deletePointEvents(teacherId: string, eventIds: string[]) {
   const ids = [...new Set(eventIds)];
   const events = await prisma.pointEvent.findMany({
     where: { id: { in: ids }, student: { group: { teacherId } } },
-    select: { id: true, studentId: true, attendanceSessionId: true },
+    select: { id: true, studentId: true, attendanceSessionId: true, student: { select: { group: { select: { archivedAt: true } } } } },
   });
   if (events.length !== ids.length) throw new HttpError(404, 'Начисление не найдено');
+  if (events.some((e) => e.student.group.archivedAt)) {
+    throw new HttpError(409, 'Группа в архиве. Верните её из архива, чтобы вносить изменения');
+  }
   if (events.some((e) => e.attendanceSessionId)) {
     throw new HttpError(409, 'Баллы за посещение меняются через отметку посещаемости');
   }
