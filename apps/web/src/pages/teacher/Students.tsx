@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowsLeftRightIcon, KeyIcon, PencilSimpleIcon, PrinterIcon, TrashIcon, UserPlusIcon } from '@phosphor-icons/react';
+import { ArrowsLeftRightIcon, FileArrowUpIcon, KeyIcon, PencilSimpleIcon, PrinterIcon, TrashIcon, UserPlusIcon } from '@phosphor-icons/react';
 import { api, type Credentials, type LessonStudent } from '../../api';
 import { HeroHead } from '../../components/HeroAvatar';
+import { ImportStudentsModal, type ImportPreview } from '../../components/ImportStudentsModal';
 import { MoveStudentModal } from '../../components/MoveStudentModal';
 import { useToast } from '../../components/Toast';
 import { Modal, PageTitle } from '../../components/ui';
@@ -20,6 +21,9 @@ export function StudentsPage() {
   const [editing, setEditing] = useState<LessonStudent | null>(null);
   const [deleting, setDeleting] = useState<LessonStudent | null>(null);
   const [moving, setMoving] = useState<LessonStudent | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+  const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
   const [groupEdit, setGroupEdit] = useState(false);
 
   const parsed = names
@@ -27,17 +31,33 @@ export function StudentsPage() {
     .map((n) => n.trim())
     .filter(Boolean);
 
-  async function addStudents() {
+  async function addStudents(list = parsed) {
     setBusy(true);
     try {
-      const r = await api<{ credentials: Credentials[] }>('POST', `/teacher/groups/${data.group.id}/students`, { names: parsed });
+      const r = await api<{ credentials: Credentials[] }>('POST', `/teacher/groups/${data.group.id}/students`, { names: list });
+      setImportPreview(null);
       setIssued(r.credentials);
-      setNames('');
+      if (list === parsed) setNames('');
       await reload();
     } catch (e) {
       toast({ text: (e as Error).message, tone: 'error' });
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function onImportFile(file: File | undefined) {
+    if (!file) return;
+    setImporting(true);
+    try {
+      const form = new FormData();
+      form.append('file', file, file.name);
+      setImportPreview(await api<ImportPreview>('POST', `/teacher/groups/${data.group.id}/students/import-preview`, form));
+    } catch (e) {
+      toast({ text: (e as Error).message, tone: 'error' });
+    } finally {
+      setImporting(false);
+      if (fileInput.current) fileInput.current.value = '';
     }
   }
 
@@ -115,9 +135,22 @@ export function StudentsPage() {
           onChange={(e) => setNames(e.target.value)}
         />
         <p className="mt-2 text-sm text-ink-soft">Можно вставить список из таблицы или журнала.</p>
-        <button className="btn btn-primary mt-4 w-full" disabled={busy || parsed.length === 0} onClick={addStudents}>
+        <button className="btn btn-primary mt-4 w-full" disabled={busy || parsed.length === 0} onClick={() => addStudents()}>
           {busy ? 'Создаём…' : parsed.length ? `Добавить ${parsed.length}` : 'Добавить'}
         </button>
+        <div className="mt-5 border-t border-line pt-5">
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".xlsx,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+            className="sr-only"
+            onChange={(e) => onImportFile(e.target.files?.[0])}
+          />
+          <button className="btn btn-secondary w-full" disabled={importing} onClick={() => fileInput.current?.click()}>
+            <FileArrowUpIcon size={20} /> {importing ? 'Читаем файл…' : 'Загрузить Excel или CSV'}
+          </button>
+          <p className="mt-2 text-sm text-ink-soft">Подойдёт выгрузка из электронного журнала с колонкой «ФИО» или «Фамилия» и «Имя».</p>
+        </div>
       </section>
 
       <Modal open={!!issued} title="Логины и пароли" onClose={() => setIssued(null)} size="lg">
@@ -181,6 +214,13 @@ export function StudentsPage() {
       </Modal>
 
       <GroupSettingsModal open={groupEdit} onClose={() => setGroupEdit(false)} />
+
+      <ImportStudentsModal
+        preview={importPreview}
+        busy={busy}
+        onClose={() => setImportPreview(null)}
+        onConfirm={(list) => addStudents(list)}
+      />
 
       <MoveStudentModal
         student={moving && { id: moving.id, name: moving.name, groupId: data.group.id }}

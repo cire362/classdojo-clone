@@ -15,6 +15,7 @@ import { awardPoints, cardSummaries, deletePointEvents } from '../services/point
 import { studentProfile } from '../services/profile.js';
 import { createDefaultReasons } from '../services/reasons.js';
 import { groupStats, statsWorkbook } from '../services/stats.js';
+import { MAX_IMPORT_BYTES, previewImport } from '../services/import.js';
 import { createStudents, deleteStudent, resetStudentPassword } from '../services/students.js';
 import { saveHero } from './student.js';
 
@@ -183,6 +184,29 @@ export const teacherRoutes = new Hono<AppEnv>()
     if (total + clean.length > 200) throw new HttpError(400, 'В группе может быть не больше 200 учеников');
     return c.json({ credentials: await createStudents(group.id, clean) }, 201);
   })
+  // Разбор Excel/CSV со списком учеников: только предпросмотр, создание — обычным POST /students
+  .post(
+    '/groups/:id/students/import-preview',
+    bodyLimit({
+      maxSize: MAX_IMPORT_BYTES + 64 * 1024,
+      onError: () => {
+        throw new HttpError(413, 'Файл слишком большой (больше 2 МБ)');
+      },
+    }),
+    async (c) => {
+      const group = await teacherGroup(c.get('user'), c.req.param('id'));
+      const body = await c.req.parseBody();
+      const file = body['file'];
+      if (!(file instanceof File)) throw new HttpError(400, 'Загрузите файл');
+      const preview = await previewImport(file);
+      const existing = await prisma.student.findMany({ where: { groupId: group.id }, select: { name: true } });
+      const have = new Set(existing.map((s) => s.name.toLowerCase()));
+      return c.json({
+        ...preview,
+        names: preview.names.map((name) => ({ name, alreadyInGroup: have.has(name.toLowerCase()) })),
+      });
+    },
+  )
   .post('/groups/:id/reset-passwords', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
     const { studentIds } = parse(ResetMany, await c.req.json().catch(() => ({})));
