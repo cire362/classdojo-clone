@@ -1,8 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
 import { WarningIcon, XIcon } from '@phosphor-icons/react';
-
-const spring = { type: 'spring', stiffness: 380, damping: 34 } as const;
+import { usePresence } from '../lib/presence';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -22,6 +20,7 @@ export function Modal({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const { mounted, closing } = usePresence(open, 180);
   // Фокус: при открытии — в окно, Tab не уходит за его пределы, при закрытии — обратно на кнопку,
   // которой окно открыли. Esc закрывает.
   const onCloseRef = useRef(onClose);
@@ -58,45 +57,37 @@ export function Modal({
     };
   }, [open]);
 
+  if (!mounted) return null;
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-40 flex items-end justify-center bg-[rgb(14_17_34/0.55)] sm:items-center sm:p-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onMouseDown={(e) => e.target === e.currentTarget && onClose()}
-        >
-          <motion.div
-            ref={ref}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={titleId}
-            tabIndex={-1}
-            className={`flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-surface shadow-[var(--shadow-pop)] outline-none sm:rounded-2xl ${
-              size === 'lg' ? 'sm:max-w-3xl' : 'sm:max-w-lg'
-            }`}
-            initial={{ y: 48, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 32, opacity: 0 }}
-            transition={spring}
-          >
-            <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3">
-              <h2 id={titleId} className="text-lg">
-                {title}
-              </h2>
-              <button className="icon-btn -mr-2" onClick={onClose} aria-label="Закрыть">
-                <XIcon size={22} />
-              </button>
-            </div>
-            <div className="overflow-y-auto overscroll-contain px-5 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-              {children}
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div
+      className={`fixed inset-0 z-40 flex items-end justify-center bg-[rgb(14_17_34/0.55)] sm:items-center sm:p-6 ${
+        closing ? 'anim-fade-out pointer-events-none' : 'anim-fade-in'
+      }`}
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        ref={ref}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className={`flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-surface shadow-[var(--shadow-pop)] outline-none sm:rounded-2xl ${
+          size === 'lg' ? 'sm:max-w-3xl' : 'sm:max-w-lg'
+        } ${closing ? 'anim-sheet-out' : 'anim-sheet-in'}`}
+      >
+        <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3">
+          <h2 id={titleId} className="text-lg">
+            {title}
+          </h2>
+          <button className="icon-btn -mr-2" onClick={onClose} aria-label="Закрыть">
+            <XIcon size={22} />
+          </button>
+        </div>
+        <div className="overflow-y-auto overscroll-contain px-5 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          {children}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -150,11 +141,9 @@ export function ProgressBar({ value, label, className = '' }: { value: number; l
       aria-valuemax={100}
       className={`h-3 overflow-hidden rounded-full bg-surface-2 ${className}`}
     >
-      <motion.div
-        className="h-full rounded-full bg-accent"
-        initial={{ width: 0 }}
-        animate={{ width: `${v * 100}%` }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      <div
+        className="anim-grow h-full rounded-full bg-accent transition-[width] duration-700 ease-[var(--ease-out)]"
+        style={{ width: `${v * 100}%` }}
       />
     </div>
   );

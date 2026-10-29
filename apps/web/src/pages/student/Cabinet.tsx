@@ -1,12 +1,15 @@
+import { lazy, Suspense, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PaintBrushIcon, SparkleIcon } from '@phosphor-icons/react';
 import { api, type Profile } from '../../api';
-import { LevelUpOverlay } from '../../components/LevelUp';
 import { PartPreview } from '../../components/PartPreview';
 import { ProfileView } from '../../components/ProfileView';
 import { ErrorBox, Skeleton } from '../../components/ui';
 import { pluralize, useLoad } from '../../hooks';
 import { useNews } from '../../news';
+
+// Праздник уровня с конфетти бывает редко и тянет библиотеку анимаций — грузим его только когда он нужен
+const LevelUpOverlay = lazy(() => import('../../components/LevelUp').then((m) => ({ default: m.LevelUpOverlay })));
 
 export function ProfileSkeleton() {
   return (
@@ -28,6 +31,9 @@ export function ProfileSkeleton() {
 export function CabinetPage() {
   const { data, error, reload } = useLoad(() => api<Profile>('GET', '/student/profile'), []);
   const { news, markSeen } = useNews();
+  // Окно остаётся смонтированным после закрытия, чтобы доиграла анимация ухода
+  const [levelUpUsed, setLevelUpUsed] = useState(false);
+  if (news?.levelUp && !levelUpUsed) setLevelUpUsed(true);
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <ProfileSkeleton />;
 
@@ -68,13 +74,17 @@ export function CabinetPage() {
         }
       />
 
-      <LevelUpOverlay
-        open={!!news?.levelUp}
-        level={news?.levelUp?.to ?? 1}
-        hero={data.hero.parts}
-        newPartIds={newIds}
-        onClose={() => void markSeen('level')}
-      />
+      {levelUpUsed && (
+        <Suspense fallback={null}>
+          <LevelUpOverlay
+            open={!!news?.levelUp}
+            level={news?.levelUp?.to ?? 1}
+            hero={data.hero.parts}
+            newPartIds={newIds}
+            onClose={() => void markSeen('level')}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

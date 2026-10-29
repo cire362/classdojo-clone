@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { DEFAULT_HERO, type HeroParts } from '@heroes/shared';
 import { useAuth } from '../auth';
 import { HeroAvatar } from '../components/HeroAvatar';
@@ -33,16 +32,53 @@ const SLIDES: HeroParts[][] = [
 
 const INTERVAL_MS = 4000;
 
+const EXIT_MS = 600;
+
+function Slide({ index, phase }: { index: number; phase: 'still' | 'in' | 'out' }) {
+  return (
+    <div
+      className={`absolute inset-0 flex items-end justify-center gap-[3%] ${
+        phase === 'in' ? 'anim-slide-in' : phase === 'out' ? 'anim-slide-out' : ''
+      }`}
+    >
+      {SLIDES[index].map((parts, i) => (
+        <div
+          key={i}
+          className={`${i === 1 ? 'w-[38%]' : 'w-[29%]'} ${phase === 'in' ? 'anim-hero-rise' : ''}`}
+          style={phase === 'in' ? { animationDelay: `${0.08 + i * 0.07}s` } : undefined}
+        >
+          <HeroAvatar parts={parts} className="aspect-[5/6]" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function HeroSlider() {
-  const reduce = useReducedMotion();
   const [index, setIndex] = useState(0);
+  // Уходящий слайд ещё EXIT_MS виден с анимацией выхода; первый слайд появляется без анимации
+  const [leaving, setLeaving] = useState<number | null>(null);
+  const [moved, setMoved] = useState(false);
   const [paused, setPaused] = useState(false);
+
+  const go = (next: number) => {
+    if (next === index) return;
+    setLeaving(index);
+    setIndex(next);
+    setMoved(true);
+  };
 
   useEffect(() => {
     if (paused) return;
-    const t = window.setTimeout(() => setIndex((i) => (i + 1) % SLIDES.length), INTERVAL_MS);
+    const t = window.setTimeout(() => go((index + 1) % SLIDES.length), INTERVAL_MS);
     return () => window.clearTimeout(t);
   }, [index, paused]);
+
+  useEffect(() => {
+    if (leaving === null) return;
+    const t = window.setTimeout(() => setLeaving(null), EXIT_MS);
+    return () => window.clearTimeout(t);
+  }, [leaving, index]);
 
   return (
     <div
@@ -59,28 +95,8 @@ function HeroSlider() {
           className="absolute inset-x-[4%] bottom-[2%] top-[6%] rounded-[50%] bg-[radial-gradient(closest-side,rgb(255_194_51/0.16),transparent)]"
         />
         <div aria-hidden className="absolute inset-x-[10%] -bottom-[3%] h-[10%] rounded-[50%] bg-white/10 blur-md" />
-        <AnimatePresence initial={false} mode="popLayout">
-          <motion.div
-            key={index}
-            className="absolute inset-0 flex items-end justify-center gap-[3%]"
-            initial={reduce ? { opacity: 0 } : { opacity: 0, x: 80 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={reduce ? { opacity: 0 } : { opacity: 0, x: -80 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {SLIDES[index].map((parts, i) => (
-              <motion.div
-                key={i}
-                className={i === 1 ? 'w-[38%]' : 'w-[29%]'}
-                initial={reduce ? false : { y: 24 }}
-                animate={{ y: 0 }}
-                transition={{ type: 'spring', stiffness: 140, damping: 16, delay: 0.08 + i * 0.07 }}
-              >
-                <HeroAvatar parts={parts} className="aspect-[5/6]" />
-              </motion.div>
-            ))}
-          </motion.div>
-        </AnimatePresence>
+        {leaving !== null && leaving !== index && <Slide key={`out-${leaving}`} index={leaving} phase="out" />}
+        <Slide key={index} index={index} phase={moved ? 'in' : 'still'} />
       </div>
 
       <div className="mt-10 flex gap-2" role="tablist" aria-label="Слайды">
@@ -90,7 +106,7 @@ function HeroSlider() {
             role="tab"
             aria-selected={i === index}
             aria-label={`Слайд ${i + 1}`}
-            onClick={() => setIndex(i)}
+            onClick={() => go(i)}
             className="flex h-6 min-w-6 items-center justify-center"
           >
             <span

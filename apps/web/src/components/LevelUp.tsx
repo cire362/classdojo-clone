@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, MotionConfig, motion, useReducedMotion } from 'motion/react';
 import { LEVELS, type HeroParts } from '@heroes/shared';
 import { pluralize } from '../hooks';
 import { HeroAvatar } from './HeroAvatar';
@@ -69,91 +69,93 @@ export function LevelUpOverlay({
   }, [open, onClose]);
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[rgb(14_17_34/0.72)] p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Новый уровень: ${level}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          {!reduce && <Confetti />}
+    <MotionConfig reducedMotion="user">
+      <AnimatePresence>
+        {open && (
           <motion.div
-            className="relative w-full max-w-md overflow-hidden rounded-2xl bg-surface text-center shadow-[var(--shadow-pop)]"
-            initial={{ scale: 0.85, y: 24 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[rgb(14_17_34/0.72)] p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Новый уровень: ${level}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            <div className="relative bg-accent/30 px-6 pt-10">
-              <div
-                aria-hidden
-                className="absolute inset-0 opacity-25"
-                style={{ backgroundImage: 'radial-gradient(var(--ink) 1px, transparent 1px)', backgroundSize: '16px 16px' }}
-              />
-              <motion.div
-                className="relative mx-auto w-44"
-                initial={reduce ? false : { y: 30, scale: 0.9 }}
-                animate={{ y: 0, scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.15 }}
-              >
-                <HeroAvatar parts={hero} className="aspect-[5/6]" />
-              </motion.div>
-              <motion.span
-                className="absolute right-6 top-6 flex size-16 items-center justify-center rounded-full bg-accent font-display text-3xl text-on-accent shadow-[var(--shadow-pop)]"
-                initial={reduce ? false : { scale: 0, rotate: -30 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 12, delay: 0.35 }}
-              >
-                {level}
-              </motion.span>
-            </div>
-
-            <div className="space-y-5 px-6 pb-6 pt-5">
-              <div>
-                <h2 className="text-2xl leading-tight sm:text-3xl">Новый уровень!</h2>
-                <p className="mt-1 text-lg text-ink-soft">
-                  Теперь ты <b className="text-ink">{title}</b>
-                </p>
+            {!reduce && <Confetti />}
+            <motion.div
+              className="relative w-full max-w-md overflow-hidden rounded-2xl bg-surface text-center shadow-[var(--shadow-pop)]"
+              initial={{ scale: 0.85, y: 24 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            >
+              <div className="relative bg-accent/30 px-6 pt-10">
+                <div
+                  aria-hidden
+                  className="absolute inset-0 opacity-25"
+                  style={{ backgroundImage: 'radial-gradient(var(--ink) 1px, transparent 1px)', backgroundSize: '16px 16px' }}
+                />
+                <motion.div
+                  className="relative mx-auto w-44"
+                  initial={reduce ? false : { y: 30, scale: 0.9 }}
+                  animate={{ y: 0, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.15 }}
+                >
+                  <HeroAvatar parts={hero} className="aspect-[5/6]" />
+                </motion.div>
+                <motion.span
+                  className="absolute right-6 top-6 flex size-16 items-center justify-center rounded-full bg-accent font-display text-3xl text-on-accent shadow-[var(--shadow-pop)]"
+                  initial={reduce ? false : { scale: 0, rotate: -30 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 12, delay: 0.35 }}
+                >
+                  {level}
+                </motion.span>
               </div>
 
-              {shown.length > 0 && (
-                <div className="space-y-3 text-left">
-                  <p className="font-semibold">
-                    {pluralize(newPartIds.length, 'Открылась', 'Открылись', 'Открылось')} {newPartIds.length}{' '}
-                    {pluralize(newPartIds.length, 'новая деталь', 'новые детали', 'новых деталей')}
+              <div className="space-y-5 px-6 pb-6 pt-5">
+                <div>
+                  <h2 className="text-2xl leading-tight sm:text-3xl">Новый уровень!</h2>
+                  <p className="mt-1 text-lg text-ink-soft">
+                    Теперь ты <b className="text-ink">{title}</b>
                   </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {shown.map((id) => (
-                      <PartPreview key={id} partId={id} base={hero} />
-                    ))}
-                  </div>
                 </div>
-              )}
 
-              <div className="flex flex-col gap-2 sm:flex-row-reverse">
-                {newPartIds.length > 0 && (
-                  <button
-                    className="btn btn-primary btn-lg flex-1"
-                    onClick={() => {
-                      onClose();
-                      navigate('/hero');
-                    }}
-                  >
-                    Примерить
-                  </button>
+                {shown.length > 0 && (
+                  <div className="space-y-3 text-left">
+                    <p className="font-semibold">
+                      {pluralize(newPartIds.length, 'Открылась', 'Открылись', 'Открылось')} {newPartIds.length}{' '}
+                      {pluralize(newPartIds.length, 'новая деталь', 'новые детали', 'новых деталей')}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {shown.map((id) => (
+                        <PartPreview key={id} partId={id} base={hero} />
+                      ))}
+                    </div>
+                  </div>
                 )}
-                <button ref={closeRef} className={`btn btn-lg flex-1 ${newPartIds.length ? 'btn-secondary' : 'btn-primary'}`} onClick={onClose}>
-                  Ура!
-                </button>
+
+                <div className="flex flex-col gap-2 sm:flex-row-reverse">
+                  {newPartIds.length > 0 && (
+                    <button
+                      className="btn btn-primary btn-lg flex-1"
+                      onClick={() => {
+                        onClose();
+                        navigate('/hero');
+                      }}
+                    >
+                      Примерить
+                    </button>
+                  )}
+                  <button ref={closeRef} className={`btn btn-lg flex-1 ${newPartIds.length ? 'btn-secondary' : 'btn-primary'}`} onClick={onClose}>
+                    Ура!
+                  </button>
+                </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </MotionConfig>
   );
 }

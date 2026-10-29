@@ -1,6 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'motion/react';
 import {
   CheckIcon,
   DiceFiveIcon,
@@ -16,6 +15,7 @@ import { HeroAvatar, heroTint } from '../../components/HeroAvatar';
 import { useToast } from '../../components/Toast';
 import { EmptyState, Modal } from '../../components/ui';
 import { pluralize } from '../../hooks';
+import { usePresence } from '../../lib/presence';
 import { useGroup } from './GroupLayout';
 
 interface Burst {
@@ -29,6 +29,7 @@ export function LessonPage() {
   const { data, setData } = useGroup();
   const toast = useToast();
   const [selectMode, setSelectMode] = useState(false);
+  const selectBar = usePresence(selectMode, 200);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [target, setTarget] = useState<{ ids: string[]; label: string } | null>(null);
   const [projector, setProjector] = useState(false);
@@ -206,35 +207,31 @@ export function LessonPage() {
       {grid}
 
       {/* Панель выбора нескольких учеников */}
-      <AnimatePresence>
-        {selectMode && (
-          <motion.div
-            initial={{ y: 80 }}
-            animate={{ y: 0 }}
-            exit={{ y: 80 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 34 }}
-            className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur"
-          >
-            <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-              <span className="font-semibold tabular-nums">
-                Выбрано: {selected.size}
-              </span>
-              <button
-                className="btn btn-primary"
-                disabled={!selected.size}
-                onClick={() =>
-                  setTarget({
-                    ids: [...selected],
-                    label: `${selected.size} ${pluralize(selected.size, 'ученик', 'ученика', 'учеников')}`,
-                  })
-                }
-              >
-                Начислить
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {selectBar.mounted && (
+        <div
+          className={`fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur ${
+            selectBar.closing ? 'anim-bar-out' : 'anim-bar-in'
+          }`}
+        >
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+            <span className="font-semibold tabular-nums">
+              Выбрано: {selected.size}
+            </span>
+            <button
+              className="btn btn-primary"
+              disabled={!selected.size}
+              onClick={() =>
+                setTarget({
+                  ids: [...selected],
+                  label: `${selected.size} ${pluralize(selected.size, 'ученик', 'ученика', 'учеников')}`,
+                })
+              }
+            >
+              Начислить
+            </button>
+          </div>
+        </div>
+      )}
       {selectMode && <div className="h-20" />}
 
       {/* Режим проектора */}
@@ -296,13 +293,11 @@ const StudentCard = memo(function StudentCard({
   onClick: (s: LessonStudent) => void;
 }) {
   return (
-    <motion.button
+    <button
       type="button"
-      layout="position"
-      whileTap={{ scale: 0.97 }}
       onClick={() => onClick(s)}
       aria-pressed={selectable ? selected : undefined}
-      className={`card relative flex flex-col items-stretch overflow-hidden p-2.5 text-left transition-[box-shadow,opacity] hover:shadow-[var(--shadow-pop)] ${
+      className={`card relative flex flex-col items-stretch overflow-hidden p-2.5 text-left transition-[box-shadow,opacity,transform] duration-200 ease-[var(--ease-out)] hover:shadow-[var(--shadow-pop)] active:scale-[0.97] ${
         selected ? 'ring-4 ring-accent' : ''
       } ${absent ? 'opacity-55' : ''}`}
     >
@@ -325,39 +320,26 @@ const StudentCard = memo(function StudentCard({
         {absent && !big && (
           <span className="chip absolute bottom-2 left-2 bg-surface text-xs text-ink-soft">нет на уроке</span>
         )}
-        <AnimatePresence>
-          {burst?.level && (
-            <motion.span
-              key={`lvl-${burst.key}`}
-              className="pointer-events-none absolute inset-0 rounded-xl ring-4 ring-accent"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 1, 1, 0] }}
-              transition={{ duration: 2.4, times: [0, 0.1, 0.8, 1] }}
-            />
-          )}
-          {burst?.level && (
-            <motion.span
-              key={`lvl-text-${burst.key}`}
-              className="pointer-events-none absolute inset-x-0 bottom-3 mx-auto w-fit rounded-full bg-ink px-3 py-1 font-display text-sm text-bg shadow-[var(--shadow-pop)]"
-              initial={{ opacity: 0, y: 12, scale: 0.8 }}
-              animate={{ opacity: [0, 1, 1, 0], y: 0, scale: 1 }}
-              transition={{ duration: 2.4, times: [0, 0.12, 0.85, 1], ease: [0.16, 1, 0.3, 1] }}
-            >
-              Уровень {burst.level}!
-            </motion.span>
-          )}
-          {burst && (
-            <motion.span
-              key={burst.key}
-              className="pointer-events-none absolute inset-x-0 top-1/3 mx-auto w-fit rounded-full bg-accent px-3 py-1 font-display text-2xl text-on-accent shadow-[var(--shadow-pop)]"
-              initial={{ opacity: 0, y: 10, scale: 0.6 }}
-              animate={{ opacity: [0, 1, 1, 0], y: -40, scale: 1 }}
-              transition={{ duration: 1.3, ease: [0.16, 1, 0.3, 1] }}
-            >
-              +{burst.value}
-            </motion.span>
-          )}
-        </AnimatePresence>
+        {/* Ключ перезапускает CSS-анимацию при каждом новом начислении */}
+        {burst?.level && (
+          <span key={`lvl-${burst.key}`} className="anim-flash pointer-events-none absolute inset-0 rounded-xl ring-4 ring-accent" />
+        )}
+        {burst?.level && (
+          <span
+            key={`lvl-text-${burst.key}`}
+            className="anim-level-badge pointer-events-none absolute inset-x-0 bottom-3 mx-auto w-fit rounded-full bg-ink px-3 py-1 font-display text-sm text-bg shadow-[var(--shadow-pop)]"
+          >
+            Уровень {burst.level}!
+          </span>
+        )}
+        {burst && (
+          <span
+            key={burst.key}
+            className="anim-points-burst pointer-events-none absolute inset-x-0 top-1/3 mx-auto w-fit rounded-full bg-accent px-3 py-1 font-display text-2xl text-on-accent shadow-[var(--shadow-pop)]"
+          >
+            +{burst.value}
+          </span>
+        )}
       </div>
       <div className={`px-1 pb-0.5 pt-2.5 ${big ? 'pt-3' : ''}`}>
         <div className={`truncate font-semibold ${big ? 'text-xl' : ''}`}>{s.name}</div>
@@ -372,7 +354,7 @@ const StudentCard = memo(function StudentCard({
         {s.todayEarned > 0 && <span className="sr-only">, сегодня +{s.todayEarned}</span>}
         {absent && <span className="sr-only">, нет на уроке</span>}
       </div>
-    </motion.button>
+    </button>
   );
 });
 
@@ -472,15 +454,12 @@ function RandomPicker({
     <Modal open={open} title={onlyPresent ? 'Случайный из присутствующих' : 'Случайный ученик'} onClose={onClose}>
       {s && (
         <div className="flex flex-col items-center text-center">
-          <motion.div
+          <div
             key={done ? 'done' : s.id}
-            initial={done ? { scale: 0.85 } : false}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 14 }}
-            className={`w-48 rounded-2xl p-2 transition-colors ${done ? 'bg-accent/30' : 'bg-surface-2'}`}
+            className={`w-48 rounded-2xl p-2 transition-colors ${done ? 'anim-pop-big bg-accent/30' : 'bg-surface-2'}`}
           >
             <HeroAvatar parts={s.hero.parts} className="aspect-[5/6]" />
-          </motion.div>
+          </div>
           <p className={`mt-4 font-display text-2xl transition-opacity ${done ? '' : 'opacity-60'}`}>{s.name}</p>
           <div className={`mt-6 flex flex-wrap justify-center gap-2 transition-opacity ${done ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
             <button className="btn btn-primary" onClick={() => onAward(s)}>

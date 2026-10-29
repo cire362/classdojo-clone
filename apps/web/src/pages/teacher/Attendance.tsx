@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { CalendarBlankIcon, CameraIcon, CheckIcon, EyeSlashIcon, ImageIcon, InfoIcon, ListChecksIcon, PlusIcon, TrashIcon, WarningIcon } from '@phosphor-icons/react';
 import { api, type AttendanceDay, type Detection } from '../../api';
 import { HeroHead } from '../../components/HeroAvatar';
@@ -236,7 +235,7 @@ export function AttendancePage() {
 
   if (phase === 'saved') {
     return (
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl space-y-4">
+      <div className="anim-rise-in max-w-xl space-y-4">
         <span className="flex size-14 items-center justify-center rounded-full bg-plus-bg text-plus">
           <CheckIcon size={30} weight="bold" />
         </span>
@@ -255,7 +254,7 @@ export function AttendancePage() {
             Отметить заново
           </button>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
@@ -447,8 +446,10 @@ export function AttendancePage() {
             <img src={preview} alt="Фото группы" className="block w-full" />
             <svg className="absolute inset-0 size-full" viewBox={`0 0 ${detection.width} ${detection.height}`} preserveAspectRatio="none" aria-hidden>
               {detection.boxes.map((b, i) => (
-                <motion.rect
+                <rect
                   key={i}
+                  className="anim-fade-in"
+                  style={{ animationDelay: `${0.05 * i}s` }}
                   x={b.x}
                   y={b.y}
                   width={b.w}
@@ -457,9 +458,6 @@ export function AttendancePage() {
                   fill="rgb(255 194 51 / 0.12)"
                   stroke="#ffc233"
                   strokeWidth={Math.max(3, detection.width / 300)}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.05 * i }}
                 />
               ))}
             </svg>

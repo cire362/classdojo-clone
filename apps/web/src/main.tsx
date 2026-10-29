@@ -1,7 +1,6 @@
 import { StrictMode, Suspense, useEffect, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import { MotionConfig } from 'motion/react';
 import '@fontsource-variable/onest';
 import '@fontsource-variable/unbounded';
 import './styles.css';
@@ -66,7 +65,6 @@ await Promise.race([preloadRoute(window.location.pathname), new Promise((resolve
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MotionConfig reducedMotion="user">
     <AuthProvider>
       <NewsProvider>
       <ToastProvider>
@@ -100,6 +98,5 @@ createRoot(document.getElementById('root')!).render(
       </ToastProvider>
       </NewsProvider>
     </AuthProvider>
-    </MotionConfig>
   </StrictMode>,
 );
