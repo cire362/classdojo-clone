@@ -2,14 +2,16 @@
 // Учётные записи вынесены в Account, чтобы позже добавить родителей и других ролей
 // без изменения таблиц учителей и учеников.
 
+// Prisma 7: клиент генерируется в исходники (src/generated, не хранится в git) и работает
+// через драйвер pg без двоичного движка запросов. Адрес базы — в prisma.config.ts.
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {

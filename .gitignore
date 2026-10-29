@@ -13,3 +13,6 @@ coverage/
 # Playwright
 e2e/test-results/
 e2e/playwright-report/
+
+# Клиент Prisma генерируется при сборке (npm run prisma:generate)
+apps/api/src/generated/

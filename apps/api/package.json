@@ -17,10 +17,11 @@
     "@heroes/shared": "0.1.0",
     "@hono/node-server": "1.19.17",
     "@node-rs/argon2": "2.2.2",
-    "@prisma/client": "6.19.3",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
     "exceljs": "4.4.0",
     "hono": "4.13.14",
-    "prisma": "6.19.3",
+    "prisma": "7.10.1",
     "tsx": "4.23.15",
     "zod": "3.25.76"
   },

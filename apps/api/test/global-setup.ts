@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { PrismaClient } from '@prisma/client';
+import { createPrisma } from '../src/db';
 
 /**
  * Каждый прогон тестов работает в собственной новой схеме PostgreSQL:
@@ -17,7 +17,7 @@ export default async function setup() {
   execSync('npx prisma migrate deploy', { stdio: 'pipe', env: { ...process.env, DATABASE_URL: url.toString() } });
 
   return async () => {
-    const prisma = new PrismaClient({ datasourceUrl: url.toString() });
+    const prisma = createPrisma(url.toString());
     await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
     await prisma.$disconnect();
   };

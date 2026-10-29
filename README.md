@@ -139,7 +139,9 @@ PW_CHANNEL=chrome npm run e2e
 
 ```bash
 npm install
-# PostgreSQL: DATABASE_URL=postgresql://user:pass@localhost:5432/heroes
+# Prisma 7 не читает .env сам: адрес базы должен быть в окружении
+export DATABASE_URL=postgresql://user:pass@localhost:5432/heroes
+npm run prisma:generate -w @heroes/api   # клиент Prisma генерируется в apps/api/src/generated
 npm run db:migrate -w @heroes/api && npm run db:seed -w @heroes/api
 DETECTOR_URL=http://localhost:8000 npm run dev:api     # API на :3000
 npm run dev:web                                        # http://localhost:5173, /api проксируется на :3000
