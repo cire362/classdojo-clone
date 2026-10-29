@@ -9,18 +9,25 @@ import { HttpError, notFound } from '../lib/errors.js';
  */
 export const ARCHIVED_MESSAGE = 'Группа в архиве. Верните её из архива, чтобы вносить изменения';
 
-/** Условие «группа доступна преподавателю» — единое для всех запросов */
+export const OWNER_ONLY_MESSAGE = 'Это может сделать только создатель группы';
+
+/** Условие «группа доступна преподавателю» (владелец или соавтор) — единое для всех запросов */
 export function groupsOf(teacherId: string): Prisma.GroupWhereInput {
-  return { teacherId };
+  return { OR: [{ teacherId }, { coTeachers: { some: { teacherId } } }] };
 }
 
-/** writable: true — для изменений, которые запрещены в архивной группе */
-export async function teacherGroup(user: AuthUser, groupId: string, opts: { writable?: boolean } = {}) {
+/**
+ * writable: true — для изменений, которые запрещены в архивной группе;
+ * owner: true — только для создателя группы (удаление, архив, название, состав преподавателей)
+ */
+export async function teacherGroup(user: AuthUser, groupId: string, opts: { writable?: boolean; owner?: boolean } = {}) {
   if (!user.teacherId) throw new HttpError(403, 'Недостаточно прав');
   const group = await prisma.group.findFirst({ where: { id: groupId, ...groupsOf(user.teacherId) } });
   if (!group) throw notFound('Группа не найдена');
+  const isOwner = group.teacherId === user.teacherId;
+  if (opts.owner && !isOwner) throw new HttpError(403, OWNER_ONLY_MESSAGE);
   if (opts.writable && group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
-  return group;
+  return { ...group, isOwner };
 }
 
 export async function teacherStudent(user: AuthUser, studentId: string) {

@@ -77,6 +77,22 @@ export interface GroupListItem {
   studentsCount: number;
   archivedAt: string | null;
   previewHeroes: HeroParts[];
+  /** Создатель группы; соавтор не может её удалить, архивировать и переименовать */
+  isOwner: boolean;
+  /** Другие преподаватели группы */
+  colleagues: string[];
+}
+
+export interface GroupTeacher {
+  id: string;
+  name: string;
+  login: string;
+  isMe: boolean;
+}
+
+export interface GroupTeachers {
+  owner: GroupTeacher;
+  coTeachers: GroupTeacher[];
 }
 
 export interface Reason {
@@ -102,7 +118,7 @@ export interface LessonStudent extends CardSummary {
 }
 
 export interface GroupDetails {
-  group: { id: string; name: string; subtractTeacher: boolean; archivedAt: string | null };
+  group: { id: string; name: string; subtractTeacher: boolean; archivedAt: string | null; isOwner: boolean };
   students: LessonStudent[];
   reasons: Reason[];
   todayAttendance: { peopleOnPhoto: number | null; presentStudentIds: string[] } | null;

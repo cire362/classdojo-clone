@@ -48,15 +48,17 @@ export function GroupLayout() {
               <b>Группа в архиве</b> с {new Date(data.group.archivedAt).toLocaleDateString('ru-RU')}. Статистика, профили и
               Excel доступны, а начислять баллы и отмечать посещаемость нельзя.
             </p>
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={async () => {
-                await api('POST', `/teacher/groups/${data.group.id}/restore`);
-                await reload();
-              }}
-            >
-              Вернуть из архива
-            </button>
+            {data.group.isOwner && (
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={async () => {
+                  await api('POST', `/teacher/groups/${data.group.id}/restore`);
+                  await reload();
+                }}
+              >
+                Вернуть из архива
+              </button>
+            )}
           </div>
         )}
         <nav

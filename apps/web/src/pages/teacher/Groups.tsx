@@ -42,7 +42,7 @@ export function GroupsPage() {
       {error && <ErrorBox message={error} onRetry={reload} />}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="grid content-start gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 content-start gap-3 sm:grid-cols-2">
           {loading && !data && [0, 1].map((i) => <Skeleton key={i} className="h-36" />)}
           {active.map((g) => (
             <Link
@@ -51,7 +51,12 @@ export function GroupsPage() {
               className="card group flex min-h-36 flex-col justify-between p-5 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-pop)] active:translate-y-0"
             >
               <span className="flex items-start justify-between gap-3">
-                <span className="font-display text-xl leading-tight">{g.name}</span>
+                <span className="min-w-0">
+                  <span className="block font-display text-xl leading-tight">{g.name}</span>
+                  {g.colleagues.length > 0 && (
+                    <span className="mt-1 block truncate text-sm text-ink-soft">Вместе с: {g.colleagues.join(', ')}</span>
+                  )}
+                </span>
                 {g.previewHeroes.length > 0 && (
                   <span className="flex -space-x-3" aria-hidden>
                     {g.previewHeroes.slice(0, 5).map((h, i) => (
@@ -116,15 +121,17 @@ export function GroupsPage() {
                       {new Date(g.archivedAt!).toLocaleDateString('ru-RU')}
                     </span>
                   </Link>
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={async () => {
-                      await api('POST', `/teacher/groups/${g.id}/restore`);
-                      await reload();
-                    }}
-                  >
-                    <ArrowCounterClockwiseIcon size={18} /> Вернуть
-                  </button>
+                  {g.isOwner && (
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={async () => {
+                        await api('POST', `/teacher/groups/${g.id}/restore`);
+                        await reload();
+                      }}
+                    >
+                      <ArrowCounterClockwiseIcon size={18} /> Вернуть
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

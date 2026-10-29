@@ -35,6 +35,23 @@ const NAMES = [
 let seed = 42;
 const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
 
+const CO_TEACHER_LOGIN = 'teacher2';
+
+/** Второй преподаватель — соавтор демо-группы; добавляется и в уже существующую демо-базу */
+async function ensureDemoCoTeacher() {
+  if (await prisma.account.findUnique({ where: { login: CO_TEACHER_LOGIN } })) return;
+  const group = await prisma.group.findFirst({ where: { teacher: { account: { login: TEACHER_LOGIN } } }, orderBy: { createdAt: 'asc' } });
+  if (!group) return;
+  await prisma.teacher.create({
+    data: {
+      name: 'Игорь Павлович',
+      account: { create: { login: CO_TEACHER_LOGIN, passwordHash: await hashPassword(TEACHER_PASSWORD), role: 'TEACHER' } },
+      coGroups: { create: { groupId: group.id } },
+    },
+  });
+  console.log(`Seed: соавтор группы «${group.name}»: ${CO_TEACHER_LOGIN} / ${TEACHER_PASSWORD}`);
+}
+
 /** Демо-родитель добавляется и в уже существующую демо-базу (роль появилась позже) */
 async function ensureDemoParent() {
   if (await prisma.account.findUnique({ where: { login: PARENT_LOGIN } })) return;
@@ -55,6 +72,7 @@ async function main() {
   if (await prisma.account.findUnique({ where: { login: TEACHER_LOGIN } })) {
     console.log(`Seed: преподаватель «${TEACHER_LOGIN}» уже есть — пропускаю.`);
     await ensureDemoParent();
+    await ensureDemoCoTeacher();
     return;
   }
 
@@ -132,6 +150,7 @@ async function main() {
   console.log(`  Группа «${group.name}», пароль у всех учеников: ${STUDENT_PASSWORD}`);
   for (const s of students) console.log(`    ${s.name.padEnd(18)} ${s.account.login}`);
   await ensureDemoParent();
+  await ensureDemoCoTeacher();
 }
 
 await main();

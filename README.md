@@ -20,6 +20,7 @@ docker compose up --build
 | Кто | Логин | Пароль |
 |---|---|---|
 | Преподаватель | `teacher` | `teacher123` |
+| Второй преподаватель группы «5 «А»» (соавтор) | `teacher2` | `teacher123` |
 | Ученики группы «5 «А»» (10 человек) | `alisa.m`, `artem.k`, `vera.s`, `gleb.n`, `darya.l`, `egor.p`, `zlata.v`, `ilya.f`, `kira.m`, `mark.o` | `hero12345` |
 | Родитель Киры и Марка | `parent` | `parent12345` |
 

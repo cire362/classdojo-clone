@@ -8,7 +8,8 @@ import { env } from '../env.js';
 import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../lib/dates.js';
 import { hashPassword, verifyPassword } from '../lib/credentials.js';
 import { HttpError, notFound, parse } from '../lib/errors.js';
-import { ARCHIVED_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../services/access.js';
+import { ARCHIVED_MESSAGE, OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../services/access.js';
+import { addCoTeacher, groupTeachers, removeCoTeacher } from '../services/coTeachers.js';
 import { MAX_LESSONS_PER_DAY, attendanceForDate, deleteAttendance, saveAttendance } from '../services/attendance.js';
 import { countPeople } from '../services/detector.js';
 import { awardPoints, cardSummaries, deletePointEvents } from '../services/points.js';
@@ -29,6 +30,7 @@ const GroupPatch = z.object({
 const StudentsCreate = z.object({
   names: z.array(z.string().trim().max(80)).min(1).max(100),
 });
+const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).max(64) });
 const ParentLink = z.object({ login: z.string().trim().min(1).max(64) });
 const StudentPatch = z.object({ name: z.string().trim().min(1).max(80) });
 const ResetMany = z.object({ studentIds: z.array(id).max(200).optional() });
@@ -102,8 +104,11 @@ export const teacherRoutes = new Hono<AppEnv>()
       include: {
         _count: { select: { students: true } },
         students: { take: 6, orderBy: { name: 'asc' }, select: { hero: { select: { parts: true } } } },
+        teacher: { select: { name: true } },
+        coTeachers: { orderBy: { createdAt: 'asc' }, select: { teacher: { select: { id: true, name: true } } } },
       },
     });
+    const me = c.get('user').teacherId!;
     return c.json(
       groups.map((g) => ({
         id: g.id,
@@ -112,6 +117,12 @@ export const teacherRoutes = new Hono<AppEnv>()
         archivedAt: g.archivedAt,
         studentsCount: g._count.students,
         previewHeroes: g.students.map((s) => normalizeHero(s.hero?.parts)),
+        isOwner: g.teacherId === me,
+        // Другие преподаватели группы — подпись «вместе с …» на карточке
+        colleagues: [
+          ...(g.teacherId === me ? [] : [g.teacher.name]),
+          ...g.coTeachers.filter((ct) => ct.teacher.id !== me).map((ct) => ct.teacher.name),
+        ],
       })),
     );
   })
@@ -148,7 +159,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     ]);
     const summaries = await cardSummaries(students.map((s) => s.id));
     return c.json({
-      group: { id: group.id, name: group.name, subtractTeacher: group.subtractTeacher, archivedAt: group.archivedAt },
+      group: { id: group.id, name: group.name, subtractTeacher: group.subtractTeacher, archivedAt: group.archivedAt, isOwner: group.isOwner },
       students: students.map((s) => ({
         id: s.id,
         name: s.name,
@@ -169,22 +180,23 @@ export const teacherRoutes = new Hono<AppEnv>()
   .patch('/groups/:id', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
     const data = parse(GroupPatch, await c.req.json().catch(() => null));
+    if (data.name !== undefined && data.name !== group.name && !group.isOwner) throw new HttpError(403, OWNER_ONLY_MESSAGE);
     const g = await prisma.group.update({ where: { id: group.id }, data });
     return c.json({ id: g.id, name: g.name, subtractTeacher: g.subtractTeacher });
   })
   // Архив: группа скрывается из списка и замораживается (просмотр, статистика и Excel остаются)
   .post('/groups/:id/archive', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { owner: true });
     const g = await prisma.group.update({ where: { id: group.id }, data: { archivedAt: group.archivedAt ?? new Date() } });
     return c.json({ id: g.id, archivedAt: g.archivedAt });
   })
   .post('/groups/:id/restore', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { owner: true });
     await prisma.group.update({ where: { id: group.id }, data: { archivedAt: null } });
     return c.json({ id: group.id, archivedAt: null });
   })
   .delete('/groups/:id', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { owner: true });
     const students = await prisma.student.findMany({ where: { groupId: group.id }, select: { accountId: true } });
     await prisma.$transaction([
       prisma.account.deleteMany({ where: { id: { in: students.map((s) => s.accountId) } } }),
@@ -265,6 +277,27 @@ export const teacherRoutes = new Hono<AppEnv>()
   .post('/students/:id/reset-password', async (c) => {
     const student = await teacherStudent(c.get('user'), c.req.param('id'));
     return c.json(await resetStudentPassword(student.id));
+  })
+
+  // ───── Преподаватели группы ─────
+  .get('/groups/:id/teachers', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    return c.json(await groupTeachers(group.id, c.get('user').teacherId!));
+  })
+  .post('/groups/:id/teachers', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { owner: true });
+    const { login } = parse(TeacherLogin, await c.req.json().catch(() => null));
+    await addCoTeacher(group, login);
+    return c.json(await groupTeachers(group.id, c.get('user').teacherId!));
+  })
+  /** Владелец убирает соавтора; соавтор может убрать только себя (выйти из группы) */
+  .delete('/groups/:id/teachers/:teacherId', async (c) => {
+    const user = c.get('user');
+    const group = await teacherGroup(user, c.req.param('id'));
+    const teacherId = c.req.param('teacherId');
+    if (!group.isOwner && teacherId !== user.teacherId) throw new HttpError(403, OWNER_ONLY_MESSAGE);
+    await removeCoTeacher(group.id, teacherId);
+    return c.json({ ok: true });
   })
 
   // ───── Родители ─────
