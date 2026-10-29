@@ -95,4 +95,28 @@ describe('экран урока', () => {
     expect(await within(comets).findByText('лидер')).toBeInTheDocument();
     localStorage.removeItem('heroes:teams:g1');
   });
+  it('поиск и «выбрать найденных» начисляют только найденным, при смене поиска выбор сбрасывается', async () => {
+    const { user } = renderInGroup(<LessonPage />, groupData());
+    const search = screen.getByRole('searchbox', { name: 'Поиск ученика' });
+    await user.type(search, '  ИВАНОВА ');
+    expect(screen.getByRole('button', { name: /^Маша Иванова/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Петя Смирнов/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Несколько' }));
+    await user.click(screen.getByRole('button', { name: 'Выбрать найденных' }));
+    await user.click(screen.getByRole('button', { name: /^Начислить$/ }));
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: /Отличная работа/ }));
+    expect(api).toHaveBeenCalledWith('POST', '/teacher/groups/g1/points', { studentIds: ['s1'], reasonId: 'r1' });
+    await user.click(screen.getByRole('button', { name: 'Несколько' }));
+    await user.click(screen.getByRole('button', { name: 'Выбрать найденных' }));
+    await user.clear(search);
+    await user.type(search, 'petya.s');
+    expect(screen.queryByRole('button', { name: /^Маша Иванова/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Петя Смирнов/ })).toBeInTheDocument();
+    expect(screen.getByText('Выбрано: 0')).toBeInTheDocument();
+    await user.type(search, 'неттакого');
+    expect(screen.getByText(/Ученики не найдены/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Очистить поиск' }));
+    expect(screen.getByRole('button', { name: /^Маша Иванова/ })).toBeInTheDocument();
+  });
+
 });

@@ -9,6 +9,8 @@ import { MoveStudentModal } from '../../components/MoveStudentModal';
 import { useToast } from '../../components/Toast';
 import { Modal, PageTitle } from '../../components/ui';
 import { pluralize } from '../../hooks';
+import { StudentSearch } from '../../components/StudentSearch';
+import { matchesStudent } from '../../lib/student-search';
 import { useGroup } from './GroupLayout';
 import { CredentialsTable } from './Print';
 
@@ -17,6 +19,8 @@ export function StudentsPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const [names, setNames] = useState('');
+  const [query, setQuery] = useState('');
+  const visibleStudents = data.students.filter((s) => matchesStudent(s, query));
   const [busy, setBusy] = useState(false);
   const [issued, setIssued] = useState<Credentials[] | null>(null);
   const [editing, setEditing] = useState<LessonStudent | null>(null);
@@ -109,31 +113,36 @@ export function StudentsPage() {
           {data.students.length} {pluralize(data.students.length, 'ученик', 'ученика', 'учеников')}
         </PageTitle>
 
+        {data.students.length > 0 && <StudentSearch value={query} onChange={setQuery} found={visibleStudents.length} total={data.students.length} />}
         {data.students.length === 0 ? (
           <p className="text-ink-soft">Добавьте учеников справа. Логины и пароли создадутся автоматически.</p>
+        ) : visibleStudents.length === 0 ? (
+          <p className="rounded-2xl bg-surface-2 p-5 text-ink-soft">Ученики не найдены. Попробуйте другое имя, фамилию или логин.</p>
         ) : (
           <ul className="card divide-y divide-line overflow-hidden">
-            {data.students.map((s) => (
-              <li key={s.id} className="flex items-center gap-3 px-3 py-2.5 sm:px-4">
-                <Link to={`/s/${s.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+            {visibleStudents.map((s) => (
+              <li key={s.id} className="flex flex-wrap items-center gap-3 px-3 py-2.5 sm:flex-nowrap sm:px-4">
+                <Link to={`/s/${s.id}`} className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-auto">
                   <HeroHead parts={s.hero.parts} />
                   <span className="min-w-0">
                     <span className="block truncate font-semibold">{s.name}</span>
                     <span className="block truncate font-mono text-sm text-ink-soft">{s.login}</span>
                   </span>
                 </Link>
-                <button className="icon-btn" title="Переименовать" aria-label={`Переименовать ${s.name}`} onClick={() => setEditing(s)}>
-                  <PencilSimpleIcon size={20} />
-                </button>
-                <button className="icon-btn" title="Перевести в другую группу" aria-label={`Перевести ${s.name} в другую группу`} onClick={() => setMoving(s)}>
-                  <ArrowsLeftRightIcon size={20} />
-                </button>
-                <button className="icon-btn" title="Новый пароль" aria-label={`Новый пароль для ${s.name}`} onClick={() => resetPassword(s)}>
-                  <KeyIcon size={20} />
-                </button>
-                <button className="icon-btn hover:text-minus" title="Удалить" aria-label={`Удалить ${s.name}`} onClick={() => setDeleting(s)}>
-                  <TrashIcon size={20} />
-                </button>
+                <div className="ml-auto flex shrink-0 items-center gap-1">
+                  <button className="icon-btn" title="Переименовать" aria-label={`Переименовать ${s.name}`} onClick={() => setEditing(s)}>
+                    <PencilSimpleIcon size={20} />
+                  </button>
+                  <button className="icon-btn" title="Перевести в другую группу" aria-label={`Перевести ${s.name} в другую группу`} onClick={() => setMoving(s)}>
+                    <ArrowsLeftRightIcon size={20} />
+                  </button>
+                  <button className="icon-btn" title="Новый пароль" aria-label={`Новый пароль для ${s.name}`} onClick={() => resetPassword(s)}>
+                    <KeyIcon size={20} />
+                  </button>
+                  <button className="icon-btn hover:text-minus" title="Удалить" aria-label={`Удалить ${s.name}`} onClick={() => setDeleting(s)}>
+                    <TrashIcon size={20} />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

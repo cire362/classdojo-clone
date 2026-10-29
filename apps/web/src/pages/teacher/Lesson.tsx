@@ -14,6 +14,8 @@ import {
 import { api, type CardSummary, type LessonStudent, type Reason } from '../../api';
 import { HeroAvatar, heroTint } from '../../components/HeroAvatar';
 import { useToast } from '../../components/Toast';
+import { StudentSearch } from '../../components/StudentSearch';
+import { matchesStudent } from '../../lib/student-search';
 import { TeamsModal } from '../../components/TeamsModal';
 import { EmptyState, Modal } from '../../components/ui';
 import { pluralize } from '../../hooks';
@@ -49,6 +51,7 @@ function rememberTeamMode(groupId: string, on: boolean) {
 export function LessonPage() {
   const { data, setData, reload } = useGroup();
   const toast = useToast();
+  const [query, setQuery] = useState('');
   const [selectMode, setSelectMode] = useState(false);
   const selectBar = usePresence(selectMode, 200);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -62,6 +65,13 @@ export function LessonPage() {
   const burstKey = useRef(1);
 
   const students = data.students;
+  // Поиск скрывает карточки только на рабочем экране; проектор показывает всю группу.
+  const searching = !projector && !!query.trim();
+  const visibleStudents = searching ? students.filter((s) => matchesStudent(s, query)) : students;
+  function search(value: string) {
+    setQuery(value);
+    setSelected(new Set());
+  }
   const archived = !!data.group.archivedAt;
   const navigate = useNavigate();
   const present = data.todayAttendance ? new Set(data.todayAttendance.presentStudentIds) : null;
@@ -195,7 +205,7 @@ export function LessonPage() {
   const scoreOf = (members: LessonStudent[]) => members.reduce((sum, s) => sum + s.todayEarned, 0);
   const best = Math.max(0, ...teamSections.filter((x) => x.team).map((x) => scoreOf(x.members)));
 
-  const grid = teamView ? (
+  const grid = teamView && !searching ? (
     <div className="space-y-6">
       {teamSections.map(({ team, members }) => {
         const score = scoreOf(members);
@@ -223,16 +233,19 @@ export function LessonPage() {
       })}
     </div>
   ) : (
-    <div className={gridClass}>{students.map(card)}</div>
+    visibleStudents.length > 0 ? <div className={gridClass}>{visibleStudents.map(card)}</div> : (
+      <p className="rounded-2xl bg-surface-2 p-5 text-ink-soft">Ученики не найдены. Попробуйте другое имя, фамилию или логин.</p>
+    )
   );
 
   return (
     <>
+      {!projector && <StudentSearch value={query} onChange={search} found={visibleStudents.length} total={students.length} />}
       {!archived && <div className="flex flex-wrap items-center gap-2">
         {selectMode ? (
           <>
-            <button className="btn btn-secondary" onClick={() => setSelected(new Set(students.map((s) => s.id)))}>
-              <SelectionAllIcon size={20} /> Выбрать всех
+            <button className="btn btn-secondary" onClick={() => setSelected(new Set(visibleStudents.map((s) => s.id)))} disabled={!visibleStudents.length}>
+              <SelectionAllIcon size={20} /> {searching ? 'Выбрать найденных' : 'Выбрать всех'}
             </button>
             <button
               className="btn btn-ghost"
@@ -278,6 +291,7 @@ export function LessonPage() {
         )}
       </div>}
 
+      {searching && !selectMode && <p className="text-sm text-ink-soft">«Всей группе» начисляет баллы всем ученикам. Для найденных используйте «Несколько».</p>}
       {grid}
 
       {/* Панель выбора нескольких учеников */}
