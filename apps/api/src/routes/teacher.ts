@@ -9,6 +9,7 @@ import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../lib/dates.js
 import { hashPassword, verifyPassword } from '../lib/credentials.js';
 import { HttpError, notFound, parse } from '../lib/errors.js';
 import { ARCHIVED_MESSAGE, OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../services/access.js';
+import { classGoal, saveClassGoal, removeClassGoal } from '../services/classGoals.js';
 import { createDefaultRewards, decideRequest, groupRequests, groupRewards } from '../services/rewards.js';
 import { TEAM_COLORS, assignTeams, createTeam, deleteTeam, groupTeams, updateTeam } from '../services/teams.js';
 import { MAX_POST_LENGTH, createPost, deletePost, groupFeed } from '../services/feed.js';
@@ -27,6 +28,10 @@ import { createStudents, deleteStudent, resetStudentPassword } from '../services
 import { saveHero } from './student.js';
 
 const id = z.string().min(1).max(64);
+const ClassGoalBody = z.object({
+  title: z.string().trim().min(1, 'Напишите цель класса').max(100),
+  target: z.number().int().min(1, 'Нужно хотя бы 1 балл').max(1_000_000),
+});
 const GroupCreate = z.object({ name: z.string().trim().min(1, 'Введите название').max(60) });
 const GroupPatch = z.object({
   name: z.string().trim().min(1).max(60).optional(),
@@ -179,10 +184,11 @@ export const teacherRoutes = new Hono<AppEnv>()
         include: { records: true },
       }),
     ]);
-    const [summaries, teams, pendingRewards] = await Promise.all([
+    const [summaries, teams, pendingRewards, goal] = await Promise.all([
       cardSummaries(students.map((s) => s.id)),
       groupTeams(group.id),
       prisma.rewardRequest.count({ where: { status: 'PENDING', student: { groupId: group.id } } }),
+      classGoal(group.id),
     ]);
     return c.json({
       group: { id: group.id, name: group.name, subtractTeacher: group.subtractTeacher, archivedAt: group.archivedAt, isOwner: group.isOwner },
@@ -197,6 +203,7 @@ export const teacherRoutes = new Hono<AppEnv>()
       })),
       reasons: reasons.map((r) => ({ id: r.id, name: r.name, emoji: r.emoji, value: r.value })),
       teams,
+      classGoal: goal,
       pendingRewards,
       todayAttendance: todaySession
         ? {
@@ -537,6 +544,27 @@ export const teacherRoutes = new Hono<AppEnv>()
     return c.json({ ok: true });
   })
 
+  // ───── Общая цель класса ─────
+  .get('/groups/:id/goal', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    return c.json(await classGoal(group.id));
+  })
+  .put('/groups/:id/goal', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
+    const body = parse(ClassGoalBody, await c.req.json().catch(() => null));
+    return c.json(await saveClassGoal(group.id, body));
+  })
+  .post('/groups/:id/goal/restart', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
+    const body = parse(ClassGoalBody, await c.req.json().catch(() => null));
+    return c.json(await saveClassGoal(group.id, body, true));
+  })
+  .delete('/groups/:id/goal', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
+    await removeClassGoal(group.id);
+    return c.json({ ok: true });
+  })
+
   // ───── Баллы ─────
   .post('/groups/:id/points', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
@@ -551,6 +579,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     return c.json(
       {
         value: reason.value,
+        classGoal: await classGoal(group.id),
         eventIds: events.map((e) => e.id),
         summaries: Object.fromEntries(summaries),
       },

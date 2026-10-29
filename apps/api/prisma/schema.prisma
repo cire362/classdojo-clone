@@ -101,6 +101,7 @@ model Group {
   feedReads          FeedRead[]
   rewards            Reward[]
   teams              Team[]
+  classGoal          ClassGoal?
 
   @@index([teacherId])
 }
@@ -226,7 +227,12 @@ model PointEvent {
   attendanceSessionId String?
   attendanceSession   AttendanceSession? @relation(fields: [attendanceSessionId], references: [id], onDelete: Cascade)
 
+  /// Вклад в цель, действовавшую при начислении (только плюсы)
+  classGoalId         String?
+  classGoal           ClassGoal? @relation(fields: [classGoalId], references: [id], onDelete: SetNull)
+
   @@index([studentId, createdAt])
+  @@index([classGoalId])
   @@index([attendanceSessionId])
 }
 
@@ -245,6 +251,9 @@ model AttendanceSession {
   createdById       String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  /// Цель, действовавшая при первой отметке урока; переотметка не переносит вклад в другую цель
+  classGoalId       String?
+  classGoal         ClassGoal? @relation(fields: [classGoalId], references: [id], onDelete: SetNull)
 
   records Attendance[]
   points  PointEvent[]
@@ -397,4 +406,16 @@ model Team {
   students Student[]
 
   @@index([groupId])
+}
+
+/// Одна общая текущая цель класса; новая цель начинается с нуля.
+model ClassGoal {
+  id          String   @id @default(cuid())
+  groupId     String   @unique
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  title       String
+  target      Int
+  createdAt   DateTime @default(now())
+  points      PointEvent[]
+  sessions    AttendanceSession[]
 }

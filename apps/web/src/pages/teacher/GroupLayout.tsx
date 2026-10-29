@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, type Dispatch, type SetStateAction } from 'react';
 import { Link, NavLink, Outlet, useLocation, useOutletContext, useParams } from 'react-router-dom';
 import { ChunkErrorBoundary } from '../../components/ChunkErrorBoundary';
 import { ArchiveIcon, ArrowLeftIcon, CameraIcon, ChartBarIcon, GiftIcon, ListChecksIcon, MegaphoneIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
@@ -8,7 +8,7 @@ import { pluralize, useLoad } from '../../hooks';
 
 export interface GroupCtx {
   data: GroupDetails;
-  setData: (d: GroupDetails) => void;
+  setData: Dispatch<SetStateAction<GroupDetails | null>>;
   reload: () => Promise<void>;
 }
 

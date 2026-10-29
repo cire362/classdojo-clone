@@ -1,3 +1,4 @@
+import { lockGoalGroup } from './classGoals.js';
 import { prisma } from '../db.js';
 import { dateKey, dbDate, dbDateKey, localDayStart } from '../lib/dates.js';
 import { HttpError } from '../lib/errors.js';
@@ -73,12 +74,15 @@ export async function saveAttendance(params: {
       : new Date(localDayStart(params.date).getTime() + (11 + params.lesson) * 3600_000);
 
   return prisma.$transaction(async (tx) => {
+    await lockGoalGroup(tx, params.groupId);
+    const goal = await tx.classGoal.findUnique({ where: { groupId: params.groupId }, select: { id: true } });
     const reason = await attendanceReason(tx, params.groupId);
     const date = dbDate(params.date);
     const session = await tx.attendanceSession.upsert({
       where: { groupId_date_lessonNumber: { groupId: params.groupId, date, lessonNumber: params.lesson } },
       create: {
         groupId: params.groupId,
+        classGoalId: goal?.id ?? null,
         date,
         lessonNumber: params.lesson,
         peopleOnPhoto: params.peopleOnPhoto,
@@ -106,6 +110,7 @@ export async function saveAttendance(params: {
         value: reason.value,
         awardedById: params.createdById,
         attendanceSessionId: session.id,
+        classGoalId: session.classGoalId,
         createdAt: pointsAt,
       })),
     });

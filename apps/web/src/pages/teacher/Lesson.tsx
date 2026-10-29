@@ -11,9 +11,10 @@ import {
   UsersThreeIcon,
   XIcon,
 } from '@phosphor-icons/react';
-import { api, type CardSummary, type LessonStudent, type Reason } from '../../api';
+import { api, type CardSummary, type ClassGoal, type LessonStudent, type Reason } from '../../api';
 import { HeroAvatar, heroTint } from '../../components/HeroAvatar';
 import { useToast } from '../../components/Toast';
+import { ClassGoalPanel } from '../../components/ClassGoal';
 import { StudentSearch } from '../../components/StudentSearch';
 import { matchesStudent } from '../../lib/student-search';
 import { TeamsModal } from '../../components/TeamsModal';
@@ -77,27 +78,30 @@ export function LessonPage() {
   const present = data.todayAttendance ? new Set(data.todayAttendance.presentStudentIds) : null;
 
   const applySummaries = useCallback(
-    (summaries: Record<string, CardSummary>) => {
-      setData({
-        ...data,
-        students: data.students.map((s) => (summaries[s.id] ? { ...s, ...summaries[s.id] } : s)),
-      });
+    (summaries: Record<string, CardSummary>, classGoal?: ClassGoal | null) => {
+      setData((current) => current && ({
+        ...current,
+        classGoal: classGoal === undefined ? current.classGoal : classGoal,
+        students: current.students.map((s) => summaries[s.id] ? { ...s, ...summaries[s.id] } : s),
+      }));
     },
-    [data, setData],
+    [setData],
   );
+  const changeGoal = (classGoal: ClassGoal | null) => setData((current) => current && ({ ...current, classGoal }));
+  const goalPanel = <ClassGoalPanel goal={data.classGoal} groupId={data.group.id} archived={archived} onChange={changeGoal} />;
 
   async function award(reason: Reason) {
     if (!target) return;
     const ids = target.ids;
     setTarget(null);
     try {
-      const res = await api<{ value: number; eventIds: string[]; summaries: Record<string, CardSummary> }>(
+      const res = await api<{ value: number; eventIds: string[]; classGoal?: ClassGoal | null; summaries: Record<string, CardSummary> }>(
         'POST',
         `/teacher/groups/${data.group.id}/points`,
         { studentIds: ids, reasonId: reason.id },
       );
       const before = new Map(students.map((s) => [s.id, s.level]));
-      applySummaries(res.summaries);
+      applySummaries(res.summaries, res.classGoal);
       setSelected(new Set());
       setSelectMode(false);
       const leveled = ids.filter((id) => (res.summaries[id]?.level ?? 0) > (before.get(id) ?? 0));
@@ -117,11 +121,23 @@ export function LessonPage() {
       const undo = {
         label: 'Отменить',
         run: async () => {
-          const r = await api<{ summaries: Record<string, CardSummary> }>('POST', '/teacher/points/undo', {
-            eventIds: res.eventIds,
-          });
-          applySummaries(r.summaries);
-          toast({ text: 'Отменено', tone: 'neutral' });
+          try {
+            const r = await api<{ summaries: Record<string, CardSummary> }>('POST', '/teacher/points/undo', {
+              eventIds: res.eventIds,
+            });
+            applySummaries(r.summaries);
+            toast({ text: 'Отменено', tone: 'neutral' });
+          } catch (err) {
+            toast({ text: (err as Error).message, tone: 'error' });
+            return;
+          }
+          try {
+            // Цель могла быть изменена другим преподавателем после начисления.
+            const goal = await api<ClassGoal | null>('GET', `/teacher/groups/${data.group.id}/goal`);
+            setData((current) => current && ({ ...current, classGoal: goal }));
+          } catch {
+            toast({ text: 'Баллы отменены. Чтобы обновить прогресс цели, перезагрузите страницу', tone: 'neutral' });
+          }
         },
       };
       const who = ids.length === 1 ? students.find((s) => s.id === ids[0])?.name.split(' ')[0] : `${ids.length} ${pluralize(ids.length, 'ученик', 'ученика', 'учеников')}`;
@@ -170,12 +186,16 @@ export function LessonPage() {
 
   if (!students.length) {
     return (
-      <EmptyState icon={<UserPlusIcon size={28} />} title="В группе пока нет учеников">
-        <p>Добавьте учеников списком, и у каждого появится свой герой.</p>
-        <Link to="students" className="btn btn-primary mt-4">
-          Добавить учеников
-        </Link>
-      </EmptyState>
+      <>
+        {goalPanel}
+        <h2 className="sr-only">Ученики</h2>
+        <EmptyState icon={<UserPlusIcon size={28} />} title="В группе пока нет учеников">
+          <p>Добавьте учеников списком, и у каждого появится свой герой.</p>
+          <Link to="students" className="btn btn-primary mt-4">
+            Добавить учеников
+          </Link>
+        </EmptyState>
+      </>
     );
   }
 
@@ -240,6 +260,7 @@ export function LessonPage() {
 
   return (
     <>
+      {!projector && goalPanel}
       {!projector && <StudentSearch value={query} onChange={search} found={visibleStudents.length} total={students.length} />}
       {!archived && <div className="flex flex-wrap items-center gap-2">
         {selectMode ? (
@@ -336,6 +357,7 @@ export function LessonPage() {
               </button>
             </div>
           </div>
+          <ClassGoalPanel goal={data.classGoal} groupId={data.group.id} archived={archived} projector />
           {grid}
         </div>
       )}

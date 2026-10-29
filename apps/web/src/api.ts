@@ -149,7 +149,17 @@ export interface Shop {
   requests: RewardRequest[];
 }
 
+export interface ClassGoal {
+  id: string;
+  title: string;
+  target: number;
+  earned: number;
+  reached: boolean;
+  createdAt: string;
+}
+
 export interface GroupDetails {
+  classGoal: ClassGoal | null;
   group: { id: string; name: string; subtractTeacher: boolean; archivedAt: string | null; isOwner: boolean };
   students: LessonStudent[];
   reasons: Reason[];

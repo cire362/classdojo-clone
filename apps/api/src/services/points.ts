@@ -1,3 +1,4 @@
+import { lockGoalGroup } from './classGoals.js';
 import { groupsOf } from './access.js';
 import { levelForPoints } from '@heroes/shared';
 import { prisma } from '../db.js';
@@ -73,19 +74,18 @@ export async function awardPoints(params: {
   const count = await prisma.student.count({ where: { id: { in: studentIds }, groupId: params.groupId } });
   if (count !== studentIds.length) throw new HttpError(404, 'Ученик не найден в группе');
 
-  const events = await prisma.$transaction(
-    studentIds.map((studentId) =>
-      prisma.pointEvent.create({
-        data: {
-          studentId,
-          reasonId: reason.id,
-          reasonName: reason.name,
-          emoji: reason.emoji,
-          value: reason.value,
-          awardedById: params.awardedById,
-        },
-      }),
-    ),
-  );
+  const events = await prisma.$transaction(async (tx) => {
+    await lockGoalGroup(tx, params.groupId);
+    const goal = reason.value > 0 ? await tx.classGoal.findUnique({ where: { groupId: params.groupId }, select: { id: true } }) : null;
+    return Promise.all(studentIds.map((studentId) => tx.pointEvent.create({ data: {
+      studentId,
+      reasonId: reason.id,
+      reasonName: reason.name,
+      emoji: reason.emoji,
+      value: reason.value,
+      awardedById: params.awardedById,
+      classGoalId: goal?.id ?? null,
+    } })));
+  });
   return { reason, events };
 }

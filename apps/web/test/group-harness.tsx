@@ -16,6 +16,7 @@ export function groupData(overrides: Partial<GroupDetails['group']> = {}): Group
       { id: 'r1', name: 'Отличная работа', emoji: '⭐', value: 2 },
       { id: 'r2', name: 'Опоздал', emoji: '⏰', value: -1 },
     ],
+    classGoal: null,
     teams: [],
     pendingRewards: 0,
     todayAttendance: null,
@@ -30,7 +31,8 @@ function Where() {
 export function renderInGroup(page: ReactElement, initial: GroupDetails, path = '') {
   const reload = async () => {};
   function Layout() {
-    const [data, setData] = useState(initial);
+    const [data, setData] = useState<GroupDetails | null>(initial);
+    if (!data) return null;
     return <Outlet context={{ data, setData, reload } satisfies GroupCtx} />;
   }
   return renderApp(

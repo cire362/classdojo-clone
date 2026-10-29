@@ -49,7 +49,10 @@ export function Modal({
     window.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    requestAnimationFrame(() => ref.current?.focus());
+    requestAnimationFrame(() => {
+      // Не уводим фокус из поля, если пользователь уже начал заполнять окно.
+      if (ref.current && !ref.current.contains(document.activeElement)) ref.current.focus();
+    });
     return () => {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
@@ -130,7 +133,7 @@ export function EmptyState({ icon, title, children }: { icon: ReactNode; title: 
   );
 }
 
-export function ProgressBar({ value, label, className = '' }: { value: number; label: string; className?: string }) {
+export function ProgressBar({ value, label, valueText, className = '' }: { value: number; label: string; valueText?: string; className?: string }) {
   const v = Math.max(0, Math.min(1, value));
   return (
     <div
@@ -139,6 +142,7 @@ export function ProgressBar({ value, label, className = '' }: { value: number; l
       aria-valuenow={Math.round(v * 100)}
       aria-valuemin={0}
       aria-valuemax={100}
+      aria-valuetext={valueText}
       className={`h-3 overflow-hidden rounded-full bg-surface-2 ${className}`}
     >
       <div
