@@ -14,7 +14,7 @@ describe('премиум', () => {
     const denied = await call('PUT', '/api/student/hero', { cookie, body: { name: '', parts: premiumHero } });
     expect(denied.status).toBe(422);
     expect(denied.body.error).toMatch(/премиум-коллекции/);
-    expect((await call('GET', '/api/teacher/plan', { cookie: t.cookie })).body).toEqual({ active: false, until: null });
+    expect((await call('GET', '/api/teacher/plan', { cookie: t.cookie })).body).toEqual({ active: false, until: null, freeForAll: false });
 
     await prisma.teacher.update({ where: { id: t.teacher.id }, data: { premiumUntil: new Date(Date.now() + 86_400_000) } });
     expect((await call('GET', '/api/student/profile', { cookie })).body.premium).toBe(true);

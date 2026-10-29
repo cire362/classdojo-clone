@@ -149,7 +149,7 @@ export function SettingsPage() {
 
 /** Премиум: пока без оплаты на сайте — подключает администратор */
 function PremiumCard() {
-  const { data } = useLoad(() => api<{ active: boolean; until: string | null }>('GET', '/teacher/plan'), []);
+  const { data } = useLoad(() => api<{ active: boolean; until: string | null; freeForAll: boolean }>('GET', '/teacher/plan'), []);
   return (
     <section className="card space-y-4 p-5" aria-labelledby="premium-title">
       <h2 id="premium-title" className="flex items-center gap-2 text-lg">
@@ -157,6 +157,8 @@ function PremiumCard() {
       </h2>
       {!data ? (
         <Skeleton className="h-16" />
+      ) : data.freeForAll ? (
+        <p>Сейчас премиум бесплатен для всех: ученикам ваших групп открыта премиум-коллекция «Космос».</p>
       ) : data.active ? (
         <p>
           Подключён до <b>{new Date(data.until!).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</b>. Ученикам ваших
@@ -171,7 +173,7 @@ function PremiumCard() {
         <li>Премиум-коллекция деталей героя «Космос»: галактика, плащ-комета, костюм астронавта, алмаз и особые цвета.</li>
         <li>Действует для учеников групп, которые вы создали; детали открываются по уровню, как обычные.</li>
       </ul>
-      {!data?.active && <p className="text-sm text-ink-soft">Оплата на сайте появится позже. Чтобы подключить премиум сейчас, обратитесь к администратору.</p>}
+      {data && !data.active && <p className="text-sm text-ink-soft">Оплата на сайте появится позже. Чтобы подключить премиум сейчас, обратитесь к администратору.</p>}
     </section>
   );
 }

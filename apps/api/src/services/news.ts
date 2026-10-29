@@ -1,4 +1,5 @@
 import { prisma } from '../db.js';
+import { studentHasPremium } from './premium.js';
 import { studentLevel } from './points.js';
 
 /**
@@ -6,19 +7,21 @@ import { studentLevel } from './points.js';
  * как он последний раз заходил в конструктор. Уровень всегда считается на сервере.
  */
 export async function studentNews(studentId: string) {
-  const [student, level] = await Promise.all([
+  const [student, level, premium] = await Promise.all([
     prisma.student.findUniqueOrThrow({
       where: { id: studentId },
       select: { celebratedLevel: true, partsSeenLevel: true },
     }),
     studentLevel(studentId),
+    studentHasPremium(studentId),
   ]);
   const newParts =
     level.level > student.partsSeenLevel
       ? await prisma.heroPart.findMany({
           where: {
             active: true,
-            isPremium: false,
+            // Премиум-детали в новостях — только если премиум открыт
+            ...(premium ? {} : { isPremium: false }),
             requiredLevel: { gt: student.partsSeenLevel, lte: level.level },
           },
           orderBy: [{ requiredLevel: 'asc' }, { sortOrder: 'asc' }],

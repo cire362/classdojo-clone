@@ -13,4 +13,6 @@ export const env = {
   /** Максимальный размер фото для отметки, байт */
   maxPhotoBytes: num('MAX_PHOTO_BYTES', 12 * 1024 * 1024),
   loginRateLimit: num('LOGIN_RATE_LIMIT', 10),
+  /** Пока оплаты нет, премиум бесплатен для всех. PREMIUM_FOR_ALL=false включает обычные правила (срок у преподавателя) */
+  premiumForAll: process.env.PREMIUM_FOR_ALL !== 'false',
 };
