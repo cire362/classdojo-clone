@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 import { defineConfig, type Plugin } from 'vite';
@@ -76,20 +78,84 @@ function inlineStyles(): Plugin {
   };
 }
 
+/**
+ * `import { StarIcon } from '@phosphor-icons/react'` → импорт каждой иконки по её пути.
+ * Через общий индексный файл все иконки «притягивались» к первому импортировавшему их файлу
+ * (ядру приложения), а по отдельности каждая попадает в код той страницы, где нужна.
+ */
+function phosphorPerIcon(): Plugin {
+  const IMPORT = /import\s*\{([^}]*)\}\s*from\s*['"]@phosphor-icons\/react['"];?/g;
+  return {
+    name: 'heroes-phosphor-per-icon',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!/[\\/]src[\\/].*\.tsx?$/.test(id) || !code.includes('@phosphor-icons/react')) return null;
+      return code.replace(IMPORT, (_, names: string) =>
+        names
+          .split(',')
+          .map((n) => n.trim())
+          .filter(Boolean)
+          .map((n) => {
+            const [name, alias] = n.split(/\s+as\s+/);
+            const file = name.replace(/Icon$/, '');
+            return `import { ${name}${alias ? ` as ${alias}` : ''} } from '@phosphor-icons/react/dist/csr/${file}';`;
+          })
+          .join('\n'),
+      );
+    },
+  };
+}
+
+/**
+ * Каждая иконка Phosphor несёт 6 начертаний, а мы используем 2–3 (regular по умолчанию + weight="…"
+ * в коде). Неиспользуемые начертания вырезаются при сборке — иконки становятся вдвое легче.
+ * Набор начертаний собирается из исходников; weight={выражение} отключает вырезание целиком.
+ */
+function phosphorUsedWeights(): Plugin {
+  const ALL = ['thin', 'light', 'regular', 'bold', 'fill', 'duotone'];
+  const srcDir = fileURLToPath(new URL('./src', import.meta.url));
+  const used = new Set(['regular']);
+  let dynamic = false;
+  for (const file of readdirSync(srcDir, { recursive: true, encoding: 'utf8' })) {
+    if (!/\.tsx?$/.test(file)) continue;
+    const code = readFileSync(join(srcDir, file), 'utf8');
+    for (const m of code.matchAll(/\bweight=(?:"(\w+)"|'(\w+)'|\{)/g)) {
+      if (m[1] || m[2]) used.add(m[1] || m[2]);
+      else dynamic = true;
+    }
+  }
+  const unused = ALL.filter((w) => !used.has(w));
+  const ENTRY = new RegExp(`\\n  \\[\\n    "(?:${unused.join('|')})",\\n[\\s\\S]*?\\n  \\],?(?=\\n)`, 'g');
+  return {
+    name: 'heroes-phosphor-used-weights',
+    apply: 'build',
+    transform(code, id) {
+      if (dynamic || !unused.length || !/@phosphor-icons[\\/]react[\\/]dist[\\/]defs[\\/]/.test(id)) return null;
+      return code.replace(ENTRY, '');
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), inlineEarlyScript(), inlineStyles()],
+  plugins: [phosphorPerIcon(), phosphorUsedWeights(), react(), tailwindcss(), inlineEarlyScript(), inlineStyles()],
   build: {
     rollupOptions: {
       output: {
         // Библиотеки — в отдельных файлах: они редко меняются и дольше живут в кэше браузера
-        manualChunks(id) {
+        manualChunks(id, { getModuleInfo }) {
           // Ядро приложения, нужное любой странице, — одним файлом, а не россыпью мелких
           if (/[\\/]src[\\/]((api|auth|news|hooks|pages|routes)\.tsx?|components[\\/](ui|Toast|Layout|ChunkErrorBoundary|PageSkeleton)\.tsx|lib[\\/]network\.ts)$/.test(id)) {
             return 'app';
           }
           if (!id.includes('node_modules')) return undefined;
-          // Иконки проверяем первыми: путь @phosphor-icons/react иначе попал бы в чанк react
-          if (id.includes('@phosphor-icons')) return 'icons';
+          // Иконки: основа Phosphor и иконки, нужные нескольким файлам, — в ядро (каждая меньше 1 КБ,
+          // а отдельный файл по HTTP/1.1 стоит лишнего запроса); иконка одной страницы — в коде этой страницы.
+          // Проверяем до react: путь @phosphor-icons/react иначе попал бы в чанк react
+          if (id.includes('@phosphor-icons')) {
+            if (/[\\/]dist[\\/]lib[\\/]/.test(id)) return 'app';
+            if (/[\\/]dist[\\/]csr[\\/]/.test(id) && (getModuleInfo(id)?.importers.length ?? 0) > 1) return 'app';
+            return undefined;
+          }
           if (/[\\/](react-router|react-router-dom)[\\/]/.test(id)) return 'router';
           if (/[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react';
           if (/[\\/](motion|framer-motion|motion-dom|motion-utils)[\\/]/.test(id)) return 'motion';
