@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ChunkErrorBoundary } from './ChunkErrorBoundary';
-import { ChatsCircleIcon, GearSixIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
+import { BellIcon, ChatsCircleIcon, GearSixIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
 import { useAuth } from '../auth';
 import { useNews } from '../news';
 import { CountBadge, useNotifications } from '../notify';
@@ -41,6 +41,7 @@ export function AppLayout() {
   const shopLink = (
     <NavLink to="/shop" className={navClass}>
       Награды
+      <CountBadge count={counts.rewards} label={pluralize(counts.rewards, 'выданная награда', 'выданные награды', 'выданных наград')} />
     </NavLink>
   );
   const feedLink = (
@@ -67,6 +68,13 @@ export function AppLayout() {
             </nav>
           )}
           <div className="ml-auto flex items-center gap-1">
+            {user?.role === 'STUDENT' && (
+              <NavLink to="/notifications" className={({ isActive }) => `icon-btn relative w-auto gap-1 px-2.5 ${isActive ? 'bg-surface-2 text-ink' : ''}`} title="Уведомления">
+                <BellIcon size={22} aria-hidden />
+                <span className="sr-only">Уведомления</span>
+                <CountBadge count={counts.feed + counts.rewards} label={pluralize(counts.feed + counts.rewards, 'непрочитанное уведомление', 'непрочитанных уведомления', 'непрочитанных уведомлений')} />
+              </NavLink>
+            )}
             {user?.role === 'TEACHER' && (
               <NavLink
                 to="/messages"
@@ -109,7 +117,7 @@ export function AppLayout() {
           </div>
         </div>
         {user?.role === 'STUDENT' && (
-          <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:hidden" aria-label="Разделы">
+          <nav className="relative mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:hidden" aria-label="Разделы">
             <NavLink to="/" end className={navClass}>
               Мой герой
             </NavLink>

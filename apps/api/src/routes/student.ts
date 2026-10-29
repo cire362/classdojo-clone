@@ -10,6 +10,7 @@ import { cancelRequest, requestReward, studentShop } from '../services/rewards.j
 import { markNewsSeen, studentNews } from '../services/news.js';
 import { studentHasPremium } from '../services/premium.js';
 import { studentProfile } from '../services/profile.js';
+import { readStudentNotifications, studentNotifications } from '../services/studentNotifications.js';
 
 export const HeroBody = z.object({
   name: z.string().trim().max(40),
@@ -34,6 +35,15 @@ export async function saveHero(studentId: string, body: unknown) {
 export const studentRoutes = new Hono<AppEnv>()
   .use(requireRole('STUDENT'))
   .get('/profile', async (c) => c.json(await studentProfile(c.get('user').studentId!)))
+  .get('/notifications', async (c) => {
+    const query = parse(z.object({ before: z.string().max(200).optional(), through: z.string().datetime().optional() }), c.req.query());
+    return c.json(await studentNotifications(c.get('user').studentId!, query));
+  })
+  .post('/notifications/read', async (c) => {
+    const body = parse(z.object({ groupId: z.string().min(1).max(100), through: z.string().datetime() }), await c.req.json().catch(() => null));
+    await readStudentNotifications(c.get('user').studentId!, body.groupId, body.through);
+    return c.json({ ok: true });
+  })
   .put('/hero', async (c) => c.json(await saveHero(c.get('user').studentId!, await c.req.json().catch(() => null))))
   .get('/shop', async (c) => c.json(await studentShop(c.get('user').studentId!)))
   .post('/shop/:rewardId/request', async (c) => {

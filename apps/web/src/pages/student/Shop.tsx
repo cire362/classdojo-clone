@@ -3,6 +3,7 @@ import { api, type Shop } from '../../api';
 import { useToast } from '../../components/Toast';
 import { EmptyState, ErrorBox, Skeleton } from '../../components/ui';
 import { formatDateTime, pluralize, useLoad } from '../../hooks';
+import { useNotifications } from '../../notify';
 
 const STATUS = {
   PENDING: { text: 'ждёт ответа учителя', cls: 'bg-accent/25 text-ink' },
@@ -13,7 +14,12 @@ const STATUS = {
 /** Магазин наград ученика: тратит баллы на награды класса */
 export function ShopPage() {
   const toast = useToast();
-  const { data, setData, error, reload } = useLoad(() => api<Shop>('GET', '/student/shop'), []);
+  const { refresh } = useNotifications();
+  const { data, setData, error, reload } = useLoad(async () => {
+    const shop = await api<Shop>('GET', '/student/shop');
+    void refresh();
+    return shop;
+  }, []);
 
   async function act(fn: () => Promise<Shop>, ok: string) {
     try {

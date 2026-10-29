@@ -24,6 +24,7 @@ export const PAGE_MODULES = {
   parentHome: 'pages/parent/ParentHome.tsx',
   studentFeed: 'pages/student/StudentFeed.tsx',
   shop: 'pages/student/Shop.tsx',
+  notifications: 'pages/student/Notifications.tsx',
 } as const;
 
 export type PageKey = keyof typeof PAGE_MODULES;
@@ -42,6 +43,7 @@ const ROUTE_PAGES: [RegExp, PageKey[]][] = [
   [/^\/g\/[^/]+\/feed$/, ['groupLayout', 'groupFeed']],
   [/^\/g\/[^/]+\/rewards$/, ['groupLayout', 'rewards']],
   [/^\/shop$/, ['shop']],
+  [/^\/notifications$/, ['notifications']],
   [/^\/messages(\/|$)/, ['messages']],
   [/^\/feed$/, ['studentFeed']],
   [/^\/g\/[^/]+\/?$/, ['groupLayout', 'lesson']],

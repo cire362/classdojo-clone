@@ -1,4 +1,5 @@
 import { prisma } from '../db.js';
+import type { Prisma } from '../generated/prisma/client.js';
 import { HttpError, notFound } from '../lib/errors.js';
 import { groupsOf } from './access.js';
 
@@ -7,19 +8,15 @@ export const MAX_POST_LENGTH = 2000;
 const PAGE = 100;
 
 export async function groupFeed(groupId: string, viewer: { accountId: string; teacherId?: string | null; isOwner?: boolean }) {
+  const through = new Date();
   const posts = await prisma.post.findMany({
-    where: { groupId },
+    where: { groupId, createdAt: { lte: through } },
     orderBy: { createdAt: 'desc' },
     take: PAGE,
     include: { author: { select: { id: true, name: true } } },
   });
-  // Открыл ленту — всё прочитано
-  const now = new Date();
-  await prisma.feedRead.upsert({
-    where: { accountId_groupId: { accountId: viewer.accountId, groupId } },
-    create: { accountId: viewer.accountId, groupId, readAt: now },
-    update: { readAt: now },
-  });
+  // События, появившиеся во время загрузки, останутся новыми; старый запрос не откатит отметку.
+  await markFeedRead(viewer.accountId, groupId, through);
   return posts.map((p) => ({
     id: p.id,
     text: p.text,
@@ -28,6 +25,14 @@ export async function groupFeed(groupId: string, viewer: { accountId: string; te
     // Удалить запись может её автор и создатель группы
     canDelete: !!viewer.teacherId && (p.author.id === viewer.teacherId || !!viewer.isOwner),
   }));
+}
+
+export async function markFeedRead(accountId: string, groupId: string, through: Date, db: Prisma.TransactionClient | typeof prisma = prisma) {
+  await db.$executeRaw`
+    INSERT INTO "FeedRead" ("accountId", "groupId", "readAt") VALUES (${accountId}, ${groupId}, ${through})
+    ON CONFLICT ("accountId", "groupId") DO UPDATE
+    SET "readAt" = GREATEST("FeedRead"."readAt", EXCLUDED."readAt")
+  `;
 }
 
 export async function createPost(groupId: string, authorId: string, text: string) {

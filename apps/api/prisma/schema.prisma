@@ -134,6 +134,8 @@ model Student {
   celebratedLevel Int      @default(1)
   /// До какого уровня ученик уже видел новые детали в конструкторе
   partsSeenLevel  Int      @default(1)
+  /// До какого момента просмотрены решения о выдаче наград
+  rewardsReadAt   DateTime @default(now())
 
   hero        Hero?
   pointEvents PointEvent[]
@@ -401,6 +403,7 @@ model RewardRequest {
   decidedBy   Account?     @relation("DecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
 
   @@index([studentId, status])
+  @@index([studentId, status, decidedAt])
 }
 
 /// Команда для командного режима на уроке

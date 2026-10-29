@@ -40,6 +40,7 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   parentHome: remember(() => import('./pages/parent/ParentHome')),
   studentFeed: remember(() => import('./pages/student/StudentFeed')),
   shop: remember(() => import('./pages/student/Shop')),
+  notifications: remember(() => import('./pages/student/Notifications')),
 };
 
 /**
@@ -80,11 +81,12 @@ export const ThreadPage = page(loaders.messages, 'ThreadPage');
 export const StudentFeedPage = page(loaders.studentFeed, 'StudentFeedPage');
 export const RewardsPage = page(loaders.rewards, 'RewardsPage');
 export const ShopPage = page(loaders.shop, 'ShopPage');
+export const StudentNotificationsPage = page(loaders.notifications, 'StudentNotificationsPage');
 
 const byRole = {
   ADMIN: [loaders.admin],
   TEACHER: [loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons, loaders.attendance, loaders.stats, loaders.studentView, loaders.settings, loaders.groupFeed, loaders.messages, loaders.rewards],
-  STUDENT: [loaders.cabinet, loaders.myHero, loaders.studentFeed, loaders.shop],
+  STUDENT: [loaders.cabinet, loaders.myHero, loaders.studentFeed, loaders.shop, loaders.notifications],
   PARENT: [loaders.parentHome],
 };
 

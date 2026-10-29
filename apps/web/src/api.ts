@@ -201,13 +201,34 @@ export interface ParentChild {
   groupName: string;
   hero: Hero;
   level: number;
-  unread: Notifications;
+  unread: Pick<Notifications, 'messages' | 'feed'>;
 }
 
-/** Счётчики для значков: новые сообщения и записи в ленте */
+/** Счётчики: новые сообщения, записи в ленте и выданные награды ученика */
 export interface Notifications {
   messages: number;
   feed: number;
+  rewards: number;
+}
+
+export interface StudentNotification {
+  id: string;
+  kind: 'feed' | 'reward';
+  title: string;
+  text: string;
+  author: string | null;
+  cost: number | null;
+  createdAt: string;
+  unread: boolean;
+  href: '/feed' | '/shop';
+}
+
+export interface StudentNotifications {
+  items: StudentNotification[];
+  nextCursor: string | null;
+  through: string;
+  groupId: string;
+  unreadCount: number;
 }
 
 export interface FeedPost {

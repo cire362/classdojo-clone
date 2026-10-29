@@ -1,6 +1,7 @@
 import type { Prisma } from '../generated/prisma/client';
 import { prisma } from '../db.js';
 import { HttpError, notFound } from '../lib/errors.js';
+import { markRewardNotificationsRead } from './studentNotifications.js';
 
 /**
  * Магазин наград. Баланс = все баллы (плюсы минус минусы) минус потраченное на награды.
@@ -48,12 +49,14 @@ const requestView = {
 
 /** Магазин для ученика: баланс, награды его группы и его запросы */
 export async function studentShop(studentId: string) {
+  const through = new Date();
   const s = await prisma.student.findUniqueOrThrow({ where: { id: studentId }, select: { groupId: true, group: { select: { archivedAt: true } } } });
   const [rewards, requests, bal] = await Promise.all([
     groupRewards(s.groupId),
     prisma.rewardRequest.findMany({ where: { studentId }, orderBy: { createdAt: 'desc' }, take: 50, select: requestView }),
     balance(studentId),
   ]);
+  await markRewardNotificationsRead(studentId, through);
   return { balance: bal, archived: !!s.group.archivedAt, rewards, requests };
 }
 
