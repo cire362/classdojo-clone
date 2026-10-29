@@ -15,6 +15,7 @@ import { api, type CardSummary, type ClassGoal, type LessonStudent, type Reason 
 import { HeroAvatar, heroTint } from '../../components/HeroAvatar';
 import { useToast } from '../../components/Toast';
 import { ClassGoalPanel } from '../../components/ClassGoal';
+import { LessonTimer } from '../../components/LessonTimer';
 import { StudentSearch } from '../../components/StudentSearch';
 import { matchesStudent } from '../../lib/student-search';
 import { TeamsModal } from '../../components/TeamsModal';
@@ -58,6 +59,7 @@ export function LessonPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [target, setTarget] = useState<{ ids: string[]; label: string } | null>(null);
   const [projector, setProjector] = useState(false);
+  const [timerTarget, setTimerTarget] = useState<HTMLDivElement | null>(null);
   const [randomOpen, setRandomOpen] = useState(false);
   const [teamMode, setTeamMode] = useState(() => storedTeamMode(data.group.id));
   const [teamsOpen, setTeamsOpen] = useState(false);
@@ -89,6 +91,7 @@ export function LessonPage() {
   );
   const changeGoal = (classGoal: ClassGoal | null) => setData((current) => current && ({ ...current, classGoal }));
   const goalPanel = <ClassGoalPanel goal={data.classGoal} groupId={data.group.id} archived={archived} onChange={changeGoal} />;
+  const timerPanel = !archived && <LessonTimer key={data.group.id} groupId={data.group.id} projector={projector} target={timerTarget} />;
 
   async function award(reason: Reason) {
     if (!target) return;
@@ -188,6 +191,7 @@ export function LessonPage() {
     return (
       <>
         {goalPanel}
+        {timerPanel}
         <h2 className="sr-only">Ученики</h2>
         <EmptyState icon={<UserPlusIcon size={28} />} title="В группе пока нет учеников">
           <p>Добавьте учеников списком, и у каждого появится свой герой.</p>
@@ -261,6 +265,7 @@ export function LessonPage() {
   return (
     <>
       {!projector && goalPanel}
+      {timerPanel}
       {!projector && <StudentSearch value={query} onChange={search} found={visibleStudents.length} total={students.length} />}
       {!archived && <div className="flex flex-wrap items-center gap-2">
         {selectMode ? (
@@ -357,6 +362,7 @@ export function LessonPage() {
               </button>
             </div>
           </div>
+          <div ref={setTimerTarget} />
           <ClassGoalPanel goal={data.classGoal} groupId={data.group.id} archived={archived} projector />
           {grid}
         </div>
