@@ -51,8 +51,33 @@ function inlineEarlyScript(): Plugin {
   };
 }
 
+/**
+ * Стили встраиваются в index.html (~13 КБ в gzip). Отдельный CSS-файл по HTTP/1.1 ждал свободного
+ * соединения из шести, которые ранний скрипт сразу занимает данными и кодом страницы, и первая
+ * отрисовка иногда сдвигалась с 1,5 до 2,7 с. Шрифты остаются отдельными файлами (пути абсолютные).
+ */
+function inlineStyles(): Plugin {
+  return {
+    name: 'heroes-inline-styles',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, ctx) {
+        if (!ctx.bundle) return html;
+        const bundle = ctx.bundle;
+        return html.replace(/<link rel="stylesheet"[^>]*href="\/(assets\/[^"]+\.css)"[^>]*>/g, (tag, fileName: string) => {
+          const asset = bundle[fileName];
+          if (!asset || asset.type !== 'asset') return tag;
+          delete bundle[fileName];
+          return `<style>${String(asset.source).replace(/<\/style/gi, '<\\/style')}</style>`;
+        });
+      },
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), inlineEarlyScript()],
+  plugins: [react(), tailwindcss(), inlineEarlyScript(), inlineStyles()],
   build: {
     rollupOptions: {
       output: {
