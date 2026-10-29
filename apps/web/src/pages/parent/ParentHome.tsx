@@ -6,6 +6,7 @@ import { Thread } from '../../components/Thread';
 import { CountBadge, useNotifications } from '../../notify';
 import { HeroHead } from '../../components/HeroAvatar';
 import { ProfileView } from '../../components/ProfileView';
+import { WeeklySummary } from '../../components/WeeklySummary';
 import { EmptyState, ErrorBox, Skeleton } from '../../components/ui';
 import { useLoad } from '../../hooks';
 import { ProfileSkeleton } from '../student/Cabinet';
@@ -25,7 +26,7 @@ function storedChild(): string | null {
 export function ParentHomePage() {
   const children = useLoad(() => api<ParentChild[]>('GET', '/parent/children'), []);
   const [selected, setSelected] = useState<string | null>(storedChild);
-  const [section, setSection] = useState<'profile' | 'feed' | 'messages'>('profile');
+  const [section, setSection] = useState<'profile' | 'week' | 'feed' | 'messages'>('profile');
   const list = children.data ?? [];
   const current = list.find((c) => c.id === selected) ?? list[0];
   const profile = useLoad(
@@ -76,6 +77,7 @@ export function ParentHomePage() {
           {(
             [
               ['profile', 'Профиль', 0],
+              ['week', 'Итог недели', 0],
               ['feed', 'Лента класса', current.unread.feed],
               ['messages', 'Сообщения', current.unread.messages],
             ] as const
@@ -91,6 +93,7 @@ export function ParentHomePage() {
         <Feed key={current.id} path={`/parent/children/${current.id}/feed`} onLoaded={() => void children.reload()} readOnlyNote={`Объявления преподавателей группы ${current.groupName}.`} />
       )}
       {current && section === 'messages' && <ParentMessages key={current.id} child={current} onRead={children.reload} />}
+      {current && section === 'week' && <WeeklySummary key={current.id} child={current} />}
       {section === 'profile' &&
         (profile.error ? (
           <ErrorBox message={profile.error} onRetry={profile.reload} />

@@ -7,6 +7,7 @@ import { groupFeed, unreadPosts } from '../services/feed.js';
 import { MAX_MESSAGE_LENGTH, sendMessage, threadMessages, unreadMessages } from '../services/messages.js';
 import { parentChild, parentChildren } from '../services/parents.js';
 import { studentProfile } from '../services/profile.js';
+import { weeklySummary } from '../services/weekly-summary.js';
 
 /** Кабинет родителя: только просмотр и только своих детей (чужие — 404) */
 export const parentRoutes = new Hono<AppEnv>()
@@ -46,4 +47,8 @@ export const parentRoutes = new Hono<AppEnv>()
   .get('/children/:id/profile', async (c) => {
     const studentId = await parentChild(c.get('user').parentId!, c.req.param('id'));
     return c.json(await studentProfile(studentId));
+  })
+  .get('/children/:id/weekly-summary', async (c) => {
+    const studentId = await parentChild(c.get('user').parentId!, c.req.param('id'));
+    return c.json(await weeklySummary(studentId, c.req.query('week')));
   });

@@ -204,6 +204,24 @@ export interface ParentChild {
   unread: Pick<Notifications, 'messages' | 'feed'>;
 }
 
+export interface WeeklySummary {
+  studentId: string;
+  from: string;
+  to: string;
+  currentFrom: string;
+  previousWeek: string;
+  nextWeek: string | null;
+  isCurrent: boolean;
+  points: PointsSum & { events: number };
+  reasons: { name: string; emoji: string; earned: number; lost: number; count: number }[];
+  attendance: {
+    total: number;
+    attended: number;
+    missed: number;
+    records: { id: string; date: string; lesson: number; present: boolean; groupName: string }[];
+  };
+}
+
 /** Счётчики: новые сообщения, записи в ленте и выданные награды ученика */
 export interface Notifications {
   messages: number;
