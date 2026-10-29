@@ -4,7 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import '@fontsource-variable/onest';
 import '@fontsource-variable/unbounded';
 import './styles.css';
-import { AuthProvider, useAuth } from './auth';
+import { AuthProvider, storedRole, useAuth } from './auth';
 import { NewsProvider } from './news';
 import type { Role } from './api';
 import { AppLayout } from './components/Layout';
@@ -19,6 +19,7 @@ import {
   LessonPage,
   LoginPage,
   MyHeroPage,
+  ParentHomePage,
   PrintPage,
   ReasonsPage,
   SettingsPage,
@@ -53,7 +54,8 @@ function Home() {
   const { user, loading } = useAuth();
   if (loading) return <PageSkeleton />;
   if (!user) return <Navigate to="/login" replace />;
-  return user.role === 'TEACHER' ? <GroupsPage /> : <CabinetPage />;
+  if (user.role === 'TEACHER') return <GroupsPage />;
+  return user.role === 'PARENT' ? <ParentHomePage /> : <CabinetPage />;
 }
 
 const teacher = (el: ReactNode) => <RequireRole role="TEACHER">{el}</RequireRole>;
@@ -61,7 +63,7 @@ const student = (el: ReactNode) => <RequireRole role="STUDENT">{el}</RequireRole
 
 // Ждём код открытой страницы (он маленький и грузится параллельно с данными), но не дольше 2 с:
 // так первая отрисовка сразу показывает страницу, без промежуточной заглушки
-await Promise.race([preloadRoute(window.location.pathname), new Promise((resolve) => setTimeout(resolve, 2000))]);
+await Promise.race([preloadRoute(window.location.pathname, storedRole()), new Promise((resolve) => setTimeout(resolve, 2000))]);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

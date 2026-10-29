@@ -33,6 +33,7 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   settings: remember(() => import('./pages/teacher/Settings')),
   cabinet: remember(() => import('./pages/student/Cabinet')),
   myHero: remember(() => import('./pages/student/MyHero')),
+  parentHome: remember(() => import('./pages/parent/ParentHome')),
 };
 
 /**
@@ -65,10 +66,12 @@ export const StudentHeroPage = page(loaders.studentView, 'StudentHeroPage');
 export const SettingsPage = page(loaders.settings, 'SettingsPage');
 export const CabinetPage = page(loaders.cabinet, 'CabinetPage');
 export const MyHeroPage = page(loaders.myHero, 'MyHeroPage');
+export const ParentHomePage = page(loaders.parentHome, 'ParentHomePage');
 
 const byRole = {
   TEACHER: [loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons, loaders.attendance, loaders.stats, loaders.studentView, loaders.settings],
   STUDENT: [loaders.cabinet, loaders.myHero],
+  PARENT: [loaders.parentHome],
 };
 
 const prefetched = new Set<string>();
@@ -88,6 +91,6 @@ export function prefetchPages(role: keyof typeof byRole) {
 }
 
 /** Код открытой страницы начинаем грузить сразу при старте, не дожидаясь проверки входа */
-export function preloadRoute(pathname: string): Promise<unknown> {
-  return Promise.all(pagesFor(pathname).map((key) => loaders[key]().catch(() => undefined)));
+export function preloadRoute(pathname: string, role?: string | null): Promise<unknown> {
+  return Promise.all(pagesFor(pathname, role).map((key) => loaders[key]().catch(() => undefined)));
 }

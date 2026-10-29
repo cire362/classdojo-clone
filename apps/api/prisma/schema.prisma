@@ -17,6 +17,7 @@ datasource db {
 enum Role {
   TEACHER
   STUDENT
+  PARENT
 }
 
 enum ReasonKind {
@@ -35,6 +36,7 @@ model Account {
 
   teacher  Teacher?
   student  Student?
+  parent   Parent?
   sessions Session[]
   awarded  PointEvent[] @relation("AwardedBy")
 }
@@ -94,8 +96,31 @@ model Student {
   hero        Hero?
   pointEvents PointEvent[]
   attendance  Attendance[]
+  parents     ParentStudent[]
 
   @@index([groupId])
+}
+
+/// Родитель: аккаунт создаёт преподаватель (регистрации нет). Один родитель может быть
+/// привязан к нескольким детям — у братьев и сестёр общий вход.
+model Parent {
+  id        String   @id @default(cuid())
+  accountId String   @unique
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  children ParentStudent[]
+}
+
+model ParentStudent {
+  parentId  String
+  parent    Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([parentId, studentId])
+  @@index([studentId])
 }
 
 model Hero {

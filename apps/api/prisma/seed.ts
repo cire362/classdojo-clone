@@ -13,6 +13,10 @@ import { attendanceReason, createDefaultReasons } from '../src/services/reasons.
 const TEACHER_LOGIN = process.env.SEED_TEACHER_LOGIN ?? 'teacher';
 const TEACHER_PASSWORD = process.env.SEED_TEACHER_PASSWORD ?? 'teacher123';
 const STUDENT_PASSWORD = process.env.SEED_STUDENT_PASSWORD ?? 'hero12345';
+const PARENT_LOGIN = 'parent';
+const PARENT_PASSWORD = process.env.SEED_PARENT_PASSWORD ?? 'parent12345';
+/** Демо-родитель с двумя детьми — чтобы было видно переключение между детьми */
+const PARENT_CHILDREN = ['kira.m', 'mark.o'];
 
 const NAMES = [
   'Алиса Морозова',
@@ -31,11 +35,26 @@ const NAMES = [
 let seed = 42;
 const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
 
+/** Демо-родитель добавляется и в уже существующую демо-базу (роль появилась позже) */
+async function ensureDemoParent() {
+  if (await prisma.account.findUnique({ where: { login: PARENT_LOGIN } })) return;
+  const children = await prisma.student.findMany({ where: { account: { login: { in: PARENT_CHILDREN } } }, select: { id: true } });
+  if (!children.length) return;
+  await prisma.parent.create({
+    data: {
+      account: { create: { login: PARENT_LOGIN, passwordHash: await hashPassword(PARENT_PASSWORD), role: 'PARENT' } },
+      children: { create: children.map((c) => ({ studentId: c.id })) },
+    },
+  });
+  console.log(`Seed: родитель ${PARENT_LOGIN} / ${PARENT_PASSWORD} (дети: ${PARENT_CHILDREN.join(', ')})`);
+}
+
 async function main() {
   await syncHeroParts();
 
   if (await prisma.account.findUnique({ where: { login: TEACHER_LOGIN } })) {
     console.log(`Seed: преподаватель «${TEACHER_LOGIN}» уже есть — пропускаю.`);
+    await ensureDemoParent();
     return;
   }
 
@@ -112,6 +131,7 @@ async function main() {
   console.log(`  Преподаватель: ${TEACHER_LOGIN} / ${TEACHER_PASSWORD}`);
   console.log(`  Группа «${group.name}», пароль у всех учеников: ${STUDENT_PASSWORD}`);
   for (const s of students) console.log(`    ${s.name.padEnd(18)} ${s.account.login}`);
+  await ensureDemoParent();
 }
 
 await main();

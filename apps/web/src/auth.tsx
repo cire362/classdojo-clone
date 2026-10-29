@@ -19,9 +19,21 @@ const ROLE_KEY = 'heroes:role';
 function rememberRole(role: string | null) {
   try {
     if (role) localStorage.setItem(ROLE_KEY, role);
-    else localStorage.removeItem(ROLE_KEY);
+    else {
+      localStorage.removeItem(ROLE_KEY);
+      // Выбранный ребёнок в кабинете родителя — тоже только для ускорения
+      localStorage.removeItem('heroes:child');
+    }
   } catch {
     /* хранилище недоступно — просто без ускорения */
+  }
+}
+
+export function storedRole(): string | null {
+  try {
+    return localStorage.getItem(ROLE_KEY);
+  } catch {
+    return null;
   }
 }
 

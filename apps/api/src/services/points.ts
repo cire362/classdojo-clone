@@ -1,3 +1,4 @@
+import { groupsOf } from './access.js';
 import { levelForPoints } from '@heroes/shared';
 import { prisma } from '../db.js';
 import { startOfDay } from '../lib/dates.js';
@@ -37,7 +38,7 @@ export async function cardSummaries(studentIds: string[]) {
 export async function deletePointEvents(teacherId: string, eventIds: string[]) {
   const ids = [...new Set(eventIds)];
   const events = await prisma.pointEvent.findMany({
-    where: { id: { in: ids }, student: { group: { teacherId } } },
+    where: { id: { in: ids }, student: { group: groupsOf(teacherId) } },
     select: { id: true, studentId: true, attendanceSessionId: true, student: { select: { group: { select: { archivedAt: true } } } } },
   });
   if (events.length !== ids.length) throw new HttpError(404, 'Начисление не найдено');

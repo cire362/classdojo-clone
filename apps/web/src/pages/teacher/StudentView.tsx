@@ -4,6 +4,7 @@ import { ArrowLeftIcon, ArrowsLeftRightIcon, KeyIcon, PaintBrushIcon } from '@ph
 import { api, type Credentials, type Hero, type HistoryEvent, type Profile } from '../../api';
 import { HeroEditor } from '../../components/HeroEditor';
 import { MoveStudentModal } from '../../components/MoveStudentModal';
+import { ParentAccessCard } from '../../components/ParentAccess';
 import { ProfileView } from '../../components/ProfileView';
 import { useToast } from '../../components/Toast';
 import { ErrorBox, Modal, Skeleton } from '../../components/ui';
@@ -53,6 +54,7 @@ export function StudentViewPage() {
           </>
         }
       />
+      <ParentAccessCard student={data.student} groupId={data.student.group.id} archived={!!data.student.group.archivedAt} />
       <MoveStudentModal
         student={moving ? { id: data.student.id, name: data.student.name, groupId: data.student.group.id } : null}
         onClose={() => setMoving(false)}

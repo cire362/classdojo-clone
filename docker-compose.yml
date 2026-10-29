@@ -46,6 +46,7 @@ services:
       SEED_TEACHER_LOGIN: teacher
       SEED_TEACHER_PASSWORD: teacher123
       SEED_STUDENT_PASSWORD: hero12345
+      SEED_PARENT_PASSWORD: parent12345
     depends_on:
       db:
         condition: service_healthy

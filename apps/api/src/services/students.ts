@@ -1,5 +1,6 @@
 import { randomHero } from '@heroes/shared';
 import { prisma } from '../db.js';
+import { deleteOrphanParents } from './parents.js';
 import { generatePassword, hashPassword, loginBase, pickLogin } from '../lib/credentials.js';
 
 export interface IssuedCredentials {
@@ -62,5 +63,5 @@ export async function resetStudentPassword(studentId: string): Promise<IssuedCre
 export async function deleteStudent(studentId: string): Promise<void> {
   const student = await prisma.student.findUniqueOrThrow({ where: { id: studentId } });
   // Удаление аккаунта каскадом удаляет ученика, героя, баллы и посещаемость
-  await prisma.account.delete({ where: { id: student.accountId } });
+  await prisma.$transaction([prisma.account.delete({ where: { id: student.accountId } }), deleteOrphanParents()]);
 }

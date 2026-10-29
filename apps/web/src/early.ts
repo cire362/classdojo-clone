@@ -19,20 +19,22 @@ function key(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function role(): string | null {
+function stored(key: string): string | null {
   try {
-    return localStorage.getItem('heroes:role');
+    return localStorage.getItem(key);
   } catch {
     return null;
   }
 }
+
+const role = () => stored('heroes:role');
 
 const path = location.pathname;
 
 // Код открытой страницы заказываем сразу (имена файлов сборки подставляет vite.config.ts)
 const chunks = (window as Window & { __heroesChunks?: Partial<Record<PageKey, string[]>> }).__heroesChunks ?? {};
 const preloaded = new Set<string>();
-for (const key of pagesFor(path)) {
+for (const key of pagesFor(path, role())) {
   for (const file of chunks[key] ?? []) {
     if (preloaded.has(file)) continue;
     preloaded.add(file);
@@ -64,6 +66,11 @@ if (path !== '/login') {
         get('/student/profile');
         get('/student/news');
         if (path === '/hero') get('/hero-parts');
+      }
+      if (r === 'PARENT' && path === '/') {
+        get('/parent/children');
+        const child = stored('heroes:child');
+        if (child) get(`/parent/children/${child}/profile`);
       }
     };
     const known = role();

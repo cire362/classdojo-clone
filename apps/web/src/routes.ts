@@ -17,13 +17,14 @@ export const PAGE_MODULES = {
   settings: 'pages/teacher/Settings.tsx',
   cabinet: 'pages/student/Cabinet.tsx',
   myHero: 'pages/student/MyHero.tsx',
+  parentHome: 'pages/parent/ParentHome.tsx',
 } as const;
 
 export type PageKey = keyof typeof PAGE_MODULES;
 
 const ROUTE_PAGES: [RegExp, PageKey[]][] = [
   [/^\/login$/, ['login']],
-  [/^\/$/, ['groups', 'cabinet']],
+  [/^\/$/, ['groups', 'cabinet', 'parentHome']],
   [/^\/hero$/, ['myHero']],
   [/^\/settings$/, ['settings']],
   [/^\/s\//, ['studentView']],
@@ -35,6 +36,10 @@ const ROUTE_PAGES: [RegExp, PageKey[]][] = [
   [/^\/g\/[^/]+\/?$/, ['groupLayout', 'lesson']],
 ];
 
-export function pagesFor(pathname: string): PageKey[] {
+/** Главная у каждой роли своя; если роль известна (запомнена после входа), грузим только её страницу */
+const HOME_BY_ROLE: Record<string, PageKey> = { TEACHER: 'groups', STUDENT: 'cabinet', PARENT: 'parentHome' };
+
+export function pagesFor(pathname: string, role?: string | null): PageKey[] {
+  if (pathname === '/' && role && HOME_BY_ROLE[role]) return [HOME_BY_ROLE[role]];
   return ROUTE_PAGES.find(([re]) => re.test(pathname))?.[1] ?? [];
 }

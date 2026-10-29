@@ -8,7 +8,7 @@ import { env } from '../env.js';
 import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../lib/dates.js';
 import { hashPassword, verifyPassword } from '../lib/credentials.js';
 import { HttpError, notFound, parse } from '../lib/errors.js';
-import { ARCHIVED_MESSAGE, teacherGroup, teacherStudent } from '../services/access.js';
+import { ARCHIVED_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../services/access.js';
 import { MAX_LESSONS_PER_DAY, attendanceForDate, deleteAttendance, saveAttendance } from '../services/attendance.js';
 import { countPeople } from '../services/detector.js';
 import { awardPoints, cardSummaries, deletePointEvents } from '../services/points.js';
@@ -16,6 +16,7 @@ import { studentProfile } from '../services/profile.js';
 import { createDefaultReasons } from '../services/reasons.js';
 import { groupStats, statsWorkbook } from '../services/stats.js';
 import { MAX_IMPORT_BYTES, previewImport } from '../services/import.js';
+import { createParents, deleteOrphanParents, linkParent, resetParentPassword, studentParents, unlinkParent } from '../services/parents.js';
 import { createStudents, deleteStudent, resetStudentPassword } from '../services/students.js';
 import { saveHero } from './student.js';
 
@@ -28,6 +29,7 @@ const GroupPatch = z.object({
 const StudentsCreate = z.object({
   names: z.array(z.string().trim().max(80)).min(1).max(100),
 });
+const ParentLink = z.object({ login: z.string().trim().min(1).max(64) });
 const StudentPatch = z.object({ name: z.string().trim().min(1).max(80) });
 const ResetMany = z.object({ studentIds: z.array(id).max(200).optional() });
 const ReasonBody = z.object({
@@ -95,7 +97,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   // ───── Группы ─────
   .get('/groups', async (c) => {
     const groups = await prisma.group.findMany({
-      where: { teacherId: c.get('user').teacherId! },
+      where: groupsOf(c.get('user').teacherId!),
       orderBy: { createdAt: 'asc' },
       include: {
         _count: { select: { students: true } },
@@ -131,7 +133,7 @@ export const teacherRoutes = new Hono<AppEnv>()
       prisma.student.findMany({
         where: { groupId: group.id },
         orderBy: { name: 'asc' },
-        include: { hero: true, account: { select: { login: true } } },
+        include: { hero: true, account: { select: { login: true } }, _count: { select: { parents: true } } },
       }),
       prisma.behaviorReason.findMany({
         where: { groupId: group.id, kind: 'MANUAL', archived: false },
@@ -152,6 +154,7 @@ export const teacherRoutes = new Hono<AppEnv>()
         name: s.name,
         login: s.account.login,
         hero: { name: s.hero?.name ?? '', parts: normalizeHero(s.hero?.parts) },
+        parentsCount: s._count.parents,
         ...summaries.get(s.id)!,
       })),
       reasons: reasons.map((r) => ({ id: r.id, name: r.name, emoji: r.emoji, value: r.value })),
@@ -186,6 +189,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     await prisma.$transaction([
       prisma.account.deleteMany({ where: { id: { in: students.map((s) => s.accountId) } } }),
       prisma.group.delete({ where: { id: group.id } }),
+      deleteOrphanParents(),
     ]);
     return c.json({ ok: true });
   })
@@ -262,6 +266,51 @@ export const teacherRoutes = new Hono<AppEnv>()
     const student = await teacherStudent(c.get('user'), c.req.param('id'));
     return c.json(await resetStudentPassword(student.id));
   })
+
+  // ───── Родители ─────
+  .get('/students/:id/parents', async (c) => {
+    const student = await teacherStudent(c.get('user'), c.req.param('id'));
+    return c.json(await studentParents(student.id));
+  })
+  .post('/students/:id/parents', async (c) => {
+    const student = await teacherStudent(c.get('user'), c.req.param('id'));
+    if (student.group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
+    if ((await prisma.parentStudent.count({ where: { studentId: student.id } })) >= 4) {
+      throw new HttpError(400, 'У ученика может быть не больше 4 родительских входов');
+    }
+    const [credentials] = await createParents([{ id: student.id, name: student.name }]);
+    return c.json(credentials);
+  })
+  .post('/students/:id/parents/link', async (c) => {
+    const user = c.get('user');
+    const student = await teacherStudent(user, c.req.param('id'));
+    if (student.group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
+    const { login } = parse(ParentLink, await c.req.json().catch(() => null));
+    await linkParent(user.teacherId!, student.id, login);
+    return c.json(await studentParents(student.id));
+  })
+  .delete('/students/:id/parents/:parentId', async (c) => {
+    const user = c.get('user');
+    const student = await teacherStudent(user, c.req.param('id'));
+    await unlinkParent(user.teacherId!, student.id, c.req.param('parentId'));
+    return c.json(await studentParents(student.id));
+  })
+  .post('/students/:id/parents/:parentId/reset-password', async (c) => {
+    const user = c.get('user');
+    const student = await teacherStudent(user, c.req.param('id'));
+    return c.json(await resetParentPassword(user.teacherId!, c.req.param('parentId'), student.id));
+  })
+  /** Доступ родителям всех учеников группы, у кого его ещё нет, — для листа на родительское собрание */
+  .post('/groups/:id/parents', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
+    const students = await prisma.student.findMany({
+      where: { groupId: group.id, parents: { none: {} } },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+    });
+    return c.json({ credentials: await createParents(students) });
+  })
+
   .get('/students/:id/profile', async (c) => {
     const student = await teacherStudent(c.get('user'), c.req.param('id'));
     return c.json(await studentProfile(student.id));
@@ -432,7 +481,7 @@ function checkAttendanceDate(date: string) {
 
 async function ownedReason(teacherId: string, reasonId: string) {
   const reason = await prisma.behaviorReason.findFirst({
-    where: { id: reasonId, kind: 'MANUAL', archived: false, group: { teacherId } },
+    where: { id: reasonId, kind: 'MANUAL', archived: false, group: groupsOf(teacherId) },
     include: { group: { select: { archivedAt: true } } },
   });
   if (!reason) throw notFound('Причина не найдена');

@@ -21,6 +21,7 @@ docker compose up --build
 |---|---|---|
 | Преподаватель | `teacher` | `teacher123` |
 | Ученики группы «5 «А»» (10 человек) | `alisa.m`, `artem.k`, `vera.s`, `gleb.n`, `darya.l`, `egor.p`, `zlata.v`, `ilya.f`, `kira.m`, `mark.o` | `hero12345` |
+| Родитель Киры и Марка | `parent` | `parent12345` |
 
 Пароли seed задаются переменными `SEED_TEACHER_PASSWORD` и `SEED_STUDENT_PASSWORD` в `docker-compose.yml`. Seed идемпотентен: если преподаватель уже есть, данные не трогаются.
 

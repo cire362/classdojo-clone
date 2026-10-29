@@ -5,6 +5,7 @@ import { requireAuth, type AppEnv } from './auth.js';
 import { prisma } from './db.js';
 import { HttpError } from './lib/errors.js';
 import { authRoutes } from './routes/auth.js';
+import { parentRoutes } from './routes/parent.js';
 import { studentRoutes } from './routes/student.js';
 import { teacherRoutes } from './routes/teacher.js';
 
@@ -36,6 +37,9 @@ export function createApp() {
 
   app.use('/api/student/*', requireAuth);
   app.route('/api/student', studentRoutes);
+
+  app.use('/api/parent/*', requireAuth);
+  app.route('/api/parent', parentRoutes);
 
   app.get('/api/hero-parts', requireAuth, async (c) => {
     const parts = await prisma.heroPart.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } });

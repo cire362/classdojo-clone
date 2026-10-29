@@ -58,7 +58,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   return data as T;
 }
 
-export type Role = 'TEACHER' | 'STUDENT';
+export type Role = 'TEACHER' | 'STUDENT' | 'PARENT';
 export interface Me {
   login: string;
   role: Role;
@@ -97,6 +97,8 @@ export interface LessonStudent extends CardSummary {
   name: string;
   login: string;
   hero: Hero;
+  /** Сколько родительских входов выдано */
+  parentsCount: number;
 }
 
 export interface GroupDetails {
@@ -111,6 +113,31 @@ export interface Credentials {
   name: string;
   login: string;
   password: string;
+}
+
+/** Родительский вход, привязанный к ученику */
+export interface ParentAccess {
+  id: string;
+  login: string;
+  /** Другие дети этого родителя (общий вход для братьев и сестёр) */
+  otherChildren: { id: string; name: string }[];
+}
+
+export interface ParentCredentials {
+  parentId: string;
+  studentId: string;
+  studentName: string;
+  login: string;
+  password: string;
+}
+
+/** Ребёнок в кабинете родителя */
+export interface ParentChild {
+  id: string;
+  name: string;
+  groupName: string;
+  hero: Hero;
+  level: number;
 }
 
 export interface PointsSum {

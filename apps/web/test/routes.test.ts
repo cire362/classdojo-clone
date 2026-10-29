@@ -1,0 +1,16 @@
+import { describe, expect, it } from 'vitest';
+import { pagesFor } from '../src/routes';
+
+describe('код страниц по адресу', () => {
+  it('главная: при известной роли — только её страница', () => {
+    expect(pagesFor('/', 'TEACHER')).toEqual(['groups']);
+    expect(pagesFor('/', 'STUDENT')).toEqual(['cabinet']);
+    expect(pagesFor('/', 'PARENT')).toEqual(['parentHome']);
+  });
+
+  it('главная без роли — страницы всех ролей; остальные адреса от роли не зависят', () => {
+    expect(pagesFor('/', null)).toEqual(['groups', 'cabinet', 'parentHome']);
+    expect(pagesFor('/g/abc/stats', 'TEACHER')).toEqual(['groupLayout', 'stats']);
+    expect(pagesFor('/unknown')).toEqual([]);
+  });
+});

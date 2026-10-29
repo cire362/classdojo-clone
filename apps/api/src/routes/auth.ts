@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { checkLoginRate, createSession, destroySession, loadUser, resetLoginRate, type AppEnv } from '../auth.js';
+import { ACCOUNT_PROFILE, accountName, checkLoginRate, createSession, destroySession, loadUser, resetLoginRate, type AppEnv } from '../auth.js';
 import { prisma } from '../db.js';
 import { hashPassword, verifyPassword } from '../lib/credentials.js';
 import { HttpError, parse } from '../lib/errors.js';
@@ -30,15 +30,9 @@ export const authRoutes = new Hono<AppEnv>()
     await createSession(c, account.id);
     const user = await prisma.account.findUniqueOrThrow({
       where: { id: account.id },
-      include: { teacher: true, student: true },
+      include: ACCOUNT_PROFILE,
     });
-    return c.json({
-      user: {
-        login: user.login,
-        role: user.role,
-        name: user.teacher?.name ?? user.student?.name ?? user.login,
-      },
-    });
+    return c.json({ user: { login: user.login, role: user.role, name: accountName(user) } });
   })
   .post('/logout', async (c) => {
     await destroySession(c);

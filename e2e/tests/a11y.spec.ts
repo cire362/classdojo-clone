@@ -59,6 +59,20 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await expect(sp.getByRole('heading', { name: 'Конструктор героя' })).toBeVisible();
       await expectNoViolations(sp, 'конструктор');
       await student.close();
+
+      // Кабинет родителя с двумя детьми (переключатель)
+      const issued = await (await page.request.post(`/api/teacher/students/${g.credentials[0].id}/parents`, { headers: { 'x-heroes-client': '1' } })).json();
+      await page.request.post(`/api/teacher/students/${g.credentials[1].id}/parents/link`, {
+        headers: { 'x-heroes-client': '1' },
+        data: { login: issued.login },
+      });
+      const parent = await ctx.browser()!.newContext({ baseURL: test.info().project.use.baseURL, colorScheme });
+      const pp = await parent.newPage();
+      await loginUi(pp, issued.login, issued.password);
+      await expect(pp.getByRole('tab', { name: /Доступ Второй/ })).toBeVisible();
+      await expect(pp.getByText(/^Доступ Второй, E2E/)).toBeVisible();
+      await expectNoViolations(pp, 'кабинет родителя');
+      await parent.close();
     } finally {
       await ctx.close();
       await g.remove();

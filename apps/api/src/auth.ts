@@ -17,9 +17,35 @@ export interface AuthUser {
   name: string;
   teacherId: string | null;
   studentId: string | null;
+  parentId: string | null;
 }
 
 export type AppEnv = { Variables: { user: AuthUser } };
+
+/** Связи аккаунта, по которым строятся роль и отображаемое имя */
+export const ACCOUNT_PROFILE = {
+  teacher: true,
+  student: true,
+  parent: { include: { children: { include: { student: { select: { name: true } } } } } },
+} as const;
+
+type AccountWithProfile = {
+  login: string;
+  teacher: { name: string } | null;
+  student: { name: string } | null;
+  parent: { children: { student: { name: string } }[] } | null;
+};
+
+/** Имя в шапке: у родителя — имена его детей */
+export function accountName(a: AccountWithProfile): string {
+  if (a.teacher) return a.teacher.name;
+  if (a.student) return a.student.name;
+  if (a.parent) {
+    const names = a.parent.children.map((ch) => ch.student.name).sort();
+    return names.length ? `Родитель: ${names.join(', ')}` : 'Родитель';
+  }
+  return a.login;
+}
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 
@@ -47,7 +73,7 @@ export async function loadUser(c: Context): Promise<AuthUser | null> {
   if (!token) return null;
   const session = await prisma.session.findUnique({
     where: { id: sha256(token) },
-    include: { account: { include: { teacher: true, student: true } } },
+    include: { account: { include: ACCOUNT_PROFILE } },
   });
   if (!session) return null;
   if (session.expiresAt < new Date()) {
@@ -60,9 +86,10 @@ export async function loadUser(c: Context): Promise<AuthUser | null> {
     accountId: a.id,
     login: a.login,
     role: a.role,
-    name: a.teacher?.name ?? a.student?.name ?? a.login,
+    name: accountName(a),
     teacherId: a.teacher?.id ?? null,
     studentId: a.student?.id ?? null,
+    parentId: a.parent?.id ?? null,
   };
 }
 

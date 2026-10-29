@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArchiveIcon, ArrowsLeftRightIcon, FileArrowUpIcon, KeyIcon, PencilSimpleIcon, PrinterIcon, TrashIcon, UserPlusIcon } from '@phosphor-icons/react';
-import { api, type Credentials, type LessonStudent } from '../../api';
+import { ArchiveIcon, ArrowsLeftRightIcon, FileArrowUpIcon, KeyIcon, PencilSimpleIcon, PrinterIcon, TrashIcon, UserPlusIcon, UsersIcon } from '@phosphor-icons/react';
+import { api, type Credentials, type LessonStudent, type ParentCredentials } from '../../api';
 import { HeroHead } from '../../components/HeroAvatar';
 import { ImportStudentsModal, type ImportPreview } from '../../components/ImportStudentsModal';
 import { MoveStudentModal } from '../../components/MoveStudentModal';
@@ -25,6 +25,22 @@ export function StudentsPage() {
   const [importing, setImporting] = useState(false);
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
   const [groupEdit, setGroupEdit] = useState(false);
+  const [parentsConfirm, setParentsConfirm] = useState(false);
+  const [parentsBusy, setParentsBusy] = useState(false);
+  const withoutParents = data.students.filter((s) => s.parentsCount === 0).length;
+
+  async function issueParents() {
+    setParentsBusy(true);
+    try {
+      const r = await api<{ credentials: ParentCredentials[] }>('POST', `/teacher/groups/${data.group.id}/parents`);
+      await reload();
+      navigate(`/g/${data.group.id}/print`, { state: { parents: r.credentials } });
+    } catch (e) {
+      toast({ text: (e as Error).message, tone: 'error' });
+    } finally {
+      setParentsBusy(false);
+    }
+  }
 
   const parsed = names
     .split('\n')
@@ -76,9 +92,16 @@ export function StudentsPage() {
         <PageTitle
           actions={
             data.students.length > 0 && (
-              <Link to={`/g/${data.group.id}/print`} className="btn btn-secondary btn-sm">
-                <PrinterIcon size={18} /> Лист с логинами
-              </Link>
+              <>
+                <Link to={`/g/${data.group.id}/print`} className="btn btn-secondary btn-sm">
+                  <PrinterIcon size={18} /> Лист с логинами
+                </Link>
+                {!data.group.archivedAt && withoutParents > 0 && (
+                  <button className="btn btn-secondary btn-sm" onClick={() => setParentsConfirm(true)}>
+                    <UsersIcon size={18} /> Входы родителям
+                  </button>
+                )}
+              </>
             )
           }
         >
@@ -230,6 +253,25 @@ export function StudentsPage() {
         onConfirm={(list) => addStudents(list)}
       />
 
+      <Modal open={parentsConfirm} title="Входы для родителей" onClose={() => setParentsConfirm(false)}>
+        <div className="space-y-5">
+          <p>
+            Создадим вход родителям {withoutParents} {pluralize(withoutParents, 'ученика', 'учеников', 'учеников')}, у кого его ещё нет,
+            и откроем лист для печати — удобно раздать на родительском собрании.
+          </p>
+          <p className="text-sm text-ink-soft">
+            Родители увидят героя, баллы, историю и посещаемость только своего ребёнка. Пароли показываются один раз.
+          </p>
+          <div className="flex gap-2">
+            <button className="btn btn-primary" disabled={parentsBusy} onClick={issueParents}>
+              {parentsBusy ? 'Создаём…' : 'Создать и распечатать'}
+            </button>
+            <button className="btn btn-secondary" onClick={() => setParentsConfirm(false)}>
+              Отмена
+            </button>
+          </div>
+        </div>
+      </Modal>
       <MoveStudentModal
         student={moving && { id: moving.id, name: moving.name, groupId: data.group.id }}
         onClose={() => setMoving(null)}
