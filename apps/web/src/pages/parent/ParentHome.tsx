@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { UsersIcon } from '@phosphor-icons/react';
-import { api, type ParentChild, type Profile } from '../../api';
+import { api, type ChatMessage, type ParentChild, type Profile } from '../../api';
+import { Feed } from '../../components/Feed';
+import { Thread } from '../../components/Thread';
+import { CountBadge, useNotifications } from '../../notify';
 import { HeroHead } from '../../components/HeroAvatar';
 import { ProfileView } from '../../components/ProfileView';
-import { EmptyState, ErrorBox } from '../../components/ui';
+import { EmptyState, ErrorBox, Skeleton } from '../../components/ui';
 import { useLoad } from '../../hooks';
 import { ProfileSkeleton } from '../student/Cabinet';
 
@@ -22,6 +25,7 @@ function storedChild(): string | null {
 export function ParentHomePage() {
   const children = useLoad(() => api<ParentChild[]>('GET', '/parent/children'), []);
   const [selected, setSelected] = useState<string | null>(storedChild);
+  const [section, setSection] = useState<'profile' | 'feed' | 'messages'>('profile');
   const list = children.data ?? [];
   const current = list.find((c) => c.id === selected) ?? list[0];
   const profile = useLoad(
@@ -62,17 +66,59 @@ export function ParentHomePage() {
             >
               <HeroHead parts={c.hero.parts} className="size-10" />
               {c.name}
+              <CountBadge count={c.unread.messages + c.unread.feed} label="новых" />
             </button>
           ))}
         </div>
       )}
-      {profile.error ? (
-        <ErrorBox message={profile.error} onRetry={profile.reload} />
-      ) : profile.data && profile.data.student.id === current?.id ? (
-        <ProfileView profile={profile.data} isOwn={false} />
-      ) : (
-        <ProfileSkeleton />
+      {current && (
+        <nav className="flex gap-1 overflow-x-auto" aria-label="Разделы">
+          {(
+            [
+              ['profile', 'Профиль', 0],
+              ['feed', 'Лента класса', current.unread.feed],
+              ['messages', 'Сообщения', current.unread.messages],
+            ] as const
+          ).map(([key, label, count]) => (
+            <button key={key} className={`tab ${section === key ? 'active' : ''}`} aria-current={section === key ? 'page' : undefined} onClick={() => setSection(key)}>
+              {label}
+              <CountBadge count={count} label="новых" />
+            </button>
+          ))}
+        </nav>
       )}
+      {current && section === 'feed' && (
+        <Feed key={current.id} path={`/parent/children/${current.id}/feed`} onLoaded={() => void children.reload()} readOnlyNote={`Объявления преподавателей группы ${current.groupName}.`} />
+      )}
+      {current && section === 'messages' && <ParentMessages key={current.id} child={current} onRead={children.reload} />}
+      {section === 'profile' &&
+        (profile.error ? (
+          <ErrorBox message={profile.error} onRetry={profile.reload} />
+        ) : profile.data && profile.data.student.id === current?.id ? (
+          <ProfileView profile={profile.data} isOwn={false} />
+        ) : (
+          <ProfileSkeleton />
+        ))}
+    </div>
+  );
+}
+
+/** Переписка с преподавателями группы о ребёнке */
+function ParentMessages({ child, onRead }: { child: ParentChild; onRead: () => Promise<void> }) {
+  const { refresh } = useNotifications();
+  const path = `/parent/children/${child.id}/messages`;
+  const { data, error, reload } = useLoad(async () => {
+    const list = await api<ChatMessage[]>('GET', path);
+    void refresh();
+    void onRead();
+    return list;
+  }, [path]);
+  if (error) return <ErrorBox message={error} onRetry={reload} />;
+  if (!data) return <Skeleton className="h-60 max-w-2xl" />;
+  return (
+    <div className="max-w-2xl space-y-3">
+      <p className="text-ink-soft">Сообщения видят все преподаватели группы {child.groupName}.</p>
+      <Thread messages={data} emptyText="Здесь можно написать преподавателю: о пропуске, успехах или вопросе." send={(text) => api<ChatMessage[]>('POST', path, { text })} />
     </div>
   );
 }

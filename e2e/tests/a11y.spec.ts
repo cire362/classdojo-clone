@@ -33,6 +33,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
         [`/g/${g.id}/students`, 'Добавить учеников'],
         [`/g/${g.id}/reasons`, 'Причины начисления'],
         [`/g/${g.id}/stats`, 'Скачать Excel'],
+        [`/g/${g.id}/feed`, 'Объявление для учеников и родителей'],
+        ['/messages', 'Сообщения'],
         ['/settings', 'Сменить пароль'],
       ] as const) {
         await page.goto(path);

@@ -6,6 +6,7 @@ import '@fontsource-variable/unbounded';
 import './styles.css';
 import { AuthProvider, storedRole, useAuth } from './auth';
 import { NewsProvider } from './news';
+import { NotificationsProvider } from './notify';
 import type { Role } from './api';
 import { AppLayout } from './components/Layout';
 import { ToastProvider } from './components/Toast';
@@ -18,8 +19,12 @@ import {
   GroupsPage,
   LessonPage,
   LoginPage,
+  GroupFeedPage,
+  MessagesPage,
   MyHeroPage,
   ParentHomePage,
+  StudentFeedPage,
+  ThreadPage,
   PrintPage,
   ReasonsPage,
   SettingsPage,
@@ -69,6 +74,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
       <NewsProvider>
+      <NotificationsProvider>
       <ToastProvider>
         <BrowserRouter>
           <Prefetch />
@@ -87,8 +93,12 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="students" element={<StudentsPage />} />
                 <Route path="reasons" element={<ReasonsPage />} />
                 <Route path="stats" element={<StatsPage />} />
+                <Route path="feed" element={<GroupFeedPage />} />
               </Route>
               <Route path="/settings" element={teacher(<SettingsPage />)} />
+              <Route path="/messages" element={teacher(<MessagesPage />)} />
+              <Route path="/messages/:studentId/:parentId" element={teacher(<ThreadPage />)} />
+              <Route path="/feed" element={student(<StudentFeedPage />)} />
               <Route path="/s/:studentId" element={teacher(<StudentViewPage />)} />
               <Route path="/s/:studentId/hero" element={teacher(<StudentHeroPage />)} />
               <Route path="*" element={<Navigate to="/" replace />} />
@@ -98,6 +108,7 @@ createRoot(document.getElementById('root')!).render(
           </ChunkErrorBoundary>
         </BrowserRouter>
       </ToastProvider>
+      </NotificationsProvider>
       </NewsProvider>
     </AuthProvider>
   </StrictMode>,

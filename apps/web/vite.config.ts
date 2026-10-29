@@ -144,7 +144,7 @@ export default defineConfig({
         // Библиотеки — в отдельных файлах: они редко меняются и дольше живут в кэше браузера
         manualChunks(id, { getModuleInfo }) {
           // Ядро приложения, нужное любой странице, — одним файлом, а не россыпью мелких
-          if (/[\\/]src[\\/]((api|auth|news|hooks|pages|routes)\.tsx?|components[\\/](ui|Toast|Layout|ChunkErrorBoundary|PageSkeleton)\.tsx|lib[\\/]network\.ts)$/.test(id)) {
+          if (/[\\/]src[\\/]((api|auth|news|notify|hooks|pages|routes)\.tsx?|components[\\/](ui|Toast|Layout|ChunkErrorBoundary|PageSkeleton)\.tsx|lib[\\/]network\.ts)$/.test(id)) {
             return 'app';
           }
           if (!id.includes('node_modules')) return undefined;

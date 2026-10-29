@@ -38,6 +38,9 @@ model Account {
   student  Student?
   parent   Parent?
   sessions Session[]
+  messages    Message[]
+  feedReads   FeedRead[]
+  threadReads ThreadRead[]
   awarded  PointEvent[] @relation("AwardedBy")
 }
 
@@ -63,6 +66,7 @@ model Teacher {
 
   groups   Group[]
   coGroups GroupTeacher[]
+  posts    Post[]
 }
 
 model Group {
@@ -81,6 +85,8 @@ model Group {
   attendanceSessions AttendanceSession[]
   /// Коллеги, которых владелец (teacherId) добавил в группу
   coTeachers         GroupTeacher[]
+  posts              Post[]
+  feedReads          FeedRead[]
 
   @@index([teacherId])
 }
@@ -115,6 +121,8 @@ model Student {
   pointEvents PointEvent[]
   attendance  Attendance[]
   parents     ParentStudent[]
+  messages    Message[]
+  threadReads ThreadRead[]
 
   @@index([groupId])
 }
@@ -127,7 +135,9 @@ model Parent {
   account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
-  children ParentStudent[]
+  children    ParentStudent[]
+  messages    Message[]
+  threadReads ThreadRead[]
 }
 
 model ParentStudent {
@@ -243,4 +253,56 @@ model LoginAttempt {
   resetAt DateTime
 
   @@index([resetAt])
+}
+
+/// Лента класса: объявления преподавателей группы. Видят ученики группы и их родители
+model Post {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    Teacher  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([groupId, createdAt])
+}
+
+/// До какого момента аккаунт прочитал ленту группы — для счётчика новых записей
+model FeedRead {
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  readAt    DateTime
+
+  @@id([accountId, groupId])
+}
+
+/// Переписка родителя с преподавателями группы о конкретном ребёнке: ветка = (родитель, ученик)
+model Message {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  parentId  String
+  parent    Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    Account  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([studentId, parentId, createdAt])
+  @@index([parentId])
+}
+
+model ThreadRead {
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  parentId  String
+  parent    Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  readAt    DateTime
+
+  @@id([accountId, studentId, parentId])
 }

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { KeyIcon, LinkSimpleIcon, PrinterIcon, UserPlusIcon, XIcon } from '@phosphor-icons/react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ChatCircleIcon, KeyIcon, LinkSimpleIcon, PrinterIcon, UserPlusIcon, XIcon } from '@phosphor-icons/react';
 import { api, type ParentAccess as Access, type ParentCredentials } from '../api';
 import { useLoad } from '../hooks';
 import { CredentialsTable } from '../pages/teacher/Print';
@@ -90,6 +90,9 @@ export function ParentAccessCard({ student, groupId, archived }: { student: { id
                   <span className="block text-sm text-ink-soft">Также: {p.otherChildren.map((c) => c.name).join(', ')}</span>
                 )}
               </span>
+              <Link className="icon-btn" title="Написать" aria-label={`Написать ${p.login}`} to={`/messages/${student.id}/${p.id}`}>
+                <ChatCircleIcon size={20} />
+              </Link>
               <button className="icon-btn" title="Новый пароль" aria-label={`Новый пароль для ${p.login}`} disabled={busy} onClick={() => resetPassword(p)}>
                 <KeyIcon size={20} />
               </button>

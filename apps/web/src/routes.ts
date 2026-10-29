@@ -13,11 +13,14 @@ export const PAGE_MODULES = {
   reasons: 'pages/teacher/Reasons.tsx',
   attendance: 'pages/teacher/Attendance.tsx',
   stats: 'pages/teacher/Stats.tsx',
+  groupFeed: 'pages/teacher/Feed.tsx',
+  messages: 'pages/teacher/Messages.tsx',
   studentView: 'pages/teacher/StudentView.tsx',
   settings: 'pages/teacher/Settings.tsx',
   cabinet: 'pages/student/Cabinet.tsx',
   myHero: 'pages/student/MyHero.tsx',
   parentHome: 'pages/parent/ParentHome.tsx',
+  studentFeed: 'pages/student/StudentFeed.tsx',
 } as const;
 
 export type PageKey = keyof typeof PAGE_MODULES;
@@ -33,6 +36,9 @@ const ROUTE_PAGES: [RegExp, PageKey[]][] = [
   [/^\/g\/[^/]+\/students$/, ['groupLayout', 'students']],
   [/^\/g\/[^/]+\/reasons$/, ['groupLayout', 'reasons']],
   [/^\/g\/[^/]+\/stats$/, ['groupLayout', 'stats']],
+  [/^\/g\/[^/]+\/feed$/, ['groupLayout', 'groupFeed']],
+  [/^\/messages(\/|$)/, ['messages']],
+  [/^\/feed$/, ['studentFeed']],
   [/^\/g\/[^/]+\/?$/, ['groupLayout', 'lesson']],
 ];
 

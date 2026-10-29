@@ -29,11 +29,14 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   reasons: remember(() => import('./pages/teacher/Reasons')),
   attendance: remember(() => import('./pages/teacher/Attendance')),
   stats: remember(() => import('./pages/teacher/Stats')),
+  groupFeed: remember(() => import('./pages/teacher/Feed')),
+  messages: remember(() => import('./pages/teacher/Messages')),
   studentView: remember(() => import('./pages/teacher/StudentView')),
   settings: remember(() => import('./pages/teacher/Settings')),
   cabinet: remember(() => import('./pages/student/Cabinet')),
   myHero: remember(() => import('./pages/student/MyHero')),
   parentHome: remember(() => import('./pages/parent/ParentHome')),
+  studentFeed: remember(() => import('./pages/student/StudentFeed')),
 };
 
 /**
@@ -67,10 +70,14 @@ export const SettingsPage = page(loaders.settings, 'SettingsPage');
 export const CabinetPage = page(loaders.cabinet, 'CabinetPage');
 export const MyHeroPage = page(loaders.myHero, 'MyHeroPage');
 export const ParentHomePage = page(loaders.parentHome, 'ParentHomePage');
+export const GroupFeedPage = page(loaders.groupFeed, 'GroupFeedPage');
+export const MessagesPage = page(loaders.messages, 'MessagesPage');
+export const ThreadPage = page(loaders.messages, 'ThreadPage');
+export const StudentFeedPage = page(loaders.studentFeed, 'StudentFeedPage');
 
 const byRole = {
-  TEACHER: [loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons, loaders.attendance, loaders.stats, loaders.studentView, loaders.settings],
-  STUDENT: [loaders.cabinet, loaders.myHero],
+  TEACHER: [loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons, loaders.attendance, loaders.stats, loaders.studentView, loaders.settings, loaders.groupFeed, loaders.messages],
+  STUDENT: [loaders.cabinet, loaders.myHero, loaders.studentFeed],
   PARENT: [loaders.parentHome],
 };
 

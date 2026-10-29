@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useOutletContext, useParams } from 'react-router-dom';
 import { ChunkErrorBoundary } from '../../components/ChunkErrorBoundary';
-import { ArchiveIcon, ArrowLeftIcon, CameraIcon, ChartBarIcon, ListChecksIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
+import { ArchiveIcon, ArrowLeftIcon, CameraIcon, ChartBarIcon, ListChecksIcon, MegaphoneIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { api, type GroupDetails } from '../../api';
 import { CardGridSkeleton, ErrorBox, Skeleton } from '../../components/ui';
 import { useLoad } from '../../hooks';
@@ -20,6 +20,7 @@ const TABS = [
   { to: 'students', label: 'Ученики', icon: UsersThreeIcon },
   { to: 'reasons', label: 'Причины', icon: ListChecksIcon },
   { to: 'stats', label: 'Статистика', icon: ChartBarIcon },
+  { to: 'feed', label: 'Лента', icon: MegaphoneIcon },
 ];
 
 export function GroupLayout() {

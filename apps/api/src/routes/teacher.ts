@@ -9,6 +9,8 @@ import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../lib/dates.js
 import { hashPassword, verifyPassword } from '../lib/credentials.js';
 import { HttpError, notFound, parse } from '../lib/errors.js';
 import { ARCHIVED_MESSAGE, OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../services/access.js';
+import { MAX_POST_LENGTH, createPost, deletePost, groupFeed } from '../services/feed.js';
+import { MAX_MESSAGE_LENGTH, sendMessage, teacherThread, teacherThreads, threadMessages } from '../services/messages.js';
 import { addCoTeacher, groupTeachers, removeCoTeacher } from '../services/coTeachers.js';
 import { MAX_LESSONS_PER_DAY, attendanceForDate, deleteAttendance, saveAttendance } from '../services/attendance.js';
 import { countPeople } from '../services/detector.js';
@@ -31,6 +33,8 @@ const GroupPatch = z.object({
 const StudentsCreate = z.object({
   names: z.array(z.string().trim().max(80)).min(1).max(100),
 });
+const PostBody = z.object({ text: z.string().trim().min(1, 'Напишите текст').max(MAX_POST_LENGTH) });
+const MessageBody = z.object({ text: z.string().trim().min(1, 'Напишите сообщение').max(MAX_MESSAGE_LENGTH) });
 const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).max(64) });
 const ParentLink = z.object({ login: z.string().trim().min(1).max(64) });
 const StudentPatch = z.object({ name: z.string().trim().min(1).max(80) });
@@ -300,6 +304,37 @@ export const teacherRoutes = new Hono<AppEnv>()
     if (!group.isOwner && teacherId !== user.teacherId) throw new HttpError(403, OWNER_ONLY_MESSAGE);
     await removeCoTeacher(group.id, teacherId);
     return c.json({ ok: true });
+  })
+
+  // ───── Лента класса ─────
+  .get('/groups/:id/feed', async (c) => {
+    const user = c.get('user');
+    const group = await teacherGroup(user, c.req.param('id'));
+    return c.json(await groupFeed(group.id, { accountId: user.accountId, teacherId: user.teacherId, isOwner: group.isOwner }));
+  })
+  .post('/groups/:id/feed', async (c) => {
+    const user = c.get('user');
+    const group = await teacherGroup(user, c.req.param('id'), { writable: true });
+    const { text } = parse(PostBody, await c.req.json().catch(() => null));
+    return c.json(await createPost(group.id, user.teacherId!, text), 201);
+  })
+  .delete('/posts/:id', async (c) => {
+    await deletePost(c.get('user').teacherId!, c.req.param('id'));
+    return c.json({ ok: true });
+  })
+
+  // ───── Сообщения родителям ─────
+  .get('/messages', async (c) => c.json(await teacherThreads(c.get('user').teacherId!, c.get('user').accountId)))
+  .get('/students/:id/parents/:parentId/messages', async (c) => {
+    const user = c.get('user');
+    const thread = await teacherThread(user.teacherId!, c.req.param('id'), c.req.param('parentId'));
+    return c.json({ ...thread, messages: await threadMessages(c.req.param('id'), c.req.param('parentId'), user.accountId) });
+  })
+  .post('/students/:id/parents/:parentId/messages', async (c) => {
+    const user = c.get('user');
+    await teacherThread(user.teacherId!, c.req.param('id'), c.req.param('parentId'));
+    const { text } = parse(MessageBody, await c.req.json().catch(() => null));
+    return c.json(await sendMessage(c.req.param('id'), c.req.param('parentId'), user.accountId, text), 201);
   })
 
   // ───── Родители ─────

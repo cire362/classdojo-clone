@@ -1,9 +1,10 @@
 import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ChunkErrorBoundary } from './ChunkErrorBoundary';
-import { GearSixIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
+import { ChatsCircleIcon, GearSixIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
 import { useAuth } from '../auth';
 import { useNews } from '../news';
+import { CountBadge, useNotifications } from '../notify';
 import { pluralize } from '../hooks';
 import { Skeleton } from './ui';
 
@@ -23,6 +24,7 @@ export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { news } = useNews();
+  const { counts } = useNotifications();
   const navClass = ({ isActive }: { isActive: boolean }) => `tab ${isActive ? 'active' : ''}`;
   const newCount = news?.newPartIds.length ?? 0;
   const heroLink = (
@@ -34,6 +36,12 @@ export function AppLayout() {
           <span className="sr-only"> {pluralize(newCount, 'новая деталь', 'новые детали', 'новых деталей')}</span>
         </span>
       )}
+    </NavLink>
+  );
+  const feedLink = (
+    <NavLink to="/feed" className={navClass}>
+      Лента
+      <CountBadge count={counts.feed} label="новых записей" />
     </NavLink>
   );
   return (
@@ -49,9 +57,21 @@ export function AppLayout() {
                 Мой герой
               </NavLink>
               {heroLink}
+              {feedLink}
             </nav>
           )}
           <div className="ml-auto flex items-center gap-1">
+            {user?.role === 'TEACHER' && (
+              <NavLink
+                to="/messages"
+                className={({ isActive }) => `icon-btn relative w-auto gap-1 px-2.5 ${isActive ? 'bg-surface-2 text-ink' : ''}`}
+                title="Сообщения"
+              >
+                <ChatsCircleIcon size={22} aria-hidden />
+                <span className="sr-only">Сообщения</span>
+                <CountBadge count={counts.messages} label="новых сообщений" />
+              </NavLink>
+            )}
             {user?.role === 'TEACHER' ? (
               <NavLink
                 to="/settings"
@@ -88,6 +108,7 @@ export function AppLayout() {
               Мой герой
             </NavLink>
             {heroLink}
+            {feedLink}
           </nav>
         )}
       </header>

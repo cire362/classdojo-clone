@@ -151,6 +151,7 @@ export async function parentChildren(parentId: string) {
   return links.map(({ student: s }) => ({
     id: s.id,
     name: s.name,
+    groupId: s.groupId,
     groupName: s.group.name,
     hero: { name: s.hero?.name ?? '', parts: normalizeHero(s.hero?.parts) },
     level: levelForPoints(s.pointEvents.reduce((sum, e) => sum + e.value, 0)).level,

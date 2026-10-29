@@ -4,6 +4,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import { requireAuth, type AppEnv } from './auth.js';
 import { prisma } from './db.js';
 import { HttpError } from './lib/errors.js';
+import { notifications } from './services/notifications.js';
 import { authRoutes } from './routes/auth.js';
 import { parentRoutes } from './routes/parent.js';
 import { studentRoutes } from './routes/student.js';
@@ -40,6 +41,8 @@ export function createApp() {
 
   app.use('/api/parent/*', requireAuth);
   app.route('/api/parent', parentRoutes);
+
+  app.get('/api/notifications', requireAuth, async (c) => c.json(await notifications(c.get('user'))));
 
   app.get('/api/hero-parts', requireAuth, async (c) => {
     const parts = await prisma.heroPart.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } });
