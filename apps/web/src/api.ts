@@ -58,7 +58,7 @@ export async function api<T>(method: string, path: string, body?: unknown): Prom
   return data as T;
 }
 
-export type Role = 'TEACHER' | 'STUDENT' | 'PARENT';
+export type Role = 'TEACHER' | 'STUDENT' | 'PARENT' | 'ADMIN';
 export interface Me {
   login: string;
   role: Role;
@@ -323,4 +323,16 @@ export interface AttendanceDay {
     presentStudentIds: string[];
     markedStudentIds: string[];
   } | null;
+}
+
+export interface TeacherCredentials { id: string; name: string; login: string; password: string }
+export interface AdminTeacher {
+  id: string; name: string; login: string; ownedGroups: number; sharedGroups: number;
+  premiumUntil: string | null; premiumActive: boolean;
+}
+export interface AdminTeachers { freeForAll: boolean; teachers: AdminTeacher[] }
+export interface AdminGroup {
+  id: string; name: string; archivedAt: string | null; studentsCount: number;
+  owner: { id: string; name: string; login: string };
+  colleagues: { id: string; name: string }[];
 }

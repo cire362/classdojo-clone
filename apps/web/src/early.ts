@@ -61,6 +61,7 @@ if (path !== '/login') {
     get(`/teacher/students/${student[1]}/profile`);
   } else if (path === '/' || path === '/hero') {
     const forRole = (r: string | null) => {
+      if (r === 'ADMIN' && path === '/') get('/admin/teachers');
       if (r === 'TEACHER' && path === '/') get('/teacher/groups');
       if (r === 'STUDENT') {
         get('/student/profile');

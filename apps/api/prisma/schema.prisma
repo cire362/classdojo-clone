@@ -15,6 +15,7 @@ datasource db {
 }
 
 enum Role {
+  ADMIN
   TEACHER
   STUDENT
   PARENT
@@ -34,6 +35,7 @@ model Account {
   role         Role
   createdAt    DateTime @default(now())
 
+  admin    Admin?
   teacher  Teacher?
   student  Student?
   parent   Parent?
@@ -55,6 +57,14 @@ model Session {
   createdAt DateTime @default(now())
 
   @@index([accountId])
+}
+
+/// Администратор управляет преподавателями и видит группы всей установки (одна школа).
+model Admin {
+  id        String  @id @default(cuid())
+  accountId String  @unique
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  name      String
 }
 
 model Teacher {

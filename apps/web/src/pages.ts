@@ -20,6 +20,7 @@ function remember<M>(load: () => Promise<M>): () => Promise<M> {
 }
 
 const loaders: Record<PageKey, () => Promise<any>> = {
+  admin: remember(() => import('./pages/admin/Admin')),
   login: remember(() => import('./pages/Login')),
   groups: remember(() => import('./pages/teacher/Groups')),
   groupLayout: remember(() => import('./pages/teacher/GroupLayout')),
@@ -57,6 +58,7 @@ function page<M, K extends keyof M>(load: () => Promise<M>, name: K) {
   return Page;
 }
 
+export const AdminPage = page(loaders.admin, 'AdminPage');
 export const LoginPage = page(loaders.login, 'LoginPage');
 export const GroupsPage = page(loaders.groups, 'GroupsPage');
 export const GroupLayout = page(loaders.groupLayout, 'GroupLayout');
@@ -80,6 +82,7 @@ export const RewardsPage = page(loaders.rewards, 'RewardsPage');
 export const ShopPage = page(loaders.shop, 'ShopPage');
 
 const byRole = {
+  ADMIN: [loaders.admin],
   TEACHER: [loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons, loaders.attendance, loaders.stats, loaders.studentView, loaders.settings, loaders.groupFeed, loaders.messages, loaders.rewards],
   STUDENT: [loaders.cabinet, loaders.myHero, loaders.studentFeed, loaders.shop],
   PARENT: [loaders.parentHome],

@@ -43,6 +43,8 @@ services:
       PORT: "3000"
       # Включите, если сайт открывается по HTTPS
       COOKIE_SECURE: "false"
+      SEED_ADMIN_LOGIN: admin
+      SEED_ADMIN_PASSWORD: admin12345
       SEED_TEACHER_LOGIN: teacher
       SEED_TEACHER_PASSWORD: teacher123
       SEED_STUDENT_PASSWORD: hero12345

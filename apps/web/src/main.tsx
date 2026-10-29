@@ -14,6 +14,7 @@ import { PageSkeleton } from './components/PageSkeleton';
 import { ErrorBox } from './components/ui';
 
 import {
+  AdminPage,
   AttendancePage,
   CabinetPage,
   GroupLayout,
@@ -74,6 +75,7 @@ function Home() {
   if (loading) return <PageSkeleton />;
   if (!user && offline) return <Offline />;
   if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'ADMIN') return <AdminPage />;
   if (user.role === 'TEACHER') return <GroupsPage />;
   return user.role === 'PARENT' ? <ParentHomePage /> : <CabinetPage />;
 }

@@ -73,8 +73,18 @@ async function ensureDemoRewards() {
   if (group && !(await prisma.reward.count({ where: { groupId: group.id } }))) await createDefaultRewards(prisma, group.id);
 }
 
+async function ensureDemoAdmin() {
+  const login = process.env.SEED_ADMIN_LOGIN ?? 'admin';
+  if (await prisma.account.findUnique({ where: { login } })) return;
+  await prisma.admin.create({ data: {
+    name: 'Администратор школы',
+    account: { create: { login, role: 'ADMIN', passwordHash: await hashPassword(process.env.SEED_ADMIN_PASSWORD ?? 'admin12345') } },
+  } });
+}
+
 async function main() {
   await syncHeroParts();
+  await ensureDemoAdmin();
 
   if (await prisma.account.findUnique({ where: { login: TEACHER_LOGIN } })) {
     console.log(`Seed: преподаватель «${TEACHER_LOGIN}» уже есть — пропускаю.`);

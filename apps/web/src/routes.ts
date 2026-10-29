@@ -4,6 +4,7 @@
  * Модуль без зависимостей: он встраивается в HTML.
  */
 export const PAGE_MODULES = {
+  admin: 'pages/admin/Admin.tsx',
   login: 'pages/Login.tsx',
   groups: 'pages/teacher/Groups.tsx',
   groupLayout: 'pages/teacher/GroupLayout.tsx',
@@ -29,7 +30,7 @@ export type PageKey = keyof typeof PAGE_MODULES;
 
 const ROUTE_PAGES: [RegExp, PageKey[]][] = [
   [/^\/login$/, ['login']],
-  [/^\/$/, ['groups', 'cabinet', 'parentHome']],
+  [/^\/$/, ['groups', 'cabinet', 'parentHome', 'admin']],
   [/^\/hero$/, ['myHero']],
   [/^\/settings$/, ['settings']],
   [/^\/s\//, ['studentView']],
@@ -47,7 +48,7 @@ const ROUTE_PAGES: [RegExp, PageKey[]][] = [
 ];
 
 /** Главная у каждой роли своя; если роль известна (запомнена после входа), грузим только её страницу */
-const HOME_BY_ROLE: Record<string, PageKey> = { TEACHER: 'groups', STUDENT: 'cabinet', PARENT: 'parentHome' };
+const HOME_BY_ROLE: Record<string, PageKey> = { ADMIN: 'admin', TEACHER: 'groups', STUDENT: 'cabinet', PARENT: 'parentHome' };
 
 export function pagesFor(pathname: string, role?: string | null): PageKey[] {
   if (pathname === '/' && role && HOME_BY_ROLE[role]) return [HOME_BY_ROLE[role]];

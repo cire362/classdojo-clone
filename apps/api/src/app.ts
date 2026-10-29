@@ -5,6 +5,7 @@ import { requireAuth, type AppEnv } from './auth.js';
 import { prisma } from './db.js';
 import { HttpError } from './lib/errors.js';
 import { notifications } from './services/notifications.js';
+import { adminRoutes } from './routes/admin.js';
 import { authRoutes } from './routes/auth.js';
 import { parentRoutes } from './routes/parent.js';
 import { studentRoutes } from './routes/student.js';
@@ -32,6 +33,9 @@ export function createApp() {
   });
 
   app.route('/api/auth', authRoutes);
+
+  app.use('/api/admin/*', requireAuth);
+  app.route('/api/admin', adminRoutes);
 
   app.use('/api/teacher/*', requireAuth);
   app.route('/api/teacher', teacherRoutes);

@@ -24,12 +24,14 @@ export type AppEnv = { Variables: { user: AuthUser } };
 
 /** Связи аккаунта, по которым строятся роль и отображаемое имя */
 export const ACCOUNT_PROFILE = {
+  admin: true,
   teacher: true,
   student: true,
   parent: { include: { children: { include: { student: { select: { name: true } } } } } },
 } as const;
 
 type AccountWithProfile = {
+  admin: { name: string } | null;
   login: string;
   teacher: { name: string } | null;
   student: { name: string } | null;
@@ -38,6 +40,7 @@ type AccountWithProfile = {
 
 /** Имя в шапке: у родителя — имена его детей */
 export function accountName(a: AccountWithProfile): string {
+  if (a.admin) return a.admin.name;
   if (a.teacher) return a.teacher.name;
   if (a.student) return a.student.name;
   if (a.parent) {
