@@ -81,6 +81,8 @@ it('первый 5-й уровень: массовое начисление да
   for (let i = 0; i < 3; i++) await points(t, i, 69);
   const tied = await award(t, t.plusReason.id, [0, 1]);
   expect(tied.status).toBe(201);
+  const batch = await prisma.pointEvent.findMany({ where: { id: { in: tied.body.eventIds } }, select: { createdAt: true } });
+  expect(new Set(batch.map((e) => e.createdAt.getTime())).size).toBe(1);
   for (const i of [0, 1]) expect(await badge(t, 'level.first5', i)).toMatchObject({ progress: 1, earnedOn: dateKey(), groupName: t.group.name });
   const later = await award(t, t.plusReason.id, [2]);
   expect((await badge(t, 'level.first5', 2)).earnedOn).toBeNull();
