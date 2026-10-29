@@ -111,7 +111,9 @@ export async function saveAttendance(params: {
         awardedById: params.createdById,
         attendanceSessionId: session.id,
         classGoalId: session.classGoalId,
-        createdAt: pointsAt,
+        awardedGroupId: params.groupId,
+        // Повторная отметка сегодняшнего урока не меняет время его вклада в уровень.
+        createdAt: params.date === dateKey() ? session.createdAt : pointsAt,
       })),
     });
     return {

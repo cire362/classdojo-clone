@@ -1,4 +1,4 @@
-import type { HeroParts, LevelInfo } from '@heroes/shared';
+import type { HeroParts, LevelInfo, StudentBadge } from '@heroes/shared';
 
 export class ApiError extends Error {
   constructor(
@@ -100,6 +100,7 @@ export interface Reason {
   name: string;
   emoji: string;
   value: number;
+  countsForHelpBadge?: boolean;
 }
 
 export interface CardSummary {
@@ -276,6 +277,7 @@ export interface Profile {
   /** Открыта ли премиум-коллекция деталей героя */
   premium: boolean;
   portfolio: PortfolioItem[];
+  badges: StudentBadge[];
   student: { id: string; name: string; login: string; group: { id: string; name: string; archivedAt: string | null } };
   hero: Hero;
   level: LevelInfo;

@@ -60,6 +60,7 @@ const ParentLink = z.object({ login: z.string().trim().min(1).max(64) });
 const StudentPatch = z.object({ name: z.string().trim().min(1).max(80) });
 const ResetMany = z.object({ studentIds: z.array(id).max(200).optional() });
 const ReasonBody = z.object({
+  countsForHelpBadge: z.boolean().optional(),
   name: z.string().trim().min(1).max(60),
   emoji: z.string().trim().min(1).max(16),
   value: z
@@ -201,7 +202,7 @@ export const teacherRoutes = new Hono<AppEnv>()
         teamId: s.teamId,
         ...summaries.get(s.id)!,
       })),
-      reasons: reasons.map((r) => ({ id: r.id, name: r.name, emoji: r.emoji, value: r.value })),
+      reasons: reasons.map((r) => ({ id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge })),
       teams,
       classGoal: goal,
       pendingRewards,
@@ -500,7 +501,7 @@ export const teacherRoutes = new Hono<AppEnv>()
       where: { groupId: group.id, kind: 'MANUAL', archived: false },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
-    return c.json(reasons.map((r) => ({ id: r.id, name: r.name, emoji: r.emoji, value: r.value })));
+    return c.json(reasons.map((r) => ({ id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge })));
   })
   .post('/groups/:id/reasons', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
@@ -512,7 +513,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     const r = await prisma.behaviorReason.create({
       data: { ...body, groupId: group.id, sortOrder: (max._max.sortOrder ?? 0) + 1 },
     });
-    return c.json({ id: r.id, name: r.name, emoji: r.emoji, value: r.value }, 201);
+    return c.json({ id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge }, 201);
   })
   // Новый порядок причин: полный список активных причин группы в нужном порядке
   .put('/groups/:id/reasons/order', async (c) => {
@@ -535,7 +536,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     const reason = await ownedReason(c.get('user').teacherId!, c.req.param('id'));
     const body = parse(ReasonBody, await c.req.json().catch(() => null));
     const r = await prisma.behaviorReason.update({ where: { id: reason.id }, data: body });
-    return c.json({ id: r.id, name: r.name, emoji: r.emoji, value: r.value });
+    return c.json({ id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge });
   })
   .delete('/reasons/:id', async (c) => {
     const reason = await ownedReason(c.get('user').teacherId!, c.req.param('id'));

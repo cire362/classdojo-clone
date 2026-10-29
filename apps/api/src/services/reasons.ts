@@ -22,7 +22,7 @@ export const ATTENDANCE_REASON = { name: 'Посещение', emoji: '✅', val
 export async function createDefaultReasons(tx: Tx, groupId: string): Promise<void> {
   await tx.behaviorReason.createMany({
     data: [
-      ...DEFAULT_REASONS.map((r, i) => ({ ...r, groupId, sortOrder: i })),
+      ...DEFAULT_REASONS.map((r, i) => ({ ...r, groupId, sortOrder: i, countsForHelpBadge: r.name === 'Помог другу' })),
       { ...ATTENDANCE_REASON, groupId, kind: 'ATTENDANCE' as const, sortOrder: 1000 },
     ],
   });

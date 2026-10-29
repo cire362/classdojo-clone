@@ -85,6 +85,8 @@ export async function awardPoints(params: {
       value: reason.value,
       awardedById: params.awardedById,
       classGoalId: goal?.id ?? null,
+      helpBadge: reason.value > 0 && reason.countsForHelpBadge,
+      awardedGroupId: params.groupId,
     } })));
   });
   return { reason, events };

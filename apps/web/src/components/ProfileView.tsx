@@ -5,6 +5,7 @@ import type { HistoryEvent, PointsSum, Profile } from '../api';
 import { formatDate, pluralize } from '../hooks';
 import { HeroAvatar } from './HeroAvatar';
 import { Portfolio, type PortfolioEdit } from './Portfolio';
+import { Badges, BadgeSummary } from './Badges';
 import { EmptyState, ProgressBar } from './ui';
 
 function PointsTile({ label, sum, featured = false }: { label: string; sum: PointsSum; featured?: boolean }) {
@@ -96,22 +97,30 @@ export function ProfileView({
         </div>
       </section>
 
+      <BadgeSummary badges={profile.badges} onOpen={() => setTab('portfolio')} />
+
       <section className="space-y-4">
-        <div className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0" role="tablist">
-          <button role="tab" aria-selected={tab === 'history'} className={`tab ${tab === 'history' ? 'active' : 'bg-surface-2'}`} onClick={() => setTab('history')}>
+        <div className="grid grid-cols-3 gap-1 sm:flex" role="tablist">
+          <button role="tab" aria-selected={tab === 'history'} className={`tab flex-col justify-center gap-1 px-1 py-2 text-xs sm:flex-row sm:gap-2 sm:px-4 sm:py-0 sm:text-sm ${tab === 'history' ? 'active' : 'bg-surface-2'}`} onClick={() => setTab('history')}>
             <ClockCounterClockwiseIcon size={18} weight="bold" /> История
           </button>
-          <button role="tab" aria-selected={tab === 'attendance'} className={`tab ${tab === 'attendance' ? 'active' : 'bg-surface-2'}`} onClick={() => setTab('attendance')}>
+          <button role="tab" aria-selected={tab === 'attendance'} className={`tab flex-col justify-center gap-1 px-1 py-2 text-xs sm:flex-row sm:gap-2 sm:px-4 sm:py-0 sm:text-sm ${tab === 'attendance' ? 'active' : 'bg-surface-2'}`} onClick={() => setTab('attendance')}>
             <CalendarCheckIcon size={18} weight="bold" /> Посещаемость
           </button>
-          <button role="tab" aria-selected={tab === 'portfolio'} className={`tab ${tab === 'portfolio' ? 'active' : 'bg-surface-2'}`} onClick={() => setTab('portfolio')}>
+          <button role="tab" aria-selected={tab === 'portfolio'} className={`tab flex-col justify-center gap-1 px-1 py-2 text-xs sm:flex-row sm:gap-2 sm:px-4 sm:py-0 sm:text-sm ${tab === 'portfolio' ? 'active' : 'bg-surface-2'}`} onClick={() => setTab('portfolio')}>
             <TrophyIcon size={18} weight="bold" /> Портфолио
-            {profile.portfolio.length > 0 && <span className="tabular-nums opacity-70">{profile.portfolio.length}</span>}
+            {profile.portfolio.length > 0 && <span className="hidden tabular-nums opacity-70 sm:inline">{profile.portfolio.length}</span>}
           </button>
         </div>
 
         <h2 className="sr-only">{tab === 'history' ? 'История начислений' : tab === 'attendance' ? 'Посещаемость' : 'Портфолио'}</h2>
-        {tab === 'portfolio' && <Portfolio items={profile.portfolio} edit={portfolioEdit} />}
+        {tab === 'portfolio' && <div className="space-y-8">
+          <Badges badges={profile.badges} />
+          <section aria-label="Достижения от преподавателя" className="space-y-4">
+            <h3 className="font-sans text-lg font-semibold">Достижения от преподавателя</h3>
+            <Portfolio items={profile.portfolio} edit={portfolioEdit} />
+          </section>
+        </div>}
         {tab === 'history' &&
           (historyByDay.length === 0 ? (
             <EmptyState icon={<StarIcon size={28} weight="fill" />} title="Баллов пока нет">

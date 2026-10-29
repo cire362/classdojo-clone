@@ -8,7 +8,7 @@ import { useGroup } from './GroupLayout';
 
 const EMOJI = ['💪', '💡', '🤝', '🧩', '✨', '⭐', '🏆', '📚', '🎯', '🚀', '🎨', '🙋', '⏰', '💤', '📕', '📢', '📱', '🙊'];
 
-type Draft = { name: string; emoji: string; value: number };
+type Draft = { name: string; emoji: string; value: number; countsForHelpBadge: boolean };
 
 export function ReasonsPage() {
   const { data, reload } = useGroup();
@@ -195,20 +195,20 @@ function ReasonModal({
   onClose: () => void;
   onSave: (d: Draft) => Promise<void>;
 }) {
-  const [draft, setDraft] = useState<Draft>({ name: '', emoji: '⭐', value: 1 });
+  const [draft, setDraft] = useState<Draft>({ name: '', emoji: '⭐', value: 1, countsForHelpBadge: false });
   const [error, setError] = useState<string | null>(null);
   const [key, setKey] = useState<string | null>(null);
   const currentKey = reason === 'new' ? 'new' : reason?.id ?? null;
   if (currentKey !== key) {
     setKey(currentKey);
     setError(null);
-    setDraft(reason && reason !== 'new' ? { name: reason.name, emoji: reason.emoji, value: reason.value } : { name: '', emoji: '⭐', value: 1 });
+    setDraft(reason && reason !== 'new' ? { name: reason.name, emoji: reason.emoji, value: reason.value, countsForHelpBadge: reason.countsForHelpBadge ?? false } : { name: '', emoji: '⭐', value: 1, countsForHelpBadge: false });
   }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     try {
-      await onSave(draft);
+      await onSave({ ...draft, countsForHelpBadge: draft.value > 0 && draft.countsForHelpBadge });
     } catch (err) {
       setError((err as Error).message);
     }
@@ -269,6 +269,15 @@ function ReasonModal({
             </button>
           </div>
         </fieldset>
+        {draft.value > 0 && (
+          <div>
+            <label className="flex cursor-pointer items-start gap-3 text-sm font-medium">
+              <input type="checkbox" className="mt-0.5 size-5 shrink-0 accent-ink" checked={draft.countsForHelpBadge} onChange={(e) => setDraft({ ...draft, countsForHelpBadge: e.target.checked })} aria-describedby="help-badge-hint" />
+              Учитывать для значка «Надёжный друг»
+            </label>
+            <p id="help-badge-hint" className="mt-2 text-sm text-ink-soft">Каждое начисление — один случай помощи, независимо от числа баллов. Изменение действует на новые начисления.</p>
+          </div>
+        )}
         {error && <p className="text-sm font-medium text-minus">{error}</p>}
         <button className="btn btn-primary" disabled={!draft.name.trim()}>
           Сохранить

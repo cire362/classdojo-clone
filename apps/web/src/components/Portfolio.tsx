@@ -83,7 +83,7 @@ export function Portfolio({ items, edit }: { items: PortfolioItem[]; edit?: Port
           </button>
         ))}
       {items.length === 0 ? (
-        <EmptyState icon={<TrophyIcon size={28} />} title="Портфолио пока пустое">
+        <EmptyState icon={<TrophyIcon size={28} />} title="Записей преподавателя пока нет">
           {edit ? 'Олимпиады, проекты, выступления — всё, чем ученик может гордиться.' : 'Здесь появятся достижения, которые отметит преподаватель.'}
         </EmptyState>
       ) : (

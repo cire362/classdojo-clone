@@ -102,6 +102,9 @@ model Group {
   rewards            Reward[]
   teams              Team[]
   classGoal          ClassGoal?
+  /// Первенство по уровням учитывается только с момента запуска значков
+  badgeTrackingStartedAt DateTime @default(now())
+  awardedPoints      PointEvent[] @relation("AwardedInGroup")
 
   @@index([teacherId])
 }
@@ -206,6 +209,8 @@ model BehaviorReason {
   archived  Boolean    @default(false)
   createdAt DateTime   @default(now())
 
+  countsForHelpBadge Boolean @default(false)
+
   events PointEvent[]
 
   @@index([groupId])
@@ -230,7 +235,12 @@ model PointEvent {
   /// Вклад в цель, действовавшую при начислении (только плюсы)
   classGoalId         String?
   classGoal           ClassGoal? @relation(fields: [classGoalId], references: [id], onDelete: SetNull)
+  /// Снимки для значков: переименование причины и перевод ученика не меняют смысл события
+  helpBadge           Boolean @default(false)
+  awardedGroupId      String?
+  awardedGroup        Group? @relation("AwardedInGroup", fields: [awardedGroupId], references: [id], onDelete: SetNull)
 
+  @@index([awardedGroupId, createdAt])
   @@index([studentId, createdAt])
   @@index([classGoalId])
   @@index([attendanceSessionId])

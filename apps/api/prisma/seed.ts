@@ -157,6 +157,8 @@ async function main() {
           value: r.value,
           createdAt: lessonTime(min),
           awardedById: teacher.accountId,
+          helpBadge: r.value > 0 && r.countsForHelpBadge,
+          awardedGroupId: group.id,
           attendanceSessionId: r.kind === 'ATTENDANCE' ? session.id : null,
         })),
       });
