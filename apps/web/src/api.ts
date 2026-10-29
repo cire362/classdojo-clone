@@ -173,6 +173,8 @@ export interface HistoryEvent {
 }
 
 export interface Profile {
+  /** Открыта ли премиум-коллекция деталей героя */
+  premium: boolean;
   student: { id: string; name: string; login: string; group: { id: string; name: string; archivedAt: string | null } };
   hero: Hero;
   level: LevelInfo;

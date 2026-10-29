@@ -6,6 +6,7 @@ import { HttpError, parse } from '../lib/errors.js';
 import { validateHeroForLevel } from '../services/heroParts.js';
 import { studentLevel } from '../services/points.js';
 import { markNewsSeen, studentNews } from '../services/news.js';
+import { studentHasPremium } from '../services/premium.js';
 import { studentProfile } from '../services/profile.js';
 
 export const HeroBody = z.object({
@@ -16,8 +17,8 @@ export const HeroBody = z.object({
 /** Общая логика сохранения героя: проверяем детали по уровню ученика */
 export async function saveHero(studentId: string, body: unknown) {
   const { name, parts } = parse(HeroBody, body);
-  const level = await studentLevel(studentId);
-  const check = await validateHeroForLevel(parts, level.level);
+  const [level, premium] = await Promise.all([studentLevel(studentId), studentHasPremium(studentId)]);
+  const check = await validateHeroForLevel(parts, level.level, premium);
   if (!check.ok) throw new HttpError(422, check.error);
   const hero = await prisma.hero.upsert({
     where: { studentId },

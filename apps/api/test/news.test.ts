@@ -22,7 +22,7 @@ describe('новый уровень и новые детали', () => {
     const news = await call('GET', '/api/student/news', { cookie });
     expect(news.body.level).toBe(3);
     expect(news.body.levelUp).toEqual({ from: 1, to: 3 });
-    const expected = HERO_PARTS.filter((p) => p.requiredLevel > 1 && p.requiredLevel <= 3).map((p) => p.id);
+    const expected = HERO_PARTS.filter((p) => !p.premium && p.requiredLevel > 1 && p.requiredLevel <= 3).map((p) => p.id);
     expect([...news.body.newPartIds].sort()).toEqual([...expected].sort());
   });
 

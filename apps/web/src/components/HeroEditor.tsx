@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { DiceFiveIcon, LockSimpleIcon } from '@phosphor-icons/react';
+import { DiceFiveIcon, LockSimpleIcon, SparkleIcon } from '@phosphor-icons/react';
 import {
   HERO_SLOT_LABELS,
   HERO_SLOTS,
@@ -29,9 +29,12 @@ export function HeroEditor({
   onSave,
   ownerLabel,
   newIds,
+  premium = false,
 }: {
   initial: { name: string; parts: HeroParts };
   level: number;
+  /** Открыта ли премиум-коллекция (премиум у создателя группы) */
+  premium?: boolean;
   onSave: (name: string, parts: HeroParts) => Promise<void>;
   ownerLabel?: string;
   /** Детали, открывшиеся с прошлого визита: помечаются «новое» */
@@ -53,10 +56,11 @@ export function HeroEditor({
   const access = useLoad(() => api<PartAccess[]>('GET', '/hero-parts'), []);
   const accessById = useMemo(() => new Map(access.data?.map((p) => [p.id, p])), [access.data]);
 
-  const lockLevel = (p: HeroPartDef): number | null => {
-    const a = accessById.get(p.id);
-    const required = a?.requiredLevel ?? p.requiredLevel;
-    if (a?.isPremium) return Infinity;
+  const isPremiumPart = (p: HeroPartDef) => accessById.get(p.id)?.isPremium ?? !!p.premium;
+  /** Замок: номер уровня, на котором деталь откроется, или 'premium' — нужна премиум-коллекция */
+  const lockOf = (p: HeroPartDef): number | 'premium' | null => {
+    if (isPremiumPart(p) && !premium) return 'premium';
+    const required = accessById.get(p.id)?.requiredLevel ?? p.requiredLevel;
     return required > level ? required : null;
   };
 
@@ -65,9 +69,9 @@ export function HeroEditor({
   const isSwatch = SWATCH_LAYERS.includes(HERO_SLOTS[slot]);
 
   function pick(p: HeroPartDef) {
-    const lock = lockLevel(p);
+    const lock = lockOf(p);
     if (lock !== null) {
-      toast({ text: lock === Infinity ? 'Эта деталь пока недоступна' : `Откроется на ${lock} уровне`, tone: 'neutral' });
+      toast({ text: lock === 'premium' ? 'Деталь из премиум-коллекции: откроется, когда преподаватель подключит премиум' : `Откроется на ${lock} уровне`, tone: 'neutral' });
       return;
     }
     setParts({ ...parts, [slot]: p.id });
@@ -76,7 +80,7 @@ export function HeroEditor({
   function randomize() {
     const next = { ...parts };
     for (const s of SLOTS) {
-      const open = partsForLayer(HERO_SLOTS[s]).filter((p) => lockLevel(p) === null);
+      const open = partsForLayer(HERO_SLOTS[s]).filter((p) => lockOf(p) === null);
       if (open.length) next[s] = open[Math.floor(Math.random() * open.length)].id;
     }
     setParts(next);
@@ -141,7 +145,8 @@ export function HeroEditor({
           }
         >
           {options.map((p) => {
-            const lock = lockLevel(p);
+            const lock = lockOf(p);
+            const premiumPart = isPremiumPart(p);
             const active = parts[slot] === p.id;
             const isNew = !!newIds?.has(p.id);
             return (
@@ -162,7 +167,8 @@ export function HeroEditor({
                 )}
                 <span className={`text-xs font-medium leading-tight ${lock ? 'text-ink-soft' : ''}`}>
                   {p.name}
-                  {lock !== null && <span className="sr-only">, откроется {lock === Infinity ? 'позже' : `на ${lock} уровне`}</span>}
+                  {premiumPart && <span className="sr-only">, премиум</span>}
+                  {lock !== null && <span className="sr-only">{lock === 'premium' ? ', недоступна без премиума' : `, откроется на ${lock} уровне`}</span>}
                   {isNew && <span className="sr-only">, новое</span>}
                 </span>
                 {isNew && (
@@ -173,14 +179,22 @@ export function HeroEditor({
                 {lock !== null && (
                   <span aria-hidden className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-full bg-ink px-1.5 py-0.5 text-[11px] font-bold text-bg">
                     <LockSimpleIcon size={11} weight="bold" />
-                    {lock === Infinity ? '' : lock}
+                    {lock === 'premium' ? '' : lock}
+                  </span>
+                )}
+                {premiumPart && (
+                  <span aria-hidden className="absolute bottom-[1.9rem] right-1.5 inline-flex items-center gap-0.5 rounded-full bg-[#2a2470] px-1.5 py-0.5 text-[11px] font-bold text-white">
+                    <SparkleIcon size={11} weight="fill" /> премиум
                   </span>
                 )}
               </button>
             );
           })}
         </div>
-        <p className="text-sm text-ink-soft">Детали с замком открываются на новых уровнях. Уровень растёт от заработанных баллов.</p>
+        <p className="text-sm text-ink-soft">
+          Детали с замком открываются на новых уровнях. Уровень растёт от заработанных баллов.
+          {premium ? ' Премиум-коллекция «Космос» открыта.' : ' Детали с меткой «премиум» открываются, если преподаватель подключит премиум.'}
+        </p>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ const { api } = await import('../src/api');
 
 beforeEach(() => {
   vi.mocked(api).mockImplementation(async (_m: string, path: string) => {
-    if (path === '/hero-parts') return HERO_PARTS.map((p) => ({ id: p.id, requiredLevel: p.requiredLevel, isPremium: false }));
+    if (path === '/hero-parts') return HERO_PARTS.map((p) => ({ id: p.id, requiredLevel: p.requiredLevel, isPremium: !!p.premium }));
     throw new Error(`unexpected ${path}`);
   });
 });
@@ -26,6 +26,23 @@ describe('конструктор героя', () => {
     expect(await screen.findByText('Откроется на 5 уровне')).toBeInTheDocument();
     expect(helmet).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByRole('button', { name: 'Сохранено' })).toBeDisabled();
+  });
+
+  it('премиум-деталь без премиума закрыта, с премиумом выбирается', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const view = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={1} onSave={onSave} />);
+    await view.user.click(tab('Эмблема'));
+    const crystal = await screen.findByRole('button', { name: /^Алмаз.*премиум.*недоступна без премиума/ });
+    await view.user.click(crystal);
+    expect(await screen.findByText(/откроется, когда преподаватель подключит премиум/)).toBeInTheDocument();
+    expect(crystal).toHaveAttribute('aria-pressed', 'false');
+    view.unmount();
+
+    const { user } = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={1} premium onSave={onSave} />);
+    await user.click(tab('Эмблема'));
+    await user.click(await screen.findByRole('button', { name: /^Алмаз\s*,\s*премиум$/ }));
+    await user.click(screen.getByRole('button', { name: 'Сохранить героя' }));
+    expect(onSave).toHaveBeenCalledWith('', { ...DEFAULT_HERO, emblem: 'emblem.diamond' });
   });
 
   it('выбор открытой детали и имени сохраняется', async () => {

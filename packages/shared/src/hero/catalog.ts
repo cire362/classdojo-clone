@@ -38,6 +38,8 @@ export interface HeroPartDef {
   hidesMouth?: boolean;
   /** Деталь маски рисуется поверх причёски (корона, нимб) */
   overHair?: boolean;
+  /** Премиум-коллекция: доступна ученикам, если у создателя их группы подключён премиум (и по уровню) */
+  premium?: boolean;
 }
 
 /** Слоты героя → тип слоя. Порядок = порядок вкладок в конструкторе. */
@@ -240,6 +242,20 @@ const parts: HeroPartDef[] = [
       `<rect x="73" y="141" width="54" height="8" rx="2" fill="#ffd23f" ${O}/>` +
       `<rect x="93" y="139" width="14" height="12" rx="3" fill="{accent}" ${O}/>`,
   },
+  {
+    id: 'suit.astro',
+    layer: 'suit',
+    name: 'Астронавт',
+    requiredLevel: 2,
+    premium: true,
+    front:
+      `<path d="M80 103 Q100 116 120 103" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>` +
+      `<path d="M80 103 Q100 116 120 103" fill="none" stroke="{outline}" stroke-width="2" stroke-linecap="round"/>` +
+      `<rect x="86" y="120" width="28" height="20" rx="5" fill="#ffffff" ${O}/>` +
+      `<circle cx="94" cy="130" r="3" fill="#e63946"/><circle cx="102" cy="130" r="3" fill="#ffd23f"/><circle cx="110" cy="130" r="3" fill="#2a9d55"/>` +
+      `<path d="M76 150 L124 150" stroke="#ffffff" stroke-width="6"/><path d="M76 150 L124 150" stroke="{outline}" stroke-width="1.5" stroke-dasharray="4 3"/>` +
+      `<path d="M79 176 L96 176 M104 176 L121 176" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>`,
+  },
 
   // ───────── Плащи ─────────
   { id: 'cape.none', layer: 'cape', name: 'Без плаща', requiredLevel: 1 },
@@ -310,6 +326,22 @@ const parts: HeroPartDef[] = [
       `<path d="M76 103 L124 103 L154 224 Q100 236 46 224 Z" fill="#d4a017" ${O}/>` +
       `<path d="M84 108 L116 108 L140 214 Q100 224 60 214 Z" fill="{accent}" opacity="0.9"/>` +
       star(100, 196, 12, 5, `fill="#ffd23f" ${O}`),
+    front: CAPE_CLASPS,
+  },
+  {
+    id: 'cape.comet',
+    layer: 'cape',
+    name: 'Комета',
+    requiredLevel: 3,
+    premium: true,
+    back:
+      `<path d="M76 103 L124 103 L160 222 Q100 238 40 222 Z" fill="#2a2470" ${O}/>` +
+      `<path d="M86 110 L114 110 L140 214 Q100 224 60 214 Z" fill="{accent}" opacity="0.3"/>` +
+      // Комета: хвост и звезда на краю плаща, где их не закрывает тело
+      `<path d="M150 214 L132 150" stroke="#ffd23f" stroke-width="5" stroke-linecap="round" opacity="0.55"/>` +
+      `<path d="M150 214 L138 168" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>` +
+      star(150, 212, 9, 3.8, `fill="#ffd23f" ${O}`) +
+      `<circle cx="52" cy="206" r="2.4" fill="#ffffff"/><circle cx="60" cy="184" r="1.8" fill="#ffffff"/><circle cx="46" cy="196" r="1.5" fill="#ffffff"/>`,
     front: CAPE_CLASPS,
   },
 
@@ -543,6 +575,17 @@ const parts: HeroPartDef[] = [
       BADGE +
       `<path d="M100 124 C96 117 89 117 89 124 C89 131 96 131 100 124 C104 117 111 117 111 124 C111 131 104 131 100 124 Z" fill="none" stroke="{suit}" stroke-width="2.6" stroke-linejoin="round"/>`,
   },
+  {
+    id: 'emblem.diamond',
+    layer: 'emblem',
+    name: 'Алмаз',
+    requiredLevel: 1,
+    premium: true,
+    front:
+      BADGE +
+      `<path d="M93 119 L97 114 L103 114 L107 119 L100 131 Z" ${EM}/>` +
+      `<path d="M93 119 L107 119 M97 114 L100 119 L103 114 M100 119 L100 131" fill="none" stroke="{outline}" stroke-width="1.2"/>`,
+  },
 
   // ───────── Сияние (фон за героем, только на старших уровнях) ─────────
   { id: 'aura.none', layer: 'aura', name: 'Без сияния', requiredLevel: 1 },
@@ -648,6 +691,22 @@ const parts: HeroPartDef[] = [
     back: `<circle cx="70" cy="34" r="13" fill="{hair}" ${O}/><circle cx="130" cy="34" r="13" fill="{hair}" ${O}/>`,
     front: HAIR_SHORT_FRONT,
   },
+  {
+    id: 'aura.galaxy',
+    layer: 'aura',
+    name: 'Галактика',
+    requiredLevel: 4,
+    premium: true,
+    back:
+      `<circle cx="100" cy="116" r="98" fill="#2a2470" opacity="0.85"/>` +
+      `<ellipse cx="100" cy="116" rx="96" ry="34" fill="#7b4fd6" opacity="0.45" transform="rotate(-20 100 116)"/>` +
+      `<ellipse cx="100" cy="116" rx="70" ry="20" fill="{accent}" opacity="0.3" transform="rotate(-20 100 116)"/>` +
+      `<circle cx="28" cy="70" r="10" fill="#ff6f61" ${O}/><path d="M14 72 Q28 62 42 68" fill="none" stroke="#ffd23f" stroke-width="3"/>` +
+      `<circle cx="172" cy="168" r="7" fill="#3ccfa6" ${O}/>` +
+      [[44, 30], [160, 40], [182, 96], [20, 150], [58, 214], [150, 214], [120, 22], [36, 110]]
+        .map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i % 3 ? 1.8 : 2.6}" fill="#ffffff"/>`)
+        .join(''),
+  },
 
   // ───────── Цвета костюма и деталей ─────────
   { id: 'color.red', layer: 'color', name: 'Красный', requiredLevel: 1, color: '#e63946' },
@@ -666,6 +725,8 @@ const parts: HeroPartDef[] = [
   { id: 'color.obsidian', layer: 'color', name: 'Обсидиан', requiredLevel: 9, color: '#34344a' },
   { id: 'color.ruby', layer: 'color', name: 'Рубин', requiredLevel: 8, color: '#b3123c' },
   { id: 'color.emerald', layer: 'color', name: 'Изумруд', requiredLevel: 9, color: '#0b7a55' },
+  { id: 'color.cosmic', layer: 'color', name: 'Космос', requiredLevel: 1, color: '#3b2a8f', premium: true },
+  { id: 'color.coral', layer: 'color', name: 'Коралл', requiredLevel: 1, color: '#ff6f61', premium: true },
 
   // ───────── Тон кожи ─────────
   { id: 'skin.1', layer: 'skin', name: 'Светлый', requiredLevel: 1, color: '#ffe0c4' },
@@ -685,6 +746,7 @@ const parts: HeroPartDef[] = [
   { id: 'hairColor.gray', layer: 'hairColor', name: 'Седой', requiredLevel: 1, color: '#c9c9d1' },
   { id: 'hairColor.blue', layer: 'hairColor', name: 'Синий', requiredLevel: 1, color: '#3d7be0' },
   { id: 'hairColor.pink', layer: 'hairColor', name: 'Розовый', requiredLevel: 1, color: '#f07ab4' },
+  { id: 'hairColor.violet', layer: 'hairColor', name: 'Фиалковый', requiredLevel: 1, color: '#8a63e8', premium: true },
 ];
 
 export const HERO_PARTS: ReadonlyArray<HeroPartDef> = parts;
@@ -715,12 +777,12 @@ export function randomHero(rand: () => number = Math.random): HeroParts {
   for (const [slot, layer] of Object.entries(HERO_SLOTS) as [HeroSlot, HeroLayer][]) {
     // Для случайного героя берём только естественные тона кожи (skin.1–skin.6)
     const base = parts.filter(
-      (p) => p.layer === layer && p.requiredLevel <= 1 && !(layer === 'skin' && Number(p.id.slice(5)) > 6),
+      (p) => p.layer === layer && p.requiredLevel <= 1 && !p.premium && !(layer === 'skin' && Number(p.id.slice(5)) > 6),
     );
     result[slot] = base[Math.floor(rand() * base.length)].id;
   }
   if (result.accentColor === result.suitColor) {
-    const colors = parts.filter((p) => p.layer === 'color' && p.requiredLevel <= 1 && p.id !== result.suitColor);
+    const colors = parts.filter((p) => p.layer === 'color' && p.requiredLevel <= 1 && !p.premium && p.id !== result.suitColor);
     result.accentColor = colors[Math.floor(rand() * colors.length)].id;
   }
   return result;

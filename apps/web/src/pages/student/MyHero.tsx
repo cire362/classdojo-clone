@@ -31,6 +31,7 @@ export function MyHeroPage() {
         key={data.student.id}
         initial={data.hero}
         level={data.level.level}
+        premium={data.premium}
         newIds={newIds ?? undefined}
         onSave={async (name, parts) => {
           const hero = await api<Hero>('PUT', '/student/hero', { name, parts });

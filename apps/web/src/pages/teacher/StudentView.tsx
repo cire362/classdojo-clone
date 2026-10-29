@@ -139,6 +139,7 @@ export function StudentHeroPage() {
         key={data.student.id}
         initial={data.hero}
         level={data.level.level}
+        premium={data.premium}
         ownerLabel={data.student.name}
         onSave={async (name, parts) => {
           const hero = await api<Hero>('PUT', `/teacher/students/${data.student.id}/hero`, { name, parts });

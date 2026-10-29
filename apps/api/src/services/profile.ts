@@ -1,5 +1,6 @@
 import { levelForPoints, normalizeHero } from '@heroes/shared';
 import { prisma } from '../db.js';
+import { isActive } from './premium.js';
 import { dbDateKey, startOfDay, startOfWeek } from '../lib/dates.js';
 
 async function sums(studentId: string, since?: Date) {
@@ -17,7 +18,11 @@ async function sums(studentId: string, since?: Date) {
 export async function studentProfile(studentId: string) {
   const student = await prisma.student.findUniqueOrThrow({
     where: { id: studentId },
-    include: { account: { select: { login: true } }, group: { select: { id: true, name: true, archivedAt: true } }, hero: true },
+    include: {
+      account: { select: { login: true } },
+      group: { select: { id: true, name: true, archivedAt: true, teacher: { select: { premiumUntil: true } } } },
+      hero: true,
+    },
   });
   const [today, week, total, history, attendance] = await Promise.all([
     sums(studentId, startOfDay()),
@@ -37,7 +42,14 @@ export async function studentProfile(studentId: string) {
   ]);
   const attended = attendance.filter((a) => a.present).length;
   return {
-    student: { id: student.id, name: student.name, login: student.account.login, group: student.group },
+    student: {
+      id: student.id,
+      name: student.name,
+      login: student.account.login,
+      group: { id: student.group.id, name: student.group.name, archivedAt: student.group.archivedAt },
+    },
+    /** Открыта ли премиум-коллекция деталей (премиум у создателя группы) */
+    premium: isActive(student.group.teacher.premiumUntil),
     hero: { name: student.hero?.name ?? '', parts: normalizeHero(student.hero?.parts) },
     level: levelForPoints(total.earned),
     points: { today, week, total },

@@ -13,6 +13,7 @@ import { addCoTeacher, groupTeachers, removeCoTeacher } from '../services/coTeac
 import { MAX_LESSONS_PER_DAY, attendanceForDate, deleteAttendance, saveAttendance } from '../services/attendance.js';
 import { countPeople } from '../services/detector.js';
 import { awardPoints, cardSummaries, deletePointEvents } from '../services/points.js';
+import { teacherPremium } from '../services/premium.js';
 import { studentProfile } from '../services/profile.js';
 import { createDefaultReasons } from '../services/reasons.js';
 import { groupStats, statsWorkbook } from '../services/stats.js';
@@ -71,6 +72,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   .use(requireRole('TEACHER'))
 
   // ───── Профиль преподавателя ─────
+  .get('/plan', async (c) => c.json(await teacherPremium(c.get('user').teacherId!)))
   .patch('/me', async (c) => {
     const { name } = parse(ProfileBody, await c.req.json().catch(() => null));
     const t = await prisma.teacher.update({ where: { id: c.get('user').teacherId! }, data: { name } });

@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react';
-import { EyeIcon, EyeSlashIcon, KeyIcon, UserIcon } from '@phosphor-icons/react';
+import { EyeIcon, EyeSlashIcon, KeyIcon, SparkleIcon, UserIcon } from '@phosphor-icons/react';
 import { api } from '../../api';
 import { useAuth } from '../../auth';
 import { useToast } from '../../components/Toast';
+import { Skeleton } from '../../components/ui';
+import { useLoad } from '../../hooks';
 
 const MIN_LENGTH = 8;
 
@@ -139,6 +141,37 @@ export function SettingsPage() {
           {savingPwd ? 'Сохраняем…' : 'Сменить пароль'}
         </button>
       </form>
+
+      <PremiumCard />
     </div>
+  );
+}
+
+/** Премиум: пока без оплаты на сайте — подключает администратор */
+function PremiumCard() {
+  const { data } = useLoad(() => api<{ active: boolean; until: string | null }>('GET', '/teacher/plan'), []);
+  return (
+    <section className="card space-y-4 p-5" aria-labelledby="premium-title">
+      <h2 id="premium-title" className="flex items-center gap-2 text-lg">
+        <SparkleIcon size={22} weight="fill" /> Премиум
+      </h2>
+      {!data ? (
+        <Skeleton className="h-16" />
+      ) : data.active ? (
+        <p>
+          Подключён до <b>{new Date(data.until!).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</b>. Ученикам ваших
+          групп открыта премиум-коллекция «Космос».
+        </p>
+      ) : (
+        <p>
+          {data.until ? 'Срок премиума закончился.' : 'Сейчас у вас бесплатный тариф: все функции для уроков работают без ограничений.'}
+        </p>
+      )}
+      <ul className="list-disc space-y-1 pl-5 text-sm text-ink-soft">
+        <li>Премиум-коллекция деталей героя «Космос»: галактика, плащ-комета, костюм астронавта, алмаз и особые цвета.</li>
+        <li>Действует для учеников групп, которые вы создали; детали открываются по уровню, как обычные.</li>
+      </ul>
+      {!data?.active && <p className="text-sm text-ink-soft">Оплата на сайте появится позже. Чтобы подключить премиум сейчас, обратитесь к администратору.</p>}
+    </section>
   );
 }

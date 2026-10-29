@@ -58,6 +58,8 @@ model Teacher {
   account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   name      String
   createdAt DateTime @default(now())
+  /// Премиум до этой даты (включает администратор: npm run set-premium). Платежей пока нет
+  premiumUntil DateTime?
 
   groups   Group[]
   coGroups GroupTeacher[]
