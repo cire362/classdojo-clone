@@ -134,7 +134,10 @@ export function ProfileView({
                         <span className="w-7 text-center text-xl" aria-hidden>
                           {e.emoji}
                         </span>
-                        <span className="flex-1">{e.reasonName}</span>
+                        <span className="min-w-0 flex-1 break-words">
+                          <span className="block">{e.reasonName}</span>
+                          <span className="block text-xs text-ink-soft">{e.author ?? 'Автор не указан'}</span>
+                        </span>
                         <span className="text-sm text-ink-soft tabular-nums">
                           {new Date(e.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                         </span>

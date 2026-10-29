@@ -32,7 +32,10 @@ export async function studentProfile(studentId: string) {
       where: { studentId },
       orderBy: { createdAt: 'desc' },
       take: 300,
-      select: { id: true, value: true, reasonName: true, emoji: true, createdAt: true, attendanceSessionId: true },
+      select: {
+        id: true, value: true, reasonName: true, emoji: true, createdAt: true, attendanceSessionId: true,
+        awardedBy: { select: { teacher: { select: { name: true } } } },
+      },
     }),
     prisma.attendance.findMany({
       where: { studentId },
@@ -59,7 +62,9 @@ export async function studentProfile(studentId: string) {
     level: levelForPoints(total.earned),
     points: { today, week, total },
     // Баллы за посещение меняются только через отметку посещаемости
-    history: history.map(({ attendanceSessionId, ...e }) => ({ ...e, attendance: attendanceSessionId !== null })),
+    history: history.map(({ attendanceSessionId, awardedBy, ...e }) => ({
+      ...e, attendance: attendanceSessionId !== null, author: awardedBy?.teacher?.name ?? null,
+    })),
     portfolio: portfolio.map(({ createdBy, ...p }) => ({ ...p, author: createdBy.teacher?.name ?? '' })),
     attendance: {
       attended,

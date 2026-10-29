@@ -242,6 +242,8 @@ export interface PointsSum {
 }
 
 export interface HistoryEvent {
+  /** Имя начислившего преподавателя; null для старой записи без автора */
+  author: string | null;
   id: string;
   value: number;
   reasonName: string;

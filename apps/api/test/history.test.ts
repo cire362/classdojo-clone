@@ -3,6 +3,33 @@ import { prisma } from '../src/db.js';
 import { call, setupTeacher } from './helpers.js';
 
 describe('исправление истории', () => {
+  it('история показывает автора ручных баллов и посещения во всех кабинетах', async () => {
+    const owner = await setupTeacher(['Маша Иванова']);
+    const colleague = await setupTeacher(['Свой Ученик']);
+    await prisma.teacher.update({ where: { id: colleague.teacher.id }, data: { name: 'Игорь Павлович' } });
+    await prisma.groupTeacher.create({ data: { groupId: owner.group.id, teacherId: colleague.teacher.id } });
+    const studentId = owner.students[0].id;
+    await call('POST', `/api/teacher/groups/${owner.group.id}/points`, {
+      cookie: colleague.cookie, body: { studentIds: [studentId], reasonId: owner.plusReason.id },
+    });
+    await call('POST', `/api/teacher/groups/${owner.group.id}/attendance`, {
+      cookie: owner.cookie, body: { presentStudentIds: [studentId], peopleOnPhoto: null, subtractedTeacher: false },
+    });
+    // Старое событие без автора остаётся читаемым.
+    await prisma.pointEvent.create({ data: { studentId, value: 1, reasonName: 'Старая запись', emoji: '⭐' } });
+    for (const [path, cookie] of [
+      [`/api/teacher/students/${studentId}/profile`, owner.cookie],
+      ['/api/student/profile', await owner.studentCookie(0)],
+    ]) {
+      const profile = (await call('GET', path, { cookie })).body;
+      expect(profile.history.find((e: { reasonName: string }) => e.reasonName === owner.plusReason.name).author).toBe('Игорь Павлович');
+      expect(profile.history.find((e: { attendance: boolean }) => e.attendance).author).toBe(owner.teacher.name);
+      expect(profile.history.find((e: { reasonName: string }) => e.reasonName === 'Старая запись').author).toBeNull();
+      // В ответе нет данных входа начислившего преподавателя.
+      expect(profile.history[0]).not.toHaveProperty('awardedBy');
+    }
+  });
+
   it('преподаватель удаляет ошибочное начисление из профиля ученика', async () => {
     const t = await setupTeacher(['Ученик Один']);
     const sid = t.students[0].id;
