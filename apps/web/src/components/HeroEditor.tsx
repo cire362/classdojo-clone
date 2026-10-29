@@ -1,9 +1,12 @@
-import { useMemo, useState } from 'react';
-import { DiceFiveIcon, LockSimpleIcon, SparkleIcon } from '@phosphor-icons/react';
+import { useMemo, useRef, useState } from 'react';
+import { DiceFiveIcon, LockSimpleIcon, MinusCircleIcon, PawPrintIcon, SparkleIcon } from '@phosphor-icons/react';
 import {
   HERO_SLOT_LABELS,
   HERO_SLOTS,
   partsForLayer,
+  normalizeHero,
+  PET_STAGES,
+  petStageForLevel,
   type HeroLayer,
   type HeroParts,
   type HeroPartDef,
@@ -13,6 +16,7 @@ import { api } from '../api';
 import { useLoad } from '../hooks';
 import { HeroAvatar } from './HeroAvatar';
 import { useToast } from './Toast';
+import { PetAvatar } from './PetCompanion';
 
 const SWATCH_LAYERS: HeroLayer[] = ['color', 'skin', 'hairColor'];
 const SLOTS = Object.keys(HERO_SLOTS) as HeroSlot[];
@@ -41,7 +45,9 @@ export function HeroEditor({
   newIds?: Set<string>;
 }) {
   const toast = useToast();
-  const [parts, setParts] = useState<HeroParts>(initial.parts);
+  const initialParts = useMemo(() => normalizeHero(initial.parts), [initial.parts]);
+  const [parts, setParts] = useState<HeroParts>(initialParts);
+  const petTab = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState(initial.name);
   const slotHasNew = (s: HeroSlot) => !!newIds?.size && partsForLayer(HERO_SLOTS[s]).some((p) => newIds.has(p.id));
   const [slot, setSlot] = useState<HeroSlot>('pose');
@@ -64,9 +70,10 @@ export function HeroEditor({
     return required > level ? required : null;
   };
 
-  const dirty = name !== initial.name || SLOTS.some((s) => parts[s] !== initial.parts[s]);
+  const dirty = name !== initial.name || SLOTS.some((s) => parts[s] !== initialParts[s]);
   const options = partsForLayer(HERO_SLOTS[slot]);
   const isSwatch = SWATCH_LAYERS.includes(HERO_SLOTS[slot]);
+  const petStage = petStageForLevel(level);
 
   function pick(p: HeroPartDef) {
     const lock = lockOf(p);
@@ -103,12 +110,19 @@ export function HeroEditor({
       <div className="space-y-4 lg:sticky lg:top-24 lg:h-fit">
         <div className="relative mx-auto max-w-[320px] rounded-2xl bg-surface-2 px-6 pt-4 lg:max-w-none">
           <div key={JSON.stringify(parts)} className="anim-pop">
-            <HeroAvatar parts={parts} title={name || 'Герой'} className="mx-auto aspect-[5/6] max-w-[300px]" />
+            <HeroAvatar parts={parts} level={level} title={name || 'Герой'} className="mx-auto aspect-[5/6] max-w-[300px]" />
           </div>
           <button className="icon-btn absolute right-2 top-2 bg-surface" onClick={randomize} aria-label="Случайный герой" title="Случайный герой">
             <DiceFiveIcon size={22} />
           </button>
         </div>
+        <button className="btn btn-secondary w-full" onClick={() => {
+          setSlot('pet');
+          petTab.current?.focus();
+          petTab.current?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+        }}>
+          <PawPrintIcon size={20} aria-hidden /> {parts.pet === 'pet.none' ? 'Выбрать питомца' : 'Изменить питомца'}
+        </button>
         <div>
           <label className="label" htmlFor="hero-name">
             Имя героя{ownerLabel ? ` (${ownerLabel})` : ''}
@@ -128,18 +142,27 @@ export function HeroEditor({
       </div>
 
       <div className="min-w-0 space-y-4">
-        <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0" aria-label="Детали героя">
+        <nav className="relative -mx-4 flex gap-1 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0" aria-label="Детали героя">
           {SLOTS.map((s) => (
-            <button key={s} className={`tab ${slot === s ? 'active' : 'bg-surface-2'}`} onClick={() => setSlot(s)} aria-pressed={slot === s}>
+            <button key={s} ref={s === 'pet' ? petTab : undefined} className={`tab ${slot === s ? 'active' : 'bg-surface-2'}`} onClick={() => setSlot(s)} aria-pressed={slot === s}>
               {HERO_SLOT_LABELS[s]}
               {slotHasNew(s) && <span className="size-2 rounded-full bg-accent" aria-label="есть новые детали" />}
             </button>
           ))}
         </nav>
 
+        {slot === 'pet' && <section aria-label="Рост питомца" className="space-y-3">
+          <div>
+            <h2 className="font-sans text-lg font-semibold">Питомец героя</h2>
+            <p className="mt-1 text-sm text-ink-soft">Выбери компаньона. На 4-м и 7-м уровнях героя он вырастет и изменится.</p>
+          </div>
+          <ol className="flex flex-wrap gap-2 text-xs">
+            {PET_STAGES.map((s) => <li key={s.level} aria-current={petStage.title === s.title ? 'step' : undefined} className={`rounded-full px-3 py-1.5 ${petStage.title === s.title ? 'bg-accent font-semibold text-on-accent' : 'bg-surface-2 text-ink-soft'}`}>{s.level}-й уровень · {s.title}</li>)}
+          </ol>
+        </section>}
         <div
           className={
-            isSwatch
+            slot === 'pet' ? 'grid grid-cols-2 gap-3 sm:grid-cols-4' : isSwatch
               ? 'grid grid-cols-[repeat(auto-fill,minmax(76px,1fr))] gap-3'
               : 'grid grid-cols-3 gap-2.5 sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))]'
           }
@@ -158,11 +181,15 @@ export function HeroEditor({
                   active ? 'border-ink bg-accent/20 ring-2 ring-ink' : 'border-line bg-surface hover:border-ink-soft'
                 }`}
               >
-                {isSwatch ? (
+                {slot === 'pet' ? (
+                  <span className="flex aspect-square w-full items-center justify-center rounded-xl bg-[#f4efdf] p-2">
+                    {p.id === 'pet.none' ? <MinusCircleIcon size={40} className="text-[#1b1f4b]" aria-hidden /> : <PetAvatar petId={p.id} level={level} className="size-full" />}
+                  </span>
+                ) : isSwatch ? (
                   <span className="mt-1 size-12 rounded-full ring-1 ring-line" style={{ background: p.color }} />
                 ) : (
                   <span className="block w-full overflow-hidden rounded-xl bg-surface-2">
-                    <HeroAvatar parts={{ ...parts, [slot]: p.id }} className={`aspect-[5/6] w-full ${lock ? 'opacity-35 grayscale' : ''}`} />
+                    <HeroAvatar parts={{ ...parts, [slot]: p.id }} level={level} className={`aspect-[5/6] w-full ${lock ? 'opacity-35 grayscale' : ''}`} />
                   </span>
                 )}
                 <span className={`text-xs font-medium leading-tight ${lock ? 'text-ink-soft' : ''}`}>

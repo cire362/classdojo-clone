@@ -1,3 +1,5 @@
+import { PET_COMPANIONS } from './pets.js';
+
 /**
  * Каталог деталей героя — единый источник правды для фронтенда (отрисовка)
  * и бэкенда (проверка выбора, синхронизация таблицы HeroPart).
@@ -19,7 +21,8 @@ export type HeroLayer =
   | 'color'
   | 'skin'
   | 'hairColor'
-  | 'aura';
+  | 'aura'
+  | 'pet';
 
 export interface HeroPartDef {
   /** Уникальный id вида `<слой>.<ключ>` — он же «id SVG» */
@@ -52,6 +55,7 @@ export const HERO_SLOTS = {
   mask: 'mask',
   emblem: 'emblem',
   aura: 'aura',
+  pet: 'pet',
   skin: 'skin',
   hair: 'hair',
   hairColor: 'hairColor',
@@ -69,6 +73,7 @@ export const HERO_SLOT_LABELS: Record<HeroSlot, string> = {
   mask: 'Маска',
   emblem: 'Эмблема',
   aura: 'Сияние',
+  pet: 'Питомец',
   skin: 'Тон кожи',
   hair: 'Причёска',
   hairColor: 'Цвет волос',
@@ -110,6 +115,8 @@ const CAPE_CLASPS =
   `<circle cx="79" cy="106" r="5" fill="#ffd23f" ${O}/><circle cx="121" cy="106" r="5" fill="#ffd23f" ${O}/>`;
 
 const parts: HeroPartDef[] = [
+  { id: 'pet.none', layer: 'pet', name: 'Без питомца', requiredLevel: 1 },
+  ...PET_COMPANIONS.map((p) => ({ ...p, layer: 'pet' as const, requiredLevel: 1 })),
   // ───────── Позы (руки) ─────────
   {
     id: 'pose.stand',
@@ -773,6 +780,7 @@ export const DEFAULT_HERO: HeroParts = {
   mask: 'mask.domino',
   emblem: 'emblem.star',
   aura: 'aura.none',
+  pet: 'pet.none',
   skin: 'skin.2',
   hair: 'hair.short',
   hairColor: 'hairColor.brown',
@@ -782,6 +790,8 @@ export const DEFAULT_HERO: HeroParts = {
 export function randomHero(rand: () => number = Math.random): HeroParts {
   const result = { ...DEFAULT_HERO };
   for (const [slot, layer] of Object.entries(HERO_SLOTS) as [HeroSlot, HeroLayer][]) {
+    // Первого питомца ученик выбирает сам. Кнопка случайного героя в редакторе может менять и питомца.
+    if (slot === 'pet') continue;
     // Для случайного героя берём только естественные тона кожи (skin.1–skin.6)
     const base = parts.filter(
       (p) => p.layer === layer && p.requiredLevel <= 1 && !p.premium && !(layer === 'skin' && Number(p.id.slice(5)) > 6),

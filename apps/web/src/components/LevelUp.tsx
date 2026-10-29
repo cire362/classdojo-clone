@@ -101,7 +101,7 @@ export function LevelUpOverlay({
                   animate={{ y: 0, scale: 1 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.15 }}
                 >
-                  <HeroAvatar parts={hero} className="aspect-[5/6]" />
+                  <HeroAvatar parts={hero} level={level} className="aspect-[5/6]" />
                 </motion.div>
                 <motion.span
                   className="absolute right-6 top-6 flex size-16 items-center justify-center rounded-full bg-accent font-display text-3xl text-on-accent shadow-[var(--shadow-pop)]"
@@ -129,7 +129,7 @@ export function LevelUpOverlay({
                     </p>
                     <div className="grid grid-cols-3 gap-2">
                       {shown.map((id) => (
-                        <PartPreview key={id} partId={id} base={hero} />
+                        <PartPreview key={id} partId={id} base={hero} level={level} />
                       ))}
                     </div>
                   </div>

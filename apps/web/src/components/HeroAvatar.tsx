@@ -10,17 +10,19 @@ export const HeroAvatar = memo(function HeroAvatar({
   title,
   className = '',
   crop = 'full',
+  level = 1,
 }: {
   parts: HeroParts | Record<string, string>;
   title?: string;
   className?: string;
   crop?: 'full' | 'head';
+  level?: number;
 }) {
   const svg = useMemo(() => {
     // Подпись даёт обёртка; у самого svg роль не нужна
-    const full = renderHeroSvg(parts).replace(' role="img"', ' aria-hidden="true" focusable="false"');
+    const full = renderHeroSvg(parts, { level }).replace(' role="img"', ' aria-hidden="true" focusable="false"');
     return crop === 'head' ? full.replace('viewBox="0 0 200 240"', 'viewBox="38 8 124 124"') : full;
-  }, [parts, crop]);
+  }, [parts, crop, level]);
   // Без подписи герой — просто украшение рядом с именем, экранный диктор его пропускает
   return title ? (
     <div className={`hero-avatar ${className}`} role="img" aria-label={title} dangerouslySetInnerHTML={{ __html: svg }} />

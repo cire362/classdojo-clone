@@ -428,7 +428,7 @@ const StudentCard = memo(function StudentCard({
     >
       {/* Картинка и значки на ней — оформление; для экранного диктора то же самое есть текстом ниже */}
       <div className="relative rounded-xl" style={{ background: heroTint(s.hero.parts) }} aria-hidden>
-        <HeroAvatar parts={s.hero.parts} className="mx-auto aspect-[5/6] w-[88%]" />
+        <HeroAvatar parts={s.hero.parts} level={s.level} className="mx-auto aspect-[5/6] w-[88%]" />
         {s.todayEarned > 0 && (
           <span className={`chip absolute right-2 top-2 bg-plus-bg text-plus ${big ? 'text-lg' : ''}`}>+{s.todayEarned}</span>
         )}
@@ -583,7 +583,7 @@ function RandomPicker({
             key={done ? 'done' : s.id}
             className={`w-48 rounded-2xl p-2 transition-colors ${done ? 'anim-pop-big bg-accent/30' : 'bg-surface-2'}`}
           >
-            <HeroAvatar parts={s.hero.parts} className="aspect-[5/6]" />
+            <HeroAvatar parts={s.hero.parts} level={s.level} className="aspect-[5/6]" />
           </div>
           <p className={`mt-4 font-display text-2xl transition-opacity ${done ? '' : 'opacity-60'}`}>{s.name}</p>
           <div className={`mt-6 flex flex-wrap justify-center gap-2 transition-opacity ${done ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>

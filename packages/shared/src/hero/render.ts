@@ -1,4 +1,5 @@
 import { DEFAULT_HERO, HERO_PARTS_BY_ID, HERO_SLOTS, type HeroPartDef, type HeroParts, type HeroSlot } from './catalog.js';
+import { renderPetFragment } from './pets.js';
 
 const OUTLINE = '#1b1f4b';
 const O = `stroke="${OUTLINE}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
@@ -57,7 +58,7 @@ function get(id: string): HeroPartDef {
  * Собирает SVG героя из слоёв. Возвращает строку <svg> — её можно вставить
  * в страницу, сохранить файлом или отрисовать на сервере.
  */
-export function renderHeroSvg(input: unknown, opts: { title?: string } = {}): string {
+export function renderHeroSvg(input: unknown, opts: { title?: string; level?: number } = {}): string {
   const h = normalizeHero(input);
   const pose = get(h.pose);
   const suit = get(h.suit);
@@ -94,7 +95,8 @@ export function renderHeroSvg(input: unknown, opts: { title?: string } = {}): st
   else if (showHair) face.push(hair.front ?? '');
   if (mask.overHair) face.push(mask.front ?? '');
 
-  const body = [...layers, ...face]
+  const pet = renderPetFragment(h.pet, opts.level);
+  const body = [...layers, ...face, pet ? `<g transform="translate(136 162)">${pet}</g>` : '']
     .filter(Boolean)
     .join('')
     .replace(/\{suitDark\}/g, shade(suitC, 0.22))

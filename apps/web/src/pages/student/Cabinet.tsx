@@ -57,7 +57,7 @@ export function CabinetPage() {
           </span>
           <span className="hidden gap-2 md:flex" aria-hidden>
             {newIds.slice(0, 4).map((id) => (
-              <PartPreview key={id} partId={id} base={data.hero.parts} className="w-16 [&_figcaption]:hidden" />
+              <PartPreview key={id} partId={id} base={data.hero.parts} level={data.level.level} className="w-16 [&_figcaption]:hidden" />
             ))}
           </span>
           <span className="btn btn-primary w-full sm:w-auto">В конструктор</span>

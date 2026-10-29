@@ -13,10 +13,11 @@ export const LAYER_PREVIEW_SLOT: Record<HeroLayer, HeroSlot> = {
   skin: 'skin',
   hairColor: 'hairColor',
   aura: 'aura',
+  pet: 'pet',
 };
 
 /** Мини-превью детали: свой герой с этой деталью или образец цвета */
-export function PartPreview({ partId, base, className = '' }: { partId: string; base: HeroParts; className?: string }) {
+export function PartPreview({ partId, base, level = 1, className = '' }: { partId: string; base: HeroParts; level?: number; className?: string }) {
   const part = HERO_PARTS_BY_ID.get(partId);
   if (!part) return null;
   return (
@@ -27,7 +28,7 @@ export function PartPreview({ partId, base, className = '' }: { partId: string; 
         </span>
       ) : (
         <span className="block w-full overflow-hidden rounded-xl bg-surface-2">
-          <HeroAvatar parts={{ ...base, [LAYER_PREVIEW_SLOT[part.layer]]: part.id }} className="aspect-[5/6] w-full" />
+          <HeroAvatar parts={{ ...base, [LAYER_PREVIEW_SLOT[part.layer]]: part.id }} level={level} className="aspect-[5/6] w-full" />
         </span>
       )}
       <figcaption className="text-center text-xs font-medium leading-tight">{part.name}</figcaption>

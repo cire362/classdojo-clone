@@ -6,6 +6,7 @@ import { formatDate, pluralize } from '../hooks';
 import { HeroAvatar } from './HeroAvatar';
 import { Portfolio, type PortfolioEdit } from './Portfolio';
 import { Badges, BadgeSummary } from './Badges';
+import { PetCompanion } from './PetCompanion';
 import { EmptyState, ProgressBar } from './ui';
 
 function PointsTile({ label, sum, featured = false }: { label: string; sum: PointsSum; featured?: boolean }) {
@@ -59,7 +60,7 @@ export function ProfileView({
             className="absolute inset-0 opacity-25"
             style={{ backgroundImage: 'radial-gradient(var(--ink) 1px, transparent 1px)', backgroundSize: '16px 16px' }}
           />
-          <HeroAvatar parts={hero.parts} title={hero.name || profile.student.name} className="relative mx-auto aspect-[5/6] max-w-[280px]" />
+          <HeroAvatar parts={hero.parts} level={level.level} title={hero.name || profile.student.name} className="relative mx-auto aspect-[5/6] max-w-[280px]" />
         </div>
 
         <div className="flex flex-col gap-5">
@@ -93,6 +94,7 @@ export function ProfileView({
             <PointsTile label="Неделя" sum={points.week} />
             <PointsTile label="Всего" sum={points.total} featured />
           </div>
+          <PetCompanion parts={hero.parts} level={level.level} />
           {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
         </div>
       </section>

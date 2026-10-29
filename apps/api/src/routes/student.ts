@@ -11,6 +11,7 @@ import { markNewsSeen, studentNews } from '../services/news.js';
 import { studentHasPremium } from '../services/premium.js';
 import { studentProfile } from '../services/profile.js';
 import { readStudentNotifications, studentNotifications } from '../services/studentNotifications.js';
+import { normalizeHero } from '@heroes/shared';
 
 export const HeroBody = z.object({
   name: z.string().trim().max(40),
@@ -21,6 +22,11 @@ export const HeroBody = z.object({
 export async function saveHero(studentId: string, body: unknown) {
   const { name, parts } = parse(HeroBody, body);
   const [level, premium] = await Promise.all([studentLevel(studentId), studentHasPremium(studentId)]);
+  // Вкладка старой версии может ещё не знать о питомце: сохраняем выбор из БД.
+  if (parts.pet === undefined) {
+    const saved = await prisma.hero.findUnique({ where: { studentId }, select: { parts: true } });
+    parts.pet = normalizeHero(saved?.parts).pet;
+  }
   const check = await validateHeroForLevel(parts, level.level, premium);
   if (!check.ok) throw new HttpError(422, check.error);
   const hero = await prisma.hero.upsert({
