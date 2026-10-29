@@ -148,11 +148,18 @@ const parts: HeroPartDef[] = [
   },
 
   {
-    id: 'pose.point',
+    id: 'pose.wave',
     layer: 'pose',
-    name: 'Туда!',
+    name: 'Привет!',
     requiredLevel: 7,
-    front: arm('M74 110 Q62 130 62 150') + arm('M126 110 L148 108 L162 104') + glove(62, 155) + glove(167, 103, 9),
+    front:
+      arm('M74 110 L54 132 L72 148') +
+      arm('M126 110 Q148 104 152 80') +
+      glove(74, 149, 8) +
+      glove(153, 70, 10) +
+      // Дуги «машет рукой»
+      `<path d="M167 58 Q173 68 167 78" fill="none" stroke="{outline}" stroke-width="3" stroke-linecap="round"/>` +
+      `<path d="M176 52 Q184 68 176 84" fill="none" stroke="{outline}" stroke-width="3" stroke-linecap="round"/>`,
   },
 
   // ───────── Костюмы (детали поверх базового комбинезона) ─────────
