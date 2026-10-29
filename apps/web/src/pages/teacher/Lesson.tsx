@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   CheckIcon,
   DiceFiveIcon,
+  FlagBannerIcon,
   ProjectorScreenIcon,
   SelectionAllIcon,
   StarIcon,
@@ -13,6 +14,7 @@ import {
 import { api, type CardSummary, type LessonStudent, type Reason } from '../../api';
 import { HeroAvatar, heroTint } from '../../components/HeroAvatar';
 import { useToast } from '../../components/Toast';
+import { TeamsModal } from '../../components/TeamsModal';
 import { EmptyState, Modal } from '../../components/ui';
 import { pluralize } from '../../hooks';
 import { usePresence } from '../../lib/presence';
@@ -25,8 +27,27 @@ interface Burst {
   level?: number;
 }
 
+const TEAM_MODE_KEY = 'heroes:teams:';
+
+function storedTeamMode(groupId: string): boolean {
+  try {
+    return localStorage.getItem(TEAM_MODE_KEY + groupId) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function rememberTeamMode(groupId: string, on: boolean) {
+  try {
+    if (on) localStorage.setItem(TEAM_MODE_KEY + groupId, '1');
+    else localStorage.removeItem(TEAM_MODE_KEY + groupId);
+  } catch {
+    // без запоминания
+  }
+}
+
 export function LessonPage() {
-  const { data, setData } = useGroup();
+  const { data, setData, reload } = useGroup();
   const toast = useToast();
   const [selectMode, setSelectMode] = useState(false);
   const selectBar = usePresence(selectMode, 200);
@@ -34,6 +55,9 @@ export function LessonPage() {
   const [target, setTarget] = useState<{ ids: string[]; label: string } | null>(null);
   const [projector, setProjector] = useState(false);
   const [randomOpen, setRandomOpen] = useState(false);
+  const [teamMode, setTeamMode] = useState(() => storedTeamMode(data.group.id));
+  const [teamsOpen, setTeamsOpen] = useState(false);
+  const teamView = teamMode && data.teams.length > 0;
   const [bursts, setBursts] = useState<Record<string, Burst>>({});
   const burstKey = useRef(1);
 
@@ -145,27 +169,61 @@ export function LessonPage() {
     );
   }
 
-  const grid = (
-    <div
-      className={
-        projector
-          ? 'grid grid-cols-[repeat(auto-fill,minmax(clamp(220px,15vw,340px),1fr))] gap-5'
-          : 'grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(168px,1fr))] sm:gap-4'
-      }
-    >
-      {students.map((s) => (
-        <StudentCard
-          key={s.id}
-          student={s}
-          big={projector}
-          absent={present ? !present.has(s.id) : false}
-          selectable={selectMode}
-          selected={selected.has(s.id)}
-          burst={bursts[s.id]}
-          onClick={onCardClick}
-        />
-      ))}
+  const gridClass = projector
+    ? 'grid grid-cols-[repeat(auto-fill,minmax(clamp(220px,15vw,340px),1fr))] gap-5'
+    : 'grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(168px,1fr))] sm:gap-4';
+  const card = (s: LessonStudent) => (
+    <StudentCard
+      key={s.id}
+      student={s}
+      big={projector}
+      absent={present ? !present.has(s.id) : false}
+      selectable={selectMode}
+      selected={selected.has(s.id)}
+      burst={bursts[s.id]}
+      onClick={onCardClick}
+    />
+  );
+
+  // Командный режим: карточки по командам, счёт команды — сумма баллов участников за сегодня
+  const teamSections = teamView
+    ? [
+        ...data.teams.map((team) => ({ team, members: students.filter((s) => s.teamId === team.id) })),
+        { team: null, members: students.filter((s) => !s.teamId || !data.teams.some((t) => t.id === s.teamId)) },
+      ].filter((x) => x.team || x.members.length)
+    : [];
+  const scoreOf = (members: LessonStudent[]) => members.reduce((sum, s) => sum + s.todayEarned, 0);
+  const best = Math.max(0, ...teamSections.filter((x) => x.team).map((x) => scoreOf(x.members)));
+
+  const grid = teamView ? (
+    <div className="space-y-6">
+      {teamSections.map(({ team, members }) => {
+        const score = scoreOf(members);
+        return (
+          <section key={team?.id ?? 'none'} aria-label={team ? `Команда ${team.name}` : 'Без команды'}>
+            <div className="mb-3 flex flex-wrap items-center gap-3">
+              <span aria-hidden className={`shrink-0 rounded-full ${projector ? 'size-6' : 'size-4'}`} style={{ background: team?.color ?? 'var(--line)' }} />
+              <h2 className={projector ? 'text-3xl' : 'text-lg'}>{team?.name ?? 'Без команды'}</h2>
+              {team && (
+                <span className={`chip bg-plus-bg text-plus ${projector ? 'text-xl' : ''}`}>
+                  +{score}
+                  <span className="sr-only"> баллов</span> сегодня
+                </span>
+              )}
+              {team && score > 0 && score === best && <span className={`chip bg-accent text-on-accent ${projector ? 'text-xl' : ''}`}>лидер</span>}
+              {team && !projector && !archived && !selectMode && members.length > 0 && (
+                <button className="btn btn-secondary btn-sm ml-auto" onClick={() => setTarget({ ids: members.map((m) => m.id), label: `Команда «${team.name}»` })}>
+                  Начислить команде
+                </button>
+              )}
+            </div>
+            {members.length ? <div className={gridClass}>{members.map(card)}</div> : <p className="text-sm text-ink-soft">В команде пока никого.</p>}
+          </section>
+        );
+      })}
     </div>
+  ) : (
+    <div className={gridClass}>{students.map(card)}</div>
   );
 
   return (
@@ -197,6 +255,22 @@ export function LessonPage() {
             <button className="btn btn-secondary" onClick={() => setRandomOpen(true)}>
               <DiceFiveIcon size={20} /> Случайный
             </button>
+            <button
+              className={`btn ${teamView ? 'btn-secondary ring-2 ring-ink' : 'btn-secondary'}`}
+              aria-pressed={teamView}
+              onClick={() => {
+                if (!data.teams.length) return setTeamsOpen(true);
+                setTeamMode(!teamMode);
+                rememberTeamMode(data.group.id, !teamMode);
+              }}
+            >
+              <FlagBannerIcon size={20} /> Команды
+            </button>
+            {teamView && (
+              <button className="btn btn-ghost" onClick={() => setTeamsOpen(true)}>
+                Настроить команды
+              </button>
+            )}
             <button className="btn btn-secondary ml-auto hidden sm:inline-flex" onClick={() => setProjector(true)}>
               <ProjectorScreenIcon size={20} /> Проектор
             </button>
@@ -252,6 +326,21 @@ export function LessonPage() {
         </div>
       )}
 
+      <TeamsModal
+        open={teamsOpen}
+        groupId={data.group.id}
+        teams={data.teams}
+        students={students}
+        onClose={() => {
+          setTeamsOpen(false);
+          void reload();
+        }}
+        onSaved={async () => {
+          await reload();
+          setTeamMode(true);
+          rememberTeamMode(data.group.id, true);
+        }}
+      />
       <ReasonPicker
         open={!!target}
         label={target?.label ?? ''}

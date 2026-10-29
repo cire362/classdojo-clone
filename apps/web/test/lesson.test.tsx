@@ -69,4 +69,30 @@ describe('экран урока', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/s/s1');
     expect(api).not.toHaveBeenCalled();
   });
+
+  it('командный режим: карточки по командам, счёт за сегодня и начисление всей команде', async () => {
+    localStorage.setItem('heroes:teams:g1', '1');
+    const data = groupData();
+    data.teams = [
+      { id: 't1', name: 'Кометы', color: '#e63946' },
+      { id: 't2', name: 'Ракеты', color: '#2f6fde' },
+    ];
+    data.students = [
+      { ...data.students[0], teamId: 't1', todayEarned: 0 },
+      { ...data.students[1], teamId: 't2', todayEarned: 1 },
+    ];
+    const { user } = renderInGroup(<LessonPage />, data);
+    const rockets = screen.getByRole('region', { name: 'Команда Ракеты' });
+    expect(within(rockets).getByText('лидер')).toBeInTheDocument();
+    expect(within(rockets).getByRole('button', { name: /^Петя Смирнов/ })).toBeInTheDocument();
+
+    const comets = screen.getByRole('region', { name: 'Команда Кометы' });
+    await user.click(within(comets).getByRole('button', { name: 'Начислить команде' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Команда «Кометы»' });
+    await user.click(within(dialog).getByRole('button', { name: /Отличная работа/ }));
+    expect(api).toHaveBeenCalledWith('POST', '/teacher/groups/g1/points', { studentIds: ['s1'], reasonId: 'r1' });
+    // Теперь у «Комет» +2 и они лидируют
+    expect(await within(comets).findByText('лидер')).toBeInTheDocument();
+    localStorage.removeItem('heroes:teams:g1');
+  });
 });

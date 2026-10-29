@@ -6,6 +6,7 @@ import { HttpError, parse } from '../lib/errors.js';
 import { validateHeroForLevel } from '../services/heroParts.js';
 import { studentLevel } from '../services/points.js';
 import { groupFeed } from '../services/feed.js';
+import { cancelRequest, requestReward, studentShop } from '../services/rewards.js';
 import { markNewsSeen, studentNews } from '../services/news.js';
 import { studentHasPremium } from '../services/premium.js';
 import { studentProfile } from '../services/profile.js';
@@ -34,6 +35,15 @@ export const studentRoutes = new Hono<AppEnv>()
   .use(requireRole('STUDENT'))
   .get('/profile', async (c) => c.json(await studentProfile(c.get('user').studentId!)))
   .put('/hero', async (c) => c.json(await saveHero(c.get('user').studentId!, await c.req.json().catch(() => null))))
+  .get('/shop', async (c) => c.json(await studentShop(c.get('user').studentId!)))
+  .post('/shop/:rewardId/request', async (c) => {
+    await requestReward(c.get('user').studentId!, c.req.param('rewardId'));
+    return c.json(await studentShop(c.get('user').studentId!), 201);
+  })
+  .delete('/shop/requests/:id', async (c) => {
+    await cancelRequest(c.get('user').studentId!, c.req.param('id'));
+    return c.json(await studentShop(c.get('user').studentId!));
+  })
   .get('/feed', async (c) => {
     const user = c.get('user');
     const s = await prisma.student.findUniqueOrThrow({ where: { id: user.studentId! }, select: { groupId: true } });

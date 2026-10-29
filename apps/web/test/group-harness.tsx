@@ -9,13 +9,15 @@ export function groupData(overrides: Partial<GroupDetails['group']> = {}): Group
   return {
     group: { id: 'g1', name: '5 «А»', subtractTeacher: true, archivedAt: null, isOwner: true, ...overrides },
     students: [
-      { id: 's1', name: 'Маша Иванова', login: 'masha.i', hero: { name: '', parts: DEFAULT_HERO }, todayEarned: 0, totalEarned: 4, level: 1, parentsCount: 0 },
-      { id: 's2', name: 'Петя Смирнов', login: 'petya.s', hero: { name: '', parts: DEFAULT_HERO }, todayEarned: 1, totalEarned: 9, level: 1, parentsCount: 1 },
+      { id: 's1', name: 'Маша Иванова', login: 'masha.i', hero: { name: '', parts: DEFAULT_HERO }, todayEarned: 0, totalEarned: 4, level: 1, parentsCount: 0, teamId: null },
+      { id: 's2', name: 'Петя Смирнов', login: 'petya.s', hero: { name: '', parts: DEFAULT_HERO }, todayEarned: 1, totalEarned: 9, level: 1, parentsCount: 1, teamId: null },
     ],
     reasons: [
       { id: 'r1', name: 'Отличная работа', emoji: '⭐', value: 2 },
       { id: 'r2', name: 'Опоздал', emoji: '⏰', value: -1 },
     ],
+    teams: [],
+    pendingRewards: 0,
     todayAttendance: null,
   };
 }

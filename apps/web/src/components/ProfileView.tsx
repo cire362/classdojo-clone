@@ -4,6 +4,7 @@ import { MAX_LEVEL } from '@heroes/shared';
 import type { HistoryEvent, PointsSum, Profile } from '../api';
 import { formatDate, pluralize } from '../hooks';
 import { HeroAvatar } from './HeroAvatar';
+import { Portfolio, type PortfolioEdit } from './Portfolio';
 import { EmptyState, ProgressBar } from './ui';
 
 function PointsTile({ label, sum, featured = false }: { label: string; sum: PointsSum; featured?: boolean }) {
@@ -23,14 +24,17 @@ export function ProfileView({
   actions,
   isOwn,
   onDeleteEvent,
+  portfolioEdit,
 }: {
   profile: Profile;
   actions?: ReactNode;
   isOwn: boolean;
   /** Только для преподавателя: удаление ошибочной записи */
   onDeleteEvent?: (e: HistoryEvent) => void;
+  /** Только для преподавателя: добавление и удаление записей портфолио */
+  portfolioEdit?: PortfolioEdit;
 }) {
-  const [tab, setTab] = useState<'history' | 'attendance'>('history');
+  const [tab, setTab] = useState<'history' | 'attendance' | 'portfolio'>('history');
   const { level, points, hero } = profile;
 
   const historyByDay = useMemo(() => {
@@ -93,16 +97,21 @@ export function ProfileView({
       </section>
 
       <section className="space-y-4">
-        <div className="flex gap-1" role="tablist">
+        <div className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0" role="tablist">
           <button role="tab" aria-selected={tab === 'history'} className={`tab ${tab === 'history' ? 'active' : 'bg-surface-2'}`} onClick={() => setTab('history')}>
             <ClockCounterClockwiseIcon size={18} weight="bold" /> История
           </button>
           <button role="tab" aria-selected={tab === 'attendance'} className={`tab ${tab === 'attendance' ? 'active' : 'bg-surface-2'}`} onClick={() => setTab('attendance')}>
             <CalendarCheckIcon size={18} weight="bold" /> Посещаемость
           </button>
+          <button role="tab" aria-selected={tab === 'portfolio'} className={`tab ${tab === 'portfolio' ? 'active' : 'bg-surface-2'}`} onClick={() => setTab('portfolio')}>
+            <TrophyIcon size={18} weight="bold" /> Портфолио
+            {profile.portfolio.length > 0 && <span className="tabular-nums opacity-70">{profile.portfolio.length}</span>}
+          </button>
         </div>
 
-        <h2 className="sr-only">{tab === 'history' ? 'История начислений' : 'Посещаемость'}</h2>
+        <h2 className="sr-only">{tab === 'history' ? 'История начислений' : tab === 'attendance' ? 'Посещаемость' : 'Портфолио'}</h2>
+        {tab === 'portfolio' && <Portfolio items={profile.portfolio} edit={portfolioEdit} />}
         {tab === 'history' &&
           (historyByDay.length === 0 ? (
             <EmptyState icon={<StarIcon size={28} weight="fill" />} title="Баллов пока нет">

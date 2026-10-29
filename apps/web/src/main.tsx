@@ -24,6 +24,8 @@ import {
   MessagesPage,
   MyHeroPage,
   ParentHomePage,
+  RewardsPage,
+  ShopPage,
   StudentFeedPage,
   ThreadPage,
   PrintPage,
@@ -115,11 +117,13 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="reasons" element={<ReasonsPage />} />
                 <Route path="stats" element={<StatsPage />} />
                 <Route path="feed" element={<GroupFeedPage />} />
+                <Route path="rewards" element={<RewardsPage />} />
               </Route>
               <Route path="/settings" element={teacher(<SettingsPage />)} />
               <Route path="/messages" element={teacher(<MessagesPage />)} />
               <Route path="/messages/:studentId/:parentId" element={teacher(<ThreadPage />)} />
               <Route path="/feed" element={student(<StudentFeedPage />)} />
+              <Route path="/shop" element={student(<ShopPage />)} />
               <Route path="/s/:studentId" element={teacher(<StudentViewPage />)} />
               <Route path="/s/:studentId/hero" element={teacher(<StudentHeroPage />)} />
               <Route path="*" element={<Navigate to="/" replace />} />

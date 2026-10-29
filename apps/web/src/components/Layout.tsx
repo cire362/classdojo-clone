@@ -38,6 +38,11 @@ export function AppLayout() {
       )}
     </NavLink>
   );
+  const shopLink = (
+    <NavLink to="/shop" className={navClass}>
+      Награды
+    </NavLink>
+  );
   const feedLink = (
     <NavLink to="/feed" className={navClass}>
       Лента
@@ -57,6 +62,7 @@ export function AppLayout() {
                 Мой герой
               </NavLink>
               {heroLink}
+              {shopLink}
               {feedLink}
             </nav>
           )}
@@ -103,11 +109,12 @@ export function AppLayout() {
           </div>
         </div>
         {user?.role === 'STUDENT' && (
-          <nav className="mx-auto flex max-w-7xl gap-1 px-4 pb-2 sm:hidden" aria-label="Разделы">
+          <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:hidden" aria-label="Разделы">
             <NavLink to="/" end className={navClass}>
               Мой герой
             </NavLink>
             {heroLink}
+            {shopLink}
             {feedLink}
           </nav>
         )}

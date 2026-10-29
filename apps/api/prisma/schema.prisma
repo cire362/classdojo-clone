@@ -41,6 +41,8 @@ model Account {
   messages    Message[]
   feedReads   FeedRead[]
   threadReads ThreadRead[]
+  portfolio   PortfolioItem[]
+  decisions   RewardRequest[] @relation("DecidedBy")
   awarded  PointEvent[] @relation("AwardedBy")
 }
 
@@ -87,6 +89,8 @@ model Group {
   coTeachers         GroupTeacher[]
   posts              Post[]
   feedReads          FeedRead[]
+  rewards            Reward[]
+  teams              Team[]
 
   @@index([teacherId])
 }
@@ -123,6 +127,11 @@ model Student {
   parents     ParentStudent[]
   messages    Message[]
   threadReads ThreadRead[]
+  portfolio   PortfolioItem[]
+  rewardRequests RewardRequest[]
+  /// Команда на уроке (командный режим); команда принадлежит группе ученика
+  teamId      String?
+  team        Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   @@index([groupId])
 }
@@ -305,4 +314,77 @@ model ThreadRead {
   readAt    DateTime
 
   @@id([accountId, studentId, parentId])
+}
+
+/// Портфолио: достижения ученика, которые записывает преподаватель (олимпиада, проект, выступление)
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title       String
+  description String   @default("")
+  emoji       String   @default("🏆")
+  createdById String
+  createdBy   Account  @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([studentId, createdAt])
+}
+
+/// Награда в магазине группы: ученик тратит на неё баллы
+model Reward {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  title     String
+  emoji     String
+  cost      Int
+  archived  Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  requests RewardRequest[]
+
+  @@index([groupId])
+}
+
+enum RewardStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Запрос награды. Баллы списываются сразу (PENDING тоже занимает баланс), при отказе возвращаются
+model RewardRequest {
+  id          String       @id @default(cuid())
+  rewardId    String
+  reward      Reward       @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  /// Снимок награды на момент запроса: цену и название могут поменять позже
+  title       String
+  emoji       String
+  cost        Int
+  status      RewardStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  decidedAt   DateTime?
+  decidedById String?
+  decidedBy   Account?     @relation("DecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([studentId, status])
+}
+
+/// Команда для командного режима на уроке
+model Team {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name      String
+  color     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  students Student[]
+
+  @@index([groupId])
 }

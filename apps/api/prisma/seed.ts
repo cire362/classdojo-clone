@@ -9,6 +9,7 @@ import { hashPassword, loginBase, pickLogin } from '../src/lib/credentials.js';
 import { addDays, dateKey, dbDate, startOfDay } from '../src/lib/dates.js';
 import { syncHeroParts } from '../src/services/heroParts.js';
 import { attendanceReason, createDefaultReasons } from '../src/services/reasons.js';
+import { createDefaultRewards } from '../src/services/rewards.js';
 
 const TEACHER_LOGIN = process.env.SEED_TEACHER_LOGIN ?? 'teacher';
 const TEACHER_PASSWORD = process.env.SEED_TEACHER_PASSWORD ?? 'teacher123';
@@ -66,6 +67,12 @@ async function ensureDemoParent() {
   console.log(`Seed: родитель ${PARENT_LOGIN} / ${PARENT_PASSWORD} (дети: ${PARENT_CHILDREN.join(', ')})`);
 }
 
+/** Награды по умолчанию — и в уже существующей демо-группе (магазин появился позже) */
+async function ensureDemoRewards() {
+  const group = await prisma.group.findFirst({ where: { teacher: { account: { login: TEACHER_LOGIN } } }, orderBy: { createdAt: 'asc' } });
+  if (group && !(await prisma.reward.count({ where: { groupId: group.id } }))) await createDefaultRewards(prisma, group.id);
+}
+
 async function main() {
   await syncHeroParts();
 
@@ -73,6 +80,7 @@ async function main() {
     console.log(`Seed: преподаватель «${TEACHER_LOGIN}» уже есть — пропускаю.`);
     await ensureDemoParent();
     await ensureDemoCoTeacher();
+    await ensureDemoRewards();
     return;
   }
 
@@ -151,6 +159,7 @@ async function main() {
   for (const s of students) console.log(`    ${s.name.padEnd(18)} ${s.account.login}`);
   await ensureDemoParent();
   await ensureDemoCoTeacher();
+  await ensureDemoRewards();
 }
 
 await main();

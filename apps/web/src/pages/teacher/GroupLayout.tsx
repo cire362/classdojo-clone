@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useOutletContext, useParams } from 'react-router-dom';
 import { ChunkErrorBoundary } from '../../components/ChunkErrorBoundary';
-import { ArchiveIcon, ArrowLeftIcon, CameraIcon, ChartBarIcon, ListChecksIcon, MegaphoneIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
+import { ArchiveIcon, ArrowLeftIcon, CameraIcon, ChartBarIcon, GiftIcon, ListChecksIcon, MegaphoneIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { api, type GroupDetails } from '../../api';
 import { CardGridSkeleton, ErrorBox, Skeleton } from '../../components/ui';
-import { useLoad } from '../../hooks';
+import { pluralize, useLoad } from '../../hooks';
 
 export interface GroupCtx {
   data: GroupDetails;
@@ -20,6 +20,7 @@ const TABS = [
   { to: 'students', label: 'Ученики', icon: UsersThreeIcon },
   { to: 'reasons', label: 'Причины', icon: ListChecksIcon },
   { to: 'stats', label: 'Статистика', icon: ChartBarIcon },
+  { to: 'rewards', label: 'Награды', icon: GiftIcon },
   { to: 'feed', label: 'Лента', icon: MegaphoneIcon },
 ];
 
@@ -70,6 +71,12 @@ export function GroupLayout() {
             <NavLink key={label} to={to} end={end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
               <Icon size={18} weight="bold" />
               {label}
+              {to === 'rewards' && data && data.pendingRewards > 0 && (
+                <span className="chip min-w-6 justify-center bg-accent px-1.5 text-xs text-on-accent">
+                  {data.pendingRewards}
+                  <span className="sr-only"> {pluralize(data.pendingRewards, 'запрос', 'запроса', 'запросов')}</span>
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

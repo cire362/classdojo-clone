@@ -24,7 +24,7 @@ export async function studentProfile(studentId: string) {
       hero: true,
     },
   });
-  const [today, week, total, history, attendance] = await Promise.all([
+  const [today, week, total, history, attendance, portfolio] = await Promise.all([
     sums(studentId, startOfDay()),
     sums(studentId, startOfWeek()),
     sums(studentId),
@@ -38,6 +38,11 @@ export async function studentProfile(studentId: string) {
       where: { studentId },
       include: { session: { select: { date: true, lessonNumber: true } } },
       orderBy: [{ session: { date: 'desc' } }, { session: { lessonNumber: 'desc' } }],
+    }),
+    prisma.portfolioItem.findMany({
+      where: { studentId },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, title: true, description: true, emoji: true, createdAt: true, createdBy: { select: { teacher: { select: { name: true } } } } },
     }),
   ]);
   const attended = attendance.filter((a) => a.present).length;
@@ -55,6 +60,7 @@ export async function studentProfile(studentId: string) {
     points: { today, week, total },
     // Баллы за посещение меняются только через отметку посещаемости
     history: history.map(({ attendanceSessionId, ...e }) => ({ ...e, attendance: attendanceSessionId !== null })),
+    portfolio: portfolio.map(({ createdBy, ...p }) => ({ ...p, author: createdBy.teacher?.name ?? '' })),
     attendance: {
       attended,
       total: attendance.length,

@@ -34,6 +34,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
         [`/g/${g.id}/reasons`, 'Причины начисления'],
         [`/g/${g.id}/stats`, 'Скачать Excel'],
         [`/g/${g.id}/feed`, 'Объявление для учеников и родителей'],
+        [`/g/${g.id}/rewards`, 'Запросы учеников'],
         ['/messages', 'Сообщения'],
         ['/settings', 'Сменить пароль'],
       ] as const) {
@@ -60,6 +61,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await sp.goto('/hero');
       await expect(sp.getByRole('heading', { name: 'Конструктор героя' })).toBeVisible();
       await expectNoViolations(sp, 'конструктор');
+      await sp.goto('/shop');
+      await expect(sp.getByText('можно потратить')).toBeVisible();
+      await expectNoViolations(sp, 'магазин наград');
       await student.close();
 
       // Кабинет родителя с двумя детьми (переключатель)

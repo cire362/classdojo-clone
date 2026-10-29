@@ -115,12 +115,47 @@ export interface LessonStudent extends CardSummary {
   hero: Hero;
   /** Сколько родительских входов выдано */
   parentsCount: number;
+  teamId: string | null;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export interface Reward {
+  id: string;
+  title: string;
+  emoji: string;
+  cost: number;
+}
+
+export interface RewardRequest {
+  id: string;
+  title: string;
+  emoji: string;
+  cost: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+  decidedAt: string | null;
+  student?: { id: string; name: string };
+}
+
+export interface Shop {
+  balance: number;
+  archived: boolean;
+  rewards: Reward[];
+  requests: RewardRequest[];
 }
 
 export interface GroupDetails {
   group: { id: string; name: string; subtractTeacher: boolean; archivedAt: string | null; isOwner: boolean };
   students: LessonStudent[];
   reasons: Reason[];
+  teams: Team[];
+  /** Запросы наград, ждущие ответа */
+  pendingRewards: number;
   todayAttendance: { peopleOnPhoto: number | null; presentStudentIds: string[] } | null;
 }
 
@@ -216,9 +251,19 @@ export interface HistoryEvent {
   attendance: boolean;
 }
 
+export interface PortfolioItem {
+  id: string;
+  title: string;
+  description: string;
+  emoji: string;
+  createdAt: string;
+  author: string;
+}
+
 export interface Profile {
   /** Открыта ли премиум-коллекция деталей героя */
   premium: boolean;
+  portfolio: PortfolioItem[];
   student: { id: string; name: string; login: string; group: { id: string; name: string; archivedAt: string | null } };
   hero: Hero;
   level: LevelInfo;

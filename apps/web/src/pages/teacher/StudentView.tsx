@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, ArrowsLeftRightIcon, KeyIcon, PaintBrushIcon } from '@phosphor-icons/react';
-import { api, type Credentials, type Hero, type HistoryEvent, type Profile } from '../../api';
+import { api, type Credentials, type Hero, type HistoryEvent, type PortfolioItem, type Profile } from '../../api';
 import { HeroEditor } from '../../components/HeroEditor';
 import { MoveStudentModal } from '../../components/MoveStudentModal';
 import { ParentAccessCard } from '../../components/ParentAccess';
@@ -19,9 +19,20 @@ export function StudentViewPage() {
   const [toDelete, setToDelete] = useState<HistoryEvent | null>(null);
   const [moving, setMoving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const { data, error, reload } = useLoad(() => api<Profile>('GET', `/teacher/students/${studentId}/profile`), [studentId]);
+  const { data, setData, error, reload } = useLoad(() => api<Profile>('GET', `/teacher/students/${studentId}/profile`), [studentId]);
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <ProfileSkeleton />;
+  const portfolioEdit = {
+    add: async (item: { title: string; description: string; emoji: string }) => {
+      const portfolio = await api<PortfolioItem[]>('POST', `/teacher/students/${data.student.id}/portfolio`, item);
+      setData({ ...data, portfolio });
+      toast({ text: 'Достижение записано в портфолио', tone: 'ok' });
+    },
+    remove: async (id: string) => {
+      const portfolio = await api<PortfolioItem[]>('DELETE', `/teacher/portfolio/${id}`);
+      setData({ ...data, portfolio });
+    },
+  };
   return (
     <div className="space-y-4">
       <Link to={`/g/${data.student.group.id}`} className="btn btn-ghost btn-sm -ml-3">
@@ -31,6 +42,7 @@ export function StudentViewPage() {
         profile={data}
         isOwn={false}
         onDeleteEvent={data.student.group.archivedAt ? undefined : setToDelete}
+        portfolioEdit={portfolioEdit}
         actions={
           <>
             <Link to={`/s/${data.student.id}/hero`} className="btn btn-primary">

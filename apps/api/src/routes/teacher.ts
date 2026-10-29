@@ -9,6 +9,8 @@ import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../lib/dates.js
 import { hashPassword, verifyPassword } from '../lib/credentials.js';
 import { HttpError, notFound, parse } from '../lib/errors.js';
 import { ARCHIVED_MESSAGE, OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../services/access.js';
+import { createDefaultRewards, decideRequest, groupRequests, groupRewards } from '../services/rewards.js';
+import { TEAM_COLORS, assignTeams, createTeam, deleteTeam, groupTeams, updateTeam } from '../services/teams.js';
 import { MAX_POST_LENGTH, createPost, deletePost, groupFeed } from '../services/feed.js';
 import { MAX_MESSAGE_LENGTH, sendMessage, teacherThread, teacherThreads, threadMessages } from '../services/messages.js';
 import { addCoTeacher, groupTeachers, removeCoTeacher } from '../services/coTeachers.js';
@@ -33,6 +35,19 @@ const GroupPatch = z.object({
 const StudentsCreate = z.object({
   names: z.array(z.string().trim().max(80)).min(1).max(100),
 });
+const PortfolioBody = z.object({
+  title: z.string().trim().min(1, 'Введите название').max(100),
+  description: z.string().trim().max(1000).default(''),
+  emoji: z.string().trim().min(1).max(16).default('🏆'),
+});
+const RewardBody = z.object({
+  title: z.string().trim().min(1, 'Введите название').max(60),
+  emoji: z.string().trim().min(1).max(16),
+  cost: z.number().int().min(1, 'Цена от 1 балла').max(1000),
+});
+const TeamBody = z.object({ name: z.string().trim().min(1, 'Введите название').max(30) });
+const TeamPatch = z.object({ name: z.string().trim().min(1).max(30).optional(), color: z.enum(TEAM_COLORS).optional() });
+const TeamAssign = z.object({ assignments: z.record(z.string().max(64), z.string().max(64).nullable()) });
 const PostBody = z.object({ text: z.string().trim().min(1, 'Напишите текст').max(MAX_POST_LENGTH) });
 const MessageBody = z.object({ text: z.string().trim().min(1, 'Напишите сообщение').max(MAX_MESSAGE_LENGTH) });
 const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).max(64) });
@@ -137,6 +152,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     const group = await prisma.$transaction(async (tx) => {
       const g = await tx.group.create({ data: { name, teacherId: c.get('user').teacherId! } });
       await createDefaultReasons(tx, g.id);
+      await createDefaultRewards(tx, g.id);
       return g;
     });
     return c.json(
@@ -163,7 +179,11 @@ export const teacherRoutes = new Hono<AppEnv>()
         include: { records: true },
       }),
     ]);
-    const summaries = await cardSummaries(students.map((s) => s.id));
+    const [summaries, teams, pendingRewards] = await Promise.all([
+      cardSummaries(students.map((s) => s.id)),
+      groupTeams(group.id),
+      prisma.rewardRequest.count({ where: { status: 'PENDING', student: { groupId: group.id } } }),
+    ]);
     return c.json({
       group: { id: group.id, name: group.name, subtractTeacher: group.subtractTeacher, archivedAt: group.archivedAt, isOwner: group.isOwner },
       students: students.map((s) => ({
@@ -172,9 +192,12 @@ export const teacherRoutes = new Hono<AppEnv>()
         login: s.account.login,
         hero: { name: s.hero?.name ?? '', parts: normalizeHero(s.hero?.parts) },
         parentsCount: s._count.parents,
+        teamId: s.teamId,
         ...summaries.get(s.id)!,
       })),
       reasons: reasons.map((r) => ({ id: r.id, name: r.name, emoji: r.emoji, value: r.value })),
+      teams,
+      pendingRewards,
       todayAttendance: todaySession
         ? {
             peopleOnPhoto: todaySession.peopleOnPhoto,
@@ -303,6 +326,79 @@ export const teacherRoutes = new Hono<AppEnv>()
     const teacherId = c.req.param('teacherId');
     if (!group.isOwner && teacherId !== user.teacherId) throw new HttpError(403, OWNER_ONLY_MESSAGE);
     await removeCoTeacher(group.id, teacherId);
+    return c.json({ ok: true });
+  })
+
+  // ───── Портфолио ─────
+  .post('/students/:id/portfolio', async (c) => {
+    const user = c.get('user');
+    const student = await teacherStudent(user, c.req.param('id'));
+    const data = parse(PortfolioBody, await c.req.json().catch(() => null));
+    await prisma.portfolioItem.create({ data: { ...data, studentId: student.id, createdById: user.accountId } });
+    return c.json((await studentProfile(student.id)).portfolio, 201);
+  })
+  .delete('/portfolio/:id', async (c) => {
+    const item = await prisma.portfolioItem.findFirst({ where: { id: c.req.param('id'), student: { group: groupsOf(c.get('user').teacherId!) } } });
+    if (!item) throw notFound('Запись не найдена');
+    await prisma.portfolioItem.delete({ where: { id: item.id } });
+    return c.json((await studentProfile(item.studentId)).portfolio);
+  })
+
+  // ───── Магазин наград ─────
+  .get('/groups/:id/rewards', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const [rewards, requests] = await Promise.all([groupRewards(group.id), groupRequests(group.id)]);
+    return c.json({ rewards, requests });
+  })
+  .post('/groups/:id/rewards', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
+    const data = parse(RewardBody, await c.req.json().catch(() => null));
+    if ((await prisma.reward.count({ where: { groupId: group.id, archived: false } })) >= 30) {
+      throw new HttpError(400, 'Наград может быть не больше 30');
+    }
+    await prisma.reward.create({ data: { ...data, groupId: group.id } });
+    return c.json(await groupRewards(group.id), 201);
+  })
+  .delete('/rewards/:id', async (c) => {
+    const reward = await prisma.reward.findFirst({ where: { id: c.req.param('id'), archived: false, group: groupsOf(c.get('user').teacherId!) } });
+    if (!reward) throw notFound('Награда не найдена');
+    // Архив, а не удаление: ожидающие запросы на неё остаются
+    await prisma.reward.update({ where: { id: reward.id }, data: { archived: true } });
+    return c.json(await groupRewards(reward.groupId));
+  })
+  .post('/reward-requests/:id/:decision{approve|reject}', async (c) => {
+    const user = c.get('user');
+    const request = await prisma.rewardRequest.findFirst({
+      where: { id: c.req.param('id'), student: { group: groupsOf(user.teacherId!) } },
+      select: { student: { select: { groupId: true } } },
+    });
+    if (!request) throw notFound('Запрос не найден');
+    const group = await teacherGroup(user, request.student.groupId, { writable: true });
+    await decideRequest(group.id, c.req.param('id'), user.accountId, c.req.param('decision') === 'approve');
+    return c.json(await groupRequests(group.id));
+  })
+
+  // ───── Команды ─────
+  .post('/groups/:id/teams', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
+    const { name } = parse(TeamBody, await c.req.json().catch(() => null));
+    await createTeam(group.id, name);
+    return c.json(await groupTeams(group.id), 201);
+  })
+  .patch('/groups/:id/teams/:teamId', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
+    await updateTeam(group.id, c.req.param('teamId'), parse(TeamPatch, await c.req.json().catch(() => null)));
+    return c.json(await groupTeams(group.id));
+  })
+  .delete('/groups/:id/teams/:teamId', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
+    await deleteTeam(group.id, c.req.param('teamId'));
+    return c.json(await groupTeams(group.id));
+  })
+  .put('/groups/:id/teams/assign', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
+    const { assignments } = parse(TeamAssign, await c.req.json().catch(() => null));
+    await assignTeams(group.id, assignments);
     return c.json({ ok: true });
   })
 

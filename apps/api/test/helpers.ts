@@ -3,6 +3,7 @@ import { createApp } from '../src/app.js';
 import { prisma } from '../src/db.js';
 import { hashPassword } from '../src/lib/credentials.js';
 import { createDefaultReasons } from '../src/services/reasons.js';
+import { createDefaultRewards } from '../src/services/rewards.js';
 import { syncHeroParts } from '../src/services/heroParts.js';
 import { createStudents } from '../src/services/students.js';
 
@@ -53,6 +54,7 @@ export async function setupTeacher(studentNames = ['Маша Иванова', '�
   });
   const group = await prisma.group.create({ data: { name: 'Тестовая группа', teacherId: teacher.id } });
   await createDefaultReasons(prisma, group.id);
+  await createDefaultRewards(prisma, group.id);
   const students = await createStudents(group.id, studentNames);
   const cookie = await login(loginName, password);
   const reasons = await prisma.behaviorReason.findMany({ where: { groupId: group.id }, orderBy: { sortOrder: 'asc' } });
