@@ -11,6 +11,7 @@ import type { Role } from './api';
 import { AppLayout } from './components/Layout';
 import { ToastProvider } from './components/Toast';
 import { PageSkeleton } from './components/PageSkeleton';
+import { ErrorBox } from './components/ui';
 
 import {
   AttendancePage,
@@ -46,18 +47,30 @@ function Prefetch() {
   return null;
 }
 
+/** Сервер недоступен при запуске (например, приложение открыто с телефона без интернета) */
+function Offline() {
+  const { refresh } = useAuth();
+  return (
+    <main className="mx-auto max-w-xl px-4 py-16">
+      <ErrorBox message="Нет связи с сервером. Проверьте интернет" onRetry={() => void refresh().catch(() => undefined)} />
+    </main>
+  );
+}
+
 function RequireRole({ role, children }: { role: Role; children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, offline } = useAuth();
   const location = useLocation();
   if (loading) return <PageSkeleton />;
+  if (!user && offline) return <Offline />;
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   if (user.role !== role) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
 function Home() {
-  const { user, loading } = useAuth();
+  const { user, loading, offline } = useAuth();
   if (loading) return <PageSkeleton />;
+  if (!user && offline) return <Offline />;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'TEACHER') return <GroupsPage />;
   return user.role === 'PARENT' ? <ParentHomePage /> : <CabinetPage />;
@@ -69,6 +82,14 @@ const student = (el: ReactNode) => <RequireRole role="STUDENT">{el}</RequireRole
 // Ждём код открытой страницы (он маленький и грузится параллельно с данными), но не дольше 2 с:
 // так первая отрисовка сразу показывает страницу, без промежуточной заглушки
 await Promise.race([preloadRoute(window.location.pathname, storedRole()), new Promise((resolve) => setTimeout(resolve, 2000))]);
+
+// Установка на телефон и запуск без интернета (только в сборке: в разработке кэш мешал бы)
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  const register = () => void navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+  // Приложение стартует после загрузки кода страницы, событие load к этому моменту часто уже прошло
+  if (document.readyState === 'complete') register();
+  else window.addEventListener('load', register, { once: true });
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

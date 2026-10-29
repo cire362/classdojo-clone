@@ -64,3 +64,27 @@ test.describe('отметка по фото при плохом интернет
     }
   });
 });
+
+test('приложение ставится на телефон и открывается без интернета', async ({ page, context }) => {
+  await loginUi(page, TEACHER.login, TEACHER.password);
+  const home = page.getByRole('heading', { name: /Здравствуйте/ });
+  await expect(home).toBeVisible();
+
+  // Манифест для установки
+  const manifest = await (await page.request.get('/manifest.webmanifest')).json();
+  expect(manifest).toMatchObject({ name: 'Герои класса', display: 'standalone' });
+
+  // Service worker берёт страницу под управление; код страниц ложится в кэш
+  await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined));
+  await page.reload();
+  await expect(home).toBeVisible();
+  expect(await page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+
+  // Без интернета: оболочка приложения открывается и честно говорит про связь, вход не сбрасывается
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByText('Нет связи с сервером')).toBeVisible();
+  await context.setOffline(false);
+  await page.getByRole('button', { name: 'Повторить' }).click();
+  await expect(home).toBeVisible();
+});

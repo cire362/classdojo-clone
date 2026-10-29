@@ -1,9 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { api, type Me } from './api';
+import { ApiError, api, type Me } from './api';
 
 interface AuthState {
   user: Me | null;
   loading: boolean;
+  /** Не удалось проверить вход из-за связи: показываем «Нет связи», а не страницу входа */
+  offline: boolean;
   login: (login: string, password: string) => Promise<Me>;
   logout: () => Promise<void>;
   /** Перечитать данные пользователя (после смены имени) */
@@ -42,13 +44,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [offline, setOffline] = useState(false);
+
   useEffect(() => {
     api<{ user: Me | null }>('GET', '/auth/me')
       .then((r) => {
         setUser(r.user);
         rememberRole(r.user?.role ?? null);
       })
-      .catch(() => setUser(null))
+      .catch((e) => {
+        setUser(null);
+        if (e instanceof ApiError && e.status === 0) setOffline(true);
+      })
       .finally(() => setLoading(false));
     const onUnauthorized = () => setUser(null);
     window.addEventListener('heroes:unauthorized', onUnauthorized);
@@ -71,9 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     const r = await api<{ user: Me | null }>('GET', '/auth/me');
     setUser(r.user);
+    setOffline(false);
   }, []);
 
-  return <AuthContext.Provider value={{ user, loading, login, logout, refresh }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, offline, login, logout, refresh }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthState {
