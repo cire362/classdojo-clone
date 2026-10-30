@@ -111,7 +111,7 @@
 
 ## Лицензии зависимостей
 
-Все зависимости допускают закрытое коммерческое использование: MIT (React, Vite, Hono, Tailwind, Motion, Phosphor, exceljs, zod, @node-rs/argon2, tsx, FastAPI, ONNX Runtime, Pillow), Apache-2.0 (Prisma, TypeScript, YOLOX), BSD (uvicorn, numpy, httpx), OFL-1.1 (шрифты), PostgreSQL License, nginx (BSD-2). Только в тестах: axe-core (MPL-2.0, см. «Доступность и скорость»).
+Все зависимости допускают закрытое коммерческое использование: MIT (React, Vite, Hono, Tailwind, Motion, Phosphor, exceljs, pdfkit, fontkit, zod, @node-rs/argon2, tsx, FastAPI, ONNX Runtime, Pillow), Apache-2.0 (Prisma, TypeScript, YOLOX), BSD (uvicorn, numpy, httpx), OFL-1.1 (шрифты интерфейса и Lato в PDF), PostgreSQL License, nginx (BSD-2). Только в тестах: axe-core (MPL-2.0, см. «Доступность и скорость»).
 
 Исключение со слабым копилефтом: начиная с Prisma 7 CLI тянет в себе Prisma Studio (`@prisma/studio-core`, Apache-2.0), а она — библиотеку раскладки графов `elkjs` (EPL-2.0). CLI нужен в образе API для `prisma migrate deploy`; Studio мы не запускаем, и в коде сервиса `elkjs` не используется. EPL-2.0, как и MPL-2.0, — копилефт на уровне файлов самой библиотеки: закрытое коммерческое использование разрешено, пока её файлы не меняются (мы их не меняем). Если понадобится полностью убрать её из рабочего образа, миграции можно накатывать отдельным одноразовым контейнером со CLI, а образ API собирать без него.
 

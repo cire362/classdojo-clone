@@ -15,9 +15,10 @@ export async function fetchReport(studentId: string, from: string, to: string): 
   return blob;
 }
 
+/** Адрес живёт минуту: мобильные браузеры начинают скачивание не сразу после клика */
 export function saveReport(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   try { link.href = url; link.download = name.replace(/[\u0000-\u001f/\\]/g, '_'); document.body.append(link); link.click(); }
-  finally { link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1000); }
+  finally { link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 60_000); }
 }

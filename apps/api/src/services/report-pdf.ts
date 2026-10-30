@@ -5,9 +5,10 @@ import type { StudentReport } from './student-report.js';
 
 const regular = fileURLToPath(new URL('../../assets/fonts/Lato-Regular.ttf', import.meta.url));
 const bold = fileURLToPath(new URL('../../assets/fonts/Lato-Bold.ttf', import.meta.url));
-const glyphs = openSync(regular) as Font;
+let glyphs: Font | undefined;
 const INK = '#161a33', SOFT = '#4b5072', LINE = '#d8dbe8';
 const fmt = (key: string) => key.split('-').reverse().join('.');
+const plus = (n: number) => n ? `+${n}` : '0';
 const signed = (n: number) => n > 0 ? `+${n}` : String(n);
 
 /** A4; весь PDF и встраиваемые подмножества шрифтов собираются в памяти. */
@@ -20,11 +21,12 @@ export function reportPdf(report: StudentReport): Promise<Buffer> {
     doc.once('end', () => resolve(Buffer.concat(chunks)));
     try {
       doc.registerFont('body', regular).registerFont('bold', bold);
+      const font = (glyphs ??= openSync(regular) as Font);
       const margin = 48, width = 595.28 - margin * 2, bottom = 780;
       let y = margin, replaced = false;
       const clean = (text: string) => [...text.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/[\u2010-\u2015\u2212]/g, '-')].map((char) => {
         const code = char.codePointAt(0)!;
-        if (glyphs.hasGlyphForCodePoint(code)) return char;
+        if (font.hasGlyphForCodePoint(code)) return char;
         replaced = true;
         return `[U+${code.toString(16).toUpperCase()}]`;
       }).join('');
@@ -84,12 +86,12 @@ export function reportPdf(report: StudentReport): Promise<Buffer> {
       if (replaced) paragraph('Символы вне встроенного шрифта показаны кодами [U+XXXX].', 8.5, SOFT);
       y += 12;
       heading('Баллы за период');
-      const tiles = [['Начислено', `+${report.points.earned}`], ['Списано', report.points.lost ? `-${report.points.lost}` : '0'], ['Итого', signed(report.points.net)]];
+      const tiles = [['Начислено', plus(report.points.earned)], ['Списано', report.points.lost ? `-${report.points.lost}` : '0'], ['Итого', signed(report.points.net)]];
       ensure(66);
       doc.rect(margin, y, width, 62).fill('#eaecf4');
       tiles.forEach(([label, value], i) => { text(label, margin + 12 + i * width / 3, y + 10, width / 3 - 24, 9, 'body', SOFT); text(value, margin + 12 + i * width / 3, y + 28, width / 3 - 24, 16, 'bold'); });
       y += 76;
-      table('Причины начислений и списаний', ['Причина', 'Записей', 'Плюсы', 'Минусы'], [width - 180, 60, 60, 60], report.reasons.map((r) => [r.name, String(r.count), `+${r.earned}`, r.lost ? `-${r.lost}` : '0']), 'За выбранный период начислений и списаний нет.');
+      table('Причины начислений и списаний', ['Причина', 'Записей', 'Плюсы', 'Минусы'], [width - 180, 60, 60, 60], report.reasons.map((r) => [r.name, String(r.count), plus(r.earned), r.lost ? `-${r.lost}` : '0']), 'За выбранный период начислений и списаний нет.');
       y += 10;
       paragraph(`Посещаемость: отмечено ${report.attendance.total}, посещено ${report.attendance.attended}, пропущено ${report.attendance.missed}.`, 11);
       paragraph('Уроки без отметки не считаются пропусками. Траты в магазине не входят в суммы баллов.', 9, SOFT);

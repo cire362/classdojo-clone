@@ -76,3 +76,22 @@ it('смена ребёнка не показывает чужие данные,
   await act(async () => document.dispatchEvent(new Event('visibilitychange')));
   expect(api).toHaveBeenLastCalledWith('GET', '/parent/children/s2/rewards');
 });
+
+it('автообновление не сворачивает открытые страницы истории и подхватывает новые решения', async () => {
+  let refreshed = false;
+  vi.mocked(api).mockImplementation(async (_method, path) => {
+    if (path.includes('?')) return data({ history: [request('older', 'REJECTED')], nextCursor: null });
+    return data({ history: refreshed ? [request('fresh', 'APPROVED')] : [request('first', 'APPROVED')], nextCursor: 'cursor' });
+  });
+  const { user } = renderApp(<ParentRewards childId="s1" />);
+  await user.click(await screen.findByRole('button', { name: 'Показать ещё' }));
+  await screen.findByText('Награда older');
+
+  refreshed = true;
+  await act(async () => document.dispatchEvent(new Event('visibilitychange')));
+  await screen.findByText('Награда fresh');
+  expect(screen.getByText('Награда older')).toBeVisible();
+  expect(screen.getByText('Награда first')).toBeVisible();
+  // Все страницы уже открыты: кнопка не возвращается
+  expect(screen.queryByRole('button', { name: 'Показать ещё' })).not.toBeInTheDocument();
+});

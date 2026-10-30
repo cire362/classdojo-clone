@@ -25,18 +25,28 @@ function RequestList({ requests }: { requests: RewardRequest[] }) {
   </ul>;
 }
 
+/** Решения в истории окончательны, поэтому обновление не сворачивает уже открытые страницы */
+function keepOpenedHistory(fresh: Rewards, shown: Rewards | null): Rewards {
+  if (!shown || shown.student.id !== fresh.student.id || shown.history.length <= fresh.history.length) return fresh;
+  const byId = new Map([...shown.history, ...fresh.history].map((r) => [r.id, r]));
+  const history = [...byId.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id));
+  return { ...fresh, history, nextCursor: shown.nextCursor };
+}
+
 /** Только просмотр своего ребёнка: никакой выдачи, отмены или прочтения уведомлений за ученика. */
 export function ParentRewards({ childId }: { childId: string }) {
   const version = useRef(0);
   const [moreLoading, setMoreLoading] = useState(false);
   const [moreError, setMoreError] = useState<string | null>(null);
   const path = `/parent/children/${childId}/rewards`;
+  const shown = useRef<Rewards | null>(null);
   const { data, setData, loading, error, reload } = useLoad(async () => {
     version.current++;
     setMoreError(null);
     setMoreLoading(false);
-    return api<Rewards>('GET', path);
+    return keepOpenedHistory(await api<Rewards>('GET', path), shown.current);
   }, [path]);
+  shown.current = data;
 
   useEffect(() => {
     const onVisible = () => { if (document.visibilityState === 'visible') void reload(); };
