@@ -5,6 +5,7 @@ import { useToast } from '../../components/Toast';
 import { EmptyState, ErrorBox, PageTitle, Skeleton } from '../../components/ui';
 import { formatDateTime, pluralize, useLoad } from '../../hooks';
 import { useGroup } from './GroupLayout';
+import { useNotifications } from '../../notify';
 
 const EMOJI = ['🎁', '🪑', '🎵', '🧑‍🏫', '⏰', '🎮', '🍬', '📖', '🎨', '⚽', '🌟', '🏅'];
 const STATUS = { PENDING: 'ждёт ответа', APPROVED: 'выдано', REJECTED: 'отказано' } as const;
@@ -13,6 +14,7 @@ const STATUS = { PENDING: 'ждёт ответа', APPROVED: 'выдано', REJ
 export function RewardsPage() {
   const { data: group, reload: reloadGroup } = useGroup();
   const toast = useToast();
+  const { refresh } = useNotifications();
   const archived = !!group.group.archivedAt;
   const { data, setData, error, reload } = useLoad(
     () => api<{ rewards: Reward[]; requests: RewardRequest[] }>('GET', `/teacher/groups/${group.group.id}/rewards`),
@@ -37,6 +39,7 @@ export function RewardsPage() {
       const requests = await api<RewardRequest[]>('POST', `/teacher/reward-requests/${r.id}/${approve ? 'approve' : 'reject'}`);
       setData({ ...data!, requests });
       void reloadGroup();
+      void refresh();
       toast({ text: approve ? `${r.student?.name}: «${r.title}» выдано` : 'Отказано, баллы вернулись ученику', tone: approve ? 'ok' : 'neutral' });
     });
 

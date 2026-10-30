@@ -229,6 +229,11 @@ export interface Notifications {
   rewards: number;
 }
 
+export interface PendingRewardGroups {
+  groups: { id: string; name: string; count: number }[];
+  total: number;
+}
+
 export interface StudentNotification {
   id: string;
   kind: 'feed' | 'reward';

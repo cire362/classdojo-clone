@@ -4,8 +4,9 @@ import { groupsOf } from './access.js';
 import { unreadPosts } from './feed.js';
 import { unreadMessages } from './messages.js';
 import { unreadRewards } from './studentNotifications.js';
+import { pendingRequestsOf } from './rewards.js';
 
-/** Счётчики для значков в шапке: новые сообщения и новые записи в ленте */
+/** Значки в шапке: сообщения, лента, выданные награды ученика или ожидающие запросы преподавателя. */
 export async function notifications(user: AuthUser) {
   if (user.teacherId) {
     const threads = await prisma.message.groupBy({ by: ['studentId', 'parentId'], where: { student: { group: groupsOf(user.teacherId) } } });
@@ -13,7 +14,11 @@ export async function notifications(user: AuthUser) {
     const links = threads.length
       ? await prisma.parentStudent.findMany({ where: { OR: threads.map((t) => ({ studentId: t.studentId, parentId: t.parentId })) } })
       : [];
-    return { messages: await unreadMessages(user.accountId, links), feed: 0, rewards: 0 };
+    const [messages, rewards] = await Promise.all([
+      unreadMessages(user.accountId, links),
+      prisma.rewardRequest.count({ where: pendingRequestsOf(user.teacherId) }),
+    ]);
+    return { messages, feed: 0, rewards };
   }
   if (user.studentId) {
     const s = await prisma.student.findUniqueOrThrow({ where: { id: user.studentId }, select: { groupId: true, rewardsReadAt: true } });

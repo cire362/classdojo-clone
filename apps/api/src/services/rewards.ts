@@ -2,6 +2,7 @@ import type { Prisma } from '../generated/prisma/client';
 import { prisma } from '../db.js';
 import { HttpError, notFound } from '../lib/errors.js';
 import { markRewardNotificationsRead } from './studentNotifications.js';
+import { groupsOf } from './access.js';
 
 /**
  * Магазин наград. Баланс = все баллы (плюсы минус минусы) минус потраченное на награды.
@@ -9,6 +10,27 @@ import { markRewardNotificationsRead } from './studentNotifications.js';
  * он считается по заработанным баллам.
  */
 type Tx = Prisma.TransactionClient | typeof prisma;
+
+/** Только запросы, на которые преподаватель сейчас может ответить. После перевода — в новой группе ученика. */
+export function pendingRequestsOf(teacherId: string): Prisma.RewardRequestWhereInput {
+  return { status: 'PENDING', student: { group: { ...groupsOf(teacherId), archivedAt: null } } };
+}
+
+export async function pendingRewardGroups(teacherId: string) {
+  const groups = await prisma.group.findMany({
+    where: { ...groupsOf(teacherId), archivedAt: null, students: { some: { rewardRequests: { some: { status: 'PENDING' } } } } },
+    orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    select: {
+      id: true, name: true,
+      students: {
+        where: { rewardRequests: { some: { status: 'PENDING' } } },
+        select: { _count: { select: { rewardRequests: { where: { status: 'PENDING' } } } } },
+      },
+    },
+  });
+  const items = groups.map(({ id, name, students }) => ({ id, name, count: students.reduce((sum, s) => sum + s._count.rewardRequests, 0) })).filter((g) => g.count > 0);
+  return { groups: items, total: items.reduce((sum, g) => sum + g.count, 0) };
+}
 
 export const DEFAULT_REWARDS = [
   { emoji: '🪑', title: 'Выбрать место на уроке', cost: 15 },
@@ -84,13 +106,13 @@ export async function cancelRequest(studentId: string, requestId: string) {
 
 /** Запросы учеников группы: сначала ожидающие */
 export async function groupRequests(groupId: string) {
-  const rows = await prisma.rewardRequest.findMany({
-    where: { student: { groupId } },
-    orderBy: { createdAt: 'desc' },
-    take: 100,
-    select: { ...requestView, student: { select: { id: true, name: true } } },
-  });
-  return [...rows.filter((r) => r.status === 'PENDING').reverse(), ...rows.filter((r) => r.status !== 'PENDING')];
+  const select = { ...requestView, student: { select: { id: true, name: true } } } as const;
+  // История не должна вытеснять старые ожидающие запросы, на которые указывает значок.
+  const [pending, done] = await prisma.$transaction([
+    prisma.rewardRequest.findMany({ where: { student: { groupId }, status: 'PENDING' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select }),
+    prisma.rewardRequest.findMany({ where: { student: { groupId }, status: { not: 'PENDING' } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 100, select }),
+  ], { isolationLevel: 'RepeatableRead' });
+  return [...pending, ...done];
 }
 
 export async function decideRequest(groupId: string, requestId: string, accountId: string, approve: boolean) {

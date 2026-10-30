@@ -13,7 +13,7 @@ interface NotifyState {
 const NotifyContext = createContext<NotifyState>({ counts: EMPTY, refresh: async () => undefined });
 
 /**
- * Значки новых сообщений, записей в ленте и выданных наград. Обновляются раз в минуту,
+ * Значки сообщений, ленты и наград (для преподавателя — ожидающие запросы). Обновляются раз в минуту,
  * при возвращении на вкладку и после просмотра раздела (refresh).
  */
 export function NotificationsProvider({ children }: { children: ReactNode }) {

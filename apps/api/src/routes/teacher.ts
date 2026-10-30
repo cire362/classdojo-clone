@@ -9,7 +9,7 @@ import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../lib/dates.js
 import { HttpError, notFound, parse } from '../lib/errors.js';
 import { ARCHIVED_MESSAGE, OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../services/access.js';
 import { classGoal, saveClassGoal, removeClassGoal } from '../services/classGoals.js';
-import { createDefaultRewards, decideRequest, groupRequests, groupRewards } from '../services/rewards.js';
+import { createDefaultRewards, decideRequest, groupRequests, groupRewards, pendingRewardGroups } from '../services/rewards.js';
 import { TEAM_COLORS, assignTeams, createTeam, deleteTeam, groupTeams, updateTeam } from '../services/teams.js';
 import { MAX_POST_LENGTH, createPost, deletePost, groupFeed } from '../services/feed.js';
 import { MAX_MESSAGE_LENGTH, sendMessage, teacherThread, teacherThreads, threadMessages } from '../services/messages.js';
@@ -341,6 +341,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   })
 
   // ───── Магазин наград ─────
+  .get('/reward-requests', async (c) => c.json(await pendingRewardGroups(c.get('user').teacherId!)))
   .get('/groups/:id/rewards', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
     const [rewards, requests] = await Promise.all([groupRewards(group.id), groupRequests(group.id)]);
