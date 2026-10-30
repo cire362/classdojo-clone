@@ -85,4 +85,22 @@ describe('администратор школы', () => {
     expect((await call('PUT', path, { cookie: admin.cookie, body: { until: '2000-01-01' } })).status).toBe(400);
     expect((await call('PUT', path, { cookie: admin.cookie, body: { until: null } })).body.premiumActive).toBe(false);
   });
+
+  it('меняет свой пароль: нужен текущий, другие устройства выходят, текущая сессия живёт', async () => {
+    const admin = await setupAdmin();
+    const other = await login(admin.account.login, 'admin-test-123');
+    const wrong = await call('POST', '/api/admin/me/password', { cookie: admin.cookie, body: { currentPassword: 'neverno', newPassword: 'new-admin-pass' } });
+    expect(wrong.status).toBe(400);
+
+    const changed = await call('POST', '/api/admin/me/password', { cookie: admin.cookie, body: { currentPassword: 'admin-test-123', newPassword: 'new-admin-pass' } });
+    expect(changed.status).toBe(200);
+    expect((await call('GET', '/api/admin/teachers', { cookie: admin.cookie })).status).toBe(200);
+    expect((await call('GET', '/api/admin/teachers', { cookie: other })).status).toBe(401);
+    expect((await call('POST', '/api/auth/login', { body: { login: admin.account.login, password: 'admin-test-123' } })).status).toBe(401);
+    await login(admin.account.login, 'new-admin-pass');
+
+    const t = await setupTeacher();
+    const forbidden = await call('POST', '/api/admin/me/password', { cookie: t.cookie, body: { currentPassword: 'x', newPassword: 'new-admin-pass' } });
+    expect(forbidden.status).toBe(403);
+  });
 });

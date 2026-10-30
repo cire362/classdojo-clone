@@ -79,18 +79,20 @@ export async function awardPoints(params: {
     // Одно массовое начисление — один момент: первенство уровня может быть общим.
     const createdAt = new Date();
     const goal = reason.value > 0 ? await tx.classGoal.findUnique({ where: { groupId: params.groupId }, select: { id: true } }) : null;
-    return Promise.all(studentIds.map((studentId) => tx.pointEvent.create({ data: {
-      studentId,
-      reasonId: reason.id,
-      reasonName: reason.name,
-      emoji: reason.emoji,
-      value: reason.value,
-      createdAt,
-      awardedById: params.awardedById,
-      classGoalId: goal?.id ?? null,
-      helpBadge: reason.value > 0 && reason.countsForHelpBadge,
-      awardedGroupId: params.groupId,
-    } })));
+    return tx.pointEvent.createManyAndReturn({
+      data: studentIds.map((studentId) => ({
+        studentId,
+        reasonId: reason.id,
+        reasonName: reason.name,
+        emoji: reason.emoji,
+        value: reason.value,
+        createdAt,
+        awardedById: params.awardedById,
+        classGoalId: goal?.id ?? null,
+        helpBadge: reason.value > 0 && reason.countsForHelpBadge,
+        awardedGroupId: params.groupId,
+      })),
+    });
   });
   return { reason, events };
 }

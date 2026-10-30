@@ -109,7 +109,8 @@ function phosphorPerIcon(): Plugin {
 /**
  * Каждая иконка Phosphor несёт 6 начертаний, а мы используем 2–3 (regular по умолчанию + weight="…"
  * в коде). Неиспользуемые начертания вырезаются при сборке — иконки становятся вдвое легче.
- * Набор начертаний собирается из исходников; weight={выражение} отключает вырезание целиком.
+ * Набор начертаний собирается из исходников. weight={условие ? 'a' : 'b'} учитывается,
+ * а любое другое выражение (значение неизвестно при сборке) отключает вырезание целиком.
  */
 function phosphorUsedWeights(): Plugin {
   const ALL = ['thin', 'light', 'regular', 'bold', 'fill', 'duotone'];
@@ -119,8 +120,11 @@ function phosphorUsedWeights(): Plugin {
   for (const file of readdirSync(srcDir, { recursive: true, encoding: 'utf8' })) {
     if (!/\.tsx?$/.test(file)) continue;
     const code = readFileSync(join(srcDir, file), 'utf8');
-    for (const m of code.matchAll(/\bweight=(?:"(\w+)"|'(\w+)'|\{)/g)) {
-      if (m[1] || m[2]) used.add(m[1] || m[2]);
+    for (const m of code.matchAll(/\bweight=(?:"(\w+)"|'(\w+)'|\{([^{}]*)\})/g)) {
+      const literal = m[1] ?? m[2];
+      const ternary = m[3] && /\?\s*['"](\w+)['"]\s*:\s*['"](\w+)['"]\s*$/.exec(m[3]);
+      if (literal) used.add(literal);
+      else if (ternary) ternary.slice(1).forEach((w) => used.add(w));
       else dynamic = true;
     }
   }
@@ -129,6 +133,10 @@ function phosphorUsedWeights(): Plugin {
   return {
     name: 'heroes-phosphor-used-weights',
     apply: 'build',
+    buildStart() {
+      // Без этого предупреждения иконки молча становятся вдвое тяжелее
+      if (dynamic) this.warn('weight={…} с неизвестным значением: начертания иконок не вырезаются');
+    },
     transform(code, id) {
       if (dynamic || !unused.length || !/@phosphor-icons[\\/]react[\\/]dist[\\/]defs[\\/]/.test(id)) return null;
       return code.replace(ENTRY, '');

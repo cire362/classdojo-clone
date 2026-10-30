@@ -8,7 +8,7 @@
  */
 import { parseArgs } from 'node:util';
 import { prisma } from '../db.js';
-import { generatePassword, hashPassword } from '../lib/credentials.js';
+import { LOGIN_PATTERN, generatePassword, hashPassword } from '../lib/credentials.js';
 
 const { values } = parseArgs({
   options: {
@@ -20,7 +20,7 @@ const { values } = parseArgs({
 });
 
 const login = values.login?.trim().toLowerCase();
-if (!login || !/^[a-z0-9._-]{3,64}$/.test(login)) {
+if (!login || !LOGIN_PATTERN.test(login)) {
   console.error('Укажите --login (латиница, цифры, точка, дефис; от 3 до 64 символов)');
   process.exit(1);
 }

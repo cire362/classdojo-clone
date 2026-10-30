@@ -1,6 +1,9 @@
 import { hash, verify } from '@node-rs/argon2';
 import { randomInt } from 'node:crypto';
 
+/** Логин преподавателя или администратора, заданный вручную */
+export const LOGIN_PATTERN = /^[a-z0-9._-]{3,64}$/;
+
 export function hashPassword(password: string): Promise<string> {
   // argon2id с параметрами по умолчанию (m=19 МиБ, t=2) — рекомендация OWASP
   return hash(password);

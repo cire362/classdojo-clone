@@ -16,7 +16,7 @@ test('администратор создаёт преподавателя и в
   const issued = page.getByRole('dialog', { name: 'Передайте данные преподавателю' });
   await expect(issued).toBeVisible();
   const password = await issued.locator('dd').nth(1).innerText();
-  await page.getByRole('button', { name: 'Сохранил, закрыть' }).click();
+  await page.getByRole('button', { name: 'Данные сохранены, закрыть' }).click();
   await expect(issued).toHaveCount(0);
 
   const teacher = await (await browser.newContext({ baseURL: test.info().project.use.baseURL })).newPage();
@@ -32,7 +32,7 @@ test('администратор создаёт преподавателя и в
     await expect(teacher.getByRole('heading', { name: 'Вход в класс' })).toBeVisible();
     await loginUi(teacher, login, replacement);
     await expect(teacher.getByRole('heading', { name: /Здравствуйте/ })).toBeVisible();
-    await page.getByRole('button', { name: 'Сохранил, закрыть' }).click();
+    await page.getByRole('button', { name: 'Данные сохранены, закрыть' }).click();
     await page.getByRole('button', { name: `Премиум: ${name}` }).click();
     const until = `${new Date().getFullYear() + 1}-06-30`;
     await page.fill('#premium-until', until);

@@ -2,11 +2,10 @@ import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { normalizeHero } from '@heroes/shared';
 import { z } from 'zod';
-import { checkLoginRate, requireRole, resetLoginRate, type AppEnv } from '../auth.js';
+import { requireRole, type AppEnv } from '../auth.js';
 import { prisma } from '../db.js';
 import { env } from '../env.js';
 import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../lib/dates.js';
-import { hashPassword, verifyPassword } from '../lib/credentials.js';
 import { HttpError, notFound, parse } from '../lib/errors.js';
 import { ARCHIVED_MESSAGE, OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../services/access.js';
 import { classGoal, saveClassGoal, removeClassGoal } from '../services/classGoals.js';
@@ -25,9 +24,13 @@ import { groupStats, statsWorkbook } from '../services/stats.js';
 import { MAX_IMPORT_BYTES, previewImport } from '../services/import.js';
 import { createParents, deleteOrphanParents, linkParent, resetParentPassword, studentParents, unlinkParent } from '../services/parents.js';
 import { createStudents, deleteStudent, resetStudentPassword } from '../services/students.js';
+import { changeOwnPassword } from '../services/password.js';
 import { saveHero } from './student.js';
 
 const id = z.string().min(1).max(64);
+const reasonView = (r: { id: string; name: string; emoji: string; value: number; countsForHelpBadge: boolean }) => ({
+  id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge,
+});
 const ClassGoalBody = z.object({
   title: z.string().trim().min(1, 'Напишите цель класса').max(100),
   target: z.number().int().min(1, 'Нужно хотя бы 1 балл').max(1_000_000),
@@ -72,10 +75,6 @@ const ReasonBody = z.object({
 });
 const AwardBody = z.object({ studentIds: z.array(id).min(1).max(200), reasonId: id });
 const ProfileBody = z.object({ name: z.string().trim().min(1, 'Введите имя').max(80) });
-const PasswordBody = z.object({
-  currentPassword: z.string().min(1).max(200),
-  newPassword: z.string().min(8, 'Пароль должен быть не короче 8 символов').max(200),
-});
 const lessonNumber = z.coerce.number().int().min(1).max(MAX_LESSONS_PER_DAY);
 const AttendanceBody = z.object({
   date: z.string().refine(isDateKey, 'Дата в формате ГГГГ-ММ-ДД').optional(),
@@ -104,22 +103,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     return c.json({ name: t.name });
   })
   .post('/me/password', async (c) => {
-    const user = c.get('user');
-    const { currentPassword, newPassword } = parse(PasswordBody, await c.req.json().catch(() => null));
-    // Та же защита от перебора, что и при входе
-    const rateKey = `password|${user.accountId}`;
-    await checkLoginRate(rateKey);
-    const account = await prisma.account.findUniqueOrThrow({ where: { id: user.accountId } });
-    if (!(await verifyPassword(account.passwordHash, currentPassword))) {
-      throw new HttpError(400, 'Текущий пароль указан неверно');
-    }
-    if (currentPassword === newPassword) throw new HttpError(400, 'Новый пароль совпадает с текущим');
-    await resetLoginRate(rateKey);
-    await prisma.$transaction([
-      prisma.account.update({ where: { id: account.id }, data: { passwordHash: await hashPassword(newPassword) } }),
-      // Выходим на всех остальных устройствах, текущая сессия остаётся
-      prisma.session.deleteMany({ where: { accountId: account.id, id: { not: user.sessionId } } }),
-    ]);
+    await changeOwnPassword(c.get('user'), await c.req.json().catch(() => null));
     return c.json({ ok: true });
   })
 
@@ -202,7 +186,7 @@ export const teacherRoutes = new Hono<AppEnv>()
         teamId: s.teamId,
         ...summaries.get(s.id)!,
       })),
-      reasons: reasons.map((r) => ({ id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge })),
+      reasons: reasons.map(reasonView),
       teams,
       classGoal: goal,
       pendingRewards,
@@ -308,7 +292,8 @@ export const teacherRoutes = new Hono<AppEnv>()
     if (target.id === student.groupId) throw new HttpError(400, 'Ученик уже в этой группе');
     const total = await prisma.student.count({ where: { groupId: target.id } });
     if (total >= 200) throw new HttpError(400, 'В группе может быть не больше 200 учеников');
-    await prisma.student.update({ where: { id: student.id }, data: { groupId: target.id } });
+    // Команды принадлежат группе: в новой ученик начинает без команды
+    await prisma.student.update({ where: { id: student.id }, data: { groupId: target.id, teamId: null } });
     return c.json({ id: student.id, groupId: target.id, groupName: target.name });
   })
   .post('/students/:id/reset-password', async (c) => {
@@ -501,7 +486,7 @@ export const teacherRoutes = new Hono<AppEnv>()
       where: { groupId: group.id, kind: 'MANUAL', archived: false },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
-    return c.json(reasons.map((r) => ({ id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge })));
+    return c.json(reasons.map(reasonView));
   })
   .post('/groups/:id/reasons', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
@@ -513,7 +498,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     const r = await prisma.behaviorReason.create({
       data: { ...body, groupId: group.id, sortOrder: (max._max.sortOrder ?? 0) + 1 },
     });
-    return c.json({ id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge }, 201);
+    return c.json(reasonView(r), 201);
   })
   // Новый порядок причин: полный список активных причин группы в нужном порядке
   .put('/groups/:id/reasons/order', async (c) => {
@@ -536,7 +521,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     const reason = await ownedReason(c.get('user').teacherId!, c.req.param('id'));
     const body = parse(ReasonBody, await c.req.json().catch(() => null));
     const r = await prisma.behaviorReason.update({ where: { id: reason.id }, data: body });
-    return c.json({ id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge });
+    return c.json(reasonView(r));
   })
   .delete('/reasons/:id', async (c) => {
     const reason = await ownedReason(c.get('user').teacherId!, c.req.param('id'));

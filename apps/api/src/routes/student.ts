@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { normalizeHero } from '@heroes/shared';
 import { z } from 'zod';
 import { requireRole, type AppEnv } from '../auth.js';
 import { prisma } from '../db.js';
@@ -11,7 +12,6 @@ import { markNewsSeen, studentNews } from '../services/news.js';
 import { studentHasPremium } from '../services/premium.js';
 import { studentProfile } from '../services/profile.js';
 import { readStudentNotifications, studentNotifications } from '../services/studentNotifications.js';
-import { normalizeHero } from '@heroes/shared';
 
 export const HeroBody = z.object({
   name: z.string().trim().max(40),

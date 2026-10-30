@@ -75,11 +75,13 @@ async function ensureDemoRewards() {
 
 async function ensureDemoAdmin() {
   const login = process.env.SEED_ADMIN_LOGIN ?? 'admin';
+  const password = process.env.SEED_ADMIN_PASSWORD ?? 'admin12345';
   if (await prisma.account.findUnique({ where: { login } })) return;
   await prisma.admin.create({ data: {
     name: 'Администратор школы',
-    account: { create: { login, role: 'ADMIN', passwordHash: await hashPassword(process.env.SEED_ADMIN_PASSWORD ?? 'admin12345') } },
+    account: { create: { login, role: 'ADMIN', passwordHash: await hashPassword(password) } },
   } });
+  console.log(`Seed: администратор ${login} / ${password}`);
 }
 
 async function main() {

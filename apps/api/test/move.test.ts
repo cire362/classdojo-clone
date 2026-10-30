@@ -56,4 +56,16 @@ describe('перевод ученика в другую группу', () => {
     const s = await prisma.student.findUniqueOrThrow({ where: { id: sid } });
     expect(s.groupId).toBe(a.group.id);
   });
+
+  it('команда принадлежит старой группе: после перевода ученик без команды', async () => {
+    const t = await setupTeacher(['Ученик Один']);
+    const target = await prisma.group.create({ data: { name: 'Новая группа', teacherId: t.teacher.id } });
+    const sid = t.students[0].id;
+    const [team] = (await call('POST', `/api/teacher/groups/${t.group.id}/teams`, { cookie: t.cookie, body: { name: 'Кометы' } })).body;
+    await call('PUT', `/api/teacher/groups/${t.group.id}/teams/assign`, { cookie: t.cookie, body: { assignments: { [sid]: team.id } } });
+
+    expect((await call('POST', `/api/teacher/students/${sid}/move`, { cookie: t.cookie, body: { groupId: target.id } })).status).toBe(200);
+    const moved = (await call('GET', `/api/teacher/groups/${target.id}`, { cookie: t.cookie })).body.students[0];
+    expect(moved.teamId).toBeNull();
+  });
 });

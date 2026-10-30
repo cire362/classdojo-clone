@@ -1,24 +1,28 @@
 import { useState, type FormEvent } from 'react';
 import { KeyIcon, PlusIcon, MagnifyingGlassIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { api, type AdminGroup, type AdminTeacher, type TeacherCredentials, type AdminTeachers } from '../../api';
+import { PasswordCard } from '../../components/PasswordCard';
 import { useToast } from '../../components/Toast';
 import { ErrorBox, Modal, Skeleton } from '../../components/ui';
 import { pluralize, useLoad } from '../../hooks';
 
 /** Администратор школы: преподаватели, доступы и обзор всех групп. */
 export function AdminPage() {
-  const [tab, setTab] = useState<'teachers' | 'groups'>('teachers');
+  const [tab, setTab] = useState<'teachers' | 'groups' | 'password'>('teachers');
   return (
     <div className="space-y-6">
       <div>
         <p className="mb-2 text-sm font-semibold text-ink-soft">Управление школой</p>
         <h1 className="text-2xl sm:text-3xl">Администратор</h1>
       </div>
-      <nav className="flex gap-1" aria-label="Разделы школы">
+      <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0" aria-label="Разделы школы">
         <button className={`tab ${tab === 'teachers' ? 'active' : ''}`} aria-current={tab === 'teachers' ? 'page' : undefined} onClick={() => setTab('teachers')}>Преподаватели</button>
         <button className={`tab ${tab === 'groups' ? 'active' : ''}`} aria-current={tab === 'groups' ? 'page' : undefined} onClick={() => setTab('groups')}>Группы школы</button>
+        <button className={`tab ${tab === 'password' ? 'active' : ''}`} aria-current={tab === 'password' ? 'page' : undefined} onClick={() => setTab('password')}>Мой пароль</button>
       </nav>
-      {tab === 'teachers' ? <Teachers /> : <Groups />}
+      {tab === 'teachers' && <Teachers />}
+      {tab === 'groups' && <Groups />}
+      {tab === 'password' && <div className="max-w-2xl"><PasswordCard endpoint="/admin/me/password" /></div>}
     </div>
   );
 }
@@ -150,7 +154,7 @@ function Teachers() {
             <dt>Пароль</dt><dd className="break-all font-mono font-semibold">{issued.password}</dd>
           </dl>
           <p className="text-sm text-ink-soft">Пароль показывается только сейчас. Сохраните его перед закрытием окна.</p>
-          <button className="btn btn-primary" onClick={() => setIssued(null)}>Сохранил, закрыть</button>
+          <button className="btn btn-primary" onClick={() => setIssued(null)}>Данные сохранены, закрыть</button>
         </div>}
       </Modal>
       <Modal open={!!plan} title="Срок премиума" onClose={() => { if (!busy) setPlan(null); }}>

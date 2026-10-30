@@ -271,6 +271,7 @@ model AttendanceSession {
   points  PointEvent[]
 
   @@unique([groupId, date, lessonNumber])
+  @@index([classGoalId])
 }
 
 model Attendance {
@@ -402,7 +403,6 @@ model RewardRequest {
   decidedById String?
   decidedBy   Account?     @relation("DecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
 
-  @@index([studentId, status])
   @@index([studentId, status, decidedAt])
 }
 
