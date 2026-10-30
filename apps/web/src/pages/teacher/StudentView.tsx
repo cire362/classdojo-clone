@@ -6,6 +6,7 @@ import { HeroEditor } from '../../components/HeroEditor';
 import { MoveStudentModal } from '../../components/MoveStudentModal';
 import { ParentAccessCard } from '../../components/ParentAccess';
 import { ProfileView } from '../../components/ProfileView';
+import { StudentReport } from '../../components/StudentReport';
 import { useToast } from '../../components/Toast';
 import { ErrorBox, Modal, Skeleton } from '../../components/ui';
 import { formatDateTime, useLoad } from '../../hooks';
@@ -38,6 +39,7 @@ export function StudentViewPage() {
       <Link to={`/g/${data.student.group.id}`} className="btn btn-ghost btn-sm -ml-3">
         <ArrowLeftIcon size={18} /> {data.student.group.name}
       </Link>
+      <StudentReport key={data.student.id} studentId={data.student.id} studentName={data.student.name} />
       <ProfileView
         profile={data}
         isOwn={false}

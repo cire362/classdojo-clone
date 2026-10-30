@@ -22,6 +22,8 @@ import { studentProfile } from '../services/profile.js';
 import { createDefaultReasons } from '../services/reasons.js';
 import { groupStats, statsWorkbook } from '../services/stats.js';
 import { weeklyStats } from '../services/weekly-stats.js';
+import { studentReport } from '../services/student-report.js';
+import { reportPdf } from '../services/report-pdf.js';
 import { MAX_IMPORT_BYTES, previewImport } from '../services/import.js';
 import { createParents, deleteOrphanParents, linkParent, resetParentPassword, studentParents, unlinkParent } from '../services/parents.js';
 import { createStudents, deleteStudent, resetStudentPassword } from '../services/students.js';
@@ -640,6 +642,19 @@ export const teacherRoutes = new Hono<AppEnv>()
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
     const { from, to } = period(c.req.query());
     return c.json(await groupStats(group.id, from, to));
+  })
+  .get('/students/:id/report.pdf', async (c) => {
+    const user = c.get('user');
+    const student = await teacherStudent(user, c.req.param('id'));
+    const query = parse(z.object({ from: z.string().optional(), to: z.string().optional() }), c.req.query());
+    const report = await studentReport(student.id, user.teacherId!, query);
+    const pdf = await reportPdf(report);
+    const name = `Отчёт ${student.name.replace(/[\u0000-\u001f/\\]/g, ' ')} ${report.from}_${report.to}.pdf`;
+    const encoded = encodeURIComponent(name).replace(/['()*]/g, (s) => `%${s.charCodeAt(0).toString(16).toUpperCase()}`);
+    return new Response(new Uint8Array(pdf), { headers: {
+      'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="student-report.pdf"; filename*=UTF-8''${encoded}`,
+      'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff',
+    } });
   })
   .get('/groups/:id/stats/weekly', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
