@@ -19,6 +19,8 @@ test('поиск ученика на уроке и в списке, автор �
     await page.getByRole('button', { name: 'Очистить поиск' }).click();
     await expect(page.getByRole('button', { name: /^Вера Соколова всего 0/ })).toBeVisible();
     await page.getByRole('link', { name: 'Ученики', exact: true }).click();
+    // Вкладка грузится не мгновенно: иначе поиск заполнится ещё на экране урока
+    await expect(page.getByRole('link', { name: 'Лист с логинами' })).toBeVisible();
     const credentials = group.credentials.find((c) => c.name === 'Артём Ковалёв')!;
     await search.fill(credentials.login);
     await expect(page.getByRole('link', { name: /Артём Ковалёв/ })).toBeVisible();
