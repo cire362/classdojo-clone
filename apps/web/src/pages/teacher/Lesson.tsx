@@ -16,6 +16,7 @@ import { HeroAvatar, heroTint } from '../../components/HeroAvatar';
 import { useToast } from '../../components/Toast';
 import { ClassGoalPanel } from '../../components/ClassGoal';
 import { LessonTimer } from '../../components/LessonTimer';
+import { LessonNoiseMeter } from '../../components/LessonNoiseMeter';
 import { StudentSearch } from '../../components/StudentSearch';
 import { matchesStudent } from '../../lib/student-search';
 import { TeamsModal } from '../../components/TeamsModal';
@@ -92,6 +93,7 @@ export function LessonPage() {
   const changeGoal = (classGoal: ClassGoal | null) => setData((current) => current && ({ ...current, classGoal }));
   const goalPanel = <ClassGoalPanel goal={data.classGoal} groupId={data.group.id} archived={archived} onChange={changeGoal} />;
   const timerPanel = !archived && <LessonTimer key={data.group.id} groupId={data.group.id} projector={projector} target={timerTarget} />;
+  const noisePanel = !archived && <LessonNoiseMeter key={`noise:${data.group.id}`} groupId={data.group.id} projector={projector} target={timerTarget} />;
 
   async function award(reason: Reason) {
     if (!target) return;
@@ -192,6 +194,7 @@ export function LessonPage() {
       <>
         {goalPanel}
         {timerPanel}
+        {noisePanel}
         <h2 className="sr-only">Ученики</h2>
         <EmptyState icon={<UserPlusIcon size={28} />} title="В группе пока нет учеников">
           <p>Добавьте учеников списком, и у каждого появится свой герой.</p>
@@ -266,6 +269,7 @@ export function LessonPage() {
     <>
       {!projector && goalPanel}
       {timerPanel}
+      {noisePanel}
       {!projector && <StudentSearch value={query} onChange={search} found={visibleStudents.length} total={students.length} />}
       {!archived && <div className="flex flex-wrap items-center gap-2">
         {selectMode ? (
