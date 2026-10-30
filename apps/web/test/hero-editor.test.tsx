@@ -32,7 +32,7 @@ describe('конструктор героя', () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     const view = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={1} onSave={onSave} />);
     await view.user.click(tab('Эмблема'));
-    const crystal = await screen.findByRole('button', { name: /^Алмаз.*премиум.*недоступна без премиума/ });
+    const crystal = await screen.findByRole('button', { name: /^Алмаз.*Космос.*недоступна без премиума/ });
     await view.user.click(crystal);
     expect(await screen.findByText(/откроется, когда преподаватель подключит премиум/)).toBeInTheDocument();
     expect(crystal).toHaveAttribute('aria-pressed', 'false');
@@ -40,7 +40,7 @@ describe('конструктор героя', () => {
 
     const { user } = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={1} premium onSave={onSave} />);
     await user.click(tab('Эмблема'));
-    await user.click(await screen.findByRole('button', { name: /^Алмаз\s*,\s*премиум$/ }));
+    await user.click(await screen.findByRole('button', { name: /^Алмаз.*коллекция «Космос»$/ }));
     await user.click(screen.getByRole('button', { name: 'Сохранить героя' }));
     expect(onSave).toHaveBeenCalledWith('', { ...DEFAULT_HERO, emblem: 'emblem.diamond' });
   });
@@ -63,5 +63,35 @@ describe('конструктор героя', () => {
     expect(tab('Маска')).toHaveAttribute('aria-pressed', 'true');
     const bandana = screen.getByRole('button', { name: /^Повязка/ });
     expect(within(bandana).getByText('новое')).toBeInTheDocument();
+  });
+
+  it('фильтр показывает выбранную коллекцию без изменения героя, выборы разных наборов сохраняются вместе', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const { user } = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={5} premium onSave={onSave} />);
+    await user.selectOptions(screen.getByLabelText('Коллекция'), 'spring');
+    expect(tab('Костюм')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Сохранено' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: /^Цветущий.*Весна/ }));
+    await user.selectOptions(screen.getByLabelText('Коллекция'), 'winter');
+    await user.click(tab('Маска'));
+    await user.click(screen.getByRole('button', { name: /^Зимняя шапка.*Зима/ }));
+    await user.click(screen.getByRole('button', { name: 'Сохранить героя' }));
+    expect(onSave).toHaveBeenCalledWith('', { ...DEFAULT_HERO, suit: 'suit.bloom', mask: 'mask.winterHat' });
+  });
+
+  it('уровень ограничивает новые детали; пустой раздел позволяет показать всё, быстрый питомец снимает фильтр', async () => {
+    const { user } = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={1} premium onSave={vi.fn()} />);
+    await user.selectOptions(screen.getByLabelText('Коллекция'), 'winter');
+    await user.click(screen.getByRole('button', { name: /^Полярный.*откроется на 2 уровне/ }));
+    expect(await screen.findByText('Откроется на 2 уровне')).toBeVisible();
+    await user.click(tab('Поза'));
+    expect(screen.getByText(/В этой коллекции нет деталей/)).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Показать все детали' }));
+    expect(screen.getByLabelText('Коллекция')).toHaveValue('all');
+    await user.selectOptions(screen.getByLabelText('Коллекция'), 'autumn');
+    await user.click(screen.getByRole('button', { name: 'Выбрать питомца' }));
+    expect(screen.getByLabelText('Коллекция')).toHaveValue('all');
+    expect(tab('Питомец')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Искрик' })).toBeVisible();
   });
 });

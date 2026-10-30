@@ -1,11 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_HERO, HERO_PARTS, randomHero } from '@heroes/shared';
+import { DEFAULT_HERO, HERO_PARTS, HERO_SLOTS, randomHero, type HeroParts } from '@heroes/shared';
 import { prisma } from '../src/db.js';
 import { call, setupTeacher } from './helpers.js';
 
 const premiumHero = { ...DEFAULT_HERO, emblem: 'emblem.diamond', suitColor: 'color.cosmic' };
 
 describe('премиум', () => {
+  it('сезоны смешиваются и сохраняются, уровень и обычные правила доступа проверяются сервером', async () => {
+    const t = await setupTeacher(['Маша']);
+    const cookie = await t.studentCookie(0);
+    const parts: HeroParts = { ...DEFAULT_HERO, suit: 'suit.bloom', mask: 'mask.winterHat', cape: 'cape.sail', emblem: 'emblem.maple', aura: 'aura.snowfall', suitColor: 'color.ochre' };
+    const save = () => call('PUT', '/api/student/hero', { cookie, body: { name: 'Времена года', parts } });
+    expect((await save()).status).toBe(422);
+    await prisma.teacher.update({ where: { id: t.teacher.id }, data: { premiumUntil: new Date(Date.now() + 86_400_000) } });
+    expect((await save()).body.error).toMatch(/уровн/);
+    await prisma.pointEvent.create({ data: { studentId: t.students[0].id, value: 70, reasonName: 'Тест уровня', emoji: '⭐' } });
+    expect((await save()).status).toBe(200);
+    expect((await call('GET', '/api/student/profile', { cookie })).body.hero).toMatchObject({ name: 'Времена года', parts });
+    const catalog = (await call('GET', '/api/hero-parts', { cookie })).body;
+    for (const id of ['suit.bloom', 'aura.snowfall', 'emblem.maple']) expect(catalog.find((p: { id: string }) => p.id === id)).toMatchObject({ isPremium: true });
+    const fresh = randomHero(() => 0.99);
+    for (const slot of Object.keys(HERO_SLOTS) as (keyof HeroParts)[]) expect(HERO_PARTS.find((p) => p.id === fresh[slot])?.premium).not.toBe(true);
+  });
   it('без премиума детали коллекции недоступны, с премиумом создателя группы — доступны', async () => {
     const t = await setupTeacher(['Маша Иванова']);
     const cookie = await t.studentCookie(0);

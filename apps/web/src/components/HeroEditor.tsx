@@ -3,6 +3,8 @@ import { DiceFiveIcon, LockSimpleIcon, MinusCircleIcon, PawPrintIcon, SparkleIco
 import {
   HERO_SLOT_LABELS,
   HERO_SLOTS,
+  HERO_COLLECTIONS,
+  type HeroCollectionId,
   partsForLayer,
   normalizeHero,
   PET_STAGES,
@@ -51,6 +53,7 @@ export function HeroEditor({
   const [name, setName] = useState(initial.name);
   const slotHasNew = (s: HeroSlot) => !!newIds?.size && partsForLayer(HERO_SLOTS[s]).some((p) => newIds.has(p.id));
   const [slot, setSlot] = useState<HeroSlot>('pose');
+  const [collection, setCollection] = useState<'all' | 'base' | HeroCollectionId>('all');
   const [autoSlot, setAutoSlot] = useState(false);
   // Открываем первую вкладку, где есть новые детали
   if (!autoSlot && newIds) {
@@ -71,7 +74,9 @@ export function HeroEditor({
   };
 
   const dirty = name !== initial.name || SLOTS.some((s) => parts[s] !== initialParts[s]);
-  const options = partsForLayer(HERO_SLOTS[slot]);
+  const inCollection = (p: HeroPartDef) => collection === 'all' || (collection === 'base' ? !p.collection : p.collection === collection);
+  const options = partsForLayer(HERO_SLOTS[slot]).filter(inCollection);
+  const selectedCollection = HERO_COLLECTIONS.find((c) => c.id === collection);
   const isSwatch = SWATCH_LAYERS.includes(HERO_SLOTS[slot]);
   const petStage = petStageForLevel(level);
 
@@ -118,6 +123,7 @@ export function HeroEditor({
         </div>
         <button className="btn btn-secondary w-full" onClick={() => {
           setSlot('pet');
+          setCollection('all');
           petTab.current?.focus();
           petTab.current?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
         }}>
@@ -142,6 +148,23 @@ export function HeroEditor({
       </div>
 
       <div className="min-w-0 space-y-4">
+        <div>
+          <label className="label" htmlFor="hero-collection">Коллекция</label>
+          <select id="hero-collection" className="input max-w-sm" value={collection} onChange={(e) => {
+            const next = e.target.value as typeof collection;
+            setCollection(next);
+            const matches = (p: HeroPartDef) => next === 'all' || (next === 'base' ? !p.collection : p.collection === next);
+            if (!partsForLayer(HERO_SLOTS[slot]).some(matches)) {
+              const first = SLOTS.find((s) => partsForLayer(HERO_SLOTS[s]).some(matches));
+              if (first) setSlot(first);
+            }
+          }}>
+            <option value="all">Все детали</option>
+            <option value="base">Основная коллекция</option>
+            {HERO_COLLECTIONS.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <p className="mt-2 text-sm text-ink-soft">{selectedCollection ? `${selectedCollection.description} Можно носить круглый год и сочетать с другими коллекциями.` : 'Сочетай детали любых коллекций. Выбор коллекции фильтрует список, сохраняя твоего героя.'}</p>
+        </div>
         <nav className="relative -mx-4 flex gap-1 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0" aria-label="Детали героя">
           {SLOTS.map((s) => (
             <button key={s} ref={s === 'pet' ? petTab : undefined} className={`tab ${slot === s ? 'active' : 'bg-surface-2'}`} onClick={() => setSlot(s)} aria-pressed={slot === s}>
@@ -160,6 +183,10 @@ export function HeroEditor({
             {PET_STAGES.map((s) => <li key={s.level} aria-current={petStage.title === s.title ? 'step' : undefined} className={`rounded-full px-3 py-1.5 ${petStage.title === s.title ? 'bg-accent font-semibold text-on-accent' : 'bg-surface-2 text-ink-soft'}`}>{s.level}-й уровень · {s.title}</li>)}
           </ol>
         </section>}
+        {options.length === 0 && <div className="space-y-3 rounded-2xl border border-dashed border-line p-4">
+          <p className="text-sm text-ink-soft">В этой коллекции нет деталей для раздела «{HERO_SLOT_LABELS[slot]}». Выбери другой раздел или покажи все детали.</p>
+          <button className="btn btn-secondary btn-sm" onClick={() => setCollection('all')}>Показать все детали</button>
+        </div>}
         <div
           className={
             slot === 'pet' ? 'grid grid-cols-2 gap-3 sm:grid-cols-4' : isSwatch
@@ -170,6 +197,7 @@ export function HeroEditor({
           {options.map((p) => {
             const lock = lockOf(p);
             const premiumPart = isPremiumPart(p);
+            const collectionName = HERO_COLLECTIONS.find((c) => c.id === p.collection)?.name;
             const active = parts[slot] === p.id;
             const isNew = !!newIds?.has(p.id);
             return (
@@ -194,7 +222,7 @@ export function HeroEditor({
                 )}
                 <span className={`text-xs font-medium leading-tight ${lock ? 'text-ink-soft' : ''}`}>
                   {p.name}
-                  {premiumPart && <span className="sr-only">, премиум</span>}
+                  {collectionName && <span className="sr-only">, коллекция «{collectionName}»</span>}
                   {lock !== null && <span className="sr-only">{lock === 'premium' ? ', недоступна без премиума' : `, откроется на ${lock} уровне`}</span>}
                   {isNew && <span className="sr-only">, новое</span>}
                 </span>
@@ -211,7 +239,7 @@ export function HeroEditor({
                 )}
                 {premiumPart && (
                   <span aria-hidden className="absolute bottom-[1.9rem] right-1.5 inline-flex items-center gap-0.5 rounded-full bg-[#2a2470] px-1.5 py-0.5 text-[11px] font-bold text-white">
-                    <SparkleIcon size={11} weight="fill" /> премиум
+                    <SparkleIcon size={11} weight="fill" /> {collectionName ?? 'премиум'}
                   </span>
                 )}
               </button>
@@ -220,7 +248,7 @@ export function HeroEditor({
         </div>
         <p className="text-sm text-ink-soft">
           Детали с замком открываются на новых уровнях. Уровень растёт от заработанных баллов.
-          {premium ? ' Премиум-коллекция «Космос» открыта.' : ' Детали с меткой «премиум» открываются, если преподаватель подключит премиум.'}
+          {premium ? ' Коллекции «Космос», «Весна», «Лето», «Осень» и «Зима» доступны по уровню.' : ' Тематические коллекции открываются, если преподаватель подключит премиум.'}
         </p>
       </div>
     </div>

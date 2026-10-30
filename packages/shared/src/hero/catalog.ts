@@ -1,4 +1,5 @@
 import { PET_COMPANIONS } from './pets.js';
+import { SEASONAL_PARTS, type HeroCollectionId } from './collections.js';
 
 /**
  * Каталог деталей героя — единый источник правды для фронтенда (отрисовка)
@@ -43,6 +44,8 @@ export interface HeroPartDef {
   overHair?: boolean;
   /** Премиум-коллекция: доступна ученикам, если у создателя их группы подключён премиум (и по уровню) */
   premium?: boolean;
+  /** Название набора для фильтра в конструкторе; на доступ влияет premium и уровень. */
+  collection?: HeroCollectionId;
 }
 
 /** Слоты героя → тип слоя. Порядок = порядок вкладок в конструкторе. */
@@ -763,12 +766,15 @@ const parts: HeroPartDef[] = [
   { id: 'hairColor.violet', layer: 'hairColor', name: 'Фиалковый', requiredLevel: 1, color: '#8a63e8', premium: true },
 ];
 
-export const HERO_PARTS: ReadonlyArray<HeroPartDef> = parts;
+export const HERO_PARTS: ReadonlyArray<HeroPartDef> = [
+  ...parts.map((p) => p.premium ? { ...p, collection: 'cosmos' as const } : p),
+  ...SEASONAL_PARTS,
+];
 
-export const HERO_PARTS_BY_ID: ReadonlyMap<string, HeroPartDef> = new Map(parts.map((p) => [p.id, p]));
+export const HERO_PARTS_BY_ID: ReadonlyMap<string, HeroPartDef> = new Map(HERO_PARTS.map((p) => [p.id, p]));
 
 export function partsForLayer(layer: HeroLayer): HeroPartDef[] {
-  return parts.filter((p) => p.layer === layer);
+  return HERO_PARTS.filter((p) => p.layer === layer);
 }
 
 export const DEFAULT_HERO: HeroParts = {
@@ -793,13 +799,13 @@ export function randomHero(rand: () => number = Math.random): HeroParts {
     // Первого питомца ученик выбирает сам. Кнопка случайного героя в редакторе может менять и питомца.
     if (slot === 'pet') continue;
     // Для случайного героя берём только естественные тона кожи (skin.1–skin.6)
-    const base = parts.filter(
+    const base = HERO_PARTS.filter(
       (p) => p.layer === layer && p.requiredLevel <= 1 && !p.premium && !(layer === 'skin' && Number(p.id.slice(5)) > 6),
     );
     result[slot] = base[Math.floor(rand() * base.length)].id;
   }
   if (result.accentColor === result.suitColor) {
-    const colors = parts.filter((p) => p.layer === 'color' && p.requiredLevel <= 1 && !p.premium && p.id !== result.suitColor);
+    const colors = HERO_PARTS.filter((p) => p.layer === 'color' && p.requiredLevel <= 1 && !p.premium && p.id !== result.suitColor);
     result.accentColor = colors[Math.floor(rand() * colors.length)].id;
   }
   return result;

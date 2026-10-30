@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_HERO, HERO_PARTS, HERO_SLOTS, MAX_LEVEL, normalizeHero, randomHero, renderHeroSvg } from '@heroes/shared';
+import { DEFAULT_HERO, HERO_COLLECTIONS, HERO_PARTS, HERO_SLOTS, MAX_LEVEL, normalizeHero, randomHero, renderHeroSvg } from '@heroes/shared';
 
 describe('каталог деталей героя', () => {
   it('id уникальны и имеют вид <слой>.<ключ>', () => {
@@ -39,5 +39,23 @@ describe('каталог деталей героя', () => {
     expect(normalizeHero(old).aura).toBe('aura.none');
     const r = randomHero();
     expect(HERO_PARTS.find((p) => p.id === r.aura)!.requiredLevel).toBe(1);
+  });
+
+  it('каждый сезон имеет шесть совместимых деталей, а прежний премиум относится к Космосу', () => {
+    const ids = new Set(HERO_COLLECTIONS.map((c) => c.id));
+    for (const p of HERO_PARTS) {
+      if (p.premium) expect(ids.has(p.collection!)).toBe(true);
+      if (p.collection) expect(p.premium).toBe(true);
+    }
+    for (const season of ['spring', 'summer', 'autumn', 'winter']) {
+      const items = HERO_PARTS.filter((p) => p.collection === season);
+      expect(items).toHaveLength(6);
+      expect(new Set(items.map((p) => p.layer))).toEqual(new Set(['suit', 'mask', 'cape', 'emblem', 'aura', 'color']));
+      expect(items.map((p) => p.requiredLevel)).toEqual(expect.arrayContaining([1, 2, 3, 5]));
+    }
+    expect(HERO_PARTS.find((p) => p.id === 'emblem.diamond')?.collection).toBe('cosmos');
+    expect(HERO_PARTS.find((p) => p.id === 'emblem.sun')).toMatchObject({ name: 'Солнце', requiredLevel: 3 });
+    expect(HERO_PARTS.find((p) => p.id === 'emblem.sun')?.premium).not.toBe(true);
+    expect(HERO_PARTS.find((p) => p.id === 'emblem.snowflake')?.premium).not.toBe(true);
   });
 });
