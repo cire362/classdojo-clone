@@ -23,7 +23,7 @@ export function LessonNoiseMeter({ groupId, projector, target }: { groupId: stri
   }, [label, active]);
   useEffect(() => { if (!open && focusToggle.current) { toggle.current?.focus(); focusToggle.current = false; } }, [open]);
 
-  const panel = <section aria-label="Шумомер урока" className={projector ? 'mb-6' : ''}>
+  const panel = <section aria-label="Шумомер урока" className={projector ? 'mb-6' : open ? 'w-full' : ''}>
     {!open ? <button ref={toggle} className="btn btn-secondary btn-sm" aria-expanded={false} onClick={() => setOpen(true)}><WaveformIcon size={20} aria-hidden /> Шумомер</button> : (
       <div className="rounded-2xl border border-line bg-surface p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3">

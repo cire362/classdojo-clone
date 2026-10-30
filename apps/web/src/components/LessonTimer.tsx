@@ -94,7 +94,7 @@ export function LessonTimer({ groupId, projector, target }: { groupId: string; p
   }
   const status = timer.status === 'running' ? 'Идёт отсчёт' : timer.status === 'paused' ? 'На паузе' : timer.status === 'finished' ? 'Время вышло!' : 'Готов к запуску';
 
-  const panel = <section aria-label="Таймер урока" className={projector ? 'mb-6' : ''}>
+  const panel = <section aria-label="Таймер урока" className={projector ? 'mb-6' : expanded ? 'w-full' : ''}>
     {!expanded ? <button ref={toggle} className="btn btn-secondary btn-sm" aria-expanded={false} onClick={() => { focusCommand.current = true; setOpen(true); }}>
       <TimerIcon size={20} aria-hidden /> Таймер{timer.status !== 'idle' && <span className="tabular-nums">{timer.status === 'finished' ? '· Время вышло' : formatTimer(remaining)}</span>}
     </button> : <div id={id} className={`relative rounded-2xl border p-4 sm:p-5 ${timer.status === 'finished' ? 'border-accent bg-accent/15' : 'border-line bg-surface'}`}>

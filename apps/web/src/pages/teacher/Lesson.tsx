@@ -17,6 +17,7 @@ import { useToast } from '../../components/Toast';
 import { ClassGoalPanel } from '../../components/ClassGoal';
 import { LessonTimer } from '../../components/LessonTimer';
 import { LessonNoiseMeter } from '../../components/LessonNoiseMeter';
+import { LessonRandomGroups } from '../../components/LessonRandomGroups';
 import { StudentSearch } from '../../components/StudentSearch';
 import { matchesStudent } from '../../lib/student-search';
 import { TeamsModal } from '../../components/TeamsModal';
@@ -94,6 +95,8 @@ export function LessonPage() {
   const goalPanel = <ClassGoalPanel goal={data.classGoal} groupId={data.group.id} archived={archived} onChange={changeGoal} />;
   const timerPanel = !archived && <LessonTimer key={data.group.id} groupId={data.group.id} projector={projector} target={timerTarget} />;
   const noisePanel = !archived && <LessonNoiseMeter key={`noise:${data.group.id}`} groupId={data.group.id} projector={projector} target={timerTarget} />;
+  const randomGroupsPanel = !archived && <LessonRandomGroups key={`random-groups:${data.group.id}`} students={students} presentIds={data.todayAttendance?.presentStudentIds ?? null} projector={projector} target={timerTarget} />;
+  const tools = !archived && <div className="flex flex-wrap items-start gap-2">{timerPanel}{noisePanel}{randomGroupsPanel}</div>;
 
   async function award(reason: Reason) {
     if (!target) return;
@@ -193,8 +196,7 @@ export function LessonPage() {
     return (
       <>
         {goalPanel}
-        {timerPanel}
-        {noisePanel}
+        {tools}
         <h2 className="sr-only">Ученики</h2>
         <EmptyState icon={<UserPlusIcon size={28} />} title="В группе пока нет учеников">
           <p>Добавьте учеников списком, и у каждого появится свой герой.</p>
@@ -268,8 +270,7 @@ export function LessonPage() {
   return (
     <>
       {!projector && goalPanel}
-      {timerPanel}
-      {noisePanel}
+      {tools}
       {!projector && <StudentSearch value={query} onChange={search} found={visibleStudents.length} total={students.length} />}
       {!archived && <div className="flex flex-wrap items-center gap-2">
         {selectMode ? (
@@ -434,11 +435,11 @@ const StudentCard = memo(function StudentCard({
       aria-pressed={selectable ? selected : undefined}
       className={`card relative flex flex-col items-stretch overflow-hidden p-2.5 text-left transition-[box-shadow,opacity,transform] duration-200 ease-[var(--ease-out)] hover:shadow-[var(--shadow-pop)] active:scale-[0.97] ${
         selected ? 'ring-4 ring-accent' : ''
-      } ${absent ? 'opacity-55' : ''}`}
+      }`}
     >
       {/* Картинка и значки на ней — оформление; для экранного диктора то же самое есть текстом ниже */}
       <div className="relative rounded-xl" style={{ background: heroTint(s.hero.parts) }} aria-hidden>
-        <HeroAvatar parts={s.hero.parts} level={s.level} className="mx-auto aspect-[5/6] w-[88%]" />
+        <HeroAvatar parts={s.hero.parts} level={s.level} className={`mx-auto aspect-[5/6] w-[88%] ${absent ? 'opacity-55' : ''}`} />
         {s.todayEarned > 0 && (
           <span className={`chip absolute right-2 top-2 bg-plus-bg text-plus ${big ? 'text-lg' : ''}`}>+{s.todayEarned}</span>
         )}

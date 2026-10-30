@@ -1,0 +1,70 @@
+import { AxeBuilder } from '@axe-core/playwright';
+import { expect, test } from '@playwright/test';
+import { TEACHER, loginUi, tempGroup, uniq } from './helpers';
+
+const headers = { 'x-heroes-client': '1' };
+for (const colorScheme of ['light', 'dark'] as const) {
+  test(`пары и группы: присутствующие, тройка, проектор и отсутствие сохранения (${colorScheme})`, async ({ page, request }) => {
+    const group = await tempGroup(request, uniq('E2E пары'), ['Алина Орлова', 'Глеб Орлов', 'Марк Анисимов', 'Лиза Ершова', 'Кристина Александрова']);
+    try {
+      const present = group.credentials.slice(0, 4);
+      const absent = group.credentials[4];
+      expect((await request.post(`/api/teacher/groups/${group.id}/attendance`, { headers, data: { presentStudentIds: present.map((s) => s.id), peopleOnPhoto: null, subtractedTeacher: false } })).ok()).toBeTruthy();
+      const baseline = await (await request.get(`/api/teacher/groups/${group.id}`)).json();
+      await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
+      await loginUi(page, TEACHER.login, TEACHER.password);
+      await expect(page.getByRole('heading', { name: /Здравствуйте/ })).toBeVisible();
+      await page.goto(`/g/${group.id}`);
+      await page.getByRole('button', { name: 'Пары и группы', exact: true }).click();
+      const panel = page.getByRole('region', { name: 'Пары и группы урока', exact: true });
+      const distribution = panel.getByRole('list', { name: 'Случайное распределение' });
+      const writes: string[] = [];
+      page.on('request', (r) => { if (r.url().includes('/api/') && r.method() !== 'GET') writes.push(r.url()); });
+      await expect(panel.getByRole('checkbox', { name: 'Только присутствующие' })).toBeChecked();
+      await panel.getByRole('button', { name: 'Сформировать', exact: true }).click();
+      await expect(distribution.getByRole('heading')).toHaveCount(2);
+      await expect(distribution.getByText(absent.name, { exact: true })).toHaveCount(0);
+      for (const student of present) await expect(distribution.getByText(student.name, { exact: true })).toHaveCount(1);
+      await panel.getByText('Только присутствующие', { exact: true }).click();
+      await panel.getByRole('button', { name: 'Сформировать', exact: true }).click();
+      await expect(panel.getByText(/Одна тройка/)).toBeVisible();
+      for (const student of group.credentials) await expect(distribution.getByText(student.name, { exact: true })).toHaveCount(1);
+      await page.evaluate(() => document.fonts.ready);
+      await panel.scrollIntoViewIfNeeded();
+      await page.screenshot({ path: test.info().outputPath(`groups-desktop-${colorScheme}.png`), animations: 'disabled' });
+      await panel.getByRole('button', { name: 'По группам', exact: true }).click();
+      await panel.getByRole('spinbutton').fill('2');
+      await expect(panel.getByRole('button', { name: 'Сформировать', exact: true })).toBeDisabled();
+      await expect(panel.getByRole('alert')).toContainText('максимум по двое');
+      await panel.getByRole('spinbutton').fill('3');
+      await panel.getByRole('button', { name: 'Сформировать', exact: true }).click();
+      const before = await distribution.textContent();
+      await page.getByRole('button', { name: 'Проектор', exact: true }).click();
+      await expect(distribution).toHaveText(before!);
+      await page.screenshot({ path: test.info().outputPath(`groups-projector-${colorScheme}.png`), animations: 'disabled' });
+      await page.getByRole('button', { name: 'Выйти из режима проектора', exact: true }).click();
+      await expect(distribution).toHaveText(before!);
+      await page.setViewportSize({ width: 375, height: 812 });
+      await panel.evaluate((el) => scrollTo(0, Math.max(0, el.getBoundingClientRect().top + scrollY - 80)));
+      await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(376);
+      await page.screenshot({ path: test.info().outputPath(`groups-mobile-${colorScheme}.png`), animations: 'disabled' });
+      await page.evaluate(() => scrollTo(0, 0));
+      await page.screenshot({ path: test.info().outputPath(`groups-full-mobile-${colorScheme}.png`), fullPage: true, animations: 'disabled' });
+      const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice']).analyze();
+      expect(axe.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.failureSummary) }))).toEqual([]);
+      await panel.getByRole('spinbutton').fill('2');
+      await expect(panel.getByRole('button', { name: 'Сформировать', exact: true })).toBeDisabled();
+      await expect(panel.getByRole('alert')).toContainText('максимум по двое');
+      await panel.evaluate((el) => scrollTo(0, Math.max(0, el.getBoundingClientRect().top + scrollY - 80)));
+      await page.screenshot({ path: test.info().outputPath(`groups-cap2-mobile-${colorScheme}.png`), animations: 'disabled' });
+      expect(writes).toEqual([]);
+      const after = await (await request.get(`/api/teacher/groups/${group.id}`)).json();
+      expect(after.teams).toEqual(baseline.teams);
+      expect(after.students.map((s: { totalEarned: number; teamId: string | null }) => [s.totalEarned, s.teamId])).toEqual(baseline.students.map((s: { totalEarned: number; teamId: string | null }) => [s.totalEarned, s.teamId]));
+      await page.reload();
+      await page.getByRole('button', { name: 'Пары и группы', exact: true }).click();
+      await expect(distribution).toHaveCount(0);
+    } finally { await group.remove(); }
+  });
+}
