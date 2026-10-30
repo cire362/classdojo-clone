@@ -82,6 +82,40 @@ export async function studentShop(studentId: string) {
   return { balance: bal, archived: !!s.group.archivedAt, rewards, requests };
 }
 
+/** Родитель только смотрит: уведомления ученика не читаются, ожидающие запросы не ограничены историей. */
+export async function parentRewards(studentId: string, before?: string) {
+  let cursor: { at: Date; id: string } | null = null;
+  if (before !== undefined) {
+    const [time, id, extra] = before.split('|');
+    const at = new Date(time);
+    if (before.length > 128 || !Number.isFinite(+at) || at.toISOString() !== time || !id || id.length > 64 || extra !== undefined) {
+      throw new HttpError(400, 'Некорректная страница истории наград');
+    }
+    cursor = { at, id };
+  }
+  return prisma.$transaction(async (tx) => {
+    const student = await tx.student.findUniqueOrThrow({
+      where: { id: studentId }, select: { id: true, name: true, groupId: true, group: { select: { name: true, archivedAt: true } } },
+    });
+    const [rewards, pending, rows, bal] = await Promise.all([
+      tx.reward.findMany({ where: { groupId: student.groupId, archived: false }, orderBy: [{ cost: 'asc' }, { sortOrder: 'asc' }, { id: 'asc' }], select: { id: true, title: true, emoji: true, cost: true } }),
+      tx.rewardRequest.findMany({ where: { studentId, status: 'PENDING' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: requestView }),
+      tx.rewardRequest.findMany({
+        where: { studentId, status: { not: 'PENDING' }, ...(cursor ? { OR: [{ createdAt: { lt: cursor.at } }, { createdAt: cursor.at, id: { lt: cursor.id } }] } : {}) },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 21, select: requestView,
+      }),
+      balance(studentId, tx),
+    ]);
+    const history = rows.slice(0, 20);
+    const last = history.at(-1);
+    return {
+      student: { id: student.id, name: student.name, groupName: student.group.name },
+      balance: bal, archived: !!student.group.archivedAt, rewards, pending, history,
+      nextCursor: rows.length > 20 && last ? `${last.createdAt.toISOString()}|${last.id}` : null,
+    };
+  }, { isolationLevel: 'RepeatableRead' });
+}
+
 /** Ученик просит награду. Баланс проверяется под блокировкой строки ученика: два запроса сразу не потратят баллы дважды */
 export async function requestReward(studentId: string, rewardId: string) {
   return prisma.$transaction(async (tx) => {

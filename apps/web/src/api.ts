@@ -150,6 +150,16 @@ export interface Shop {
   requests: RewardRequest[];
 }
 
+export interface ParentRewards {
+  student: { id: string; name: string; groupName: string };
+  balance: number;
+  archived: boolean;
+  rewards: Reward[];
+  pending: RewardRequest[];
+  history: RewardRequest[];
+  nextCursor: string | null;
+}
+
 export interface ClassGoal {
   id: string;
   title: string;
