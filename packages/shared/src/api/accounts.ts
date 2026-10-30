@@ -1,0 +1,47 @@
+/** Типы ответов API: учётные записи, выданные входы и панель администратора */
+
+export type Role = 'TEACHER' | 'STUDENT' | 'PARENT' | 'ADMIN';
+
+export interface Me {
+  login: string;
+  role: Role;
+  name: string;
+}
+
+export interface Credentials {
+  id: string;
+  name: string;
+  login: string;
+  password: string;
+}
+
+/** Родительский вход, привязанный к ученику */
+export interface ParentAccess {
+  id: string;
+  login: string;
+  /** Другие дети этого родителя (общий вход для братьев и сестёр) */
+  otherChildren: { id: string; name: string }[];
+}
+
+export interface ParentCredentials {
+  parentId: string;
+  studentId: string;
+  studentName: string;
+  login: string;
+  password: string;
+}
+
+export interface TeacherCredentials { id: string; name: string; login: string; password: string }
+
+export interface AdminTeacher {
+  id: string; name: string; login: string; ownedGroups: number; sharedGroups: number;
+  premiumUntil: string | null; premiumActive: boolean;
+}
+
+export interface AdminTeachers { freeForAll: boolean; teachers: AdminTeacher[] }
+
+export interface AdminGroup {
+  id: string; name: string; archivedAt: string | null; studentsCount: number;
+  owner: { id: string; name: string; login: string };
+  colleagues: { id: string; name: string }[];
+}
