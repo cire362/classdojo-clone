@@ -333,6 +333,16 @@ export interface Detection {
   elapsedMs: number;
 }
 
+export interface WeeklyStats {
+  groupId: string;
+  from: string;
+  to: string;
+  scope: { kind: 'group' | 'student' | 'team'; id: string; name: string };
+  members: number;
+  points: PointsSum & { events: number };
+  weeks: ({ week: string; from: string; to: string; partial: boolean; events: number } & PointsSum)[];
+}
+
 export interface Stats {
   from: string;
   to: string;

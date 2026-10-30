@@ -21,6 +21,7 @@ import { teacherPremium } from '../services/premium.js';
 import { studentProfile } from '../services/profile.js';
 import { createDefaultReasons } from '../services/reasons.js';
 import { groupStats, statsWorkbook } from '../services/stats.js';
+import { weeklyStats } from '../services/weekly-stats.js';
 import { MAX_IMPORT_BYTES, previewImport } from '../services/import.js';
 import { createParents, deleteOrphanParents, linkParent, resetParentPassword, studentParents, unlinkParent } from '../services/parents.js';
 import { createStudents, deleteStudent, resetStudentPassword } from '../services/students.js';
@@ -639,6 +640,11 @@ export const teacherRoutes = new Hono<AppEnv>()
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
     const { from, to } = period(c.req.query());
     return c.json(await groupStats(group.id, from, to));
+  })
+  .get('/groups/:id/stats/weekly', async (c) => {
+    const group = await teacherGroup(c.get('user'), c.req.param('id'));
+    const query = parse(z.object({ from: z.string().optional(), to: z.string().optional(), studentId: id.optional(), teamId: id.optional() }), c.req.query());
+    return c.json(await weeklyStats(group.id, query));
   })
   .get('/groups/:id/stats.xlsx', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));

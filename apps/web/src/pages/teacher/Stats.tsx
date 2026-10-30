@@ -5,6 +5,7 @@ import { api, type Stats } from '../../api';
 import { EmptyState, ErrorBox, Skeleton } from '../../components/ui';
 import { dateKey, formatDate, useLoad } from '../../hooks';
 import { useGroup } from './GroupLayout';
+import { WeeklyPoints } from '../../components/WeeklyPoints';
 
 function presets() {
   const now = new Date();
@@ -85,6 +86,8 @@ export function StatsPage() {
           <DownloadSimpleIcon size={20} weight="bold" /> Скачать Excel
         </a>
       </div>
+
+      <WeeklyPoints key={group.group.id} group={group} from={range.from} to={range.to} />
 
       {error && <ErrorBox message={error} onRetry={reload} />}
       {loading && !data && <Skeleton className="h-96" />}
