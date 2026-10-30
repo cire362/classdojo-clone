@@ -1,6 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Modal } from '../src/components/ui';
+import { Modal } from '../src/ui';
 import { presenceConfig } from '../src/lib/presence';
 
 describe('анимация ухода окна', () => {

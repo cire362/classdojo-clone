@@ -1,7 +1,7 @@
 import { GiftIcon, StarIcon } from '@phosphor-icons/react';
 import { api, type Shop } from '../../api';
-import { useToast } from '../../components/Toast';
-import { EmptyState, ErrorBox, Skeleton } from '../../components/ui';
+import { useToast } from '../../ui/Toast';
+import { EmptyState, ErrorBox, Skeleton } from '../../ui';
 import { formatDateTime, pluralize, useLoad } from '../../hooks';
 import { useNotifications } from '../../notify';
 

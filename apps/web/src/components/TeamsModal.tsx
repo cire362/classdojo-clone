@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { ShuffleIcon, TrashIcon } from '@phosphor-icons/react';
 import { api, type LessonStudent, type Team } from '../api';
-import { useToast } from './Toast';
-import { Modal } from './ui';
+import { useToast } from '../ui/Toast';
+import { Modal } from '../ui';
 
 /** Настройка команд: состав, названия, случайное распределение поровну */
 export function TeamsModal({

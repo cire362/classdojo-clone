@@ -8,9 +8,9 @@ import { HeroHead } from '../../components/HeroAvatar';
 import { ProfileView } from '../../components/ProfileView';
 import { WeeklySummary } from '../../components/WeeklySummary';
 import { ParentRewards } from '../../components/ParentRewards';
-import { EmptyState, ErrorBox, Skeleton } from '../../components/ui';
+import { EmptyState, ErrorBox, Skeleton } from '../../ui';
 import { useLoad } from '../../hooks';
-import { ProfileSkeleton } from '../student/Cabinet';
+import { ProfileSkeleton } from '../../features/profile';
 
 /** Выбранный ребёнок запоминается: его профиль ранний скрипт запрашивает сразу при открытии */
 export const CHILD_KEY = 'heroes:child';

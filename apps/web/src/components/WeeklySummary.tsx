@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ArrowClockwiseIcon, CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import { api, type ParentChild, type WeeklySummary as Summary } from '../api';
 import { formatDate, pluralize, useLoad } from '../hooks';
-import { ErrorBox, Skeleton } from './ui';
+import { ErrorBox, Skeleton } from '../ui';
 
 const signed = (value: number) => value > 0 ? `+${value}` : value < 0 ? `−${Math.abs(value)}` : '0';
 const fullDate = (key: string) => new Date(`${key}T12:00:00Z`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Moscow' });

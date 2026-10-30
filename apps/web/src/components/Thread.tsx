@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { PaperPlaneRightIcon } from '@phosphor-icons/react';
 import type { ChatMessage } from '../api';
 import { formatDateTime } from '../hooks';
-import { useToast } from './Toast';
+import { useToast } from '../ui/Toast';
 
 /** Переписка: сообщения и поле ответа. send возвращает обновлённую ветку */
 export function Thread({ messages, send, emptyText }: { messages: ChatMessage[]; send: (text: string) => Promise<ChatMessage[]>; emptyText: string }) {

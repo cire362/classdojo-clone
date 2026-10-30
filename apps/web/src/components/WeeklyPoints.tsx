@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { api, type GroupDetails, type WeeklyStats } from '../api';
 import { pluralize, useLoad } from '../hooks';
-import { ErrorBox, Skeleton } from './ui';
+import { ErrorBox, Skeleton } from '../ui';
 
 type Metric = 'earned' | 'lost' | 'net';
 const METRICS: [Metric, string][] = [['earned', 'Плюсы'], ['lost', 'Минусы'], ['net', 'Итого']];

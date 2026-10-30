@@ -1,4 +1,4 @@
-import { Skeleton } from './ui';
+import { Skeleton } from './index';
 
 export function PageSkeleton() {
   return (

@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ChatCircleIcon, KeyIcon, LinkSimpleIcon, PrinterIcon, UserPlusIcon, XIcon } from '@phosphor-icons/react';
 import { api, type ParentAccess as Access, type ParentCredentials } from '../api';
 import { useLoad } from '../hooks';
-import { CredentialsTable } from '../pages/teacher/Print';
-import { useToast } from './Toast';
-import { Modal, Skeleton } from './ui';
+import { CredentialsTable } from '../features/students';
+import { useToast } from '../ui/Toast';
+import { Modal, Skeleton } from '../ui';
 
 /** Входы родителей в карточке ученика: выдать, привязать общий вход брата или сестры, сбросить пароль, отвязать */
 export function ParentAccessCard({ student, groupId, archived }: { student: { id: string; name: string }; groupId: string; archived: boolean }) {

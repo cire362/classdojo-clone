@@ -6,13 +6,13 @@ import { HeroHead } from '../../components/HeroAvatar';
 import { GroupTeachersSection } from '../../components/GroupTeachers';
 import { ImportStudentsModal, type ImportPreview } from '../../components/ImportStudentsModal';
 import { MoveStudentModal } from '../../components/MoveStudentModal';
-import { useToast } from '../../components/Toast';
-import { Modal, PageTitle } from '../../components/ui';
+import { useToast } from '../../ui/Toast';
+import { Modal, PageTitle } from '../../ui';
 import { pluralize } from '../../hooks';
 import { StudentSearch } from '../../components/StudentSearch';
 import { matchesStudent } from '../../lib/student-search';
 import { useGroup } from './GroupLayout';
-import { CredentialsTable } from './Print';
+import { CredentialsTable } from '../../features/students';
 
 export function StudentsPage() {
   const { data, reload } = useGroup();

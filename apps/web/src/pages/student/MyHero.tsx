@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, type Hero, type Profile } from '../../api';
 import { HeroEditor } from '../../components/HeroEditor';
-import { ErrorBox, Skeleton } from '../../components/ui';
+import { ErrorBox, Skeleton } from '../../ui';
 import { useLoad } from '../../hooks';
 import { useNews } from '../../news';
 

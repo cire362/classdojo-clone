@@ -3,8 +3,8 @@ import { SparkleIcon, UserIcon } from '@phosphor-icons/react';
 import { api } from '../../api';
 import { useAuth } from '../../auth';
 import { PasswordCard } from '../../components/PasswordCard';
-import { useToast } from '../../components/Toast';
-import { Skeleton } from '../../components/ui';
+import { useToast } from '../../ui/Toast';
+import { Skeleton } from '../../ui';
 import { useLoad } from '../../hooks';
 
 export function SettingsPage() {

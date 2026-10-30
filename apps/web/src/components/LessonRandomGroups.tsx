@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { ShuffleIcon, UsersThreeIcon, XIcon } from '@phosphor-icons/react';
 import { randomLessonGroups } from '../lib/random-groups';
 import { pluralize } from '../hooks';
-import { Switch } from './ui';
+import { Switch } from '../ui';
 
 interface Participant { id: string; name: string }
 export function LessonRandomGroups({ students, presentIds, projector, target }: {

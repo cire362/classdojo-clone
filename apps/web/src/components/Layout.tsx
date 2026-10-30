@@ -6,7 +6,7 @@ import { useAuth } from '../auth';
 import { useNews } from '../news';
 import { CountBadge, useNotifications } from '../notify';
 import { pluralize } from '../hooks';
-import { Skeleton } from './ui';
+import { Skeleton } from '../ui';
 
 export function Logo({ compact = false, hideNameOnMobile = false }: { compact?: boolean; hideNameOnMobile?: boolean }) {
   return (

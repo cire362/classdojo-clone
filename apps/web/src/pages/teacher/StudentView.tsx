@@ -7,11 +7,11 @@ import { MoveStudentModal } from '../../components/MoveStudentModal';
 import { ParentAccessCard } from '../../components/ParentAccess';
 import { ProfileView } from '../../components/ProfileView';
 import { StudentReport } from '../../components/StudentReport';
-import { useToast } from '../../components/Toast';
-import { ErrorBox, Modal, Skeleton } from '../../components/ui';
+import { useToast } from '../../ui/Toast';
+import { ErrorBox, Modal, Skeleton } from '../../ui';
 import { formatDateTime, useLoad } from '../../hooks';
-import { ProfileSkeleton } from '../student/Cabinet';
-import { CredentialsTable } from './Print';
+import { ProfileSkeleton } from '../../features/profile';
+import { CredentialsTable } from '../../features/students';
 
 export function StudentViewPage() {
   const { studentId } = useParams();

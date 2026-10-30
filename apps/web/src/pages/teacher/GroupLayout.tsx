@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useOutletContext, useParams } from 
 import { ChunkErrorBoundary } from '../../components/ChunkErrorBoundary';
 import { ArchiveIcon, ArrowLeftIcon, CameraIcon, ChartBarIcon, GiftIcon, ListChecksIcon, MegaphoneIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { api, type GroupDetails } from '../../api';
-import { CardGridSkeleton, ErrorBox, Skeleton } from '../../components/ui';
+import { CardGridSkeleton, ErrorBox, Skeleton } from '../../ui';
 import { pluralize, useLoad } from '../../hooks';
 
 export interface GroupCtx {

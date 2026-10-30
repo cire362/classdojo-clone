@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, ChatsCircleIcon } from '@phosphor-icons/react';
 import { api, type ChatMessage, type TeacherThread, type ThreadSummary } from '../../api';
 import { Thread } from '../../components/Thread';
-import { EmptyState, ErrorBox, Skeleton } from '../../components/ui';
+import { EmptyState, ErrorBox, Skeleton } from '../../ui';
 import { formatDateTime, useLoad } from '../../hooks';
 import { CountBadge, useNotifications } from '../../notify';
 

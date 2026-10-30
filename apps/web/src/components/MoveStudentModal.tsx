@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { api, type GroupListItem } from '../api';
 import { pluralize } from '../hooks';
 import { HeroHead } from './HeroAvatar';
-import { Modal, Skeleton } from './ui';
+import { Modal, Skeleton } from '../ui';
 
 export interface MoveTarget {
   id: string;

@@ -7,7 +7,7 @@ import { HeroAvatar } from './HeroAvatar';
 import { Portfolio, type PortfolioEdit } from './Portfolio';
 import { Badges, BadgeSummary } from './Badges';
 import { PetCompanion } from './PetCompanion';
-import { EmptyState, ProgressBar } from './ui';
+import { EmptyState, ProgressBar } from '../ui';
 
 function PointsTile({ label, sum, featured = false }: { label: string; sum: PointsSum; featured?: boolean }) {
   return (

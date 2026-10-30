@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { EyeIcon, EyeSlashIcon, KeyIcon } from '@phosphor-icons/react';
 import { api } from '../api';
-import { useToast } from './Toast';
+import { useToast } from '../ui/Toast';
 
 const MIN_LENGTH = 8;
 

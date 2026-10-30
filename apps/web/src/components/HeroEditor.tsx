@@ -17,7 +17,7 @@ import {
 import { api } from '../api';
 import { useLoad } from '../hooks';
 import { HeroAvatar } from './HeroAvatar';
-import { useToast } from './Toast';
+import { useToast } from '../ui/Toast';
 import { PetAvatar } from './PetCompanion';
 
 const SWATCH_LAYERS: HeroLayer[] = ['color', 'skin', 'hairColor'];

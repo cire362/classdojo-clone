@@ -2,33 +2,8 @@ import { useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, KeyIcon, PrinterIcon } from '@phosphor-icons/react';
 import { api, type Credentials, type GroupDetails, type ParentCredentials } from '../../api';
-import { ErrorBox, Modal, Skeleton } from '../../components/ui';
+import { ErrorBox, Modal, Skeleton } from '../../ui';
 import { useLoad } from '../../hooks';
-
-export function CredentialsTable({ rows }: { rows: Credentials[] }) {
-  return (
-    <div className="overflow-x-auto rounded-xl border border-line">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-surface-2 text-ink-soft">
-          <tr>
-            <th className="px-3 py-2 font-semibold">Имя</th>
-            <th className="px-3 py-2 font-semibold">Логин</th>
-            <th className="px-3 py-2 font-semibold">Пароль</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-line">
-          {rows.map((r) => (
-            <tr key={r.id}>
-              <td className="px-3 py-2 font-medium">{r.name}</td>
-              <td className="px-3 py-2 font-mono">{r.login}</td>
-              <td className="px-3 py-2 font-mono">{r.password}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
 /** Лист для печати: карточки «имя, логин, пароль» под разрезание; для родителей — свой лист */
 export function PrintPage() {

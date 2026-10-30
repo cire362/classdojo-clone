@@ -13,7 +13,7 @@ import {
 } from '@phosphor-icons/react';
 import { api, type CardSummary, type ClassGoal, type LessonStudent, type Reason } from '../../api';
 import { HeroAvatar, heroTint } from '../../components/HeroAvatar';
-import { useToast } from '../../components/Toast';
+import { useToast } from '../../ui/Toast';
 import { ClassGoalPanel } from '../../components/ClassGoal';
 import { LessonTimer } from '../../components/LessonTimer';
 import { LessonNoiseMeter } from '../../components/LessonNoiseMeter';
@@ -21,7 +21,7 @@ import { LessonRandomGroups } from '../../components/LessonRandomGroups';
 import { StudentSearch } from '../../components/StudentSearch';
 import { matchesStudent } from '../../lib/student-search';
 import { TeamsModal } from '../../components/TeamsModal';
-import { EmptyState, Modal } from '../../components/ui';
+import { EmptyState, Modal } from '../../ui';
 import { pluralize } from '../../hooks';
 import { usePresence } from '../../lib/presence';
 import { useGroup } from './GroupLayout';

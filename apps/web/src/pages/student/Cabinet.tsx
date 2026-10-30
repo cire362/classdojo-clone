@@ -4,29 +4,13 @@ import { PaintBrushIcon, SparkleIcon } from '@phosphor-icons/react';
 import { api, type Profile } from '../../api';
 import { PartPreview } from '../../components/PartPreview';
 import { ProfileView } from '../../components/ProfileView';
-import { ErrorBox, Skeleton } from '../../components/ui';
+import { ErrorBox } from '../../ui';
+import { ProfileSkeleton } from '../../features/profile';
 import { pluralize, useLoad } from '../../hooks';
 import { useNews } from '../../news';
 
 // Праздник уровня с конфетти бывает редко и тянет библиотеку анимаций — грузим его только когда он нужен
 const LevelUpOverlay = lazy(() => import('../../components/LevelUp').then((m) => ({ default: m.LevelUpOverlay })));
-
-export function ProfileSkeleton() {
-  return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]" role="status" aria-label="Загрузка">
-      <Skeleton className="aspect-[5/6] max-h-[420px]" />
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-2/3" />
-        <Skeleton className="h-28" />
-        <div className="grid grid-cols-3 gap-3">
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function CabinetPage() {
   const { data, error, reload } = useLoad(() => api<Profile>('GET', '/student/profile'), []);

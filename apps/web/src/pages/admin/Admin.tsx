@@ -2,8 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { KeyIcon, PlusIcon, MagnifyingGlassIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { api, type AdminGroup, type AdminTeacher, type TeacherCredentials, type AdminTeachers } from '../../api';
 import { PasswordCard } from '../../components/PasswordCard';
-import { useToast } from '../../components/Toast';
-import { ErrorBox, Modal, Skeleton } from '../../components/ui';
+import { useToast } from '../../ui/Toast';
+import { ErrorBox, Modal, Skeleton } from '../../ui';
 import { pluralize, useLoad } from '../../hooks';
 
 /** Администратор школы: преподаватели, доступы и обзор всех групп. */

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowClockwiseIcon, ArrowRightIcon, GiftIcon } from '@phosphor-icons/react';
 import { api, type PendingRewardGroups } from '../../api';
-import { EmptyState, ErrorBox, Skeleton } from '../../components/ui';
+import { EmptyState, ErrorBox, Skeleton } from '../../ui';
 import { pluralize, useLoad } from '../../hooks';
 import { useNotifications } from '../../notify';
 

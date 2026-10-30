@@ -9,9 +9,9 @@ import { NewsProvider } from './news';
 import { NotificationsProvider } from './notify';
 import type { Role } from './api';
 import { AppLayout } from './components/Layout';
-import { ToastProvider } from './components/Toast';
-import { PageSkeleton } from './components/PageSkeleton';
-import { ErrorBox } from './components/ui';
+import { ToastProvider } from './ui/Toast';
+import { PageSkeleton } from './ui/PageSkeleton';
+import { ErrorBox } from './ui';
 
 import {
   AdminPage,

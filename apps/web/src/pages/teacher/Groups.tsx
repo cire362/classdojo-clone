@@ -4,7 +4,7 @@ import { ArchiveIcon, ArrowCounterClockwiseIcon, ArrowRightIcon, PlusIcon, Users
 import { api, type GroupListItem } from '../../api';
 import { useAuth } from '../../auth';
 import { HeroHead } from '../../components/HeroAvatar';
-import { ErrorBox, Skeleton } from '../../components/ui';
+import { ErrorBox, Skeleton } from '../../ui';
 import { pluralize, useLoad } from '../../hooks';
 
 export function GroupsPage() {

@@ -3,8 +3,8 @@ import { MegaphoneIcon, TrashIcon } from '@phosphor-icons/react';
 import { api, type FeedPost } from '../api';
 import { formatDateTime, useLoad } from '../hooks';
 import { useNotifications } from '../notify';
-import { useToast } from './Toast';
-import { EmptyState, ErrorBox, Skeleton } from './ui';
+import { useToast } from '../ui/Toast';
+import { EmptyState, ErrorBox, Skeleton } from '../ui';
 
 const MAX = 2000;
 

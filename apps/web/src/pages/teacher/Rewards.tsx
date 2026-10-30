@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { CheckIcon, GiftIcon, TrashIcon, XIcon } from '@phosphor-icons/react';
 import { api, type Reward, type RewardRequest } from '../../api';
-import { useToast } from '../../components/Toast';
-import { EmptyState, ErrorBox, PageTitle, Skeleton } from '../../components/ui';
+import { useToast } from '../../ui/Toast';
+import { EmptyState, ErrorBox, PageTitle, Skeleton } from '../../ui';
 import { formatDateTime, pluralize, useLoad } from '../../hooks';
 import { useGroup } from './GroupLayout';
 import { useNotifications } from '../../notify';

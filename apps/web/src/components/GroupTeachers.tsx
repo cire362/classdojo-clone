@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { SignOutIcon, XIcon } from '@phosphor-icons/react';
 import { api, type GroupTeachers as Teachers } from '../api';
 import { useLoad } from '../hooks';
-import { useToast } from './Toast';
-import { Skeleton } from './ui';
+import { useToast } from '../ui/Toast';
+import { Skeleton } from '../ui';
 
 /**
  * Преподаватели группы. Создатель добавляет коллег по логину и убирает их;
