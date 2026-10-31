@@ -4,7 +4,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import { requireAuth, type AppEnv } from './platform/auth.js';
 import { prisma } from './platform/db.js';
 import { HttpError } from './platform/errors.js';
-import { notifications } from './services/notifications.js';
+import { notifications } from './modules/notifications/index.js';
 import { adminRoutes, authRoutes } from './modules/accounts/index.js';
 import { activeHeroParts } from './modules/hero/index.js';
 import { parentRoutes } from './routes/parent.js';

@@ -1,7 +1,8 @@
-import { prisma } from '../platform/db.js';
-import { HttpError } from '../platform/errors.js';
-import { markFeedRead } from '../modules/feed/index.js';
-import { markRewardNotificationsRead } from '../modules/rewards/index.js';
+import type { StudentNotifications } from '@heroes/shared/api';
+import { prisma } from '../../platform/db.js';
+import { HttpError } from '../../platform/errors.js';
+import { markFeedRead } from '../feed/index.js';
+import { markRewardNotificationsRead } from '../rewards/index.js';
 
 const PAGE = 30;
 type Kind = 'feed' | 'reward';
@@ -34,10 +35,16 @@ function before(field: 'createdAt' | 'decidedAt', kind: Kind, cursor: Cursor | n
 }
 
 /** Уведомления выводятся из исходных событий: удалённые объявления исчезают, чужие группы не попадают. */
-export async function studentNotifications(studentId: string, query: { before?: string; through?: string } = {}) {
+export async function studentNotifications(
+  studentId: string,
+  query: { before?: string; through?: string } = {},
+): Promise<StudentNotifications> {
   const through = snapshot(query.through);
   const cursor = parseCursor(query.before);
-  const s = await prisma.student.findUniqueOrThrow({ where: { id: studentId }, select: { accountId: true, groupId: true, rewardsReadAt: true } });
+  const s = await prisma.student.findUniqueOrThrow({
+    where: { id: studentId },
+    select: { accountId: true, groupId: true, rewardsReadAt: true },
+  });
   const read = await prisma.feedRead.findUnique({ where: { accountId_groupId: { accountId: s.accountId, groupId: s.groupId } } });
   const [posts, rewards, feedUnread, rewardUnread] = await Promise.all([
     prisma.post.findMany({
@@ -54,8 +61,30 @@ export async function studentNotifications(studentId: string, query: { before?: 
     prisma.rewardRequest.count({ where: { studentId, status: 'APPROVED', decidedAt: { gt: s.rewardsReadAt, lte: through } } }),
   ]);
   const items = [
-    ...posts.map((p) => ({ id: `feed:${p.id}`, kind: 'feed' as const, title: 'Запись в ленте класса', text: p.text, author: p.author.name, cost: null as number | null, createdAt: p.createdAt, unread: !read || p.createdAt > read.readAt, href: '/feed' as const, cursor: `${p.createdAt.toISOString()}|feed|${p.id}` })),
-    ...rewards.map((r) => ({ id: `reward:${r.id}`, kind: 'reward' as const, title: 'Награда выдана', text: r.title, author: r.decidedBy?.teacher?.name ?? null, cost: r.cost, createdAt: r.decidedAt!, unread: r.decidedAt! > s.rewardsReadAt, href: '/shop' as const, cursor: `${r.decidedAt!.toISOString()}|reward|${r.id}` })),
+    ...posts.map((p) => ({
+      id: `feed:${p.id}`,
+      kind: 'feed' as const,
+      title: 'Запись в ленте класса',
+      text: p.text,
+      author: p.author.name,
+      cost: null as number | null,
+      createdAt: p.createdAt.toISOString(),
+      unread: !read || p.createdAt > read.readAt,
+      href: '/feed' as const,
+      cursor: `${p.createdAt.toISOString()}|feed|${p.id}`,
+    })),
+    ...rewards.map((r) => ({
+      id: `reward:${r.id}`,
+      kind: 'reward' as const,
+      title: 'Награда выдана',
+      text: r.title,
+      author: r.decidedBy?.teacher?.name ?? null,
+      cost: r.cost,
+      createdAt: r.decidedAt!.toISOString(),
+      unread: r.decidedAt! > s.rewardsReadAt,
+      href: '/shop' as const,
+      cursor: `${r.decidedAt!.toISOString()}|reward|${r.id}`,
+    })),
   ].sort((a, b) => a.cursor < b.cursor ? 1 : a.cursor > b.cursor ? -1 : 0);
   const page = items.slice(0, PAGE);
   return {
