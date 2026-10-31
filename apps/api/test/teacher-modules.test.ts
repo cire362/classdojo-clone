@@ -5,6 +5,8 @@ import { call, login, setupTeacher } from './helpers.js';
 const routes = (groupId: string, studentId: string): [string, string][] => [
   ['GET', `/api/teacher/groups/${groupId}/goal`],
   ['DELETE', `/api/teacher/groups/${groupId}/goal`],
+  ['POST', `/api/teacher/groups/${groupId}/teams`],
+  ['PUT', `/api/teacher/groups/${groupId}/teams/assign`],
 ];
 
 describe('маршруты модулей преподавателя', () => {

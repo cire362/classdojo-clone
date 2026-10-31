@@ -1,12 +1,17 @@
-import { prisma } from '../platform/db.js';
-import { HttpError, notFound } from '../platform/errors.js';
+import type { Team } from '@heroes/shared/api';
+import { prisma } from '../../platform/db.js';
+import { HttpError, notFound } from '../../platform/errors.js';
 
 /** Цвета команд — из палитры героев, чтобы команды отличались и в тёмной теме */
 export const TEAM_COLORS = ['#e63946', '#2f6fde', '#2a9d55', '#f77f00', '#7b4fd6', '#14a3a3'] as const;
 export const MAX_TEAMS = 6;
 
-export function groupTeams(groupId: string) {
-  return prisma.team.findMany({ where: { groupId }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], select: { id: true, name: true, color: true } });
+export function groupTeams(groupId: string): Promise<Team[]> {
+  return prisma.team.findMany({
+    where: { groupId },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    select: { id: true, name: true, color: true },
+  });
 }
 
 export async function createTeam(groupId: string, name: string, color?: string) {

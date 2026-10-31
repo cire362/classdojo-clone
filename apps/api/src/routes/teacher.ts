@@ -10,7 +10,7 @@ import { HttpError, notFound, parse } from '../platform/errors.js';
 import { ARCHIVED_MESSAGE, OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../services/access.js';
 import { classGoal, goalRoutes } from '../modules/goals/index.js';
 import { createDefaultRewards, decideRequest, groupRequests, groupRewards, pendingRewardGroups } from '../services/rewards.js';
-import { TEAM_COLORS, assignTeams, createTeam, deleteTeam, groupTeams, updateTeam } from '../services/teams.js';
+import { groupTeams, teamRoutes } from '../modules/teams/index.js';
 import { MAX_POST_LENGTH, createPost, deletePost, groupFeed } from '../services/feed.js';
 import { MAX_MESSAGE_LENGTH, sendMessage, teacherThread, teacherThreads, threadMessages } from '../services/messages.js';
 import { addCoTeacher, groupTeachers, removeCoTeacher } from '../services/coTeachers.js';
@@ -52,9 +52,6 @@ const RewardBody = z.object({
   emoji: z.string().trim().min(1).max(16),
   cost: z.number().int().min(1, 'Цена от 1 балла').max(1000),
 });
-const TeamBody = z.object({ name: z.string().trim().min(1, 'Введите название').max(30) });
-const TeamPatch = z.object({ name: z.string().trim().min(1).max(30).optional(), color: z.enum(TEAM_COLORS).optional() });
-const TeamAssign = z.object({ assignments: z.record(z.string().max(64), z.string().max(64).nullable()) });
 const PostBody = z.object({ text: z.string().trim().min(1, 'Напишите текст').max(MAX_POST_LENGTH) });
 const MessageBody = z.object({ text: z.string().trim().min(1, 'Напишите сообщение').max(MAX_MESSAGE_LENGTH) });
 const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).max(64) });
@@ -372,28 +369,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   })
 
   // ───── Команды ─────
-  .post('/groups/:id/teams', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-    const { name } = parse(TeamBody, await c.req.json().catch(() => null));
-    await createTeam(group.id, name);
-    return c.json(await groupTeams(group.id), 201);
-  })
-  .patch('/groups/:id/teams/:teamId', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-    await updateTeam(group.id, c.req.param('teamId'), parse(TeamPatch, await c.req.json().catch(() => null)));
-    return c.json(await groupTeams(group.id));
-  })
-  .delete('/groups/:id/teams/:teamId', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-    await deleteTeam(group.id, c.req.param('teamId'));
-    return c.json(await groupTeams(group.id));
-  })
-  .put('/groups/:id/teams/assign', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-    const { assignments } = parse(TeamAssign, await c.req.json().catch(() => null));
-    await assignTeams(group.id, assignments);
-    return c.json({ ok: true });
-  })
+  .route('/', teamRoutes)
 
   // ───── Лента класса ─────
   .get('/groups/:id/feed', async (c) => {
