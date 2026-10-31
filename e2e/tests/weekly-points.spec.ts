@@ -56,6 +56,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await expect(chart.getByRole('table')).toBeVisible();
       await chart.getByRole('button', { name: 'Минусы', exact: true }).click();
       await expect(weeks.getByRole('button', { name: /: −3/ })).toBeVisible();
+      // Вкладка только что нажата: посреди перехода цвета дают ложное нарушение контраста
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
       result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice']).analyze();
       expect(result.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.failureSummary) }))).toEqual([]);
     } finally { await group.remove(); }
