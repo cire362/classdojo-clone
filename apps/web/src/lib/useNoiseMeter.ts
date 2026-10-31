@@ -11,6 +11,10 @@ interface Resources {
   dispose: (() => void)[];
 }
 
+/** Запрос не прерываем: окно разрешения браузера может быть ещё открыто */
+const SLOW_START_MS = 10_000;
+const SLOW_START_MESSAGE = 'Браузер пока не дал доступ. Разрешите микрофон в окне браузера или отмените запрос и попробуйте снова.';
+
 /** Один локальный микрофон; подключение к динамикам, запись и сетевые запросы отсутствуют. */
 export function useNoiseMeter(groupId: string) {
   const [phase, setPhase] = useState<'off' | 'starting' | 'active' | 'error'>('off');
@@ -61,6 +65,7 @@ export function useNoiseMeter(groupId: string) {
       fail('Этот браузер не поддерживает шумомер. Откройте приложение в браузере с доступом к микрофону.');
       return;
     }
+    const slow = window.setTimeout(() => { if (generation.current === request) setMessage(SLOW_START_MESSAGE); }, SLOW_START_MS);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
       if (generation.current !== request) { stream.getTracks().forEach((t) => t.stop()); return; }
@@ -87,7 +92,7 @@ export function useNoiseMeter(groupId: string) {
       const samples = r.samples = new Float32Array(analyser.fftSize);
       let smoothed = 0;
       pending.current = false;
-      setPhase('active');
+      setPhase('active'); setMessage('');
       r.timer = window.setInterval(() => {
         if (generation.current !== request) return;
         try {
@@ -96,7 +101,7 @@ export function useNoiseMeter(groupId: string) {
           setLevel(Math.round(smoothed));
         } catch { fail('Измерение прервалось. Проверьте микрофон и включите его снова.'); }
       }, 100);
-    } catch (e) { fail(microphoneError(e)); }
+    } catch (e) { fail(microphoneError(e)); } finally { window.clearTimeout(slow); }
   }
 
   useEffect(() => {

@@ -91,6 +91,34 @@ it('отказ в доступе можно повторить, старое р�
   expect(screen.getByRole('button', { name: 'Выключить микрофон' })).toBeEnabled();
 });
 
+it('долгий запрос доступа объясняется, но не прерывается: окно разрешения может быть открыто', async () => {
+  let allow!: (stream: MediaStream) => void;
+  gum.mockImplementationOnce(() => new Promise<MediaStream>((resolve) => { allow = resolve; }));
+  renderMeter(); open(); await start();
+  tick(9_000);
+  expect(screen.queryByText(/Браузер пока не дал доступ/)).not.toBeInTheDocument();
+  tick(1_000);
+  expect(screen.getByText(/Браузер пока не дал доступ/)).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Отменить запрос' })).toBeEnabled();
+
+  await act(async () => allow(stream));
+  expect(screen.getByRole('button', { name: 'Выключить микрофон' })).toBeEnabled();
+  expect(screen.queryByText(/Браузер пока не дал доступ/)).not.toBeInTheDocument();
+});
+
+it('после отмены или быстрого ответа подсказка о долгом запросе не появляется', async () => {
+  gum.mockImplementationOnce(() => new Promise<MediaStream>(() => undefined));
+  renderMeter(); open(); await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Отменить запрос' }));
+  tick(11_000);
+  expect(screen.queryByText(/Браузер пока не дал доступ/)).not.toBeInTheDocument();
+
+  await start();
+  tick(11_000);
+  expect(screen.getByRole('button', { name: 'Выключить микрофон' })).toBeEnabled();
+  expect(screen.queryByText(/Браузер пока не дал доступ/)).not.toBeInTheDocument();
+});
+
 it('при скрытии вкладки микрофон выключается и сам не возобновляется', async () => {
   renderMeter(); open(); await start();
   const original = Object.getOwnPropertyDescriptor(document, 'visibilityState');
