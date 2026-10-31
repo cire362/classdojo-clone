@@ -1,0 +1,91 @@
+import type { AdminGroup, AdminTeachers, TeacherCredentials } from '@heroes/shared/api';
+import { prisma } from '../../platform/db.js';
+import { addDays, localDayStart } from '../../platform/dates.js';
+import { env } from '../../platform/env.js';
+import { generatePassword, hashPassword } from '../../platform/credentials.js';
+import { HttpError, notFound } from '../../platform/errors.js';
+import { isActive } from './premium.service.js';
+
+export async function adminTeachers(): Promise<AdminTeachers> {
+  const teachers = await prisma.teacher.findMany({
+    orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    select: {
+      id: true, name: true, premiumUntil: true, account: { select: { login: true } },
+      _count: { select: { groups: true, coGroups: true } },
+    },
+  });
+  return {
+    freeForAll: env.premiumForAll,
+    teachers: teachers.map((t) => ({
+      id: t.id,
+      name: t.name,
+      login: t.account.login,
+      ownedGroups: t._count.groups,
+      sharedGroups: t._count.coGroups,
+      premiumUntil: t.premiumUntil?.toISOString() ?? null,
+      premiumActive: isActive(t.premiumUntil),
+    })),
+  };
+}
+
+export async function createTeacher(name: string, login: string): Promise<TeacherCredentials> {
+  const password = generatePassword();
+  try {
+    const teacher = await prisma.teacher.create({
+      data: { name, account: { create: { login, role: 'TEACHER', passwordHash: await hashPassword(password) } } },
+      select: { id: true },
+    });
+    return { id: teacher.id, name, login, password };
+  } catch (err) {
+    // Уникальность проверяет БД, в том числе при двух одновременных запросах.
+    if (typeof err === 'object' && err !== null && 'code' in err && err.code === 'P2002') {
+      throw new HttpError(409, 'Этот логин уже занят. Выберите другой');
+    }
+    throw err;
+  }
+}
+
+export async function resetTeacherPassword(teacherId: string): Promise<TeacherCredentials> {
+  const teacher = await prisma.teacher.findUnique({
+    where: { id: teacherId },
+    select: { id: true, name: true, accountId: true, account: { select: { login: true } } },
+  });
+  if (!teacher) throw notFound('Преподаватель не найден');
+  const password = generatePassword();
+  const passwordHash = await hashPassword(password);
+  // Старый пароль и все старые сессии перестают работать вместе.
+  await prisma.$transaction([
+    prisma.account.update({ where: { id: teacher.accountId }, data: { passwordHash } }),
+    prisma.session.deleteMany({ where: { accountId: teacher.accountId } }),
+  ]);
+  return { id: teacher.id, name: teacher.name, login: teacher.account.login, password };
+}
+
+/** Доступ до конца выбранного дня в часовом поясе школы */
+export async function setTeacherPremium(teacherId: string, until: string | null) {
+  const premiumUntil = until ? new Date(addDays(localDayStart(until), 1).getTime() - 1) : null;
+  if (premiumUntil && premiumUntil <= new Date()) throw new HttpError(400, 'Выберите сегодняшнюю или будущую дату');
+  const { count } = await prisma.teacher.updateMany({ where: { id: teacherId }, data: { premiumUntil } });
+  if (!count) throw notFound('Преподаватель не найден');
+  return { premiumUntil: premiumUntil?.toISOString() ?? null, premiumActive: isActive(premiumUntil), freeForAll: env.premiumForAll };
+}
+
+export async function adminGroups(): Promise<AdminGroup[]> {
+  const groups = await prisma.group.findMany({
+    orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    select: {
+      id: true, name: true, archivedAt: true,
+      teacher: { select: { id: true, name: true, account: { select: { login: true } } } },
+      coTeachers: { orderBy: { createdAt: 'asc' }, select: { teacher: { select: { id: true, name: true } } } },
+      _count: { select: { students: true } },
+    },
+  });
+  return groups.map((g) => ({
+    id: g.id,
+    name: g.name,
+    archivedAt: g.archivedAt?.toISOString() ?? null,
+    owner: { id: g.teacher.id, name: g.teacher.name, login: g.teacher.account.login },
+    colleagues: g.coTeachers.map((t) => t.teacher),
+    studentsCount: g._count.students,
+  }));
+}

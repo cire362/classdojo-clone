@@ -16,16 +16,15 @@ import { teacherMessageRoutes } from '../modules/messages/index.js';
 import { addCoTeacher, groupTeachers, removeCoTeacher } from '../services/coTeachers.js';
 import { attendanceRoutes, todayAttendance } from '../modules/attendance/index.js';
 import { cardSummaries, pointRoutes } from '../modules/points/index.js';
-import { teacherPremium } from '../services/premium.js';
 import { studentProfile } from '../services/profile.js';
 import { createDefaultReasons, manualReasons, reasonRoutes } from '../modules/reasons/index.js';
 import { groupStats, statsWorkbook } from '../services/stats.js';
 import { weeklyStats } from '../services/weekly-stats.js';
 import { studentReport } from '../services/student-report.js';
 import { reportPdf } from '../services/report-pdf.js';
+import { teacherAccountRoutes } from '../modules/accounts/index.js';
 import { studentAdminRoutes } from '../modules/students/index.js';
 import { deleteOrphanParents, teacherParentRoutes } from '../modules/parents/index.js';
-import { changeOwnPassword } from '../services/password.js';
 import { saveHero } from './student.js';
 
 const id = z.string().min(1).max(64);
@@ -35,7 +34,6 @@ const GroupPatch = z.object({
   subtractTeacher: z.boolean().optional(),
 });
 const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).max(64) });
-const ProfileBody = z.object({ name: z.string().trim().min(1, 'Введите имя').max(80) });
 
 function period(q: Record<string, string | undefined>) {
   const today = new Date();
@@ -49,16 +47,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   .use(requireRole('TEACHER'))
 
   // ───── Профиль преподавателя ─────
-  .get('/plan', async (c) => c.json(await teacherPremium(c.get('user').teacherId!)))
-  .patch('/me', async (c) => {
-    const { name } = parse(ProfileBody, await c.req.json().catch(() => null));
-    const t = await prisma.teacher.update({ where: { id: c.get('user').teacherId! }, data: { name } });
-    return c.json({ name: t.name });
-  })
-  .post('/me/password', async (c) => {
-    await changeOwnPassword(c.get('user'), await c.req.json().catch(() => null));
-    return c.json({ ok: true });
-  })
+  .route('/', teacherAccountRoutes)
 
   // ───── Группы ─────
   .get('/groups', async (c) => {

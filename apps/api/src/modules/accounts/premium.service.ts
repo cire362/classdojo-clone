@@ -1,5 +1,5 @@
-import { prisma } from '../platform/db.js';
-import { env } from '../platform/env.js';
+import { prisma } from '../../platform/db.js';
+import { env } from '../../platform/env.js';
 
 /**
  * Премиум. Подключается преподавателю (поле premiumUntil) и действует на группы, которые он создал:

@@ -2,7 +2,7 @@ import { levelForPoints, normalizeHero } from '@heroes/shared';
 import { prisma } from '../platform/db.js';
 import { portfolioItems } from '../modules/portfolio/index.js';
 import { studentBadges } from './badges.js';
-import { isActive } from './premium.js';
+import { isActive } from '../modules/accounts/index.js';
 import { dbDateKey, startOfDay, startOfWeek } from '../platform/dates.js';
 
 async function sums(studentId: string, since?: Date) {

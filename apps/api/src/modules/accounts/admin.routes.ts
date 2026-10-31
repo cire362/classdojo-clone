@@ -1,0 +1,37 @@
+import { Hono } from 'hono';
+import { z } from 'zod';
+import { requireRole, type AppEnv } from '../../platform/auth.js';
+import { LOGIN_PATTERN } from '../../platform/credentials.js';
+import { parse } from '../../platform/errors.js';
+import { adminGroups, adminTeachers, createTeacher, resetTeacherPassword, setTeacherPremium } from './admin.service.js';
+import { changeOwnPassword } from './service.js';
+
+const TeacherBody = z.object({
+  name: z.string().trim().min(1, 'Введите имя преподавателя').max(80),
+  login: z.string().trim().toLowerCase().regex(LOGIN_PATTERN, 'Логин: 3–64 символа, латиница, цифры, точка или дефис'),
+});
+const PremiumBody = z.object({
+  until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((key) => {
+    const d = new Date(`${key}T00:00:00Z`);
+    return Number.isFinite(d.getTime()) && d.toISOString().slice(0, 10) === key;
+  }, 'Укажите существующую дату').nullable(),
+});
+
+/** Вся установка — одна школа. Эти маршруты закрыты от всех остальных ролей. */
+export const adminRoutes = new Hono<AppEnv>()
+  .use(requireRole('ADMIN'))
+  .post('/me/password', async (c) => {
+    await changeOwnPassword(c.get('user'), await c.req.json().catch(() => null));
+    return c.json({ ok: true });
+  })
+  .get('/teachers', async (c) => c.json(await adminTeachers()))
+  .post('/teachers', async (c) => {
+    const { name, login } = parse(TeacherBody, await c.req.json().catch(() => null));
+    return c.json(await createTeacher(name, login), 201);
+  })
+  .post('/teachers/:id/reset-password', async (c) => c.json(await resetTeacherPassword(c.req.param('id'))))
+  .put('/teachers/:id/premium', async (c) => {
+    const { until } = parse(PremiumBody, await c.req.json().catch(() => null));
+    return c.json(await setTeacherPremium(c.req.param('id'), until));
+  })
+  .get('/groups', async (c) => c.json(await adminGroups()));

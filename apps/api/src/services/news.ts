@@ -1,5 +1,5 @@
 import { prisma } from '../platform/db.js';
-import { studentHasPremium } from './premium.js';
+import { studentHasPremium } from '../modules/accounts/index.js';
 import { studentLevel } from '../modules/points/index.js';
 
 /**

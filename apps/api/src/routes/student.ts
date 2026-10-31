@@ -9,7 +9,7 @@ import { studentLevel } from '../modules/points/index.js';
 import { studentFeedRoutes } from '../modules/feed/index.js';
 import { studentRewardRoutes } from '../modules/rewards/index.js';
 import { markNewsSeen, studentNews } from '../services/news.js';
-import { studentHasPremium } from '../services/premium.js';
+import { studentHasPremium } from '../modules/accounts/index.js';
 import { studentProfile } from '../services/profile.js';
 import { readStudentNotifications, studentNotifications } from '../services/studentNotifications.js';
 
