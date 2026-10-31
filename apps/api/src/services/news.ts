@@ -1,6 +1,6 @@
 import { prisma } from '../platform/db.js';
 import { studentHasPremium } from './premium.js';
-import { studentLevel } from './points.js';
+import { studentLevel } from '../modules/points/index.js';
 
 /**
  * «Новости» ученика: поздравление с новым уровнем и детали, открывшиеся с тех пор,

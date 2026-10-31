@@ -17,7 +17,7 @@ import { MAX_MESSAGE_LENGTH, sendMessage, teacherThread, teacherThreads, threadM
 import { addCoTeacher, groupTeachers, removeCoTeacher } from '../services/coTeachers.js';
 import { MAX_LESSONS_PER_DAY, attendanceForDate, deleteAttendance, saveAttendance } from '../services/attendance.js';
 import { countPeople } from '../services/detector.js';
-import { awardPoints, cardSummaries, deletePointEvents } from '../services/points.js';
+import { cardSummaries, pointRoutes } from '../modules/points/index.js';
 import { teacherPremium } from '../services/premium.js';
 import { studentProfile } from '../services/profile.js';
 import { createDefaultReasons, manualReasons, reasonRoutes } from '../modules/reasons/index.js';
@@ -45,7 +45,6 @@ const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).ma
 const ParentLink = z.object({ login: z.string().trim().min(1).max(64) });
 const StudentPatch = z.object({ name: z.string().trim().min(1).max(80) });
 const ResetMany = z.object({ studentIds: z.array(id).max(200).optional() });
-const AwardBody = z.object({ studentIds: z.array(id).min(1).max(200), reasonId: id });
 const ProfileBody = z.object({ name: z.string().trim().min(1, 'Введите имя').max(80) });
 const lessonNumber = z.coerce.number().int().min(1).max(MAX_LESSONS_PER_DAY);
 const AttendanceBody = z.object({
@@ -377,36 +376,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   .route('/', goalRoutes)
 
   // ───── Баллы ─────
-  .post('/groups/:id/points', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-    const body = parse(AwardBody, await c.req.json().catch(() => null));
-    const { reason, events } = await awardPoints({
-      groupId: group.id,
-      studentIds: body.studentIds,
-      reasonId: body.reasonId,
-      awardedById: c.get('user').accountId,
-    });
-    const summaries = await cardSummaries(body.studentIds);
-    return c.json(
-      {
-        value: reason.value,
-        classGoal: await classGoal(group.id),
-        eventIds: events.map((e) => e.id),
-        summaries: Object.fromEntries(summaries),
-      },
-      201,
-    );
-  })
-  .post('/points/undo', async (c) => {
-    const { eventIds } = parse(z.object({ eventIds: z.array(id).min(1).max(200) }), await c.req.json().catch(() => null));
-    const summaries = await deletePointEvents(c.get('user').teacherId!, eventIds);
-    return c.json({ summaries: Object.fromEntries(summaries) });
-  })
-  // Удаление ошибочной записи из истории ученика
-  .delete('/points/:id', async (c) => {
-    const summaries = await deletePointEvents(c.get('user').teacherId!, [c.req.param('id')]);
-    return c.json({ summaries: Object.fromEntries(summaries) });
-  })
+  .route('/', pointRoutes)
 
   // ───── Посещаемость ─────
   .post(

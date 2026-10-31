@@ -5,7 +5,7 @@ import { requireRole, type AppEnv } from '../platform/auth.js';
 import { prisma } from '../platform/db.js';
 import { HttpError, parse } from '../platform/errors.js';
 import { validateHeroForLevel } from '../services/heroParts.js';
-import { studentLevel } from '../services/points.js';
+import { studentLevel } from '../modules/points/index.js';
 import { studentFeedRoutes } from '../modules/feed/index.js';
 import { studentRewardRoutes } from '../modules/rewards/index.js';
 import { markNewsSeen, studentNews } from '../services/news.js';
