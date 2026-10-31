@@ -85,7 +85,7 @@ lib/             общие утилиты без React-компонентов �
 Один шаг — один коммит с полной проверкой, поведение не меняется.
 
 1. Сделано: веб `ui/`, вынос `CredentialsTable` и `ProfileSkeleton`, типы API в `packages/shared/src/api`.
-2. API: `platform/`, затем `routes/teacher.ts` по одному домену, начиная с небольших: `goals`, `teams`, `feed`, `portfolio`.
+2. Сделано: API `platform/`, модули `goals`, `teams`, `feed`, `portfolio`.
 3. API: крупные домены `rewards`, `attendance`, `students`, `groups`.
 4. Веб: фичи `lesson`, `attendance`, `students`, затем остальные.
 
