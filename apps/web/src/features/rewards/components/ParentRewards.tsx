@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowClockwiseIcon, GiftIcon } from '@phosphor-icons/react';
-import { api, type ParentRewards as Rewards, type RewardRequest } from '../lib/api';
-import { formatDateTime, points, useLoad } from '../lib/hooks';
-import { EmptyState, ErrorBox, Skeleton } from '../ui';
+import { api, type ParentRewards as Rewards, type RewardRequest } from '../../../lib/api';
+import { formatDateTime, points, useLoad } from '../../../lib/hooks';
+import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 
 const STATUS = {
   PENDING: { text: 'Ждёт ответа', cls: 'bg-accent/25 text-ink' },

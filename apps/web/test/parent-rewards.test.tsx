@@ -1,6 +1,6 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
-import { ParentRewards } from '../src/components/ParentRewards';
+import { ParentRewards } from '../src/features/rewards/components/ParentRewards';
 import { api, type ParentRewards as Rewards, type RewardRequest } from '../src/lib/api';
 import { renderApp } from './render';
 

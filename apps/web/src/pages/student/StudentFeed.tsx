@@ -1,4 +1,4 @@
-import { Feed } from '../../components/Feed';
+import { Feed } from '../../features/feed';
 
 /** Лента класса для ученика: объявления преподавателей его группы */
 export function StudentFeedPage() {

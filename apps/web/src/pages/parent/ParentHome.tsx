@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { UsersIcon } from '@phosphor-icons/react';
 import { api, type ChatMessage, type ParentChild, type Profile } from '../../lib/api';
-import { Feed } from '../../components/Feed';
-import { Thread } from '../../components/Thread';
+import { Feed } from '../../features/feed';
+import { Thread } from '../../features/messages';
 import { CountBadge, useNotifications } from '../../features/notifications';
 import { HeroHead } from '../../features/hero';
 import { ProfileView } from '../../components/ProfileView';
 import { WeeklySummary } from '../../components/WeeklySummary';
-import { ParentRewards } from '../../components/ParentRewards';
+import { ParentRewards } from '../../features/rewards';
 import { EmptyState, ErrorBox, Skeleton } from '../../ui';
 import { useLoad } from '../../lib/hooks';
 import { ProfileSkeleton } from '../../features/profile';

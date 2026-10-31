@@ -1,4 +1,4 @@
-import { Feed } from '../../components/Feed';
+import { Feed } from '../../features/feed';
 import { useGroup } from '../../features/groups';
 
 /** Лента группы: объявления преподавателей для учеников и родителей */

@@ -1,7 +1,7 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 import { api, type WeeklyStats } from '../src/lib/api';
-import { WeeklyPoints, weeklyScale } from '../src/components/WeeklyPoints';
+import { WeeklyPoints, weeklyScale } from '../src/features/stats/components/WeeklyPoints';
 import { groupData } from './group-harness';
 import { renderApp } from './render';
 
