@@ -20,7 +20,7 @@ import { countPeople } from '../services/detector.js';
 import { awardPoints, cardSummaries, deletePointEvents } from '../services/points.js';
 import { teacherPremium } from '../services/premium.js';
 import { studentProfile } from '../services/profile.js';
-import { createDefaultReasons } from '../services/reasons.js';
+import { createDefaultReasons, manualReasons, reasonRoutes } from '../modules/reasons/index.js';
 import { groupStats, statsWorkbook } from '../services/stats.js';
 import { weeklyStats } from '../services/weekly-stats.js';
 import { studentReport } from '../services/student-report.js';
@@ -32,9 +32,6 @@ import { changeOwnPassword } from '../services/password.js';
 import { saveHero } from './student.js';
 
 const id = z.string().min(1).max(64);
-const reasonView = (r: { id: string; name: string; emoji: string; value: number; countsForHelpBadge: boolean }) => ({
-  id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge,
-});
 const GroupCreate = z.object({ name: z.string().trim().min(1, 'Введите название').max(60) });
 const GroupPatch = z.object({
   name: z.string().trim().min(1).max(60).optional(),
@@ -48,17 +45,6 @@ const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).ma
 const ParentLink = z.object({ login: z.string().trim().min(1).max(64) });
 const StudentPatch = z.object({ name: z.string().trim().min(1).max(80) });
 const ResetMany = z.object({ studentIds: z.array(id).max(200).optional() });
-const ReasonBody = z.object({
-  countsForHelpBadge: z.boolean().optional(),
-  name: z.string().trim().min(1).max(60),
-  emoji: z.string().trim().min(1).max(16),
-  value: z
-    .number()
-    .int()
-    .min(-10)
-    .max(10)
-    .refine((v) => v !== 0, 'Значение не может быть нулём'),
-});
 const AwardBody = z.object({ studentIds: z.array(id).min(1).max(200), reasonId: id });
 const ProfileBody = z.object({ name: z.string().trim().min(1, 'Введите имя').max(80) });
 const lessonNumber = z.coerce.number().int().min(1).max(MAX_LESSONS_PER_DAY);
@@ -144,10 +130,7 @@ export const teacherRoutes = new Hono<AppEnv>()
         orderBy: { name: 'asc' },
         include: { hero: true, account: { select: { login: true } }, _count: { select: { parents: true } } },
       }),
-      prisma.behaviorReason.findMany({
-        where: { groupId: group.id, kind: 'MANUAL', archived: false },
-        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-      }),
+      manualReasons(group.id),
       // «Сегодня» на экране урока — последний отмеченный сегодня урок
       prisma.attendanceSession.findFirst({
         where: { groupId: group.id, date: dbDate(dateKey()) },
@@ -172,7 +155,7 @@ export const teacherRoutes = new Hono<AppEnv>()
         teamId: s.teamId,
         ...summaries.get(s.id)!,
       })),
-      reasons: reasons.map(reasonView),
+      reasons,
       teams,
       classGoal: goal,
       pendingRewards,
@@ -388,55 +371,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   })
 
   // ───── Причины ─────
-  .get('/groups/:id/reasons', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
-    const reasons = await prisma.behaviorReason.findMany({
-      where: { groupId: group.id, kind: 'MANUAL', archived: false },
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-    });
-    return c.json(reasons.map(reasonView));
-  })
-  .post('/groups/:id/reasons', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-    const body = parse(ReasonBody, await c.req.json().catch(() => null));
-    const max = await prisma.behaviorReason.aggregate({
-      where: { groupId: group.id, kind: 'MANUAL' },
-      _max: { sortOrder: true },
-    });
-    const r = await prisma.behaviorReason.create({
-      data: { ...body, groupId: group.id, sortOrder: (max._max.sortOrder ?? 0) + 1 },
-    });
-    return c.json(reasonView(r), 201);
-  })
-  // Новый порядок причин: полный список активных причин группы в нужном порядке
-  .put('/groups/:id/reasons/order', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-    const { reasonIds } = parse(z.object({ reasonIds: z.array(id).min(1).max(200) }), await c.req.json().catch(() => null));
-    const active = await prisma.behaviorReason.findMany({
-      where: { groupId: group.id, kind: 'MANUAL', archived: false },
-      select: { id: true },
-    });
-    const activeIds = new Set(active.map((r) => r.id));
-    if (new Set(reasonIds).size !== reasonIds.length || reasonIds.length !== activeIds.size || reasonIds.some((r) => !activeIds.has(r))) {
-      throw new HttpError(409, 'Список причин изменился, обновите страницу');
-    }
-    await prisma.$transaction(
-      reasonIds.map((rid, i) => prisma.behaviorReason.update({ where: { id: rid }, data: { sortOrder: i } })),
-    );
-    return c.json({ ok: true });
-  })
-  .patch('/reasons/:id', async (c) => {
-    const reason = await ownedReason(c.get('user').teacherId!, c.req.param('id'));
-    const body = parse(ReasonBody, await c.req.json().catch(() => null));
-    const r = await prisma.behaviorReason.update({ where: { id: reason.id }, data: body });
-    return c.json(reasonView(r));
-  })
-  .delete('/reasons/:id', async (c) => {
-    const reason = await ownedReason(c.get('user').teacherId!, c.req.param('id'));
-    // Архивируем: в истории начислений остаются название и эмодзи
-    await prisma.behaviorReason.update({ where: { id: reason.id }, data: { archived: true } });
-    return c.json({ ok: true });
-  })
+  .route('/', reasonRoutes)
 
   // ───── Общая цель класса ─────
   .route('/', goalRoutes)
@@ -566,14 +501,4 @@ export const teacherRoutes = new Hono<AppEnv>()
 function checkAttendanceDate(date: string) {
   if (date > dateKey()) throw new HttpError(400, 'Нельзя отметить посещаемость в будущем');
   if (date < dateKey(addDays(startOfDay(), -366))) throw new HttpError(400, 'Можно отметить посещаемость не старше года');
-}
-
-async function ownedReason(teacherId: string, reasonId: string) {
-  const reason = await prisma.behaviorReason.findFirst({
-    where: { id: reasonId, kind: 'MANUAL', archived: false, group: groupsOf(teacherId) },
-    include: { group: { select: { archivedAt: true } } },
-  });
-  if (!reason) throw notFound('Причина не найдена');
-  if (reason.group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
-  return reason;
 }

@@ -8,7 +8,7 @@ import { prisma } from '../src/platform/db.js';
 import { hashPassword, loginBase, pickLogin } from '../src/platform/credentials.js';
 import { addDays, dateKey, dbDate, startOfDay } from '../src/platform/dates.js';
 import { syncHeroParts } from '../src/services/heroParts.js';
-import { attendanceReason, createDefaultReasons } from '../src/services/reasons.js';
+import { attendanceReason, createDefaultReasons } from '../src/modules/reasons/index.js';
 import { createDefaultRewards } from '../src/modules/rewards/index.js';
 
 const TEACHER_LOGIN = process.env.SEED_TEACHER_LOGIN ?? 'teacher';

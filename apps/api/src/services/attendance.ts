@@ -2,7 +2,7 @@ import { lockGoalGroup } from '../modules/goals/index.js';
 import { prisma } from '../platform/db.js';
 import { dateKey, dbDate, dbDateKey, localDayStart } from '../platform/dates.js';
 import { HttpError } from '../platform/errors.js';
-import { attendanceReason } from './reasons.js';
+import { attendanceReason } from '../modules/reasons/index.js';
 
 export const MAX_LESSONS_PER_DAY = 8;
 
