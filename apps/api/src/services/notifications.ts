@@ -2,7 +2,7 @@ import type { AuthUser } from '../platform/auth.js';
 import { prisma } from '../platform/db.js';
 import { groupsOf } from '../modules/access/index.js';
 import { unreadPosts } from '../modules/feed/index.js';
-import { unreadMessages } from './messages.js';
+import { unreadMessages } from '../modules/messages/index.js';
 import { pendingRequestsOf, unreadRewards } from '../modules/rewards/index.js';
 
 /** Значки в шапке: сообщения, лента, выданные награды ученика или ожидающие запросы преподавателя. */

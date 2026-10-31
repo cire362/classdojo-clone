@@ -13,7 +13,7 @@ import { createDefaultRewards, pendingRequestCount, teacherRewardRoutes } from '
 import { groupTeams, teamRoutes } from '../modules/teams/index.js';
 import { teacherFeedRoutes } from '../modules/feed/index.js';
 import { portfolioRoutes } from '../modules/portfolio/index.js';
-import { MAX_MESSAGE_LENGTH, sendMessage, teacherThread, teacherThreads, threadMessages } from '../services/messages.js';
+import { teacherMessageRoutes } from '../modules/messages/index.js';
 import { addCoTeacher, groupTeachers, removeCoTeacher } from '../services/coTeachers.js';
 import { attendanceRoutes, todayAttendance } from '../modules/attendance/index.js';
 import { cardSummaries, pointRoutes } from '../modules/points/index.js';
@@ -39,7 +39,6 @@ const GroupPatch = z.object({
 const StudentsCreate = z.object({
   names: z.array(z.string().trim().max(80)).min(1).max(100),
 });
-const MessageBody = z.object({ text: z.string().trim().min(1, 'Напишите сообщение').max(MAX_MESSAGE_LENGTH) });
 const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).max(64) });
 const ParentLink = z.object({ login: z.string().trim().min(1).max(64) });
 const StudentPatch = z.object({ name: z.string().trim().min(1).max(80) });
@@ -284,18 +283,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   .route('/', teacherFeedRoutes)
 
   // ───── Сообщения родителям ─────
-  .get('/messages', async (c) => c.json(await teacherThreads(c.get('user').teacherId!, c.get('user').accountId)))
-  .get('/students/:id/parents/:parentId/messages', async (c) => {
-    const user = c.get('user');
-    const thread = await teacherThread(user.teacherId!, c.req.param('id'), c.req.param('parentId'));
-    return c.json({ ...thread, messages: await threadMessages(c.req.param('id'), c.req.param('parentId'), user.accountId) });
-  })
-  .post('/students/:id/parents/:parentId/messages', async (c) => {
-    const user = c.get('user');
-    await teacherThread(user.teacherId!, c.req.param('id'), c.req.param('parentId'));
-    const { text } = parse(MessageBody, await c.req.json().catch(() => null));
-    return c.json(await sendMessage(c.req.param('id'), c.req.param('parentId'), user.accountId, text), 201);
-  })
+  .route('/', teacherMessageRoutes)
 
   // ───── Родители ─────
   .get('/students/:id/parents', async (c) => {

@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../../platform/auth.js';
-import { parentChild } from '../../services/parents.js';
+import { parentChild } from '../access/index.js';
 import { parentRewards } from './service.js';
 
 /** Награды ребёнка для родителя. Роль проверяет routes/parent.ts, чужой ребёнок — 404 */

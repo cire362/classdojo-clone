@@ -1,6 +1,7 @@
-import { prisma } from '../platform/db.js';
-import { notFound } from '../platform/errors.js';
-import { groupsOf } from '../modules/access/index.js';
+import type { ChatMessage, TeacherThread, ThreadSummary } from '@heroes/shared/api';
+import { prisma } from '../../platform/db.js';
+import { notFound } from '../../platform/errors.js';
+import { groupsOf } from '../access/index.js';
 
 /**
  * Сообщения родителя и преподавателей группы о конкретном ребёнке. Ветка — пара (родитель, ученик):
@@ -9,16 +10,24 @@ import { groupsOf } from '../modules/access/index.js';
 export const MAX_MESSAGE_LENGTH = 2000;
 
 /** Ветка, доступная преподавателю: ученик в его группе, родитель привязан к ученику */
-export async function teacherThread(teacherId: string, studentId: string, parentId: string) {
+export async function teacherThread(teacherId: string, studentId: string, parentId: string): Promise<Omit<TeacherThread, 'messages'>> {
   const link = await prisma.parentStudent.findFirst({
     where: { studentId, parentId, student: { group: groupsOf(teacherId) } },
-    include: { student: { select: { name: true, group: { select: { id: true, name: true, archivedAt: true } } } }, parent: { include: { account: { select: { login: true } } } } },
+    include: {
+      student: { select: { name: true, group: { select: { id: true, name: true, archivedAt: true } } } },
+      parent: { include: { account: { select: { login: true } } } },
+    },
   });
   if (!link) throw notFound('Переписка не найдена');
-  return { studentName: link.student.name, group: link.student.group, parentLogin: link.parent.account.login };
+  const { group } = link.student;
+  return {
+    studentName: link.student.name,
+    group: { ...group, archivedAt: group.archivedAt?.toISOString() ?? null },
+    parentLogin: link.parent.account.login,
+  };
 }
 
-export async function threadMessages(studentId: string, parentId: string, accountId: string) {
+export async function threadMessages(studentId: string, parentId: string, accountId: string): Promise<ChatMessage[]> {
   const messages = await prisma.message.findMany({
     where: { studentId, parentId },
     orderBy: { createdAt: 'asc' },
@@ -34,7 +43,7 @@ export async function threadMessages(studentId: string, parentId: string, accoun
   return messages.map((m) => ({
     id: m.id,
     text: m.text,
-    createdAt: m.createdAt,
+    createdAt: m.createdAt.toISOString(),
     mine: m.senderId === accountId,
     // Подпись: имя преподавателя или «Родитель»
     author: m.sender.teacher?.name ?? 'Родитель',
@@ -42,13 +51,13 @@ export async function threadMessages(studentId: string, parentId: string, accoun
   }));
 }
 
-export async function sendMessage(studentId: string, parentId: string, senderId: string, text: string) {
+export async function sendMessage(studentId: string, parentId: string, senderId: string, text: string): Promise<ChatMessage[]> {
   await prisma.message.create({ data: { studentId, parentId, senderId, text } });
   return threadMessages(studentId, parentId, senderId);
 }
 
 /** Ветки для преподавателя: все переписки по ученикам его групп, новые сверху */
-export async function teacherThreads(teacherId: string, accountId: string) {
+export async function teacherThreads(teacherId: string, accountId: string): Promise<ThreadSummary[]> {
   const last = await prisma.message.groupBy({
     by: ['studentId', 'parentId'],
     where: { student: { group: groupsOf(teacherId) } },
@@ -58,7 +67,10 @@ export async function teacherThreads(teacherId: string, accountId: string) {
   const [links, reads] = await Promise.all([
     prisma.parentStudent.findMany({
       where: { OR: last.map((l) => ({ studentId: l.studentId, parentId: l.parentId })) },
-      include: { student: { select: { name: true, group: { select: { name: true } } } }, parent: { include: { account: { select: { login: true } } } } },
+      include: {
+        student: { select: { name: true, group: { select: { name: true } } } },
+        parent: { include: { account: { select: { login: true } } } },
+      },
     }),
     prisma.threadRead.findMany({ where: { accountId } }),
   ]);
@@ -71,7 +83,12 @@ export async function teacherThreads(teacherId: string, accountId: string) {
       const [lastMessage, unread] = await Promise.all([
         prisma.message.findFirst({ where: { studentId: l.studentId, parentId: l.parentId }, orderBy: { createdAt: 'desc' } }),
         prisma.message.count({
-          where: { studentId: l.studentId, parentId: l.parentId, senderId: { not: accountId }, ...(readAt.has(key) ? { createdAt: { gt: readAt.get(key)! } } : {}) },
+          where: {
+            studentId: l.studentId,
+            parentId: l.parentId,
+            senderId: { not: accountId },
+            ...(readAt.has(key) ? { createdAt: { gt: readAt.get(key)! } } : {}),
+          },
         }),
       ]);
       return {
@@ -86,7 +103,10 @@ export async function teacherThreads(teacherId: string, accountId: string) {
       };
     }),
   );
-  return rows.filter((r) => r !== null).sort((a, b) => +b.lastAt - +a.lastAt);
+  return rows
+    .filter((r) => r !== null)
+    .sort((a, b) => +b.lastAt - +a.lastAt)
+    .map((r) => ({ ...r, lastAt: r.lastAt.toISOString() }));
 }
 
 /** Непрочитанные сообщения в ветках (для счётчика): от других участников после последнего просмотра */

@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../../platform/auth.js';
-import { parentChild } from '../../services/parents.js';
+import { parentChild } from '../access/index.js';
 import { studentFeed } from './service.js';
 
 /** Лента группы ребёнка. Роль проверяет routes/parent.ts, чужой ребёнок — 404 */

@@ -157,10 +157,3 @@ export async function parentChildren(parentId: string) {
     level: levelForPoints(s.pointEvents.reduce((sum, e) => sum + e.value, 0)).level,
   }));
 }
-
-/** Ребёнок родителя или 404: родитель не может открыть чужого ученика */
-export async function parentChild(parentId: string, studentId: string): Promise<string> {
-  const link = await prisma.parentStudent.findUnique({ where: { parentId_studentId: { parentId, studentId } } });
-  if (!link) throw notFound('Ученик не найден');
-  return studentId;
-}

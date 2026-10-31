@@ -39,3 +39,10 @@ export async function teacherStudent(user: AuthUser, studentId: string) {
   if (!student) throw notFound('Ученик не найден');
   return student;
 }
+
+/** Ребёнок родителя или 404: родитель не может открыть чужого ученика */
+export async function parentChild(parentId: string, studentId: string): Promise<string> {
+  const link = await prisma.parentStudent.findUnique({ where: { parentId_studentId: { parentId, studentId } } });
+  if (!link) throw notFound('Ученик не найден');
+  return studentId;
+}
