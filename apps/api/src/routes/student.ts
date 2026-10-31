@@ -7,7 +7,7 @@ import { HttpError, parse } from '../platform/errors.js';
 import { validateHeroForLevel } from '../services/heroParts.js';
 import { studentLevel } from '../services/points.js';
 import { studentFeedRoutes } from '../modules/feed/index.js';
-import { cancelRequest, requestReward, studentShop } from '../services/rewards.js';
+import { studentRewardRoutes } from '../modules/rewards/index.js';
 import { markNewsSeen, studentNews } from '../services/news.js';
 import { studentHasPremium } from '../services/premium.js';
 import { studentProfile } from '../services/profile.js';
@@ -51,15 +51,7 @@ export const studentRoutes = new Hono<AppEnv>()
     return c.json({ ok: true });
   })
   .put('/hero', async (c) => c.json(await saveHero(c.get('user').studentId!, await c.req.json().catch(() => null))))
-  .get('/shop', async (c) => c.json(await studentShop(c.get('user').studentId!)))
-  .post('/shop/:rewardId/request', async (c) => {
-    await requestReward(c.get('user').studentId!, c.req.param('rewardId'));
-    return c.json(await studentShop(c.get('user').studentId!), 201);
-  })
-  .delete('/shop/requests/:id', async (c) => {
-    await cancelRequest(c.get('user').studentId!, c.req.param('id'));
-    return c.json(await studentShop(c.get('user').studentId!));
-  })
+  .route('/', studentRewardRoutes)
   .route('/', studentFeedRoutes)
   .get('/news', async (c) => c.json(await studentNews(c.get('user').studentId!)))
   .post('/news/seen', async (c) => {

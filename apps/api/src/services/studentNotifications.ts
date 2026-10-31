@@ -1,7 +1,7 @@
-import type { Prisma } from '../generated/prisma/client.js';
 import { prisma } from '../platform/db.js';
 import { HttpError } from '../platform/errors.js';
 import { markFeedRead } from '../modules/feed/index.js';
+import { markRewardNotificationsRead } from '../modules/rewards/index.js';
 
 const PAGE = 30;
 type Kind = 'feed' | 'reward';
@@ -31,14 +31,6 @@ function before(field: 'createdAt' | 'decidedAt', kind: Kind, cursor: Cursor | n
     ...(kind < cursor.kind ? [{ [field]: cursor.at }]
       : kind === cursor.kind ? [{ [field]: cursor.at, id: { lt: cursor.id } }] : []),
   ] };
-}
-
-export async function unreadRewards(studentId: string, readAt: Date) {
-  return prisma.rewardRequest.count({ where: { studentId, status: 'APPROVED', decidedAt: { gt: readAt } } });
-}
-
-export async function markRewardNotificationsRead(studentId: string, through: Date, db: Prisma.TransactionClient | typeof prisma = prisma) {
-  await db.student.updateMany({ where: { id: studentId, rewardsReadAt: { lt: through } }, data: { rewardsReadAt: through } });
 }
 
 /** Уведомления выводятся из исходных событий: удалённые объявления исчезают, чужие группы не попадают. */

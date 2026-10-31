@@ -3,8 +3,7 @@ import { prisma } from '../platform/db.js';
 import { groupsOf } from '../modules/access/index.js';
 import { unreadPosts } from '../modules/feed/index.js';
 import { unreadMessages } from './messages.js';
-import { unreadRewards } from './studentNotifications.js';
-import { pendingRequestsOf } from './rewards.js';
+import { pendingRequestsOf, unreadRewards } from '../modules/rewards/index.js';
 
 /** Значки в шапке: сообщения, лента, выданные награды ученика или ожидающие запросы преподавателя. */
 export async function notifications(user: AuthUser) {

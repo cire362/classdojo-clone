@@ -9,7 +9,7 @@ import { hashPassword, loginBase, pickLogin } from '../src/platform/credentials.
 import { addDays, dateKey, dbDate, startOfDay } from '../src/platform/dates.js';
 import { syncHeroParts } from '../src/services/heroParts.js';
 import { attendanceReason, createDefaultReasons } from '../src/services/reasons.js';
-import { createDefaultRewards } from '../src/services/rewards.js';
+import { createDefaultRewards } from '../src/modules/rewards/index.js';
 
 const TEACHER_LOGIN = process.env.SEED_TEACHER_LOGIN ?? 'teacher';
 const TEACHER_PASSWORD = process.env.SEED_TEACHER_PASSWORD ?? 'teacher123';

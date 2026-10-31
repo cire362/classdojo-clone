@@ -3,7 +3,7 @@ import { createApp } from '../src/app.js';
 import { prisma } from '../src/platform/db.js';
 import { hashPassword } from '../src/platform/credentials.js';
 import { createDefaultReasons } from '../src/services/reasons.js';
-import { createDefaultRewards } from '../src/services/rewards.js';
+import { createDefaultRewards } from '../src/modules/rewards/index.js';
 import { syncHeroParts } from '../src/services/heroParts.js';
 import { createStudents } from '../src/services/students.js';
 

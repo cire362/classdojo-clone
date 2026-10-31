@@ -9,7 +9,7 @@ import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../platform/dat
 import { HttpError, notFound, parse } from '../platform/errors.js';
 import { ARCHIVED_MESSAGE, OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../modules/access/index.js';
 import { classGoal, goalRoutes } from '../modules/goals/index.js';
-import { createDefaultRewards, decideRequest, groupRequests, groupRewards, pendingRewardGroups } from '../services/rewards.js';
+import { createDefaultRewards, pendingRequestCount, teacherRewardRoutes } from '../modules/rewards/index.js';
 import { groupTeams, teamRoutes } from '../modules/teams/index.js';
 import { teacherFeedRoutes } from '../modules/feed/index.js';
 import { portfolioRoutes } from '../modules/portfolio/index.js';
@@ -42,11 +42,6 @@ const GroupPatch = z.object({
 });
 const StudentsCreate = z.object({
   names: z.array(z.string().trim().max(80)).min(1).max(100),
-});
-const RewardBody = z.object({
-  title: z.string().trim().min(1, 'Введите название').max(60),
-  emoji: z.string().trim().min(1).max(16),
-  cost: z.number().int().min(1, 'Цена от 1 балла').max(1000),
 });
 const MessageBody = z.object({ text: z.string().trim().min(1, 'Напишите сообщение').max(MAX_MESSAGE_LENGTH) });
 const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).max(64) });
@@ -163,7 +158,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     const [summaries, teams, pendingRewards, goal] = await Promise.all([
       cardSummaries(students.map((s) => s.id)),
       groupTeams(group.id),
-      prisma.rewardRequest.count({ where: { status: 'PENDING', student: { groupId: group.id } } }),
+      pendingRequestCount(group.id),
       classGoal(group.id),
     ]);
     return c.json({
@@ -317,39 +312,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   .route('/', portfolioRoutes)
 
   // ───── Магазин наград ─────
-  .get('/reward-requests', async (c) => c.json(await pendingRewardGroups(c.get('user').teacherId!)))
-  .get('/groups/:id/rewards', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
-    const [rewards, requests] = await Promise.all([groupRewards(group.id), groupRequests(group.id)]);
-    return c.json({ rewards, requests });
-  })
-  .post('/groups/:id/rewards', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-    const data = parse(RewardBody, await c.req.json().catch(() => null));
-    if ((await prisma.reward.count({ where: { groupId: group.id, archived: false } })) >= 30) {
-      throw new HttpError(400, 'Наград может быть не больше 30');
-    }
-    await prisma.reward.create({ data: { ...data, groupId: group.id } });
-    return c.json(await groupRewards(group.id), 201);
-  })
-  .delete('/rewards/:id', async (c) => {
-    const reward = await prisma.reward.findFirst({ where: { id: c.req.param('id'), archived: false, group: groupsOf(c.get('user').teacherId!) } });
-    if (!reward) throw notFound('Награда не найдена');
-    // Архив, а не удаление: ожидающие запросы на неё остаются
-    await prisma.reward.update({ where: { id: reward.id }, data: { archived: true } });
-    return c.json(await groupRewards(reward.groupId));
-  })
-  .post('/reward-requests/:id/:decision{approve|reject}', async (c) => {
-    const user = c.get('user');
-    const request = await prisma.rewardRequest.findFirst({
-      where: { id: c.req.param('id'), student: { group: groupsOf(user.teacherId!) } },
-      select: { student: { select: { groupId: true } } },
-    });
-    if (!request) throw notFound('Запрос не найден');
-    const group = await teacherGroup(user, request.student.groupId, { writable: true });
-    await decideRequest(group.id, c.req.param('id'), user.accountId, c.req.param('decision') === 'approve');
-    return c.json(await groupRequests(group.id));
-  })
+  .route('/', teacherRewardRoutes)
 
   // ───── Команды ─────
   .route('/', teamRoutes)

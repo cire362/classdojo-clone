@@ -7,7 +7,7 @@ import { MAX_MESSAGE_LENGTH, sendMessage, threadMessages, unreadMessages } from 
 import { parentChild, parentChildren } from '../services/parents.js';
 import { studentProfile } from '../services/profile.js';
 import { weeklySummary } from '../services/weekly-summary.js';
-import { parentRewards } from '../services/rewards.js';
+import { parentRewardRoutes } from '../modules/rewards/index.js';
 
 /** Кабинет родителя: только просмотр и только своих детей (чужие — 404) */
 export const parentRoutes = new Hono<AppEnv>()
@@ -47,7 +47,4 @@ export const parentRoutes = new Hono<AppEnv>()
     const studentId = await parentChild(c.get('user').parentId!, c.req.param('id'));
     return c.json(await weeklySummary(studentId, c.req.query('week')));
   })
-  .get('/children/:id/rewards', async (c) => {
-    const studentId = await parentChild(c.get('user').parentId!, c.req.param('id'));
-    return c.json(await parentRewards(studentId, c.req.query('before')));
-  });
+  .route('/', parentRewardRoutes);
