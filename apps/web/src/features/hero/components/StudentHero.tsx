@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { HeroEditor } from '..';
+import { HeroEditor } from './HeroEditor';
 import { ErrorBox, Skeleton } from '../../../ui';
 import { useLoad } from '../../../lib/hooks';
 import { useNews } from '../../news';

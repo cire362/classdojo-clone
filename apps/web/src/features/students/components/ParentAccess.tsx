@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ChatCircleIcon, KeyIcon, LinkSimpleIcon, PrinterIcon, UserPlusIcon, XIcon } from '@phosphor-icons/react';
 import type { ParentAccess as Access, ParentCredentials } from '../../../lib/api';
 import { useLoad } from '../../../lib/hooks';
-import { CredentialsTable } from '..';
+import { CredentialsTable } from './CredentialsTable';
 import { useToast } from '../../../ui/Toast';
 import { Modal, Skeleton } from '../../../ui';
 import { fetchStudentParents, issueParent, linkParent, resetParentPassword, unlinkParent } from '../api';

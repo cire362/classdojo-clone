@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, ArrowsLeftRightIcon, KeyIcon, PaintBrushIcon } from '@phosphor-icons/react';
 import type { Credentials, HistoryEvent } from '../../../lib/api';
 import { HeroEditor } from '../../hero';
-import { MoveStudentModal } from '..';
+import { MoveStudentModal } from './MoveStudentModal';
 import { ParentAccessCard } from './ParentAccess';
 import { ProfileView } from '../../profile';
 import { StudentReport } from '../../profile';
@@ -11,7 +11,7 @@ import { useToast } from '../../../ui/Toast';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { formatDateTime, useLoad } from '../../../lib/hooks';
 import { ProfileSkeleton } from '../../profile';
-import { CredentialsTable } from '..';
+import { CredentialsTable } from './CredentialsTable';
 import { addPortfolioItem, deletePointEvent, deletePortfolioItem, fetchStudentProfile, resetStudentPassword, saveStudentHero } from '../api';
 
 export function StudentProfileView() {

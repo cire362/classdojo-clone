@@ -40,9 +40,11 @@ export const issueParent = (studentId: string) => api<ParentCredentials>('POST',
 export const resetParentPassword = (studentId: string, parentId: string) =>
   api<ParentCredentials>('POST', `/teacher/students/${studentId}/parents/${parentId}/reset-password`);
 
-export const linkParent = (studentId: string, login: string) => api<ParentAccess[]>('POST', `/teacher/students/${studentId}/parents/link`, { login });
+export const linkParent = (studentId: string, login: string) =>
+  api<ParentAccess[]>('POST', `/teacher/students/${studentId}/parents/link`, { login });
 
-export const unlinkParent = (studentId: string, parentId: string) => api<ParentAccess[]>('DELETE', `/teacher/students/${studentId}/parents/${parentId}`);
+export const unlinkParent = (studentId: string, parentId: string) =>
+  api<ParentAccess[]>('DELETE', `/teacher/students/${studentId}/parents/${parentId}`);
 
 export const fetchStudentProfile = (studentId: string) => api<Profile>('GET', `/teacher/students/${studentId}/profile`);
 

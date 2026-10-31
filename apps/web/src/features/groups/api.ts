@@ -18,4 +18,5 @@ export const fetchGroupTeachers = (groupId: string) => api<GroupTeachers>('GET',
 
 export const addGroupTeacher = (groupId: string, login: string) => api<GroupTeachers>('POST', `/teacher/groups/${groupId}/teachers`, { login });
 
-export const removeGroupTeacher = (groupId: string, teacherId: string) => api('DELETE', `/teacher/groups/${groupId}/teachers/${teacherId}`);
+export const removeGroupTeacher = (groupId: string, teacherId: string) =>
+  api('DELETE', `/teacher/groups/${groupId}/teachers/${teacherId}`);

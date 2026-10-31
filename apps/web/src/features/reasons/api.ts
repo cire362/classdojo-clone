@@ -2,7 +2,8 @@ import { api, type Reason } from '../../lib/api';
 
 type ReasonDraft = Omit<Reason, 'id'>;
 
-export const saveReasonOrder = (groupId: string, reasonIds: string[]) => api('PUT', `/teacher/groups/${groupId}/reasons/order`, { reasonIds });
+export const saveReasonOrder = (groupId: string, reasonIds: string[]) =>
+  api('PUT', `/teacher/groups/${groupId}/reasons/order`, { reasonIds });
 
 export const deleteReason = (reasonId: string) => api('DELETE', `/teacher/reasons/${reasonId}`);
 
