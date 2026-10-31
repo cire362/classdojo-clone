@@ -1,4 +1,4 @@
-import { lockGoalGroup } from './classGoals.js';
+import { lockGoalGroup } from '../modules/goals/index.js';
 import { groupsOf } from './access.js';
 import { levelForPoints } from '@heroes/shared';
 import { prisma } from '../platform/db.js';

@@ -1,4 +1,4 @@
-import { lockGoalGroup } from './classGoals.js';
+import { lockGoalGroup } from '../modules/goals/index.js';
 import { prisma } from '../platform/db.js';
 import { dateKey, dbDate, dbDateKey, localDayStart } from '../platform/dates.js';
 import { HttpError } from '../platform/errors.js';

@@ -1,7 +1,8 @@
-import type { Prisma } from '../generated/prisma/client';
-import { prisma } from '../platform/db.js';
-import { HttpError, notFound } from '../platform/errors.js';
-import { ARCHIVED_MESSAGE } from './access.js';
+import type { ClassGoal } from '@heroes/shared/api';
+import type { Prisma } from '../../generated/prisma/client';
+import { prisma } from '../../platform/db.js';
+import { HttpError, notFound } from '../../platform/errors.js';
+import { ARCHIVED_MESSAGE } from '../../services/access.js';
 
 /** Изменение цели и начисление сериализуются по группе: начисление не попадёт в удалённую цель. */
 export async function lockGoalGroup(tx: Prisma.TransactionClient, groupId: string) {
@@ -11,12 +12,12 @@ export async function lockGoalGroup(tx: Prisma.TransactionClient, groupId: strin
 }
 
 /** Баллы принадлежат цели, а не текущему составу класса: перевод ученика не переносит его вклад. */
-export async function classGoal(groupId: string) {
+export async function classGoal(groupId: string): Promise<ClassGoal | null> {
   const goal = await prisma.classGoal.findUnique({ where: { groupId } });
   if (!goal) return null;
   const points = await prisma.pointEvent.aggregate({ where: { classGoalId: goal.id, value: { gt: 0 } }, _sum: { value: true } });
   const earned = points._sum.value ?? 0;
-  return { id: goal.id, title: goal.title, target: goal.target, earned, reached: earned >= goal.target, createdAt: goal.createdAt };
+  return { id: goal.id, title: goal.title, target: goal.target, earned, reached: earned >= goal.target, createdAt: goal.createdAt.toISOString() };
 }
 
 /** Редактирование сохраняет вклад, запуск новой цели (restart) обнуляет его без изменения истории баллов. */
