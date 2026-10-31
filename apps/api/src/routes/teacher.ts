@@ -11,7 +11,7 @@ import { ARCHIVED_MESSAGE, OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherSt
 import { classGoal, goalRoutes } from '../modules/goals/index.js';
 import { createDefaultRewards, decideRequest, groupRequests, groupRewards, pendingRewardGroups } from '../services/rewards.js';
 import { groupTeams, teamRoutes } from '../modules/teams/index.js';
-import { MAX_POST_LENGTH, createPost, deletePost, groupFeed } from '../services/feed.js';
+import { teacherFeedRoutes } from '../modules/feed/index.js';
 import { MAX_MESSAGE_LENGTH, sendMessage, teacherThread, teacherThreads, threadMessages } from '../services/messages.js';
 import { addCoTeacher, groupTeachers, removeCoTeacher } from '../services/coTeachers.js';
 import { MAX_LESSONS_PER_DAY, attendanceForDate, deleteAttendance, saveAttendance } from '../services/attendance.js';
@@ -52,7 +52,6 @@ const RewardBody = z.object({
   emoji: z.string().trim().min(1).max(16),
   cost: z.number().int().min(1, 'Цена от 1 балла').max(1000),
 });
-const PostBody = z.object({ text: z.string().trim().min(1, 'Напишите текст').max(MAX_POST_LENGTH) });
 const MessageBody = z.object({ text: z.string().trim().min(1, 'Напишите сообщение').max(MAX_MESSAGE_LENGTH) });
 const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).max(64) });
 const ParentLink = z.object({ login: z.string().trim().min(1).max(64) });
@@ -372,21 +371,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   .route('/', teamRoutes)
 
   // ───── Лента класса ─────
-  .get('/groups/:id/feed', async (c) => {
-    const user = c.get('user');
-    const group = await teacherGroup(user, c.req.param('id'));
-    return c.json(await groupFeed(group.id, { accountId: user.accountId, teacherId: user.teacherId, isOwner: group.isOwner }));
-  })
-  .post('/groups/:id/feed', async (c) => {
-    const user = c.get('user');
-    const group = await teacherGroup(user, c.req.param('id'), { writable: true });
-    const { text } = parse(PostBody, await c.req.json().catch(() => null));
-    return c.json(await createPost(group.id, user.teacherId!, text), 201);
-  })
-  .delete('/posts/:id', async (c) => {
-    await deletePost(c.get('user').teacherId!, c.req.param('id'));
-    return c.json({ ok: true });
-  })
+  .route('/', teacherFeedRoutes)
 
   // ───── Сообщения родителям ─────
   .get('/messages', async (c) => c.json(await teacherThreads(c.get('user').teacherId!, c.get('user').accountId)))

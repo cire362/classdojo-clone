@@ -1,7 +1,7 @@
 import type { AuthUser } from '../platform/auth.js';
 import { prisma } from '../platform/db.js';
 import { groupsOf } from './access.js';
-import { unreadPosts } from './feed.js';
+import { unreadPosts } from '../modules/feed/index.js';
 import { unreadMessages } from './messages.js';
 import { unreadRewards } from './studentNotifications.js';
 import { pendingRequestsOf } from './rewards.js';

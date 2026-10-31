@@ -1,9 +1,8 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { requireRole, type AppEnv } from '../platform/auth.js';
-import { prisma } from '../platform/db.js';
 import { parse } from '../platform/errors.js';
-import { groupFeed, unreadPosts } from '../services/feed.js';
+import { parentFeedRoutes, unreadPosts } from '../modules/feed/index.js';
 import { MAX_MESSAGE_LENGTH, sendMessage, threadMessages, unreadMessages } from '../services/messages.js';
 import { parentChild, parentChildren } from '../services/parents.js';
 import { studentProfile } from '../services/profile.js';
@@ -28,12 +27,7 @@ export const parentRoutes = new Hono<AppEnv>()
     );
     return c.json(withUnread);
   })
-  .get('/children/:id/feed', async (c) => {
-    const user = c.get('user');
-    const studentId = await parentChild(user.parentId!, c.req.param('id'));
-    const s = await prisma.student.findUniqueOrThrow({ where: { id: studentId }, select: { groupId: true } });
-    return c.json(await groupFeed(s.groupId, { accountId: user.accountId }));
-  })
+  .route('/', parentFeedRoutes)
   .get('/children/:id/messages', async (c) => {
     const user = c.get('user');
     const studentId = await parentChild(user.parentId!, c.req.param('id'));

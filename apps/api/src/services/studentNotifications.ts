@@ -1,7 +1,7 @@
 import type { Prisma } from '../generated/prisma/client.js';
 import { prisma } from '../platform/db.js';
 import { HttpError } from '../platform/errors.js';
-import { markFeedRead } from './feed.js';
+import { markFeedRead } from '../modules/feed/index.js';
 
 const PAGE = 30;
 type Kind = 'feed' | 'reward';

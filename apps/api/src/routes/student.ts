@@ -6,7 +6,7 @@ import { prisma } from '../platform/db.js';
 import { HttpError, parse } from '../platform/errors.js';
 import { validateHeroForLevel } from '../services/heroParts.js';
 import { studentLevel } from '../services/points.js';
-import { groupFeed } from '../services/feed.js';
+import { studentFeedRoutes } from '../modules/feed/index.js';
 import { cancelRequest, requestReward, studentShop } from '../services/rewards.js';
 import { markNewsSeen, studentNews } from '../services/news.js';
 import { studentHasPremium } from '../services/premium.js';
@@ -60,11 +60,7 @@ export const studentRoutes = new Hono<AppEnv>()
     await cancelRequest(c.get('user').studentId!, c.req.param('id'));
     return c.json(await studentShop(c.get('user').studentId!));
   })
-  .get('/feed', async (c) => {
-    const user = c.get('user');
-    const s = await prisma.student.findUniqueOrThrow({ where: { id: user.studentId! }, select: { groupId: true } });
-    return c.json(await groupFeed(s.groupId, { accountId: user.accountId }));
-  })
+  .route('/', studentFeedRoutes)
   .get('/news', async (c) => c.json(await studentNews(c.get('user').studentId!)))
   .post('/news/seen', async (c) => {
     const { kind } = parse(z.object({ kind: z.enum(['level', 'parts']) }), await c.req.json().catch(() => null));

@@ -1,13 +1,22 @@
-import { prisma } from '../platform/db.js';
-import type { Prisma } from '../generated/prisma/client.js';
-import { HttpError, notFound } from '../platform/errors.js';
-import { groupsOf } from './access.js';
+import type { FeedPost } from '@heroes/shared/api';
+import { prisma } from '../../platform/db.js';
+import type { Prisma } from '../../generated/prisma/client.js';
+import { HttpError, notFound } from '../../platform/errors.js';
+import { groupsOf } from '../../services/access.js';
 
 /** Лента класса: объявления преподавателей группы для учеников и их родителей */
 export const MAX_POST_LENGTH = 2000;
 const PAGE = 100;
 
-export async function groupFeed(groupId: string, viewer: { accountId: string; teacherId?: string | null; isOwner?: boolean }) {
+type Viewer = { accountId: string; teacherId?: string | null; isOwner?: boolean };
+
+/** Лента текущей группы ученика: для него самого и для родителя */
+export async function studentFeed(studentId: string, accountId: string): Promise<FeedPost[]> {
+  const s = await prisma.student.findUniqueOrThrow({ where: { id: studentId }, select: { groupId: true } });
+  return groupFeed(s.groupId, { accountId });
+}
+
+export async function groupFeed(groupId: string, viewer: Viewer): Promise<FeedPost[]> {
   const through = new Date();
   const posts = await prisma.post.findMany({
     where: { groupId, createdAt: { lte: through } },
@@ -20,7 +29,7 @@ export async function groupFeed(groupId: string, viewer: { accountId: string; te
   return posts.map((p) => ({
     id: p.id,
     text: p.text,
-    createdAt: p.createdAt,
+    createdAt: p.createdAt.toISOString(),
     author: p.author.name,
     // Удалить запись может её автор и создатель группы
     canDelete: !!viewer.teacherId && (p.author.id === viewer.teacherId || !!viewer.isOwner),
@@ -35,9 +44,9 @@ export async function markFeedRead(accountId: string, groupId: string, through: 
   `;
 }
 
-export async function createPost(groupId: string, authorId: string, text: string) {
+export async function createPost(groupId: string, authorId: string, text: string): Promise<FeedPost> {
   const p = await prisma.post.create({ data: { groupId, authorId, text }, include: { author: { select: { name: true } } } });
-  return { id: p.id, text: p.text, createdAt: p.createdAt, author: p.author.name, canDelete: true };
+  return { id: p.id, text: p.text, createdAt: p.createdAt.toISOString(), author: p.author.name, canDelete: true };
 }
 
 export async function deletePost(teacherId: string, postId: string) {
