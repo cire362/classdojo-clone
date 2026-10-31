@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../../platform/auth.js';
 import { parse } from '../../platform/errors.js';
-import { teacherGroup } from '../../services/access.js';
+import { teacherGroup } from '../access/index.js';
 import { TeamAssign, TeamBody, TeamPatch } from './schemas.js';
 import { assignTeams, createTeam, deleteTeam, groupTeams, updateTeam } from './service.js';
 

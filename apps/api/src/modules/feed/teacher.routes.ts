@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from '../../platform/auth.js';
 import { parse } from '../../platform/errors.js';
-import { teacherGroup } from '../../services/access.js';
+import { teacherGroup } from '../access/index.js';
 import { MAX_POST_LENGTH, createPost, deletePost, groupFeed } from './service.js';
 
 const PostBody = z.object({ text: z.string().trim().min(1, 'Напишите текст').max(MAX_POST_LENGTH) });

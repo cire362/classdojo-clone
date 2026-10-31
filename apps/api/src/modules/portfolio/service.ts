@@ -1,7 +1,7 @@
 import type { PortfolioItem } from '@heroes/shared/api';
 import { prisma } from '../../platform/db.js';
 import { notFound } from '../../platform/errors.js';
-import { groupsOf } from '../../services/access.js';
+import { groupsOf } from '../access/index.js';
 
 export async function portfolioItems(studentId: string): Promise<PortfolioItem[]> {
   const items = await prisma.portfolioItem.findMany({

@@ -7,7 +7,7 @@ import { prisma } from '../platform/db.js';
 import { env } from '../platform/env.js';
 import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../platform/dates.js';
 import { HttpError, notFound, parse } from '../platform/errors.js';
-import { ARCHIVED_MESSAGE, OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../services/access.js';
+import { ARCHIVED_MESSAGE, OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../modules/access/index.js';
 import { classGoal, goalRoutes } from '../modules/goals/index.js';
 import { createDefaultRewards, decideRequest, groupRequests, groupRewards, pendingRewardGroups } from '../services/rewards.js';
 import { groupTeams, teamRoutes } from '../modules/teams/index.js';

@@ -1,6 +1,6 @@
 import { prisma } from '../platform/db.js';
 import { notFound } from '../platform/errors.js';
-import { groupsOf } from './access.js';
+import { groupsOf } from '../modules/access/index.js';
 
 /**
  * Сообщения родителя и преподавателей группы о конкретном ребёнке. Ветка — пара (родитель, ученик):

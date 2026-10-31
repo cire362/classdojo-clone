@@ -2,7 +2,7 @@ import type { ClassGoal } from '@heroes/shared/api';
 import type { Prisma } from '../../generated/prisma/client';
 import { prisma } from '../../platform/db.js';
 import { HttpError, notFound } from '../../platform/errors.js';
-import { ARCHIVED_MESSAGE } from '../../services/access.js';
+import { ARCHIVED_MESSAGE } from '../access/index.js';
 
 /** Изменение цели и начисление сериализуются по группе: начисление не попадёт в удалённую цель. */
 export async function lockGoalGroup(tx: Prisma.TransactionClient, groupId: string) {

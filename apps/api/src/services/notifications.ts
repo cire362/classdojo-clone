@@ -1,6 +1,6 @@
 import type { AuthUser } from '../platform/auth.js';
 import { prisma } from '../platform/db.js';
-import { groupsOf } from './access.js';
+import { groupsOf } from '../modules/access/index.js';
 import { unreadPosts } from '../modules/feed/index.js';
 import { unreadMessages } from './messages.js';
 import { unreadRewards } from './studentNotifications.js';

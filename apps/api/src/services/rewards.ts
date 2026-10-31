@@ -2,7 +2,7 @@ import type { Prisma } from '../generated/prisma/client';
 import { prisma } from '../platform/db.js';
 import { HttpError, notFound } from '../platform/errors.js';
 import { markRewardNotificationsRead } from './studentNotifications.js';
-import { groupsOf } from './access.js';
+import { groupsOf } from '../modules/access/index.js';
 
 /**
  * Магазин наград. Баланс = все баллы (плюсы минус минусы) минус потраченное на награды.

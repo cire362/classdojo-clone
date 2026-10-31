@@ -2,7 +2,7 @@ import type { FeedPost } from '@heroes/shared/api';
 import { prisma } from '../../platform/db.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { HttpError, notFound } from '../../platform/errors.js';
-import { groupsOf } from '../../services/access.js';
+import { groupsOf } from '../access/index.js';
 
 /** Лента класса: объявления преподавателей группы для учеников и их родителей */
 export const MAX_POST_LENGTH = 2000;

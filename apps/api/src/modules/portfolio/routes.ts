@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from '../../platform/auth.js';
 import { parse } from '../../platform/errors.js';
-import { teacherStudent } from '../../services/access.js';
+import { teacherStudent } from '../access/index.js';
 import { addPortfolioItem, deletePortfolioItem } from './service.js';
 
 const PortfolioBody = z.object({

@@ -25,14 +25,14 @@ platform/        db, auth, env, errors, dates, credentials: без знания 
 app.ts           сборка приложения
 ```
 
-Домены: `accounts`, `groups`, `students`, `parents`, `reasons`, `points`, `attendance`, `rewards`, `teams`, `goals`, `feed`, `messages`, `notifications`, `hero`, `badges`, `portfolio`, `reports`.
+Домены: `access`, `accounts`, `groups`, `students`, `parents`, `reasons`, `points`, `attendance`, `rewards`, `teams`, `goals`, `feed`, `messages`, `notifications`, `hero`, `badges`, `portfolio`, `reports`.
 
 - Адреса API при переносе не меняются. `routes/teacher.ts` превращается в сборку: роль проверяется один раз, модули подключаются через `.route()`.
 - `routes` не обращается к Prisma напрямую: запросы и правила живут в `service`.
 - Из другого модуля импортируй только его `index.ts`, а не внутренние файлы.
 - Зависимости модулей идут в одну сторону, циклов нет. Сводные модули (`notifications`, `reports`, `badges`) читают другие, а те о них не знают. Если нужна обратная связь, вынеси общее в третий модуль.
 - `platform/` не импортирует модули.
-- Доступ к группе и ученику проверяется только через `teacherGroup`, `teacherStudent` и `groupsOf`, родителя — через `parentChild`. Своих условий принадлежности не пишем.
+- Доступ к группе и ученику проверяется только через `teacherGroup`, `teacherStudent` и `groupsOf` из модуля `access`, родителя — через `parentChild`. Своих условий принадлежности не пишем. `access` нужен почти всем доменам, поэтому не входит в `groups` и сам не зависит от других модулей.
 - Операции, зависящие от проверки и записи, выполняются в транзакции: блокировка группы для баллов и целей, блокировка ученика для наград.
 
 ### Веб: `apps/web/src`

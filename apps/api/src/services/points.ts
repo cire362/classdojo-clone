@@ -1,5 +1,5 @@
 import { lockGoalGroup } from '../modules/goals/index.js';
-import { groupsOf } from './access.js';
+import { groupsOf } from '../modules/access/index.js';
 import { levelForPoints } from '@heroes/shared';
 import { prisma } from '../platform/db.js';
 import { startOfDay } from '../platform/dates.js';

@@ -2,7 +2,7 @@ import { levelForPoints, normalizeHero } from '@heroes/shared';
 import { prisma } from '../platform/db.js';
 import { generatePassword, hashPassword, loginBase, pickLogin } from '../platform/credentials.js';
 import { HttpError, notFound } from '../platform/errors.js';
-import { groupsOf } from './access.js';
+import { groupsOf } from '../modules/access/index.js';
 
 /**
  * Родители. Аккаунты создаёт преподаватель (регистрации нет), как и для учеников.

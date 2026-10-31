@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { AppEnv } from '../../platform/auth.js';
 import { parse } from '../../platform/errors.js';
-import { teacherGroup } from '../../services/access.js';
+import { teacherGroup } from '../access/index.js';
 import { classGoal, removeClassGoal, saveClassGoal } from './service.js';
 
 const ClassGoalBody = z.object({
