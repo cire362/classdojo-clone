@@ -4,7 +4,7 @@ import { parentFeedRoutes } from '../modules/feed/index.js';
 import { parentMessageRoutes } from '../modules/messages/index.js';
 import { parentChild } from '../modules/access/index.js';
 import { parentChildRoutes } from '../modules/parents/index.js';
-import { studentProfile } from '../services/profile.js';
+import { parentProfileRoutes } from '../modules/profile/index.js';
 import { weeklySummary } from '../services/weekly-summary.js';
 import { parentRewardRoutes } from '../modules/rewards/index.js';
 
@@ -14,10 +14,7 @@ export const parentRoutes = new Hono<AppEnv>()
   .route('/', parentChildRoutes)
   .route('/', parentFeedRoutes)
   .route('/', parentMessageRoutes)
-  .get('/children/:id/profile', async (c) => {
-    const studentId = await parentChild(c.get('user').parentId!, c.req.param('id'));
-    return c.json(await studentProfile(studentId));
-  })
+  .route('/', parentProfileRoutes)
   .get('/children/:id/weekly-summary', async (c) => {
     const studentId = await parentChild(c.get('user').parentId!, c.req.param('id'));
     return c.json(await weeklySummary(studentId, c.req.query('week')));

@@ -1,9 +1,10 @@
 import { levelForPoints, normalizeHero } from '@heroes/shared';
-import { prisma } from '../platform/db.js';
-import { portfolioItems } from '../modules/portfolio/index.js';
-import { studentBadges } from './badges.js';
-import { isActive } from '../modules/accounts/index.js';
-import { dbDateKey, startOfDay, startOfWeek } from '../platform/dates.js';
+import type { Profile } from '@heroes/shared/api';
+import { prisma } from '../../platform/db.js';
+import { portfolioItems } from '../portfolio/index.js';
+import { studentBadges } from '../badges/index.js';
+import { isActive } from '../accounts/index.js';
+import { dbDateKey, startOfDay, startOfWeek } from '../../platform/dates.js';
 
 async function sums(studentId: string, since?: Date) {
   const base = { studentId, ...(since ? { createdAt: { gte: since } } : {}) };
@@ -17,7 +18,7 @@ async function sums(studentId: string, since?: Date) {
 }
 
 /** Полный профиль ученика — для его кабинета и для просмотра преподавателем */
-export async function studentProfile(studentId: string) {
+export async function studentProfile(studentId: string): Promise<Profile> {
   const student = await prisma.student.findUniqueOrThrow({
     where: { id: studentId },
     include: {
@@ -52,7 +53,7 @@ export async function studentProfile(studentId: string) {
       id: student.id,
       name: student.name,
       login: student.account.login,
-      group: { id: student.group.id, name: student.group.name, archivedAt: student.group.archivedAt },
+      group: { id: student.group.id, name: student.group.name, archivedAt: student.group.archivedAt?.toISOString() ?? null },
     },
     /** Открыта ли премиум-коллекция деталей (премиум у создателя группы) */
     premium: isActive(student.group.teacher.premiumUntil),
@@ -60,8 +61,11 @@ export async function studentProfile(studentId: string) {
     level: levelForPoints(total.earned),
     points: { today, week, total },
     // Баллы за посещение меняются только через отметку посещаемости
-    history: history.map(({ attendanceSessionId, awardedBy, ...e }) => ({
-      ...e, attendance: attendanceSessionId !== null, author: awardedBy?.teacher?.name ?? null,
+    history: history.map(({ attendanceSessionId, awardedBy, createdAt, ...e }) => ({
+      ...e,
+      createdAt: createdAt.toISOString(),
+      attendance: attendanceSessionId !== null,
+      author: awardedBy?.teacher?.name ?? null,
     })),
     badges: await studentBadges(studentId, student.groupId, attendance),
     portfolio,
@@ -72,5 +76,3 @@ export async function studentProfile(studentId: string) {
     },
   };
 }
-
-export type StudentProfile = Awaited<ReturnType<typeof studentProfile>>;

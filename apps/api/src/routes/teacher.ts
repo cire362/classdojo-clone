@@ -16,7 +16,7 @@ import { teacherMessageRoutes } from '../modules/messages/index.js';
 import { addCoTeacher, groupTeachers, removeCoTeacher } from '../services/coTeachers.js';
 import { attendanceRoutes, todayAttendance } from '../modules/attendance/index.js';
 import { cardSummaries, pointRoutes } from '../modules/points/index.js';
-import { studentProfile } from '../services/profile.js';
+import { teacherProfileRoutes } from '../modules/profile/index.js';
 import { createDefaultReasons, manualReasons, reasonRoutes } from '../modules/reasons/index.js';
 import { groupStats, statsWorkbook } from '../services/stats.js';
 import { weeklyStats } from '../services/weekly-stats.js';
@@ -198,10 +198,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   // ───── Родители ─────
   .route('/', teacherParentRoutes)
 
-  .get('/students/:id/profile', async (c) => {
-    const student = await teacherStudent(c.get('user'), c.req.param('id'));
-    return c.json(await studentProfile(student.id));
-  })
+  .route('/', teacherProfileRoutes)
   .route('/', teacherHeroRoutes)
 
   // ───── Причины ─────

@@ -1,6 +1,6 @@
 import { BADGES, LEVELS, type StudentBadge } from '@heroes/shared';
-import { prisma } from '../platform/db.js';
-import { dateKey, dbDateKey } from '../platform/dates.js';
+import { prisma } from '../../platform/db.js';
+import { dateKey, dbDateKey } from '../../platform/dates.js';
 
 const LEVEL_FIVE = LEVELS[4].threshold;
 type Event = { id: string; studentId: string; value: number; createdAt: Date; awardedGroupId: string | null };
@@ -33,7 +33,9 @@ async function firstInGroup(groupId: string) {
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     select: { id: true, studentId: true, value: true, createdAt: true, awardedGroupId: true },
   });
-  const eligible = [...crossings(events).values()].filter((e) => e.awardedGroupId === groupId && e.createdAt >= group.badgeTrackingStartedAt);
+  const eligible = [...crossings(events).values()].filter(
+    (e) => e.awardedGroupId === groupId && e.createdAt >= group.badgeTrackingStartedAt,
+  );
   const first = Math.min(...eligible.map((e) => e.createdAt.getTime()));
   return { name: group.name, winners: eligible.filter((e) => e.createdAt.getTime() === first) };
 }
@@ -42,7 +44,11 @@ async function firstInGroup(groupId: string) {
  * Значки — проекция истории, без дублирующих записей в портфолио. Поздний пропуск/минус не отнимает
  * уже заработанное, но исправление ошибочного начисления или отметки пересчитывает достижения.
  */
-export async function studentBadges(studentId: string, currentGroupId: string, attendance: Attendance[]): Promise<StudentBadge[]> {
+export async function studentBadges(
+  studentId: string,
+  currentGroupId: string,
+  attendance: Attendance[],
+): Promise<StudentBadge[]> {
   const events = await prisma.pointEvent.findMany({
     where: { studentId, value: { gt: 0 } },
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
@@ -70,8 +76,13 @@ export async function studentBadges(studentId: string, currentGroupId: string, a
     : 'Учитываются новые достижения уровня. При одновременном достижении значок получают все.';
 
   return BADGES.map((badge) => {
-    const progress = badge.id === 'attendance.streak10' ? Math.min(best, 10) : badge.id === 'help.20' ? Math.min(help.length, 20) : winningEvent ? 1 : 0;
-    const earnedOn = badge.id === 'attendance.streak10' ? streakDate : badge.id === 'help.20' ? (help[19] ? dateKey(help[19].createdAt) : null) : winningEvent ? dateKey(winningEvent.createdAt) : null;
-    return { ...badge, progress, earnedOn, note: badge.id === 'level.first5' ? firstNote : null, groupName: badge.id === 'level.first5' && winningEvent ? ranking!.name : null };
+    const first = badge.id === 'level.first5';
+    const progress = badge.id === 'attendance.streak10' ? Math.min(best, 10)
+      : badge.id === 'help.20' ? Math.min(help.length, 20)
+      : winningEvent ? 1 : 0;
+    const earnedOn = badge.id === 'attendance.streak10' ? streakDate
+      : badge.id === 'help.20' ? (help[19] ? dateKey(help[19].createdAt) : null)
+      : winningEvent ? dateKey(winningEvent.createdAt) : null;
+    return { ...badge, progress, earnedOn, note: first ? firstNote : null, groupName: first && winningEvent ? ranking!.name : null };
   });
 }
