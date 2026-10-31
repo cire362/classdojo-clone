@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { prisma } from '../src/platform/db.js';
-import { studentReport } from '../src/services/student-report.js';
-import { reportPdf } from '../src/services/report-pdf.js';
+import { studentReport } from '../src/modules/reports/index.js';
+import { reportPdf } from '../src/modules/reports/index.js';
 import { call, login, setupTeacher } from './helpers.js';
 
 it('PDF доступен владельцу и соавтору, чужим и другим ролям закрыт; архив читается', async () => {

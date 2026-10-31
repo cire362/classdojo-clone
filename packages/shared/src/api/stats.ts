@@ -34,5 +34,7 @@ export interface Stats {
     subtractedTeacher: boolean;
     presentCount: number;
     studentsTotal: number;
+    /** Кто присутствовал на уроке: нужен листу Excel */
+    present: string[];
   }[];
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { prisma } from '../src/platform/db.js';
-import { weeklyPeriod } from '../src/services/weekly-summary.js';
+import { weeklyPeriod } from '../src/modules/reports/index.js';
 import { call, login, setupTeacher } from './helpers.js';
 
 async function family() {

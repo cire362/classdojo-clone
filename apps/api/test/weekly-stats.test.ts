@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { prisma } from '../src/platform/db.js';
-import { trendPeriod } from '../src/services/weekly-stats.js';
+import { trendPeriod } from '../src/modules/reports/index.js';
 import { call, setupTeacher } from './helpers.js';
 
 it('график: границы по Москве, смена года, пустые недели и точное обрезание периода', async () => {

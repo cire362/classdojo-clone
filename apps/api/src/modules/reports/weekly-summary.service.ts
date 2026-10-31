@@ -1,6 +1,7 @@
-import { prisma } from '../platform/db.js';
-import { addDays, dateKey, dbDate, dbDateKey, localDayStart, startOfWeek } from '../platform/dates.js';
-import { HttpError } from '../platform/errors.js';
+import type { WeeklySummary } from '@heroes/shared/api';
+import { prisma } from '../../platform/db.js';
+import { addDays, dateKey, dbDate, dbDateKey, localDayStart, startOfWeek } from '../../platform/dates.js';
+import { HttpError } from '../../platform/errors.js';
 
 /** Полная календарная неделя по часовому поясу приложения, включая смену года. */
 export function weeklyPeriod(week?: string, now = new Date()) {
@@ -20,7 +21,7 @@ export function weeklyPeriod(week?: string, now = new Date()) {
 }
 
 /** Вызывается только после parentChild: в ответе нет данных других учеников. */
-export async function weeklySummary(studentId: string, week?: string) {
+export async function weeklySummary(studentId: string, week?: string): Promise<WeeklySummary> {
   const period = weeklyPeriod(week);
   const { events, marks } = await prisma.$transaction(async (tx) => {
     const events = await tx.pointEvent.groupBy({
@@ -55,7 +56,13 @@ export async function weeklySummary(studentId: string, week?: string) {
     reasons: [...grouped.values()].sort((a, b) => b.earned - a.earned || b.lost - a.lost || a.name.localeCompare(b.name, 'ru')),
     attendance: {
       total: marks.length, attended, missed: marks.length - attended,
-      records: marks.map((r) => ({ id: r.id, date: dbDateKey(r.session.date), lesson: r.session.lessonNumber, present: r.present, groupName: r.session.group.name })),
+      records: marks.map((r) => ({
+        id: r.id,
+        date: dbDateKey(r.session.date),
+        lesson: r.session.lessonNumber,
+        present: r.present,
+        groupName: r.session.group.name,
+      })),
     },
   };
 }

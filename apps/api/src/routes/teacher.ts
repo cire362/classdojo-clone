@@ -18,10 +18,7 @@ import { attendanceRoutes, todayAttendance } from '../modules/attendance/index.j
 import { cardSummaries, pointRoutes } from '../modules/points/index.js';
 import { teacherProfileRoutes } from '../modules/profile/index.js';
 import { createDefaultReasons, manualReasons, reasonRoutes } from '../modules/reasons/index.js';
-import { groupStats, statsWorkbook } from '../services/stats.js';
-import { weeklyStats } from '../services/weekly-stats.js';
-import { studentReport } from '../services/student-report.js';
-import { reportPdf } from '../services/report-pdf.js';
+import { teacherReportRoutes } from '../modules/reports/index.js';
 import { teacherAccountRoutes } from '../modules/accounts/index.js';
 import { teacherHeroRoutes } from '../modules/hero/index.js';
 import { studentAdminRoutes } from '../modules/students/index.js';
@@ -34,14 +31,6 @@ const GroupPatch = z.object({
   subtractTeacher: z.boolean().optional(),
 });
 const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).max(64) });
-
-function period(q: Record<string, string | undefined>) {
-  const today = new Date();
-  const from = q.from && isDateKey(q.from) ? q.from : dateKey(new Date(today.getFullYear(), today.getMonth(), 1));
-  const to = q.to && isDateKey(q.to) ? q.to : dateKey(today);
-  if (from > to) throw new HttpError(400, 'Начало периода позже конца');
-  return { from, to };
-}
 
 export const teacherRoutes = new Hono<AppEnv>()
   .use(requireRole('TEACHER'))
@@ -214,39 +203,4 @@ export const teacherRoutes = new Hono<AppEnv>()
   .route('/', attendanceRoutes)
 
   // ───── Статистика ─────
-  .get('/groups/:id/stats', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
-    const { from, to } = period(c.req.query());
-    return c.json(await groupStats(group.id, from, to));
-  })
-  .get('/students/:id/report.pdf', async (c) => {
-    const user = c.get('user');
-    const student = await teacherStudent(user, c.req.param('id'));
-    const query = parse(z.object({ from: z.string().optional(), to: z.string().optional() }), c.req.query());
-    const report = await studentReport(student.id, user.teacherId!, query);
-    const pdf = await reportPdf(report);
-    const name = `Отчёт ${student.name.replace(/[\u0000-\u001f/\\]/g, ' ')} ${report.from}_${report.to}.pdf`;
-    const encoded = encodeURIComponent(name).replace(/['()*]/g, (s) => `%${s.charCodeAt(0).toString(16).toUpperCase()}`);
-    return new Response(new Uint8Array(pdf), { headers: {
-      'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="student-report.pdf"; filename*=UTF-8''${encoded}`,
-      'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff',
-    } });
-  })
-  .get('/groups/:id/stats/weekly', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
-    const query = parse(z.object({ from: z.string().optional(), to: z.string().optional(), studentId: id.optional(), teamId: id.optional() }), c.req.query());
-    return c.json(await weeklyStats(group.id, query));
-  })
-  .get('/groups/:id/stats.xlsx', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
-    const { from, to } = period(c.req.query());
-    const buf = await statsWorkbook(group.id, group.name, from, to);
-    const filename = `Статистика ${group.name} ${from}_${to}.xlsx`;
-    return new Response(new Uint8Array(buf), {
-      headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="stats.xlsx"; filename*=UTF-8''${encodeURIComponent(filename)}`,
-        'Cache-Control': 'no-store',
-      },
-    });
-  });
+  .route('/', teacherReportRoutes);

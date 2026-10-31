@@ -1,9 +1,10 @@
 import ExcelJS from 'exceljs';
 import { levelForPoints } from '@heroes/shared';
-import { prisma } from '../platform/db.js';
-import { addDays, dbDate, dbDateKey, localDayStart } from '../platform/dates.js';
+import type { Stats } from '@heroes/shared/api';
+import { prisma } from '../../platform/db.js';
+import { addDays, dbDate, dbDateKey, localDayStart } from '../../platform/dates.js';
 
-export async function groupStats(groupId: string, from: string, to: string) {
+export async function groupStats(groupId: string, from: string, to: string): Promise<Stats> {
   const start = localDayStart(from);
   const end = addDays(localDayStart(to), 1);
 

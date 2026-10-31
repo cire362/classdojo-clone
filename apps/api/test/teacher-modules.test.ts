@@ -44,6 +44,10 @@ const routes = (groupId: string, studentId: string): [string, string][] => [
   ['POST', '/api/teacher/me/password'],
   ['PUT', `/api/teacher/students/${studentId}/hero`],
   ['GET', `/api/teacher/students/${studentId}/profile`],
+  ['GET', `/api/teacher/groups/${groupId}/stats`],
+  ['GET', `/api/teacher/groups/${groupId}/stats/weekly`],
+  ['GET', `/api/teacher/groups/${groupId}/stats.xlsx`],
+  ['GET', `/api/teacher/students/${studentId}/report.pdf`],
 ];
 
 describe('маршруты модулей преподавателя', () => {
