@@ -7,7 +7,7 @@ import { prisma } from '../platform/db.js';
 import { env } from '../platform/env.js';
 import { addDays, dateKey, dbDate, isDateKey, startOfDay } from '../platform/dates.js';
 import { HttpError, notFound, parse } from '../platform/errors.js';
-import { ARCHIVED_MESSAGE, OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../modules/access/index.js';
+import { OWNER_ONLY_MESSAGE, groupsOf, teacherGroup, teacherStudent } from '../modules/access/index.js';
 import { classGoal, goalRoutes } from '../modules/goals/index.js';
 import { createDefaultRewards, pendingRequestCount, teacherRewardRoutes } from '../modules/rewards/index.js';
 import { groupTeams, teamRoutes } from '../modules/teams/index.js';
@@ -25,7 +25,7 @@ import { weeklyStats } from '../services/weekly-stats.js';
 import { studentReport } from '../services/student-report.js';
 import { reportPdf } from '../services/report-pdf.js';
 import { MAX_IMPORT_BYTES, previewImport } from '../services/import.js';
-import { createParents, deleteOrphanParents, linkParent, resetParentPassword, studentParents, unlinkParent } from '../services/parents.js';
+import { deleteOrphanParents, teacherParentRoutes } from '../modules/parents/index.js';
 import { createStudents, deleteStudent, resetStudentPassword } from '../services/students.js';
 import { changeOwnPassword } from '../services/password.js';
 import { saveHero } from './student.js';
@@ -40,7 +40,6 @@ const StudentsCreate = z.object({
   names: z.array(z.string().trim().max(80)).min(1).max(100),
 });
 const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).max(64) });
-const ParentLink = z.object({ login: z.string().trim().min(1).max(64) });
 const StudentPatch = z.object({ name: z.string().trim().min(1).max(80) });
 const ResetMany = z.object({ studentIds: z.array(id).max(200).optional() });
 const ProfileBody = z.object({ name: z.string().trim().min(1, 'Введите имя').max(80) });
@@ -286,48 +285,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   .route('/', teacherMessageRoutes)
 
   // ───── Родители ─────
-  .get('/students/:id/parents', async (c) => {
-    const student = await teacherStudent(c.get('user'), c.req.param('id'));
-    return c.json(await studentParents(student.id));
-  })
-  .post('/students/:id/parents', async (c) => {
-    const student = await teacherStudent(c.get('user'), c.req.param('id'));
-    if (student.group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
-    if ((await prisma.parentStudent.count({ where: { studentId: student.id } })) >= 4) {
-      throw new HttpError(400, 'У ученика может быть не больше 4 родительских входов');
-    }
-    const [credentials] = await createParents([{ id: student.id, name: student.name }]);
-    return c.json(credentials);
-  })
-  .post('/students/:id/parents/link', async (c) => {
-    const user = c.get('user');
-    const student = await teacherStudent(user, c.req.param('id'));
-    if (student.group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
-    const { login } = parse(ParentLink, await c.req.json().catch(() => null));
-    await linkParent(user.teacherId!, student.id, login);
-    return c.json(await studentParents(student.id));
-  })
-  .delete('/students/:id/parents/:parentId', async (c) => {
-    const user = c.get('user');
-    const student = await teacherStudent(user, c.req.param('id'));
-    await unlinkParent(user.teacherId!, student.id, c.req.param('parentId'));
-    return c.json(await studentParents(student.id));
-  })
-  .post('/students/:id/parents/:parentId/reset-password', async (c) => {
-    const user = c.get('user');
-    const student = await teacherStudent(user, c.req.param('id'));
-    return c.json(await resetParentPassword(user.teacherId!, c.req.param('parentId'), student.id));
-  })
-  /** Доступ родителям всех учеников группы, у кого его ещё нет, — для листа на родительское собрание */
-  .post('/groups/:id/parents', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-    const students = await prisma.student.findMany({
-      where: { groupId: group.id, parents: { none: {} } },
-      orderBy: { name: 'asc' },
-      select: { id: true, name: true },
-    });
-    return c.json({ credentials: await createParents(students) });
-  })
+  .route('/', teacherParentRoutes)
 
   .get('/students/:id/profile', async (c) => {
     const student = await teacherStudent(c.get('user'), c.req.param('id'));

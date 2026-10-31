@@ -1,6 +1,6 @@
 import { randomHero } from '@heroes/shared';
 import { prisma } from '../platform/db.js';
-import { deleteOrphanParents } from './parents.js';
+import { deleteOrphanParents } from '../modules/parents/index.js';
 import { generatePassword, hashPassword, loginBase, pickLogin } from '../platform/credentials.js';
 
 export interface IssuedCredentials {

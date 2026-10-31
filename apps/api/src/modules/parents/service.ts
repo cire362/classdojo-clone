@@ -1,23 +1,16 @@
 import { levelForPoints, normalizeHero } from '@heroes/shared';
-import { prisma } from '../platform/db.js';
-import { generatePassword, hashPassword, loginBase, pickLogin } from '../platform/credentials.js';
-import { HttpError, notFound } from '../platform/errors.js';
-import { groupsOf } from '../modules/access/index.js';
+import type { ParentAccess, ParentChild, ParentCredentials } from '@heroes/shared/api';
+import { prisma } from '../../platform/db.js';
+import { generatePassword, hashPassword, loginBase, pickLogin } from '../../platform/credentials.js';
+import { HttpError, notFound } from '../../platform/errors.js';
+import { groupsOf } from '../access/index.js';
+import { unreadPosts } from '../feed/index.js';
+import { unreadMessages } from '../messages/index.js';
 
 /**
  * Родители. Аккаунты создаёт преподаватель (регистрации нет), как и для учеников.
  * Один родительский вход может быть привязан к нескольким детям; родитель видит только их.
  */
-export interface ParentCredentials {
-  parentId: string;
-  /** Для кого выдан доступ — подпись на листе для печати */
-  studentId: string;
-  studentName: string;
-  login: string;
-  /** Пароль в открытом виде — возвращается только один раз, в БД хранится хеш */
-  password: string;
-}
-
 /** «Маша Иванова» → parent.masha.i (при совпадении parent.masha.i2 …) */
 async function freeParentLogins(names: string[]): Promise<string[]> {
   const bases = names.map((n) => `parent.${loginBase(n)}`);
@@ -33,7 +26,7 @@ async function freeParentLogins(names: string[]): Promise<string[]> {
   });
 }
 
-export async function createParents(students: { id: string; name: string }[]): Promise<ParentCredentials[]> {
+async function createParents(students: { id: string; name: string }[]): Promise<ParentCredentials[]> {
   const logins = await freeParentLogins(students.map((s) => s.name));
   const prepared = await Promise.all(
     students.map(async (s, i) => {
@@ -60,7 +53,26 @@ export async function createParents(students: { id: string; name: string }[]): P
   }));
 }
 
-export async function studentParents(studentId: string) {
+/** Вход родителя для одного ученика: не больше четырёх на ученика */
+export async function issueParent(student: { id: string; name: string }): Promise<ParentCredentials> {
+  if ((await prisma.parentStudent.count({ where: { studentId: student.id } })) >= 4) {
+    throw new HttpError(400, 'У ученика может быть не больше 4 родительских входов');
+  }
+  const [credentials] = await createParents([student]);
+  return credentials;
+}
+
+/** Доступ родителям всех учеников группы, у кого его ещё нет, — для листа на родительское собрание */
+export async function issueGroupParents(groupId: string): Promise<ParentCredentials[]> {
+  const students = await prisma.student.findMany({
+    where: { groupId, parents: { none: {} } },
+    orderBy: { name: 'asc' },
+    select: { id: true, name: true },
+  });
+  return createParents(students);
+}
+
+export async function studentParents(studentId: string): Promise<ParentAccess[]> {
   const links = await prisma.parentStudent.findMany({
     where: { studentId },
     orderBy: { createdAt: 'asc' },
@@ -122,7 +134,7 @@ export function deleteOrphanParents() {
 }
 
 /** Новый пароль родителю; все его сессии завершаются */
-export async function resetParentPassword(teacherId: string, parentId: string, studentId: string) {
+export async function resetParentPassword(teacherId: string, parentId: string, studentId: string): Promise<ParentCredentials> {
   const parent = await teacherParent(teacherId, { id: parentId });
   const student = await prisma.student.findUniqueOrThrow({ where: { id: studentId }, select: { id: true, name: true } });
   const password = generatePassword();
@@ -133,8 +145,8 @@ export async function resetParentPassword(teacherId: string, parentId: string, s
   return { parentId, studentId: student.id, studentName: student.name, login: parent.account.login, password };
 }
 
-/** Дети родителя — для его кабинета */
-export async function parentChildren(parentId: string) {
+/** Дети родителя для его кабинета, со значками новых сообщений и записей в ленте */
+export async function parentChildren(parentId: string, accountId: string): Promise<ParentChild[]> {
   const links = await prisma.parentStudent.findMany({
     where: { parentId },
     include: {
@@ -148,12 +160,18 @@ export async function parentChildren(parentId: string) {
     },
     orderBy: { student: { name: 'asc' } },
   });
-  return links.map(({ student: s }) => ({
-    id: s.id,
-    name: s.name,
-    groupId: s.groupId,
-    groupName: s.group.name,
-    hero: { name: s.hero?.name ?? '', parts: normalizeHero(s.hero?.parts) },
-    level: levelForPoints(s.pointEvents.reduce((sum, e) => sum + e.value, 0)).level,
-  }));
+  return Promise.all(
+    links.map(async ({ student: s }) => ({
+      id: s.id,
+      name: s.name,
+      groupId: s.groupId,
+      groupName: s.group.name,
+      hero: { name: s.hero?.name ?? '', parts: normalizeHero(s.hero?.parts) },
+      level: levelForPoints(s.pointEvents.reduce((sum, e) => sum + e.value, 0)).level,
+      unread: {
+        messages: await unreadMessages(accountId, [{ studentId: s.id, parentId }]),
+        feed: await unreadPosts(accountId, [s.groupId]),
+      },
+    })),
+  );
 }
