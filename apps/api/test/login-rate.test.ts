@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
-import { checkLoginRate, cleanupLoginAttempts, resetLoginRate } from '../src/auth.js';
-import { prisma } from '../src/db.js';
+import { checkLoginRate, cleanupLoginAttempts, resetLoginRate } from '../src/platform/auth.js';
+import { prisma } from '../src/platform/db.js';
 import { createApp } from '../src/app.js';
-import { HttpError } from '../src/lib/errors.js';
+import { HttpError } from '../src/platform/errors.js';
 import { setupTeacher } from './helpers.js';
 
 describe('ограничение попыток входа в общей базе', () => {

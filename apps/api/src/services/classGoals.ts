@@ -1,6 +1,6 @@
 import type { Prisma } from '../generated/prisma/client';
-import { prisma } from '../db.js';
-import { HttpError, notFound } from '../lib/errors.js';
+import { prisma } from '../platform/db.js';
+import { HttpError, notFound } from '../platform/errors.js';
 import { ARCHIVED_MESSAGE } from './access.js';
 
 /** Изменение цели и начисление сериализуются по группе: начисление не попадёт в удалённую цель. */

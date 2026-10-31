@@ -1,6 +1,6 @@
-import { prisma } from '../db.js';
+import { prisma } from '../platform/db.js';
 import type { Prisma } from '../generated/prisma/client.js';
-import { HttpError, notFound } from '../lib/errors.js';
+import { HttpError, notFound } from '../platform/errors.js';
 import { groupsOf } from './access.js';
 
 /** Лента класса: объявления преподавателей группы для учеников и их родителей */

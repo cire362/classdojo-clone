@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { prisma } from '../src/db.js';
+import { prisma } from '../src/platform/db.js';
 import { call, login, setupTeacher } from './helpers.js';
 
 async function pending(t: Awaited<ReturnType<typeof setupTeacher>>, status: 'PENDING' | 'APPROVED' | 'REJECTED' = 'PENDING') {

@@ -7,8 +7,8 @@
  * С флагом --reset меняет пароль существующему преподавателю.
  */
 import { parseArgs } from 'node:util';
-import { prisma } from '../db.js';
-import { LOGIN_PATTERN, generatePassword, hashPassword } from '../lib/credentials.js';
+import { prisma } from '../platform/db.js';
+import { LOGIN_PATTERN, generatePassword, hashPassword } from '../platform/credentials.js';
 
 const { values } = parseArgs({
   options: {

@@ -1,7 +1,7 @@
 import { levelForPoints } from '@heroes/shared';
-import { prisma } from '../db.js';
-import { addDays, dateKey, dbDate, dbDateKey, localDayStart } from '../lib/dates.js';
-import { HttpError } from '../lib/errors.js';
+import { prisma } from '../platform/db.js';
+import { addDays, dateKey, dbDate, dbDateKey, localDayStart } from '../platform/dates.js';
+import { HttpError } from '../platform/errors.js';
 import { trendPeriod } from './weekly-stats.js';
 
 /** Только после teacherStudent. Согласованный отчёт, без лимита истории профиля. */

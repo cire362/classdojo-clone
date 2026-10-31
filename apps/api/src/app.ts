@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { secureHeaders } from 'hono/secure-headers';
-import { requireAuth, type AppEnv } from './auth.js';
-import { prisma } from './db.js';
-import { HttpError } from './lib/errors.js';
+import { requireAuth, type AppEnv } from './platform/auth.js';
+import { prisma } from './platform/db.js';
+import { HttpError } from './platform/errors.js';
 import { notifications } from './services/notifications.js';
 import { adminRoutes } from './routes/admin.js';
 import { authRoutes } from './routes/auth.js';

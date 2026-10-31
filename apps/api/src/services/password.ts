@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { checkLoginRate, resetLoginRate, type AuthUser } from '../auth.js';
-import { prisma } from '../db.js';
-import { hashPassword, verifyPassword } from '../lib/credentials.js';
-import { HttpError, parse } from '../lib/errors.js';
+import { checkLoginRate, resetLoginRate, type AuthUser } from '../platform/auth.js';
+import { prisma } from '../platform/db.js';
+import { hashPassword, verifyPassword } from '../platform/credentials.js';
+import { HttpError, parse } from '../platform/errors.js';
 
 const PasswordBody = z.object({
   currentPassword: z.string().min(1).max(200),

@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { createPrisma } from '../src/db';
+import { createPrisma } from '../src/platform/db';
 
 /**
  * Каждый прогон тестов работает в собственной новой схеме PostgreSQL:

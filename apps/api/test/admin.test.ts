@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { prisma } from '../src/db.js';
-import { hashPassword } from '../src/lib/credentials.js';
+import { prisma } from '../src/platform/db.js';
+import { hashPassword } from '../src/platform/credentials.js';
 import { call, login, setupTeacher } from './helpers.js';
 
 async function setupAdmin() {

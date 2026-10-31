@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { prisma } from '../src/db.js';
-import { addDays, dateKey, localDayStart, startOfDay } from '../src/lib/dates.js';
+import { prisma } from '../src/platform/db.js';
+import { addDays, dateKey, localDayStart, startOfDay } from '../src/platform/dates.js';
 import { call, setupTeacher } from './helpers.js';
 
 const daysAgo = (n: number) => dateKey(addDays(startOfDay(), -n));

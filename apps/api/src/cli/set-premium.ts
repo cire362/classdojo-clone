@@ -6,7 +6,7 @@
  *   docker compose exec api npm run set-premium -- --login ivanova --until 2027-06-30
  */
 import { parseArgs } from 'node:util';
-import { prisma } from '../db.js';
+import { prisma } from '../platform/db.js';
 
 const { values } = parseArgs({
   options: {

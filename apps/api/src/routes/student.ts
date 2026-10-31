@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { normalizeHero } from '@heroes/shared';
 import { z } from 'zod';
-import { requireRole, type AppEnv } from '../auth.js';
-import { prisma } from '../db.js';
-import { HttpError, parse } from '../lib/errors.js';
+import { requireRole, type AppEnv } from '../platform/auth.js';
+import { prisma } from '../platform/db.js';
+import { HttpError, parse } from '../platform/errors.js';
 import { validateHeroForLevel } from '../services/heroParts.js';
 import { studentLevel } from '../services/points.js';
 import { groupFeed } from '../services/feed.js';

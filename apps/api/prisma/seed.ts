@@ -4,9 +4,9 @@
  * преподаватель уже есть, ничего не меняется (кроме синхронизации деталей героев).
  */
 import { randomHero } from '@heroes/shared';
-import { prisma } from '../src/db.js';
-import { hashPassword, loginBase, pickLogin } from '../src/lib/credentials.js';
-import { addDays, dateKey, dbDate, startOfDay } from '../src/lib/dates.js';
+import { prisma } from '../src/platform/db.js';
+import { hashPassword, loginBase, pickLogin } from '../src/platform/credentials.js';
+import { addDays, dateKey, dbDate, startOfDay } from '../src/platform/dates.js';
 import { syncHeroParts } from '../src/services/heroParts.js';
 import { attendanceReason, createDefaultReasons } from '../src/services/reasons.js';
 import { createDefaultRewards } from '../src/services/rewards.js';

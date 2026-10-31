@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { ACCOUNT_PROFILE, accountName, checkLoginRate, createSession, destroySession, loadUser, resetLoginRate, type AppEnv } from '../auth.js';
-import { prisma } from '../db.js';
-import { hashPassword, verifyPassword } from '../lib/credentials.js';
-import { HttpError, parse } from '../lib/errors.js';
+import { ACCOUNT_PROFILE, accountName, checkLoginRate, createSession, destroySession, loadUser, resetLoginRate, type AppEnv } from '../platform/auth.js';
+import { prisma } from '../platform/db.js';
+import { hashPassword, verifyPassword } from '../platform/credentials.js';
+import { HttpError, parse } from '../platform/errors.js';
 
 const LoginBody = z.object({
   login: z.string().trim().toLowerCase().min(1).max(64),

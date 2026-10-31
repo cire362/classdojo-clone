@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_HERO } from '@heroes/shared';
-import { prisma } from '../src/db.js';
+import { prisma } from '../src/platform/db.js';
 import { call, login, setupTeacher } from './helpers.js';
 
 describe('авторизация', () => {

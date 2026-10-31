@@ -1,5 +1,5 @@
 import type { Prisma } from '../generated/prisma/client';
-import { prisma } from '../db.js';
+import { prisma } from '../platform/db.js';
 
 type Tx = Prisma.TransactionClient | typeof prisma;
 

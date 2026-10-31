@@ -1,4 +1,4 @@
-import { prisma } from '../db.js';
+import { prisma } from '../platform/db.js';
 import { studentHasPremium } from './premium.js';
 import { studentLevel } from './points.js';
 

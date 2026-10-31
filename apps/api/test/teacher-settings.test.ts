@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { call, login, setupTeacher } from './helpers.js';
-import { prisma } from '../src/db.js';
+import { prisma } from '../src/platform/db.js';
 
 const PASSWORD = 'teacher-pass-123';
 

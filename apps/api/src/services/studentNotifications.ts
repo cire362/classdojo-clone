@@ -1,6 +1,6 @@
 import type { Prisma } from '../generated/prisma/client.js';
-import { prisma } from '../db.js';
-import { HttpError } from '../lib/errors.js';
+import { prisma } from '../platform/db.js';
+import { HttpError } from '../platform/errors.js';
 import { markFeedRead } from './feed.js';
 
 const PAGE = 30;

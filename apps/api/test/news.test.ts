@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { HERO_PARTS } from '@heroes/shared';
-import { prisma } from '../src/db.js';
+import { prisma } from '../src/platform/db.js';
 import { call, setupTeacher } from './helpers.js';
 
 const give = (studentId: string, value: number) =>

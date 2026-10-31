@@ -1,6 +1,6 @@
-import { prisma } from '../db.js';
-import { addDays, dateKey, dbDate, localDayStart, startOfWeek } from '../lib/dates.js';
-import { HttpError, notFound } from '../lib/errors.js';
+import { prisma } from '../platform/db.js';
+import { addDays, dateKey, dbDate, localDayStart, startOfWeek } from '../platform/dates.js';
+import { HttpError, notFound } from '../platform/errors.js';
 
 export function trendPeriod(from?: string, to?: string, now = new Date()) {
   from ??= dateKey(new Date(now.getFullYear(), now.getMonth(), 1));

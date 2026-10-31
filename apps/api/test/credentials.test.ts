@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generatePassword, hashPassword, loginBase, pickLogin, verifyPassword } from '../src/lib/credentials.js';
+import { generatePassword, hashPassword, loginBase, pickLogin, verifyPassword } from '../src/platform/credentials.js';
 
 describe('логины и пароли', () => {
   it('транслитерация имени в логин', () => {

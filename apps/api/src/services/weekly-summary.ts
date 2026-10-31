@@ -1,6 +1,6 @@
-import { prisma } from '../db.js';
-import { addDays, dateKey, dbDate, dbDateKey, localDayStart, startOfWeek } from '../lib/dates.js';
-import { HttpError } from '../lib/errors.js';
+import { prisma } from '../platform/db.js';
+import { addDays, dateKey, dbDate, dbDateKey, localDayStart, startOfWeek } from '../platform/dates.js';
+import { HttpError } from '../platform/errors.js';
 
 /** Полная календарная неделя по часовому поясу приложения, включая смену года. */
 export function weeklyPeriod(week?: string, now = new Date()) {

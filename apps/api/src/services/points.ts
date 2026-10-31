@@ -1,9 +1,9 @@
 import { lockGoalGroup } from './classGoals.js';
 import { groupsOf } from './access.js';
 import { levelForPoints } from '@heroes/shared';
-import { prisma } from '../db.js';
-import { startOfDay } from '../lib/dates.js';
-import { HttpError } from '../lib/errors.js';
+import { prisma } from '../platform/db.js';
+import { startOfDay } from '../platform/dates.js';
+import { HttpError } from '../platform/errors.js';
 
 /** Сумма заработанных (только положительных) баллов по ученикам */
 export async function earnedByStudent(studentIds: string[], since?: Date): Promise<Map<string, number>> {

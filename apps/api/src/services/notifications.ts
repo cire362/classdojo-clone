@@ -1,5 +1,5 @@
-import type { AuthUser } from '../auth.js';
-import { prisma } from '../db.js';
+import type { AuthUser } from '../platform/auth.js';
+import { prisma } from '../platform/db.js';
 import { groupsOf } from './access.js';
 import { unreadPosts } from './feed.js';
 import { unreadMessages } from './messages.js';

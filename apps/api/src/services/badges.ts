@@ -1,6 +1,6 @@
 import { BADGES, LEVELS, type StudentBadge } from '@heroes/shared';
-import { prisma } from '../db.js';
-import { dateKey, dbDateKey } from '../lib/dates.js';
+import { prisma } from '../platform/db.js';
+import { dateKey, dbDateKey } from '../platform/dates.js';
 
 const LEVEL_FIVE = LEVELS[4].threshold;
 type Event = { id: string; studentId: string; value: number; createdAt: Date; awardedGroupId: string | null };

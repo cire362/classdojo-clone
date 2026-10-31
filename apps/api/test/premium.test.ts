@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_HERO, HERO_PARTS, HERO_SLOTS, randomHero, type HeroParts } from '@heroes/shared';
-import { prisma } from '../src/db.js';
+import { prisma } from '../src/platform/db.js';
 import { call, setupTeacher } from './helpers.js';
 
 const premiumHero = { ...DEFAULT_HERO, emblem: 'emblem.diamond', suitColor: 'color.cosmic' };

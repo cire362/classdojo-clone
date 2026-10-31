@@ -1,7 +1,7 @@
 import { randomHero } from '@heroes/shared';
-import { prisma } from '../db.js';
+import { prisma } from '../platform/db.js';
 import { deleteOrphanParents } from './parents.js';
-import { generatePassword, hashPassword, loginBase, pickLogin } from '../lib/credentials.js';
+import { generatePassword, hashPassword, loginBase, pickLogin } from '../platform/credentials.js';
 
 export interface IssuedCredentials {
   id: string;

@@ -1,7 +1,7 @@
-import type { AuthUser } from '../auth.js';
+import type { AuthUser } from '../platform/auth.js';
 import type { Prisma } from '../generated/prisma/client';
-import { prisma } from '../db.js';
-import { HttpError, notFound } from '../lib/errors.js';
+import { prisma } from '../platform/db.js';
+import { HttpError, notFound } from '../platform/errors.js';
 
 /**
  * Проверки владения. Чужие группы и ученики выглядят для преподавателя как

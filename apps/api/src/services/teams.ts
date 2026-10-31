@@ -1,5 +1,5 @@
-import { prisma } from '../db.js';
-import { HttpError, notFound } from '../lib/errors.js';
+import { prisma } from '../platform/db.js';
+import { HttpError, notFound } from '../platform/errors.js';
 
 /** Цвета команд — из палитры героев, чтобы команды отличались и в тёмной теме */
 export const TEAM_COLORS = ['#e63946', '#2f6fde', '#2a9d55', '#f77f00', '#7b4fd6', '#14a3a3'] as const;

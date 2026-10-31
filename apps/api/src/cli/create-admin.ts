@@ -1,7 +1,7 @@
 /** Первый администратор: npm run create-admin -- --login director --name "Директор" [--reset] */
 import { parseArgs } from 'node:util';
-import { prisma } from '../db.js';
-import { LOGIN_PATTERN, generatePassword, hashPassword } from '../lib/credentials.js';
+import { prisma } from '../platform/db.js';
+import { LOGIN_PATTERN, generatePassword, hashPassword } from '../platform/credentials.js';
 
 const { values } = parseArgs({ options: {
   login: { type: 'string' }, name: { type: 'string' }, reset: { type: 'boolean', default: false },

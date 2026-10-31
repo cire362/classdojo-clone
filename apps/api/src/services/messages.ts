@@ -1,5 +1,5 @@
-import { prisma } from '../db.js';
-import { notFound } from '../lib/errors.js';
+import { prisma } from '../platform/db.js';
+import { notFound } from '../platform/errors.js';
 import { groupsOf } from './access.js';
 
 /**

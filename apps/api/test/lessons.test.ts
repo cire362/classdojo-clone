@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import ExcelJS from 'exceljs';
-import { prisma } from '../src/db.js';
-import { addDays, dateKey, startOfDay } from '../src/lib/dates.js';
+import { prisma } from '../src/platform/db.js';
+import { addDays, dateKey, startOfDay } from '../src/platform/dates.js';
 import { call, setupTeacher } from './helpers.js';
 
 describe('несколько уроков в день', () => {

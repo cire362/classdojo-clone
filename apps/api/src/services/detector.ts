@@ -1,5 +1,5 @@
-import { env } from '../env.js';
-import { HttpError } from '../lib/errors.js';
+import { env } from '../platform/env.js';
+import { HttpError } from '../platform/errors.js';
 
 export interface DetectionResult {
   count: number;

@@ -1,10 +1,10 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { Context, MiddlewareHandler } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import type { Role } from './generated/prisma/client';
+import type { Role } from '../generated/prisma/client';
 import { prisma } from './db.js';
 import { env } from './env.js';
-import { HttpError } from './lib/errors.js';
+import { HttpError } from './errors.js';
 
 export const SESSION_COOKIE = 'hk_session';
 

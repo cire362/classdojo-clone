@@ -1,8 +1,8 @@
 import { levelForPoints, normalizeHero } from '@heroes/shared';
-import { prisma } from '../db.js';
+import { prisma } from '../platform/db.js';
 import { studentBadges } from './badges.js';
 import { isActive } from './premium.js';
-import { dbDateKey, startOfDay, startOfWeek } from '../lib/dates.js';
+import { dbDateKey, startOfDay, startOfWeek } from '../platform/dates.js';
 
 async function sums(studentId: string, since?: Date) {
   const base = { studentId, ...(since ? { createdAt: { gte: since } } : {}) };

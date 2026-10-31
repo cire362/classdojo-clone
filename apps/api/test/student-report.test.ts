@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { prisma } from '../src/db.js';
+import { prisma } from '../src/platform/db.js';
 import { studentReport } from '../src/services/student-report.js';
 import { reportPdf } from '../src/services/report-pdf.js';
 import { call, login, setupTeacher } from './helpers.js';

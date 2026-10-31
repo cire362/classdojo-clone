@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { requireRole, type AppEnv } from '../auth.js';
-import { prisma } from '../db.js';
-import { parse } from '../lib/errors.js';
+import { requireRole, type AppEnv } from '../platform/auth.js';
+import { prisma } from '../platform/db.js';
+import { parse } from '../platform/errors.js';
 import { groupFeed, unreadPosts } from '../services/feed.js';
 import { MAX_MESSAGE_LENGTH, sendMessage, threadMessages, unreadMessages } from '../services/messages.js';
 import { parentChild, parentChildren } from '../services/parents.js';

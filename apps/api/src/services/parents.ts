@@ -1,7 +1,7 @@
 import { levelForPoints, normalizeHero } from '@heroes/shared';
-import { prisma } from '../db.js';
-import { generatePassword, hashPassword, loginBase, pickLogin } from '../lib/credentials.js';
-import { HttpError, notFound } from '../lib/errors.js';
+import { prisma } from '../platform/db.js';
+import { generatePassword, hashPassword, loginBase, pickLogin } from '../platform/credentials.js';
+import { HttpError, notFound } from '../platform/errors.js';
 import { groupsOf } from './access.js';
 
 /**

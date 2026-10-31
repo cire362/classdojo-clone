@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { requireRole, type AppEnv } from '../auth.js';
-import { prisma } from '../db.js';
-import { env } from '../env.js';
-import { LOGIN_PATTERN, generatePassword, hashPassword } from '../lib/credentials.js';
-import { addDays, localDayStart } from '../lib/dates.js';
-import { HttpError, notFound, parse } from '../lib/errors.js';
+import { requireRole, type AppEnv } from '../platform/auth.js';
+import { prisma } from '../platform/db.js';
+import { env } from '../platform/env.js';
+import { LOGIN_PATTERN, generatePassword, hashPassword } from '../platform/credentials.js';
+import { addDays, localDayStart } from '../platform/dates.js';
+import { HttpError, notFound, parse } from '../platform/errors.js';
 import { changeOwnPassword } from '../services/password.js';
 import { isActive } from '../services/premium.js';
 

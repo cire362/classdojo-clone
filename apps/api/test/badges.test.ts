@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { type BadgeId, type StudentBadge } from '@heroes/shared';
-import { prisma } from '../src/db.js';
-import { dateKey, addDays, dbDate } from '../src/lib/dates.js';
+import { prisma } from '../src/platform/db.js';
+import { dateKey, addDays, dbDate } from '../src/platform/dates.js';
 import { call, login, setupTeacher } from './helpers.js';
 
 type Teacher = Awaited<ReturnType<typeof setupTeacher>>;

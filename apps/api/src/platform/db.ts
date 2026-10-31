@@ -1,5 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from './generated/prisma/client';
+import { PrismaClient } from '../generated/prisma/client';
 
 /**
  * Prisma 7 работает через драйвер pg. Схема берётся из параметра ?schema= в DATABASE_URL

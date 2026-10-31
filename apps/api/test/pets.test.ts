@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { DEFAULT_HERO, PET_COMPANIONS, normalizeHero, petStageForLevel, randomHero, renderHeroSvg, renderPetSvg, validateHeroSelection } from '@heroes/shared';
-import { prisma } from '../src/db.js';
+import { prisma } from '../src/platform/db.js';
 import { call, login, setupTeacher } from './helpers.js';
 
 it('у компаньонов три стадии роста на границах уровней 1, 4 и 7; неверный уровень безопасен', () => {

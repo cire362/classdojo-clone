@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { prisma } from '../src/db.js';
+import { prisma } from '../src/platform/db.js';
 import { call, setupTeacher } from './helpers.js';
 
 type Teacher = Awaited<ReturnType<typeof setupTeacher>>;

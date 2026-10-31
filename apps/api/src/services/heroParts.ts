@@ -1,5 +1,5 @@
 import { HERO_PARTS, validateHeroSelection, type HeroValidationResult } from '@heroes/shared';
-import { prisma } from '../db.js';
+import { prisma } from '../platform/db.js';
 
 /** Синхронизирует таблицу HeroPart с каталогом из packages/shared (вызывается при старте и в seed) */
 export async function syncHeroParts(): Promise<void> {

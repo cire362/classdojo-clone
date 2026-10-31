@@ -1,7 +1,7 @@
 import { serve } from '@hono/node-server';
 import { createApp } from './app.js';
-import { env } from './env.js';
-import { cleanupLoginAttempts } from './auth.js';
+import { env } from './platform/env.js';
+import { cleanupLoginAttempts } from './platform/auth.js';
 import { syncHeroParts } from './services/heroParts.js';
 
 await syncHeroParts();
