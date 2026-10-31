@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api, type Hero, type Profile } from '../../lib/api';
-import { HeroEditor } from '../../components/HeroEditor';
+import { HeroEditor } from '../../features/hero';
 import { ErrorBox, Skeleton } from '../../ui';
 import { useLoad } from '../../lib/hooks';
-import { useNews } from '../../features/hero';
+import { useNews } from '../../features/news';
 
 export function MyHeroPage() {
   const { data, setData, error, reload } = useLoad(() => api<Profile>('GET', '/student/profile'), []);

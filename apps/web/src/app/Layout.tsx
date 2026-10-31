@@ -1,9 +1,9 @@
 import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ChunkErrorBoundary } from './ChunkErrorBoundary';
+import { ChunkErrorBoundary } from '../ui/ChunkErrorBoundary';
 import { BellIcon, ChatsCircleIcon, GearSixIcon, GiftIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
-import { useAuth } from '../features/accounts';
-import { useNews } from '../features/hero';
+import { useAuth } from '../features/auth';
+import { useNews } from '../features/news';
 import { CountBadge, useNotifications } from '../features/notifications';
 import { pluralize } from '../lib/hooks';
 import { Skeleton } from '../ui';

@@ -2,7 +2,7 @@ import { useState, type ReactElement } from 'react';
 import { Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { DEFAULT_HERO } from '@heroes/shared';
 import type { GroupDetails } from '../src/lib/api';
-import type { GroupCtx } from '../src/pages/teacher/GroupLayout';
+import type { GroupCtx } from '../src/features/groups';
 import { renderApp } from './render';
 
 export function groupData(overrides: Partial<GroupDetails['group']> = {}): GroupDetails {

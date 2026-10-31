@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { api, type Notifications } from '../../lib/api';
-import { useAuth } from '../accounts';
+import { useAuth } from '../auth';
 
 const EMPTY: Notifications = { messages: 0, feed: 0, rewards: 0 };
 const POLL_MS = 60_000;

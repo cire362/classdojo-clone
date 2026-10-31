@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { matchesStudent } from '../src/lib/student-search';
+import { matchesStudent } from '../src/features/students/student-search';
 
 it('поиск ученика по фамилии, логину и нескольким словам; е/ё равнозначны', () => {
   const student = { name: 'Артём Ковалёв', login: 'artem.k' };

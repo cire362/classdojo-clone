@@ -4,7 +4,7 @@ import { api, type Reward, type RewardRequest } from '../../lib/api';
 import { useToast } from '../../ui/Toast';
 import { EmptyState, ErrorBox, PageTitle, Skeleton } from '../../ui';
 import { formatDateTime, pluralize, useLoad } from '../../lib/hooks';
-import { useGroup } from './GroupLayout';
+import { useGroup } from '../../features/groups';
 import { useNotifications } from '../../features/notifications';
 
 const EMOJI = ['🎁', '🪑', '🎵', '🧑‍🏫', '⏰', '🎮', '🍬', '📖', '🎨', '⚽', '🌟', '🏅'];

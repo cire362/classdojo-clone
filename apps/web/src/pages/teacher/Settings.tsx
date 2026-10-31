@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { SparkleIcon, UserIcon } from '@phosphor-icons/react';
 import { api } from '../../lib/api';
-import { useAuth } from '../../features/accounts';
+import { useAuth } from '../../features/auth';
 import { PasswordCard } from '../../components/PasswordCard';
 import { useToast } from '../../ui/Toast';
 import { Skeleton } from '../../ui';

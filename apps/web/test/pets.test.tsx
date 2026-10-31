@@ -1,9 +1,9 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import { DEFAULT_HERO, HERO_PARTS } from '@heroes/shared';
-import { HeroEditor } from '../src/components/HeroEditor';
-import { HeroAvatar } from '../src/components/HeroAvatar';
-import { PetCompanion } from '../src/components/PetCompanion';
+import { HeroEditor } from '../src/features/hero/components/HeroEditor';
+import { HeroAvatar } from '../src/features/hero/components/HeroAvatar';
+import { PetCompanion } from '../src/features/hero/components/PetCompanion';
 import { renderApp } from './render';
 
 vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));

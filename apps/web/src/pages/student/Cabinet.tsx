@@ -1,16 +1,15 @@
-import { lazy, Suspense, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PaintBrushIcon, SparkleIcon } from '@phosphor-icons/react';
 import { api, type Profile } from '../../lib/api';
-import { PartPreview } from '../../components/PartPreview';
+import { PartPreview } from '../../features/hero';
 import { ProfileView } from '../../components/ProfileView';
 import { ErrorBox } from '../../ui';
 import { ProfileSkeleton } from '../../features/profile';
 import { pluralize, useLoad } from '../../lib/hooks';
-import { useNews } from '../../features/hero';
+import { LevelUpOverlay } from '../../features/hero';
+import { useNews } from '../../features/news';
 
-// Праздник уровня с конфетти бывает редко и тянет библиотеку анимаций — грузим его только когда он нужен
-const LevelUpOverlay = lazy(() => import('../../components/LevelUp').then((m) => ({ default: m.LevelUpOverlay })));
 
 export function CabinetPage() {
   const { data, error, reload } = useLoad(() => api<Profile>('GET', '/student/profile'), []);

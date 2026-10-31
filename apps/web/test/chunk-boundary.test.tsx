@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ChunkErrorBoundary } from '../src/app/ChunkErrorBoundary';
+import { ChunkErrorBoundary } from '../src/ui/ChunkErrorBoundary';
 
 function Broken(): never {
   throw new Error('Failed to fetch dynamically imported module');

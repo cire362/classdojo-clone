@@ -9,8 +9,8 @@ import { renderApp } from './render';
 import { groupData, renderInGroup } from './group-harness';
 
 const auth = vi.hoisted(() => ({ user: { login: 'teacher', role: 'TEACHER', name: 'Анна' } as Me, logout: vi.fn() }));
-vi.mock('../src/features/accounts/auth', () => ({ useAuth: () => auth }));
-vi.mock('../src/features/hero/news', () => ({ useNews: () => ({ news: null }) }));
+vi.mock('../src/features/auth/auth', () => ({ useAuth: () => auth }));
+vi.mock('../src/features/news/news', () => ({ useNews: () => ({ news: null }) }));
 vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
 const { api } = await import('../src/lib/api');
 beforeEach(() => { vi.mocked(api).mockReset(); auth.user = { login: 'teacher', role: 'TEACHER', name: 'Анна' }; });

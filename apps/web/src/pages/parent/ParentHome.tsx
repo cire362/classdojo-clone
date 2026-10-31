@@ -4,7 +4,7 @@ import { api, type ChatMessage, type ParentChild, type Profile } from '../../lib
 import { Feed } from '../../components/Feed';
 import { Thread } from '../../components/Thread';
 import { CountBadge, useNotifications } from '../../features/notifications';
-import { HeroHead } from '../../components/HeroAvatar';
+import { HeroHead } from '../../features/hero';
 import { ProfileView } from '../../components/ProfileView';
 import { WeeklySummary } from '../../components/WeeklySummary';
 import { ParentRewards } from '../../components/ParentRewards';

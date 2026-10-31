@@ -2,16 +2,16 @@ import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArchiveIcon, ArrowsLeftRightIcon, FileArrowUpIcon, KeyIcon, PencilSimpleIcon, PrinterIcon, TrashIcon, UserPlusIcon, UsersIcon } from '@phosphor-icons/react';
 import { api, type Credentials, type LessonStudent, type ParentCredentials } from '../../lib/api';
-import { HeroHead } from '../../components/HeroAvatar';
-import { GroupTeachersSection } from '../../components/GroupTeachers';
-import { ImportStudentsModal, type ImportPreview } from '../../components/ImportStudentsModal';
-import { MoveStudentModal } from '../../components/MoveStudentModal';
+import { HeroHead } from '../../features/hero';
+import { GroupTeachersSection } from '../../features/groups';
+import { ImportStudentsModal, type ImportPreview } from '../../features/students';
+import { MoveStudentModal } from '../../features/students';
 import { useToast } from '../../ui/Toast';
 import { Modal, PageTitle } from '../../ui';
 import { pluralize } from '../../lib/hooks';
-import { StudentSearch } from '../../components/StudentSearch';
-import { matchesStudent } from '../../lib/student-search';
-import { useGroup } from './GroupLayout';
+import { StudentSearch } from '../../features/students';
+import { matchesStudent } from '../../features/students';
+import { useGroup } from '../../features/groups';
 import { CredentialsTable } from '../../features/students';
 
 export function StudentsPage() {

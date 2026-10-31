@@ -14,10 +14,10 @@ import {
   type HeroPartDef,
   type HeroSlot,
 } from '@heroes/shared';
-import { api } from '../lib/api';
-import { useLoad } from '../lib/hooks';
+import { api } from '../../../lib/api';
+import { useLoad } from '../../../lib/hooks';
 import { HeroAvatar } from './HeroAvatar';
-import { useToast } from '../ui/Toast';
+import { useToast } from '../../../ui/Toast';
 import { PetAvatar } from './PetCompanion';
 
 const SWATCH_LAYERS: HeroLayer[] = ['color', 'skin', 'hairColor'];

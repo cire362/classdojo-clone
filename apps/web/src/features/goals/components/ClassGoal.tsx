@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { CheckCircleIcon, FlagBannerIcon, PencilSimpleIcon, PlusIcon } from '@phosphor-icons/react';
-import { api, type ClassGoal } from '../lib/api';
-import { pluralize, points } from '../lib/hooks';
-import { Modal, ProgressBar } from '../ui';
+import { api, type ClassGoal } from '../../../lib/api';
+import { pluralize, points } from '../../../lib/hooks';
+import { Modal, ProgressBar } from '../../../ui';
 
 /** Общая цель на уроке и проекторе. Счёт приходит с сервера, на общем экране видны только плюсы. */
 export function ClassGoalPanel({ goal, groupId, archived, projector = false, onChange }: {

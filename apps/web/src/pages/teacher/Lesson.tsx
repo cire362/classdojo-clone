@@ -12,19 +12,19 @@ import {
   XIcon,
 } from '@phosphor-icons/react';
 import { api, type CardSummary, type ClassGoal, type LessonStudent, type Reason } from '../../lib/api';
-import { HeroAvatar, heroTint } from '../../components/HeroAvatar';
+import { HeroAvatar, heroTint } from '../../features/hero';
 import { useToast } from '../../ui/Toast';
-import { ClassGoalPanel } from '../../components/ClassGoal';
+import { ClassGoalPanel } from '../../features/goals';
 import { LessonTimer } from '../../components/LessonTimer';
 import { LessonNoiseMeter } from '../../components/LessonNoiseMeter';
 import { LessonRandomGroups } from '../../components/LessonRandomGroups';
-import { StudentSearch } from '../../components/StudentSearch';
-import { matchesStudent } from '../../lib/student-search';
-import { TeamsModal } from '../../components/TeamsModal';
+import { StudentSearch } from '../../features/students';
+import { matchesStudent } from '../../features/students';
+import { TeamsModal } from '../../features/teams';
 import { EmptyState, Modal } from '../../ui';
 import { pluralize } from '../../lib/hooks';
 import { usePresence } from '../../lib/presence';
-import { useGroup } from './GroupLayout';
+import { useGroup } from '../../features/groups';
 
 interface Burst {
   key: number;

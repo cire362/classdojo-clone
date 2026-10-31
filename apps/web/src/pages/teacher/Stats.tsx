@@ -4,7 +4,7 @@ import { CalendarCheckIcon, DownloadSimpleIcon } from '@phosphor-icons/react';
 import { api, type Stats } from '../../lib/api';
 import { EmptyState, ErrorBox, Skeleton } from '../../ui';
 import { dateKey, formatDate, useLoad } from '../../lib/hooks';
-import { useGroup } from './GroupLayout';
+import { useGroup } from '../../features/groups';
 import { WeeklyPoints } from '../../components/WeeklyPoints';
 
 function presets() {

@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
-import { ClassGoalPanel } from '../src/components/ClassGoal';
+import { ClassGoalPanel } from '../src/features/goals/components/ClassGoal';
 import { LessonPage } from '../src/pages/teacher/Lesson';
 import { groupData, renderInGroup } from './group-harness';
 import { renderApp } from './render';

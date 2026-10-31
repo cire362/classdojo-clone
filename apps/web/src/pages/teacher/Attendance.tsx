@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarBlankIcon, CameraIcon, CheckIcon, EyeSlashIcon, ImageIcon, InfoIcon, ListChecksIcon, PlusIcon, TrashIcon, WarningIcon } from '@phosphor-icons/react';
 import { api, type AttendanceDay, type Detection } from '../../lib/api';
-import { HeroHead } from '../../components/HeroAvatar';
+import { HeroHead } from '../../features/hero';
 import { useToast } from '../../ui/Toast';
 import { ErrorBox, Modal, ProgressBar, Skeleton, Switch, Toggle } from '../../ui';
 import { CancelledError, uploadForm, withRetry, type RetryStatus } from '../../lib/network';
 import { dateKey, formatDate, pluralize, useLoad } from '../../lib/hooks';
-import { useGroup } from './GroupLayout';
+import { useGroup } from '../../features/groups';
 
 const MAX_SIDE = 1600;
 

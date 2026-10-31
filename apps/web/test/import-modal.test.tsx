@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
-import { ImportStudentsModal } from '../src/components/ImportStudentsModal';
+import { ImportStudentsModal } from '../src/features/students/components/ImportStudentsModal';
 import { renderApp } from './render';
 
 const preview = {

@@ -144,16 +144,21 @@ function phosphorUsedWeights(): Plugin {
   };
 }
 
-/** Ядро приложения, нужное любой странице. Пути записаны строкой: переносишь файл — обнови список */
+/**
+ * Ядро приложения, нужное любой странице. Пути записаны строкой: переносишь файл — обнови список.
+ * Rollup кладёт в ядро всё, что эти файлы импортируют, не глядя на tree-shaking, поэтому они берут из фич
+ * только auth, news и notifications: в этих фичах нет ничего, кроме кода ядра.
+ */
 const APP_CHUNK = new RegExp(
   `[\\\\/]src[\\\\/](${[
-    'app/(Layout|ChunkErrorBoundary|pages|routes)',
-    'features/accounts/auth',
-    'features/hero/news',
+    'app/(Layout|pages|routes)',
+    'features/auth/auth',
+    'features/groups/hooks/useGroup',
+    'features/news/news',
     'features/notifications/notify',
     'features/profile/components/ProfileSkeleton',
     'lib/(api|hooks|network)',
-    'ui/(index|Toast|PageSkeleton)',
+    'ui/(index|Toast|PageSkeleton|ChunkErrorBoundary)',
   ]
     .join('|')
     .replaceAll('/', '[\\\\/]')})\\.tsx?$`,
@@ -163,6 +168,8 @@ export default defineConfig({
   plugins: [phosphorPerIcon(), phosphorUsedWeights(), react(), tailwindcss(), inlineEarlyScript(), inlineStyles()],
   build: {
     rollupOptions: {
+      // Импорт из index.ts фичи не должен тянуть на страницу соседние файлы: любой memo() на верхнем уровне считается эффектом
+      treeshake: { moduleSideEffects: (id) => !/[\\/]src[\\/]features[\\/]/.test(id) },
       output: {
         // Библиотеки — в отдельных файлах: они редко меняются и дольше живут в кэше браузера
         manualChunks(id, { getModuleInfo }) {

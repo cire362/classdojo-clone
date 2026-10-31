@@ -4,7 +4,7 @@ import { CaretDownIcon, CaretUpIcon, DotsSixVerticalIcon, MinusIcon, PencilSimpl
 import { api, type Reason } from '../../lib/api';
 import { useToast } from '../../ui/Toast';
 import { Modal, PageTitle } from '../../ui';
-import { useGroup } from './GroupLayout';
+import { useGroup } from '../../features/groups';
 
 const EMOJI = ['💪', '💡', '🤝', '🧩', '✨', '⭐', '🏆', '📚', '🎯', '🚀', '🎨', '🙋', '⏰', '💤', '📕', '📢', '📱', '🙊'];
 

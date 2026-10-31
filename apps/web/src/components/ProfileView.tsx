@@ -3,10 +3,10 @@ import { CalendarCheckIcon, ClockCounterClockwiseIcon, StarIcon, TrashIcon, Trop
 import { MAX_LEVEL } from '@heroes/shared';
 import type { HistoryEvent, PointsSum, Profile } from '../lib/api';
 import { formatDate, pluralize } from '../lib/hooks';
-import { HeroAvatar } from './HeroAvatar';
+import { HeroAvatar } from '../features/hero';
 import { Portfolio, type PortfolioEdit } from './Portfolio';
 import { Badges, BadgeSummary } from './Badges';
-import { PetCompanion } from './PetCompanion';
+import { PetCompanion } from '../features/hero';
 import { EmptyState, ProgressBar } from '../ui';
 
 function PointsTile({ label, sum, featured = false }: { label: string; sum: PointsSum; featured?: boolean }) {

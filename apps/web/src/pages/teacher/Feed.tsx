@@ -1,5 +1,5 @@
 import { Feed } from '../../components/Feed';
-import { useGroup } from './GroupLayout';
+import { useGroup } from '../../features/groups';
 
 /** Лента группы: объявления преподавателей для учеников и родителей */
 export function GroupFeedPage() {

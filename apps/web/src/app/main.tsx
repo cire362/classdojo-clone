@@ -4,8 +4,8 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import '@fontsource-variable/onest';
 import '@fontsource-variable/unbounded';
 import '../styles.css';
-import { AuthProvider, storedRole, useAuth } from '../features/accounts';
-import { NewsProvider } from '../features/hero';
+import { AuthProvider, storedRole, useAuth } from '../features/auth';
+import { NewsProvider } from '../features/news';
 import { NotificationsProvider } from '../features/notifications';
 import type { Role } from '../lib/api';
 import { AppLayout } from './Layout';
@@ -41,7 +41,7 @@ import {
   prefetchPages,
   preloadRoute,
 } from './pages';
-import { ChunkErrorBoundary } from './ChunkErrorBoundary';
+import { ChunkErrorBoundary } from '../ui/ChunkErrorBoundary';
 
 /** Подгружаем страницы роли в фоне сразу после входа */
 function Prefetch() {
