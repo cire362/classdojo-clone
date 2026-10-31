@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { MegaphoneIcon, TrashIcon } from '@phosphor-icons/react';
-import { api, type FeedPost } from '../../../lib/api';
+import type { FeedPost } from '../../../lib/api';
 import { formatDateTime, useLoad } from '../../../lib/hooks';
 import { useNotifications } from '../../notifications';
 import { useToast } from '../../../ui/Toast';
 import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
+import { createPost, deletePost, fetchPosts } from '../api';
 
 const MAX = 2000;
 
@@ -13,7 +14,7 @@ export function Feed({ path, postTo, readOnlyNote, onLoaded }: { path: string; p
   const toast = useToast();
   const { refresh } = useNotifications();
   const { data, setData, error, reload } = useLoad(async () => {
-    const posts = await api<FeedPost[]>('GET', path);
+    const posts = await fetchPosts(path);
     void refresh();
     onLoaded?.();
     return posts;
@@ -26,7 +27,7 @@ export function Feed({ path, postTo, readOnlyNote, onLoaded }: { path: string; p
     if (!postTo) return;
     setBusy(true);
     try {
-      const post = await api<FeedPost>('POST', postTo, { text: text.trim() });
+      const post = await createPost(postTo, text.trim());
       setData([post, ...(data ?? [])]);
       setText('');
     } catch (err) {
@@ -38,7 +39,7 @@ export function Feed({ path, postTo, readOnlyNote, onLoaded }: { path: string; p
 
   async function remove(post: FeedPost) {
     try {
-      await api('DELETE', `/teacher/posts/${post.id}`);
+      await deletePost(post.id);
       setData((data ?? []).filter((p) => p.id !== post.id));
       toast({ text: 'Запись удалена', tone: 'neutral' });
     } catch (err) {

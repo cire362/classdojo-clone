@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowClockwiseIcon, BellIcon, CheckIcon, GiftIcon, MegaphoneIcon } from '@phosphor-icons/react';
-import { api, type StudentNotifications } from '../../../lib/api';
 import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { formatDateTime, pluralize, useLoad } from '../../../lib/hooks';
 import { useNotifications } from '../../notifications';
+import { fetchNotifications, markNotificationsRead } from '../api';
 
 export function StudentInbox() {
   const { counts, refresh } = useNotifications();
@@ -15,7 +15,7 @@ export function StudentInbox() {
   const revision = useRef(0);
   const { data, setData, loading, error, reload } = useLoad(async () => {
     revision.current++;
-    const result = await api<StudentNotifications>('GET', '/student/notifications');
+    const result = await fetchNotifications();
     void refresh();
     setMoreError(null);
     return result;
@@ -25,7 +25,7 @@ export function StudentInbox() {
     if (!data) return;
     setBusy(true);
     try {
-      await api('POST', '/student/notifications/read', { groupId: data.groupId, through: data.through });
+      await markNotificationsRead(data.groupId, data.through);
       await reload();
       toast({ text: 'Уведомления отмечены прочитанными', tone: 'ok' });
     } catch (e) {
@@ -42,7 +42,7 @@ export function StudentInbox() {
     setMoreError(null);
     try {
       const query = new URLSearchParams({ before: data.nextCursor, through: data.through });
-      const next = await api<StudentNotifications>('GET', `/student/notifications?${query}`);
+      const next = await fetchNotifications(String(query));
       if (current !== revision.current) return;
       // Перевод во время просмотра меняет ленту — смешивать записи двух групп нельзя.
       if (next.groupId !== data.groupId) await reload();

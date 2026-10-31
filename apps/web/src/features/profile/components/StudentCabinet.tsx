@@ -1,18 +1,16 @@
 import { Suspense, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PaintBrushIcon, SparkleIcon } from '@phosphor-icons/react';
-import { api, type Profile } from '../../../lib/api';
-import { PartPreview } from '../../hero';
+import { LevelUpOverlay, PartPreview, fetchStudentProfile } from '../../hero';
 import { ProfileView } from './ProfileView';
 import { ErrorBox } from '../../../ui';
-import { ProfileSkeleton } from '..';
+import { ProfileSkeleton } from './ProfileSkeleton';
 import { pluralize, useLoad } from '../../../lib/hooks';
-import { LevelUpOverlay } from '../../hero';
 import { useNews } from '../../news';
 
 
 export function StudentCabinet() {
-  const { data, error, reload } = useLoad(() => api<Profile>('GET', '/student/profile'), []);
+  const { data, error, reload } = useLoad(() => fetchStudentProfile(), []);
   const { news, markSeen } = useNews();
   // Окно остаётся смонтированным после закрытия, чтобы доиграла анимация ухода
   const [levelUpUsed, setLevelUpUsed] = useState(false);

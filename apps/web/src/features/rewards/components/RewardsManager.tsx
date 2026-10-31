@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { CheckIcon, GiftIcon, TrashIcon, XIcon } from '@phosphor-icons/react';
-import { api, type Reward, type RewardRequest } from '../../../lib/api';
+import type { Reward, RewardRequest } from '../../../lib/api';
 import { useToast } from '../../../ui/Toast';
 import { EmptyState, ErrorBox, PageTitle, Skeleton } from '../../../ui';
 import { formatDateTime, pluralize, useLoad } from '../../../lib/hooks';
 import { useGroup } from '../../groups';
 import { useNotifications } from '../../notifications';
+import { addReward, decideRequest, fetchGroupRewards, removeReward } from '../api';
 
 const EMOJI = ['🎁', '🪑', '🎵', '🧑‍🏫', '⏰', '🎮', '🍬', '📖', '🎨', '⚽', '🌟', '🏅'];
 const STATUS = { PENDING: 'ждёт ответа', APPROVED: 'выдано', REJECTED: 'отказано' } as const;
@@ -17,7 +18,7 @@ export function RewardsManager() {
   const { refresh } = useNotifications();
   const archived = !!group.group.archivedAt;
   const { data, setData, error, reload } = useLoad(
-    () => api<{ rewards: Reward[]; requests: RewardRequest[] }>('GET', `/teacher/groups/${group.group.id}/rewards`),
+    () => fetchGroupRewards(group.group.id),
     [group.group.id],
   );
   const [form, setForm] = useState({ title: '', emoji: EMOJI[0], cost: 10 });
@@ -36,7 +37,7 @@ export function RewardsManager() {
 
   const decide = (r: RewardRequest, approve: boolean) =>
     run(async () => {
-      const requests = await api<RewardRequest[]>('POST', `/teacher/reward-requests/${r.id}/${approve ? 'approve' : 'reject'}`);
+      const requests = await decideRequest(r.id, approve);
       setData({ ...data!, requests });
       void reloadGroup();
       void refresh();
@@ -46,7 +47,7 @@ export function RewardsManager() {
   const add = (e: FormEvent) => {
     e.preventDefault();
     void run(async () => {
-      const rewards = await api<Reward[]>('POST', `/teacher/groups/${group.group.id}/rewards`, { ...form, title: form.title.trim() });
+      const rewards = await addReward(group.group.id, { ...form, title: form.title.trim() });
       setData({ ...data!, rewards });
       setForm({ title: '', emoji: EMOJI[0], cost: 10 });
     });
@@ -54,7 +55,7 @@ export function RewardsManager() {
 
   const remove = (r: Reward) =>
     run(async () => {
-      const rewards = await api<Reward[]>('DELETE', `/teacher/rewards/${r.id}`);
+      const rewards = await removeReward(r.id);
       setData({ ...data!, rewards });
     });
 

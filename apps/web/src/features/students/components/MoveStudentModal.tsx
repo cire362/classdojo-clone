@@ -1,9 +1,11 @@
+import { fetchGroups } from '../../groups';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api, type GroupListItem } from '../../../lib/api';
+import type { GroupListItem } from '../../../lib/api';
 import { pluralize } from '../../../lib/hooks';
 import { HeroHead } from '../../hero';
 import { Modal, Skeleton } from '../../../ui';
+import { moveStudent } from '../api';
 
 export interface MoveTarget {
   id: string;
@@ -31,7 +33,7 @@ export function MoveStudentModal({
     setSelected(null);
     setError(null);
     setGroups(null);
-    api<GroupListItem[]>('GET', '/teacher/groups')
+    fetchGroups()
       .then(setGroups)
       .catch((e) => setError((e as Error).message));
     // Перезагружаем список только при открытии окна для другого ученика
@@ -45,7 +47,7 @@ export function MoveStudentModal({
     setBusy(true);
     setError(null);
     try {
-      const r = await api<{ groupId: string; groupName: string }>('POST', `/teacher/students/${student.id}/move`, { groupId: selected });
+      const r = await moveStudent(student.id, selected);
       onMoved({ id: r.groupId, name: r.groupName });
     } catch (e) {
       setError((e as Error).message);

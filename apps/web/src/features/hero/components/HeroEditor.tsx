@@ -14,20 +14,14 @@ import {
   type HeroPartDef,
   type HeroSlot,
 } from '@heroes/shared';
-import { api } from '../../../lib/api';
 import { useLoad } from '../../../lib/hooks';
 import { HeroAvatar } from './HeroAvatar';
 import { useToast } from '../../../ui/Toast';
 import { PetAvatar } from './PetCompanion';
+import { fetchPartAccess } from '../api';
 
 const SWATCH_LAYERS: HeroLayer[] = ['color', 'skin', 'hairColor'];
 const SLOTS = Object.keys(HERO_SLOTS) as HeroSlot[];
-
-interface PartAccess {
-  id: string;
-  requiredLevel: number;
-  isPremium: boolean;
-}
 
 export function HeroEditor({
   initial,
@@ -62,7 +56,7 @@ export function HeroEditor({
     if (first) setSlot(first);
   }
   const [saving, setSaving] = useState(false);
-  const access = useLoad(() => api<PartAccess[]>('GET', '/hero-parts'), []);
+  const access = useLoad(() => fetchPartAccess(), []);
   const accessById = useMemo(() => new Map(access.data?.map((p) => [p.id, p])), [access.data]);
 
   const isPremiumPart = (p: HeroPartDef) => accessById.get(p.id)?.isPremium ?? !!p.premium;

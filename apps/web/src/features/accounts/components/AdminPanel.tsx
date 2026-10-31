@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { KeyIcon, PlusIcon, MagnifyingGlassIcon, UsersThreeIcon } from '@phosphor-icons/react';
-import { api, type AdminGroup, type AdminTeacher, type TeacherCredentials, type AdminTeachers } from '../../../lib/api';
+import type { AdminTeacher, TeacherCredentials } from '../../../lib/api';
 import { PasswordCard } from './PasswordCard';
 import { useToast } from '../../../ui/Toast';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { pluralize, useLoad } from '../../../lib/hooks';
+import { createTeacher, fetchAdminGroups, fetchTeachers, resetTeacherPassword, setTeacherPremium } from '../api';
 
 /** Администратор школы: преподаватели, доступы и обзор всех групп. */
 export function AdminPanel() {
@@ -28,7 +29,7 @@ export function AdminPanel() {
 }
 
 function Teachers() {
-  const { data, error, reload } = useLoad(() => api<AdminTeachers>('GET', '/admin/teachers'), []);
+  const { data, error, reload } = useLoad(() => fetchTeachers(), []);
   const toast = useToast();
   const [query, setQuery] = useState('');
   const [creating, setCreating] = useState(false);
@@ -45,7 +46,7 @@ function Teachers() {
     setBusy(true);
     setFormError('');
     try {
-      const credentials = await api<TeacherCredentials>('POST', '/admin/teachers', form);
+      const credentials = await createTeacher(form);
       setCreating(false);
       setForm({ name: '', login: '' });
       setIssued(credentials);
@@ -61,7 +62,7 @@ function Teachers() {
     if (!reset) return;
     setBusy(true);
     try {
-      setIssued(await api<TeacherCredentials>('POST', `/admin/teachers/${reset.id}/reset-password`));
+      setIssued(await resetTeacherPassword(reset.id));
       setReset(null);
     } catch (err) {
       toast({ text: (err as Error).message, tone: 'error' });
@@ -74,7 +75,7 @@ function Teachers() {
     if (!plan) return;
     setBusy(true);
     try {
-      await api('PUT', `/admin/teachers/${plan.id}/premium`, { until: date });
+      await setTeacherPremium(plan.id, date);
       setPlan(null);
       void reload();
       toast({ text: 'Срок премиума сохранён', tone: 'ok' });
@@ -173,7 +174,7 @@ function Teachers() {
 }
 
 function Groups() {
-  const { data, error, reload } = useLoad(() => api<AdminGroup[]>('GET', '/admin/groups'), []);
+  const { data, error, reload } = useLoad(() => fetchAdminGroups(), []);
   const [query, setQuery] = useState('');
   const search = query.trim().toLocaleLowerCase('ru');
   const visible = data?.filter((g) => [g.name, g.owner.name, g.owner.login, ...g.colleagues.map((t) => t.name)].join(' ').toLocaleLowerCase('ru').includes(search)) ?? [];

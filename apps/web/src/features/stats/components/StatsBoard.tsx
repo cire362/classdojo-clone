@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarCheckIcon, DownloadSimpleIcon } from '@phosphor-icons/react';
-import { api, type Stats } from '../../../lib/api';
+import type { Stats } from '../../../lib/api';
 import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { dateKey, formatDate, useLoad } from '../../../lib/hooks';
 import { useGroup } from '../../groups';
 import { WeeklyPoints } from './WeeklyPoints';
+import { fetchStats } from '../api';
 
 function presets() {
   const now = new Date();
@@ -30,7 +31,7 @@ export function StatsBoard() {
   const [range, setRange] = useState({ from: options[1].from, to: options[1].to });
   const [sort, setSort] = useState<SortKey>('earned');
   const { data, error, loading, reload } = useLoad(
-    () => api<Stats>('GET', `/teacher/groups/${group.group.id}/stats?from=${range.from}&to=${range.to}`),
+    () => fetchStats(group.group.id, range.from, range.to),
     [group.group.id, range.from, range.to],
   );
 

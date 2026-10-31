@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { SparkleIcon, UserIcon } from '@phosphor-icons/react';
-import { api } from '../../../lib/api';
 import { useAuth } from '../../auth';
 import { PasswordCard } from './PasswordCard';
 import { useToast } from '../../../ui/Toast';
 import { Skeleton } from '../../../ui';
 import { useLoad } from '../../../lib/hooks';
+import { fetchPlan, renameTeacher } from '../api';
 
 export function TeacherSettings() {
   const { user, refresh } = useAuth();
@@ -17,7 +17,7 @@ export function TeacherSettings() {
     e.preventDefault();
     setSavingName(true);
     try {
-      await api('PATCH', '/teacher/me', { name });
+      await renameTeacher(name);
       await refresh();
       toast({ text: 'Имя сохранено', tone: 'ok' });
     } catch (err) {
@@ -59,7 +59,7 @@ export function TeacherSettings() {
 
 /** Премиум: пока без оплаты на сайте — подключает администратор */
 function PremiumCard() {
-  const { data } = useLoad(() => api<{ active: boolean; until: string | null; freeForAll: boolean }>('GET', '/teacher/plan'), []);
+  const { data } = useLoad(() => fetchPlan(), []);
   return (
     <section className="card space-y-4 p-5" aria-labelledby="premium-title">
       <h2 id="premium-title" className="flex items-center gap-2 text-lg">

@@ -1,16 +1,16 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArchiveIcon, ArrowCounterClockwiseIcon, ArrowRightIcon, PlusIcon, UsersThreeIcon } from '@phosphor-icons/react';
-import { api, type GroupListItem } from '../../../lib/api';
 import { useAuth } from '../../auth';
 import { HeroHead } from '../../hero';
 import { ErrorBox, Skeleton } from '../../../ui';
 import { pluralize, useLoad } from '../../../lib/hooks';
+import { createGroup, fetchGroups, restoreGroup } from '../api';
 
 export function GroupsList() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data, error, loading, reload } = useLoad(() => api<GroupListItem[]>('GET', '/teacher/groups'), []);
+  const { data, error, loading, reload } = useLoad(() => fetchGroups(), []);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export function GroupsList() {
     setBusy(true);
     setCreateError(null);
     try {
-      const g = await api<GroupListItem>('POST', '/teacher/groups', { name });
+      const g = await createGroup(name);
       navigate(`/g/${g.id}/students`);
     } catch (err) {
       setCreateError((err as Error).message);
@@ -125,7 +125,7 @@ export function GroupsList() {
                     <button
                       className="btn btn-secondary btn-sm"
                       onClick={async () => {
-                        await api('POST', `/teacher/groups/${g.id}/restore`);
+                        await restoreGroup(g.id);
                         await reload();
                       }}
                     >

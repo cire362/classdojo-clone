@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { UsersIcon } from '@phosphor-icons/react';
-import { api, type ChatMessage, type ParentChild, type Profile } from '../../../lib/api';
+import type { ParentChild } from '../../../lib/api';
 import { Feed } from '../../feed';
-import { Thread } from '../../messages';
+import { Thread, fetchChildMessages, sendChildMessage } from '../../messages';
 import { CountBadge, useNotifications } from '../../notifications';
 import { HeroHead } from '../../hero';
 import { ProfileView } from '../../profile';
@@ -11,6 +11,7 @@ import { ParentRewards } from '../../rewards';
 import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { useLoad } from '../../../lib/hooks';
 import { ProfileSkeleton } from '../../profile';
+import { fetchChildProfile, fetchChildren } from '../api';
 
 /** Выбранный ребёнок запоминается: его профиль ранний скрипт запрашивает сразу при открытии */
 export const CHILD_KEY = 'heroes:child';
@@ -25,13 +26,13 @@ function storedChild(): string | null {
 
 /** Кабинет родителя: герой, баллы, история и посещаемость своих детей — только просмотр */
 export function ParentDashboard() {
-  const children = useLoad(() => api<ParentChild[]>('GET', '/parent/children'), []);
+  const children = useLoad(() => fetchChildren(), []);
   const [selected, setSelected] = useState<string | null>(storedChild);
   const [section, setSection] = useState<'profile' | 'week' | 'rewards' | 'feed' | 'messages'>('profile');
   const list = children.data ?? [];
   const current = list.find((c) => c.id === selected) ?? list[0];
   const profile = useLoad(
-    () => (current ? api<Profile>('GET', `/parent/children/${current.id}/profile`) : Promise.resolve(null)),
+    () => (current ? fetchChildProfile(current.id) : Promise.resolve(null)),
     [current?.id],
   );
 
@@ -112,19 +113,18 @@ export function ParentDashboard() {
 /** Переписка с преподавателями группы о ребёнке */
 function ParentMessages({ child, onRead }: { child: ParentChild; onRead: () => Promise<void> }) {
   const { refresh } = useNotifications();
-  const path = `/parent/children/${child.id}/messages`;
   const { data, error, reload } = useLoad(async () => {
-    const list = await api<ChatMessage[]>('GET', path);
+    const list = await fetchChildMessages(child.id);
     void refresh();
     void onRead();
     return list;
-  }, [path]);
+  }, [child.id]);
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <Skeleton className="h-60 max-w-2xl" />;
   return (
     <div className="max-w-2xl space-y-3">
       <p className="text-ink-soft">Сообщения видят все преподаватели группы {child.groupName}.</p>
-      <Thread messages={data} emptyText="Здесь можно написать преподавателю: о пропуске, успехах или вопросе." send={(text) => api<ChatMessage[]>('POST', path, { text })} />
+      <Thread messages={data} emptyText="Здесь можно написать преподавателю: о пропуске, успехах или вопросе." send={(text) => sendChildMessage(child.id, text)} />
     </div>
   );
 }

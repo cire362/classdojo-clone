@@ -1,9 +1,10 @@
 import { GiftIcon, StarIcon } from '@phosphor-icons/react';
-import { api, type Shop } from '../../../lib/api';
+import type { Shop } from '../../../lib/api';
 import { useToast } from '../../../ui/Toast';
 import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { formatDateTime, pluralize, useLoad } from '../../../lib/hooks';
 import { useNotifications } from '../../notifications';
+import { cancelRequest, fetchShop, requestReward } from '../api';
 
 const STATUS = {
   PENDING: { text: 'ждёт ответа учителя', cls: 'bg-accent/25 text-ink' },
@@ -16,7 +17,7 @@ export function StudentShop() {
   const toast = useToast();
   const { refresh } = useNotifications();
   const { data, setData, error, reload } = useLoad(async () => {
-    const shop = await api<Shop>('GET', '/student/shop');
+    const shop = await fetchShop();
     void refresh();
     return shop;
   }, []);
@@ -69,7 +70,7 @@ export function StudentShop() {
                 <button
                   className="btn btn-primary btn-sm mt-auto"
                   disabled={data.archived || short > 0}
-                  onClick={() => act(() => api<Shop>('POST', `/student/shop/${r.id}/request`), 'Запрос отправлен учителю')}
+                  onClick={() => act(() => requestReward(r.id), 'Запрос отправлен учителю')}
                 >
                   {short > 0 ? `Не хватает ${short}` : 'Попросить'}
                 </button>
@@ -96,7 +97,7 @@ export function StudentShop() {
                 </span>
                 <span className={`chip text-xs ${STATUS[r.status].cls}`}>{STATUS[r.status].text}</span>
                 {r.status === 'PENDING' && (
-                  <button className="btn btn-ghost btn-sm" onClick={() => act(() => api<Shop>('DELETE', `/student/shop/requests/${r.id}`), 'Запрос отменён, баллы вернулись')}>
+                  <button className="btn btn-ghost btn-sm" onClick={() => act(() => cancelRequest(r.id), 'Запрос отменён, баллы вернулись')}>
                     Отменить
                   </button>
                 )}

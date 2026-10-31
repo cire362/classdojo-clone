@@ -1,9 +1,11 @@
+import { fetchGroup } from '../../groups';
 import { useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, KeyIcon, PrinterIcon } from '@phosphor-icons/react';
-import { api, type Credentials, type GroupDetails, type ParentCredentials } from '../../../lib/api';
+import type { Credentials, ParentCredentials } from '../../../lib/api';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { useLoad } from '../../../lib/hooks';
+import { resetGroupPasswords } from '../api';
 
 /** Лист для печати: карточки «имя, логин, пароль» под разрезание; для родителей — свой лист */
 export function PrintSheet() {
@@ -61,7 +63,7 @@ function StudentsSheet() {
   const [issued, setIssued] = useState<Credentials[] | null>(passed);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
-  const { data, error, reload } = useLoad(() => api<GroupDetails>('GET', `/teacher/groups/${groupId}`), [groupId]);
+  const { data, error, reload } = useLoad(() => fetchGroup(groupId!), [groupId]);
 
   const byId = new Map(issued?.map((c) => [c.id, c]));
   const rows =
@@ -72,7 +74,7 @@ function StudentsSheet() {
   async function resetAll() {
     setBusy(true);
     try {
-      const r = await api<{ credentials: Credentials[] }>('POST', `/teacher/groups/${groupId}/reset-passwords`, {});
+      const r = await resetGroupPasswords(groupId!);
       setIssued(r.credentials);
       setConfirm(false);
     } finally {

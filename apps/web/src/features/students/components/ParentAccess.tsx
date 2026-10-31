@@ -1,17 +1,18 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChatCircleIcon, KeyIcon, LinkSimpleIcon, PrinterIcon, UserPlusIcon, XIcon } from '@phosphor-icons/react';
-import { api, type ParentAccess as Access, type ParentCredentials } from '../../../lib/api';
+import type { ParentAccess as Access, ParentCredentials } from '../../../lib/api';
 import { useLoad } from '../../../lib/hooks';
 import { CredentialsTable } from '..';
 import { useToast } from '../../../ui/Toast';
 import { Modal, Skeleton } from '../../../ui';
+import { fetchStudentParents, issueParent, linkParent, resetParentPassword, unlinkParent } from '../api';
 
 /** Входы родителей в карточке ученика: выдать, привязать общий вход брата или сестры, сбросить пароль, отвязать */
 export function ParentAccessCard({ student, groupId, archived }: { student: { id: string; name: string }; groupId: string; archived: boolean }) {
   const toast = useToast();
   const navigate = useNavigate();
-  const { data, setData, error, reload } = useLoad(() => api<Access[]>('GET', `/teacher/students/${student.id}/parents`), [student.id]);
+  const { data, setData, error, reload } = useLoad(() => fetchStudentParents(student.id), [student.id]);
   const [issued, setIssued] = useState<ParentCredentials | null>(null);
   const [linking, setLinking] = useState(false);
   const [login, setLogin] = useState('');
@@ -32,16 +33,16 @@ export function ParentAccessCard({ student, groupId, archived }: { student: { id
 
   const issue = () =>
     run(async () => {
-      setIssued(await api<ParentCredentials>('POST', `/teacher/students/${student.id}/parents`));
+      setIssued(await issueParent(student.id));
       await reload();
     });
 
   const resetPassword = (p: Access) =>
-    run(async () => setIssued(await api<ParentCredentials>('POST', `/teacher/students/${student.id}/parents/${p.id}/reset-password`)));
+    run(async () => setIssued(await resetParentPassword(student.id, p.id)));
 
   async function link(e: FormEvent) {
     e.preventDefault();
-    const list = await run(() => api<Access[]>('POST', `/teacher/students/${student.id}/parents/link`, { login: login.trim() }));
+    const list = await run(() => linkParent(student.id, login.trim()));
     if (!list) return;
     setData(list);
     setLinking(false);
@@ -50,7 +51,7 @@ export function ParentAccessCard({ student, groupId, archived }: { student: { id
   }
 
   async function unlink(p: Access) {
-    const list = await run(() => api<Access[]>('DELETE', `/teacher/students/${student.id}/parents/${p.id}`));
+    const list = await run(() => unlinkParent(student.id, p.id));
     if (!list) return;
     setData(list);
     setUnlinking(null);

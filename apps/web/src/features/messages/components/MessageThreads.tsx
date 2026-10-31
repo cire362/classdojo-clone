@@ -1,14 +1,14 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, ChatsCircleIcon } from '@phosphor-icons/react';
-import { api, type ChatMessage, type TeacherThread, type ThreadSummary } from '../../../lib/api';
 import { Thread } from './Thread';
 import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { formatDateTime, useLoad } from '../../../lib/hooks';
 import { CountBadge, useNotifications } from '../../notifications';
+import { fetchTeacherThread, fetchThreads, sendTeacherMessage } from '../api';
 
 /** Переписки с родителями по всем группам преподавателя */
 export function MessageThreads() {
-  const { data, error, reload } = useLoad(() => api<ThreadSummary[]>('GET', '/teacher/messages'), []);
+  const { data, error, reload } = useLoad(() => fetchThreads(), []);
   return (
     <div className="max-w-2xl space-y-4">
       <h1 className="text-2xl sm:text-3xl">Сообщения</h1>
@@ -47,12 +47,11 @@ export function MessageThreads() {
 export function ThreadView() {
   const { studentId, parentId } = useParams();
   const { refresh } = useNotifications();
-  const base = `/teacher/students/${studentId}/parents/${parentId}/messages`;
   const { data, error, reload } = useLoad(async () => {
-    const thread = await api<TeacherThread>('GET', base);
+    const thread = await fetchTeacherThread(studentId!, parentId!);
     void refresh();
     return thread;
-  }, [base]);
+  }, [studentId, parentId]);
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <Skeleton className="h-80 max-w-2xl" />;
   return (
@@ -69,7 +68,7 @@ export function ThreadView() {
       <Thread
         messages={data.messages}
         emptyText="Напишите первое сообщение — родители увидят его в своём кабинете."
-        send={(text) => api<ChatMessage[]>('POST', base, { text })}
+        send={(text) => sendTeacherMessage(studentId!, parentId!, text)}
       />
     </div>
   );

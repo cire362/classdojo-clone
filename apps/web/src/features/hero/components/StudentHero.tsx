@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { api, type Hero, type Profile } from '../../../lib/api';
 import { HeroEditor } from '..';
 import { ErrorBox, Skeleton } from '../../../ui';
 import { useLoad } from '../../../lib/hooks';
 import { useNews } from '../../news';
+import { fetchStudentProfile, saveStudentHero } from '../api';
 
 export function StudentHero() {
-  const { data, setData, error, reload } = useLoad(() => api<Profile>('GET', '/student/profile'), []);
+  const { data, setData, error, reload } = useLoad(() => fetchStudentProfile(), []);
   const { news, markSeen } = useNews();
   // Запоминаем новые детали на время визита: метки «новое» видны, пока ученик в конструкторе
   const [newIds, setNewIds] = useState<Set<string> | null>(null);
@@ -34,7 +34,7 @@ export function StudentHero() {
         premium={data.premium}
         newIds={newIds ?? undefined}
         onSave={async (name, parts) => {
-          const hero = await api<Hero>('PUT', '/student/hero', { name, parts });
+          const hero = await saveStudentHero(name, parts);
           setData({ ...data, hero });
         }}
       />

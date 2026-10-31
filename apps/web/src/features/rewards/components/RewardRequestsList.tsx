@@ -1,15 +1,15 @@
 import { Link } from 'react-router-dom';
 import { ArrowClockwiseIcon, ArrowRightIcon, GiftIcon } from '@phosphor-icons/react';
-import { api, type PendingRewardGroups } from '../../../lib/api';
 import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import { useNotifications } from '../../notifications';
+import { fetchPendingRequests } from '../api';
 
 /** Общая очередь: переходим в нужную группу, чтобы выдать награду или отказать. */
 export function RewardRequestsList() {
   const { counts, refresh } = useNotifications();
   // Каждый успешный опрос счётчиков обновляет и распределение по группам, даже если сумма та же.
-  const { data, error, loading, reload } = useLoad(() => api<PendingRewardGroups>('GET', '/teacher/reward-requests'), [counts]);
+  const { data, error, loading, reload } = useLoad(() => fetchPendingRequests(), [counts]);
   return (
     <div className="max-w-2xl space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">

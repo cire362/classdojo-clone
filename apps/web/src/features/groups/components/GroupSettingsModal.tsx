@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArchiveIcon } from '@phosphor-icons/react';
-import { api } from '../../../lib/api';
 import { Modal } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { useGroup } from '../hooks/useGroup';
 import { GroupTeachersSection } from './GroupTeachers';
+import { archiveGroup, deleteGroup, renameGroup } from '../api';
 
 export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data, reload } = useGroup();
@@ -24,7 +24,7 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
               onSubmit={async (e) => {
                 e.preventDefault();
                 try {
-                  await api('PATCH', `/teacher/groups/${data.group.id}`, { name });
+                  await renameGroup(data.group.id, name);
                   await reload();
                   onClose();
                 } catch (err) {
@@ -50,7 +50,7 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
                 <button
                   className="btn btn-secondary"
                   onClick={async () => {
-                    await api('POST', `/teacher/groups/${data.group.id}/archive`);
+                    await archiveGroup(data.group.id);
                     navigate('/');
                   }}
                 >
@@ -68,7 +68,7 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
                 className="btn btn-danger"
                 disabled={confirmDelete !== data.group.name}
                 onClick={async () => {
-                  await api('DELETE', `/teacher/groups/${data.group.id}`);
+                  await deleteGroup(data.group.id);
                   navigate('/');
                 }}
               >

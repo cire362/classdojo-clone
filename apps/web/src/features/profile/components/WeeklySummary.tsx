@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { ArrowClockwiseIcon, CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
-import { api, type ParentChild, type WeeklySummary as Summary } from '../../../lib/api';
+import type { ParentChild } from '../../../lib/api';
 import { formatDate, pluralize, useLoad } from '../../../lib/hooks';
 import { ErrorBox, Skeleton } from '../../../ui';
+import { fetchWeeklySummary } from '../api';
 
 const signed = (value: number) => value > 0 ? `+${value}` : value < 0 ? `−${Math.abs(value)}` : '0';
 const fullDate = (key: string) => new Date(`${key}T12:00:00Z`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Moscow' });
@@ -12,7 +13,7 @@ export function WeeklySummary({ child }: { child: Pick<ParentChild, 'id' | 'name
   const [week, setWeek] = useState<string | undefined>();
   const { data, error, loading, reload } = useLoad(async () => ({
     query: week,
-    report: await api<Summary>('GET', `/parent/children/${child.id}/weekly-summary${week ? `?week=${encodeURIComponent(week)}` : ''}`),
+    report: await fetchWeeklySummary(child.id, week),
   }), [child.id, week]);
   const report = data && data.query === week && data.report.studentId === child.id ? data.report : null;
   return <section aria-labelledby="weekly-title" className="max-w-4xl space-y-6">

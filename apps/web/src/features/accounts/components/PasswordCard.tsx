@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { EyeIcon, EyeSlashIcon, KeyIcon } from '@phosphor-icons/react';
-import { api } from '../../../lib/api';
 import { useToast } from '../../../ui/Toast';
+import { changePassword } from '../api';
 
 const MIN_LENGTH = 8;
 
@@ -48,7 +48,7 @@ export function PasswordCard({ endpoint }: { endpoint: string }) {
     setSaving(true);
     setError(null);
     try {
-      await api('POST', endpoint, { currentPassword: pwd.current, newPassword: pwd.next });
+      await changePassword(endpoint, pwd.current, pwd.next);
       setPwd({ current: '', next: '', repeat: '' });
       setShow(false);
       toast({ text: 'Пароль изменён. На других устройствах выполнен выход', tone: 'ok' });

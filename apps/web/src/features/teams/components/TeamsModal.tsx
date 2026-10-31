@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { ShuffleIcon, TrashIcon } from '@phosphor-icons/react';
-import { api, type LessonStudent, type Team } from '../../../lib/api';
+import type { LessonStudent, Team } from '../../../lib/api';
 import { useToast } from '../../../ui/Toast';
 import { Modal } from '../../../ui';
+import { assignTeams, createTeam, deleteTeam, renameTeam } from '../api';
 
 /** Настройка команд: состав, названия, случайное распределение поровну */
 export function TeamsModal({
@@ -44,21 +45,20 @@ export function TeamsModal({
     }
   }
 
-  const base = `/teacher/groups/${groupId}/teams`;
   const add = (e: FormEvent) => {
     e.preventDefault();
     const submitted = name;
     void run(async () => {
-      setList(await api<Team[]>('POST', base, { name: submitted.trim() }));
+      setList(await createTeam(groupId, submitted.trim()));
       // Если пока шёл запрос уже начали вводить следующую команду — не стираем её
       setName((current) => (current === submitted ? '' : current));
     });
   };
   const rename = (t: Team, value: string) =>
-    value.trim() && value.trim() !== t.name && run(async () => setList(await api<Team[]>('PATCH', `${base}/${t.id}`, { name: value.trim() })));
+    value.trim() && value.trim() !== t.name && run(async () => setList(await renameTeam(groupId, t.id, value.trim())));
   const remove = (t: Team) =>
     run(async () => {
-      setList(await api<Team[]>('DELETE', `${base}/${t.id}`));
+      setList(await deleteTeam(groupId, t.id));
       setAssign(Object.fromEntries(Object.entries(assign).map(([s, id]) => [s, id === t.id ? null : id])));
     });
 
@@ -70,7 +70,7 @@ export function TeamsModal({
 
   const save = () =>
     run(async () => {
-      await api('PUT', `${base}/assign`, { assignments: assign });
+      await assignTeams(groupId, assign);
       await onSaved();
       toast({ text: 'Состав команд сохранён', tone: 'ok' });
       onClose();

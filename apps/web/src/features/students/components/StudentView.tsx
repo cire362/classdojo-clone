@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, ArrowsLeftRightIcon, KeyIcon, PaintBrushIcon } from '@phosphor-icons/react';
-import { api, type Credentials, type Hero, type HistoryEvent, type PortfolioItem, type Profile } from '../../../lib/api';
+import type { Credentials, HistoryEvent } from '../../../lib/api';
 import { HeroEditor } from '../../hero';
 import { MoveStudentModal } from '..';
 import { ParentAccessCard } from './ParentAccess';
@@ -12,6 +12,7 @@ import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { formatDateTime, useLoad } from '../../../lib/hooks';
 import { ProfileSkeleton } from '../../profile';
 import { CredentialsTable } from '..';
+import { addPortfolioItem, deletePointEvent, deletePortfolioItem, fetchStudentProfile, resetStudentPassword, saveStudentHero } from '../api';
 
 export function StudentProfileView() {
   const { studentId } = useParams();
@@ -20,17 +21,17 @@ export function StudentProfileView() {
   const [toDelete, setToDelete] = useState<HistoryEvent | null>(null);
   const [moving, setMoving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const { data, setData, error, reload } = useLoad(() => api<Profile>('GET', `/teacher/students/${studentId}/profile`), [studentId]);
+  const { data, setData, error, reload } = useLoad(() => fetchStudentProfile(studentId!), [studentId]);
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <ProfileSkeleton />;
   const portfolioEdit = {
     add: async (item: { title: string; description: string; emoji: string }) => {
-      const portfolio = await api<PortfolioItem[]>('POST', `/teacher/students/${data.student.id}/portfolio`, item);
+      const portfolio = await addPortfolioItem(data.student.id, item);
       setData({ ...data, portfolio });
       toast({ text: 'Достижение записано в портфолио', tone: 'ok' });
     },
     remove: async (id: string) => {
-      const portfolio = await api<PortfolioItem[]>('DELETE', `/teacher/portfolio/${id}`);
+      const portfolio = await deletePortfolioItem(id);
       setData({ ...data, portfolio });
     },
   };
@@ -54,7 +55,7 @@ export function StudentProfileView() {
               className="btn btn-secondary"
               onClick={async () => {
                 try {
-                  setIssued(await api<Credentials>('POST', `/teacher/students/${data.student.id}/reset-password`));
+                  setIssued(await resetStudentPassword(data.student.id));
                 } catch (e) {
                   toast({ text: (e as Error).message, tone: 'error' });
                 }
@@ -103,7 +104,7 @@ export function StudentProfileView() {
                 onClick={async () => {
                   setDeleting(true);
                   try {
-                    await api('DELETE', `/teacher/points/${toDelete.id}`);
+                    await deletePointEvent(toDelete.id);
                     setToDelete(null);
                     await reload();
                     toast({ text: 'Запись удалена', tone: 'neutral' });
@@ -137,7 +138,7 @@ export function StudentProfileView() {
 
 export function StudentHeroEditor() {
   const { studentId } = useParams();
-  const { data, setData, error, reload } = useLoad(() => api<Profile>('GET', `/teacher/students/${studentId}/profile`), [studentId]);
+  const { data, setData, error, reload } = useLoad(() => fetchStudentProfile(studentId!), [studentId]);
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <Skeleton className="h-[520px]" />;
   return (
@@ -156,7 +157,7 @@ export function StudentHeroEditor() {
         premium={data.premium}
         ownerLabel={data.student.name}
         onSave={async (name, parts) => {
-          const hero = await api<Hero>('PUT', `/teacher/students/${data.student.id}/hero`, { name, parts });
+          const hero = await saveStudentHero(data.student.id, name, parts);
           setData({ ...data, hero });
         }}
       />

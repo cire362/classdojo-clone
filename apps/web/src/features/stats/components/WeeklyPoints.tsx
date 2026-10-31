@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { api, type GroupDetails, type WeeklyStats } from '../../../lib/api';
+import type { GroupDetails, WeeklyStats } from '../../../lib/api';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import { ErrorBox, Skeleton } from '../../../ui';
+import { fetchWeeklyStats } from '../api';
 
 type Metric = 'earned' | 'lost' | 'net';
 const METRICS: [Metric, string][] = [['earned', 'Плюсы'], ['lost', 'Минусы'], ['net', 'Итого']];
@@ -33,7 +34,7 @@ export function WeeklyPoints({ group, from, to }: { group: GroupDetails; from: s
   if (selection.startsWith('student:')) params.set('studentId', selection.slice(8));
   if (selection.startsWith('team:')) params.set('teamId', selection.slice(5));
   const query = params.toString();
-  const { data, loading, error, reload } = useLoad(async () => ({ query, report: await api<WeeklyStats>('GET', `/teacher/groups/${group.group.id}/stats/weekly?${query}`) }), [group.group.id, query]);
+  const { data, loading, error, reload } = useLoad(async () => ({ query, report: await fetchWeeklyStats(group.group.id, query) }), [group.group.id, query]);
   const report = data?.query === query && data.report.groupId === group.group.id ? data.report : null;
   const active = report?.weeks.find((w) => w.week === selectedWeek) ?? report?.weeks.at(-1);
   const value = (w: WeeklyStats['weeks'][number]) => metric === 'lost' ? -w.lost : w[metric];

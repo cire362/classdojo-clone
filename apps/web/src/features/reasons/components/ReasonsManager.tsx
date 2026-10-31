@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Reorder, useDragControls } from 'motion/react';
 import { CaretDownIcon, CaretUpIcon, DotsSixVerticalIcon, MinusIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { api, type Reason } from '../../../lib/api';
+import type { Reason } from '../../../lib/api';
 import { useToast } from '../../../ui/Toast';
 import { Modal, PageTitle } from '../../../ui';
 import { useGroup } from '../../groups';
+import { createReason, deleteReason, saveReasonOrder, updateReason } from '../api';
 
 const EMOJI = ['💪', '💡', '🤝', '🧩', '✨', '⭐', '🏆', '📚', '🎯', '🚀', '🎨', '🙋', '⏰', '💤', '📕', '📢', '📱', '🙊'];
 
@@ -30,7 +31,7 @@ export function ReasonsManager() {
     const ids = [...next.plus, ...next.minus].map((r) => r.id);
     if (ids.join() === data.reasons.map((r) => r.id).join()) return;
     try {
-      await api('PUT', `/teacher/groups/${data.group.id}/reasons/order`, { reasonIds: ids });
+      await saveReasonOrder(data.group.id, ids);
       await reload();
     } catch (e) {
       toast({ text: (e as Error).message, tone: 'error' });
@@ -51,7 +52,7 @@ export function ReasonsManager() {
 
   async function remove(r: Reason) {
     try {
-      await api('DELETE', `/teacher/reasons/${r.id}`);
+      await deleteReason(r.id);
       await reload();
       toast({ text: `«${r.name}» удалена. В истории учеников она останется`, tone: 'neutral' });
     } catch (e) {
@@ -109,8 +110,8 @@ export function ReasonsManager() {
         reason={editing}
         onClose={() => setEditing(null)}
         onSave={async (draft) => {
-          if (editing === 'new') await api('POST', `/teacher/groups/${data.group.id}/reasons`, draft);
-          else if (editing) await api('PATCH', `/teacher/reasons/${editing.id}`, draft);
+          if (editing === 'new') await createReason(data.group.id, draft);
+          else if (editing) await updateReason(editing.id, draft);
           setEditing(null);
           await reload();
         }}

@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SignOutIcon, XIcon } from '@phosphor-icons/react';
-import { api, type GroupTeachers as Teachers } from '../../../lib/api';
 import { useLoad } from '../../../lib/hooks';
 import { useToast } from '../../../ui/Toast';
 import { Skeleton } from '../../../ui';
+import { addGroupTeacher, fetchGroupTeachers, removeGroupTeacher } from '../api';
 
 /**
  * Преподаватели группы. Создатель добавляет коллег по логину и убирает их;
@@ -13,7 +13,7 @@ import { Skeleton } from '../../../ui';
 export function GroupTeachersSection({ groupId, isOwner }: { groupId: string; isOwner: boolean }) {
   const toast = useToast();
   const navigate = useNavigate();
-  const { data, setData, error } = useLoad(() => api<Teachers>('GET', `/teacher/groups/${groupId}/teachers`), [groupId]);
+  const { data, setData, error } = useLoad(() => fetchGroupTeachers(groupId), [groupId]);
   const [login, setLogin] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -21,7 +21,7 @@ export function GroupTeachersSection({ groupId, isOwner }: { groupId: string; is
     e.preventDefault();
     setBusy(true);
     try {
-      setData(await api<Teachers>('POST', `/teacher/groups/${groupId}/teachers`, { login: login.trim() }));
+      setData(await addGroupTeacher(groupId, login.trim()));
       setLogin('');
       toast({ text: 'Коллега добавлен в группу', tone: 'ok' });
     } catch (err) {
@@ -34,7 +34,7 @@ export function GroupTeachersSection({ groupId, isOwner }: { groupId: string; is
   async function remove(teacherId: string, self: boolean) {
     setBusy(true);
     try {
-      await api('DELETE', `/teacher/groups/${groupId}/teachers/${teacherId}`);
+      await removeGroupTeacher(groupId, teacherId);
       if (self) {
         navigate('/');
         return;

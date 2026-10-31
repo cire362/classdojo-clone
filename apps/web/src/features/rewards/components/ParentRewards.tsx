@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowClockwiseIcon, GiftIcon } from '@phosphor-icons/react';
-import { api, type ParentRewards as Rewards, type RewardRequest } from '../../../lib/api';
+import type { ParentRewards as Rewards, RewardRequest } from '../../../lib/api';
 import { formatDateTime, points, useLoad } from '../../../lib/hooks';
 import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
+import { fetchChildRewards } from '../api';
 
 const STATUS = {
   PENDING: { text: 'Ждёт ответа', cls: 'bg-accent/25 text-ink' },
@@ -38,14 +39,13 @@ export function ParentRewards({ childId }: { childId: string }) {
   const version = useRef(0);
   const [moreLoading, setMoreLoading] = useState(false);
   const [moreError, setMoreError] = useState<string | null>(null);
-  const path = `/parent/children/${childId}/rewards`;
   const shown = useRef<Rewards | null>(null);
   const { data, setData, loading, error, reload } = useLoad(async () => {
     version.current++;
     setMoreError(null);
     setMoreLoading(false);
-    return keepOpenedHistory(await api<Rewards>('GET', path), shown.current);
-  }, [path]);
+    return keepOpenedHistory(await fetchChildRewards(childId), shown.current);
+  }, [childId]);
   shown.current = data;
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export function ParentRewards({ childId }: { childId: string }) {
     setMoreLoading(true);
     setMoreError(null);
     try {
-      const next = await api<Rewards>('GET', `${path}?${new URLSearchParams({ before: data.nextCursor })}`);
+      const next = await fetchChildRewards(childId, data.nextCursor);
       if (current !== version.current) return;
       setData((old) => old && old.student.id === next.student.id ? {
         ...old, history: [...new Map([...old.history, ...next.history].map((r) => [r.id, r])).values()], nextCursor: next.nextCursor,

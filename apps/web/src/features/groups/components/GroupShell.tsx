@@ -2,10 +2,10 @@ import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router-dom';
 import { ChunkErrorBoundary } from '../../../ui/ChunkErrorBoundary';
 import { ArchiveIcon, ArrowLeftIcon, CameraIcon, ChartBarIcon, GiftIcon, ListChecksIcon, MegaphoneIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
-import { api, type GroupDetails } from '../../../lib/api';
 import { CardGridSkeleton, ErrorBox, Skeleton } from '../../../ui';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import type { GroupCtx } from '../hooks/useGroup';
+import { fetchGroup, restoreGroup } from '../api';
 
 const TABS = [
   { to: '', end: true, label: 'Урок', icon: SparkleIcon },
@@ -20,10 +20,7 @@ const TABS = [
 export function GroupShell() {
   const { groupId } = useParams();
   const location = useLocation();
-  const { data, setData, error, loading, reload } = useLoad(
-    () => api<GroupDetails>('GET', `/teacher/groups/${groupId}`),
-    [groupId],
-  );
+  const { data, setData, error, loading, reload } = useLoad(() => fetchGroup(groupId!), [groupId]);
 
   if (error && !data) return <ErrorBox message={error} onRetry={reload} />;
 
@@ -47,7 +44,7 @@ export function GroupShell() {
               <button
                 className="btn btn-secondary btn-sm"
                 onClick={async () => {
-                  await api('POST', `/teacher/groups/${data.group.id}/restore`);
+                  await restoreGroup(data.group.id);
                   await reload();
                 }}
               >
