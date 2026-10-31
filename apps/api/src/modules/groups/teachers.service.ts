@@ -1,10 +1,11 @@
-import { prisma } from '../platform/db.js';
-import { HttpError, notFound } from '../platform/errors.js';
+import type { GroupTeacher, GroupTeachers } from '@heroes/shared/api';
+import { prisma } from '../../platform/db.js';
+import { HttpError, notFound } from '../../platform/errors.js';
 
 const MAX_CO_TEACHERS = 10;
 
 /** Преподаватели группы: владелец и соавторы */
-export async function groupTeachers(groupId: string, me: string) {
+export async function groupTeachers(groupId: string, me: string): Promise<GroupTeachers> {
   const group = await prisma.group.findUniqueOrThrow({
     where: { id: groupId },
     include: {
@@ -12,7 +13,12 @@ export async function groupTeachers(groupId: string, me: string) {
       coTeachers: { orderBy: { createdAt: 'asc' }, include: { teacher: { include: { account: { select: { login: true } } } } } },
     },
   });
-  const view = (t: { id: string; name: string; account: { login: string } }) => ({ id: t.id, name: t.name, login: t.account.login, isMe: t.id === me });
+  const view = (t: { id: string; name: string; account: { login: string } }): GroupTeacher => ({
+    id: t.id,
+    name: t.name,
+    login: t.account.login,
+    isMe: t.id === me,
+  });
   return {
     owner: view(group.teacher),
     coTeachers: group.coTeachers.map((ct) => view(ct.teacher)),
