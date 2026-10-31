@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import { HttpError } from '../platform/errors.js';
+import { HttpError } from '../../platform/errors.js';
 
 /**
  * Разбор списка учеников из Excel (.xlsx) или CSV. Ничего не создаёт: возвращает

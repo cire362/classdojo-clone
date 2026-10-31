@@ -5,7 +5,7 @@ import { hashPassword } from '../src/platform/credentials.js';
 import { createDefaultReasons } from '../src/modules/reasons/index.js';
 import { createDefaultRewards } from '../src/modules/rewards/index.js';
 import { syncHeroParts } from '../src/services/heroParts.js';
-import { createStudents } from '../src/services/students.js';
+import { createStudents } from '../src/modules/students/index.js';
 
 export const app = createApp();
 

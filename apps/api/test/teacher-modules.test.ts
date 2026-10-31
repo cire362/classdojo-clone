@@ -32,6 +32,13 @@ const routes = (groupId: string, studentId: string): [string, string][] => [
   ['GET', `/api/teacher/students/${studentId}/parents`],
   ['POST', `/api/teacher/students/${studentId}/parents`],
   ['POST', `/api/teacher/groups/${groupId}/parents`],
+  ['POST', `/api/teacher/groups/${groupId}/students`],
+  ['POST', `/api/teacher/groups/${groupId}/students/import-preview`],
+  ['POST', `/api/teacher/groups/${groupId}/reset-passwords`],
+  ['PATCH', `/api/teacher/students/${studentId}`],
+  ['DELETE', `/api/teacher/students/${studentId}`],
+  ['POST', `/api/teacher/students/${studentId}/move`],
+  ['POST', `/api/teacher/students/${studentId}/reset-password`],
 ];
 
 describe('маршруты модулей преподавателя', () => {

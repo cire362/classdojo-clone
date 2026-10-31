@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { bodyLimit } from 'hono/body-limit';
 import { normalizeHero } from '@heroes/shared';
 import { z } from 'zod';
 import { requireRole, type AppEnv } from '../platform/auth.js';
@@ -24,9 +23,8 @@ import { groupStats, statsWorkbook } from '../services/stats.js';
 import { weeklyStats } from '../services/weekly-stats.js';
 import { studentReport } from '../services/student-report.js';
 import { reportPdf } from '../services/report-pdf.js';
-import { MAX_IMPORT_BYTES, previewImport } from '../services/import.js';
+import { studentAdminRoutes } from '../modules/students/index.js';
 import { deleteOrphanParents, teacherParentRoutes } from '../modules/parents/index.js';
-import { createStudents, deleteStudent, resetStudentPassword } from '../services/students.js';
 import { changeOwnPassword } from '../services/password.js';
 import { saveHero } from './student.js';
 
@@ -36,12 +34,7 @@ const GroupPatch = z.object({
   name: z.string().trim().min(1).max(60).optional(),
   subtractTeacher: z.boolean().optional(),
 });
-const StudentsCreate = z.object({
-  names: z.array(z.string().trim().max(80)).min(1).max(100),
-});
 const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).max(64) });
-const StudentPatch = z.object({ name: z.string().trim().min(1).max(80) });
-const ResetMany = z.object({ studentIds: z.array(id).max(200).optional() });
 const ProfileBody = z.object({ name: z.string().trim().min(1, 'Введите имя').max(80) });
 
 function period(q: Record<string, string | undefined>) {
@@ -175,78 +168,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   })
 
   // ───── Ученики ─────
-  .post('/groups/:id/students', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-    const { names } = parse(StudentsCreate, await c.req.json().catch(() => null));
-    const clean = names.filter(Boolean);
-    if (!clean.length) throw new HttpError(400, 'Введите хотя бы одно имя');
-    const total = await prisma.student.count({ where: { groupId: group.id } });
-    if (total + clean.length > 200) throw new HttpError(400, 'В группе может быть не больше 200 учеников');
-    return c.json({ credentials: await createStudents(group.id, clean) }, 201);
-  })
-  // Разбор Excel/CSV со списком учеников: только предпросмотр, создание — обычным POST /students
-  .post(
-    '/groups/:id/students/import-preview',
-    bodyLimit({
-      maxSize: MAX_IMPORT_BYTES + 64 * 1024,
-      onError: () => {
-        throw new HttpError(413, 'Файл слишком большой (больше 2 МБ)');
-      },
-    }),
-    async (c) => {
-      const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-      const body = await c.req.parseBody();
-      const file = body['file'];
-      if (!(file instanceof File)) throw new HttpError(400, 'Загрузите файл');
-      const preview = await previewImport(file);
-      const existing = await prisma.student.findMany({ where: { groupId: group.id }, select: { name: true } });
-      const have = new Set(existing.map((s) => s.name.toLowerCase()));
-      return c.json({
-        ...preview,
-        names: preview.names.map((name) => ({ name, alreadyInGroup: have.has(name.toLowerCase()) })),
-      });
-    },
-  )
-  .post('/groups/:id/reset-passwords', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
-    const { studentIds } = parse(ResetMany, await c.req.json().catch(() => ({})));
-    const students = await prisma.student.findMany({
-      where: { groupId: group.id, ...(studentIds ? { id: { in: studentIds } } : {}) },
-      orderBy: { name: 'asc' },
-      select: { id: true },
-    });
-    const credentials = [];
-    for (const s of students) credentials.push(await resetStudentPassword(s.id));
-    return c.json({ credentials });
-  })
-  .patch('/students/:id', async (c) => {
-    const student = await teacherStudent(c.get('user'), c.req.param('id'));
-    const { name } = parse(StudentPatch, await c.req.json().catch(() => null));
-    const s = await prisma.student.update({ where: { id: student.id }, data: { name } });
-    return c.json({ id: s.id, name: s.name });
-  })
-  .delete('/students/:id', async (c) => {
-    const student = await teacherStudent(c.get('user'), c.req.param('id'));
-    await deleteStudent(student.id);
-    return c.json({ ok: true });
-  })
-  // Перевод в другую группу этого же преподавателя: герой, баллы, история и логин остаются при ученике,
-  // прошлые отметки посещаемости остаются в старой группе
-  .post('/students/:id/move', async (c) => {
-    const student = await teacherStudent(c.get('user'), c.req.param('id'));
-    const { groupId } = parse(z.object({ groupId: id }), await c.req.json().catch(() => null));
-    const target = await teacherGroup(c.get('user'), groupId, { writable: true });
-    if (target.id === student.groupId) throw new HttpError(400, 'Ученик уже в этой группе');
-    const total = await prisma.student.count({ where: { groupId: target.id } });
-    if (total >= 200) throw new HttpError(400, 'В группе может быть не больше 200 учеников');
-    // Команды принадлежат группе: в новой ученик начинает без команды
-    await prisma.student.update({ where: { id: student.id }, data: { groupId: target.id, teamId: null } });
-    return c.json({ id: student.id, groupId: target.id, groupName: target.name });
-  })
-  .post('/students/:id/reset-password', async (c) => {
-    const student = await teacherStudent(c.get('user'), c.req.param('id'));
-    return c.json(await resetStudentPassword(student.id));
-  })
+  .route('/', studentAdminRoutes)
 
   // ───── Преподаватели группы ─────
   .get('/groups/:id/teachers', async (c) => {
