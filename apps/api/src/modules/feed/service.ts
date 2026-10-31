@@ -36,7 +36,12 @@ export async function groupFeed(groupId: string, viewer: Viewer): Promise<FeedPo
   }));
 }
 
-export async function markFeedRead(accountId: string, groupId: string, through: Date, db: Prisma.TransactionClient | typeof prisma = prisma) {
+export async function markFeedRead(
+  accountId: string,
+  groupId: string,
+  through: Date,
+  db: Prisma.TransactionClient | typeof prisma = prisma,
+) {
   await db.$executeRaw`
     INSERT INTO "FeedRead" ("accountId", "groupId", "readAt") VALUES (${accountId}, ${groupId}, ${through})
     ON CONFLICT ("accountId", "groupId") DO UPDATE

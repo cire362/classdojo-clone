@@ -17,7 +17,14 @@ export async function classGoal(groupId: string): Promise<ClassGoal | null> {
   if (!goal) return null;
   const points = await prisma.pointEvent.aggregate({ where: { classGoalId: goal.id, value: { gt: 0 } }, _sum: { value: true } });
   const earned = points._sum.value ?? 0;
-  return { id: goal.id, title: goal.title, target: goal.target, earned, reached: earned >= goal.target, createdAt: goal.createdAt.toISOString() };
+  return {
+    id: goal.id,
+    title: goal.title,
+    target: goal.target,
+    earned,
+    reached: earned >= goal.target,
+    createdAt: goal.createdAt.toISOString(),
+  };
 }
 
 /** Редактирование сохраняет вклад, запуск новой цели (restart) обнуляет его без изменения истории баллов. */

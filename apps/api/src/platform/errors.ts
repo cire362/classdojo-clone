@@ -1,4 +1,4 @@
-import type { ZodType } from 'zod';
+import type { ZodType, output } from 'zod';
 
 export class HttpError extends Error {
   constructor(
@@ -12,7 +12,7 @@ export class HttpError extends Error {
 
 export const notFound = (what = 'Не найдено') => new HttpError(404, what);
 
-export function parse<T>(schema: ZodType<T>, data: unknown): T {
+export function parse<S extends ZodType>(schema: S, data: unknown): output<S> {
   const r = schema.safeParse(data);
   if (!r.success) {
     const issue = r.error.issues[0];

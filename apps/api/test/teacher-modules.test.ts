@@ -9,6 +9,8 @@ const routes = (groupId: string, studentId: string): [string, string][] => [
   ['PUT', `/api/teacher/groups/${groupId}/teams/assign`],
   ['GET', `/api/teacher/groups/${groupId}/feed`],
   ['DELETE', '/api/teacher/posts/any'],
+  ['POST', `/api/teacher/students/${studentId}/portfolio`],
+  ['DELETE', '/api/teacher/portfolio/any'],
 ];
 
 describe('маршруты модулей преподавателя', () => {

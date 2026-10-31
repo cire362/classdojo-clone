@@ -1,5 +1,6 @@
 import { levelForPoints, normalizeHero } from '@heroes/shared';
 import { prisma } from '../platform/db.js';
+import { portfolioItems } from '../modules/portfolio/index.js';
 import { studentBadges } from './badges.js';
 import { isActive } from './premium.js';
 import { dbDateKey, startOfDay, startOfWeek } from '../platform/dates.js';
@@ -43,11 +44,7 @@ export async function studentProfile(studentId: string) {
       include: { session: { select: { date: true, lessonNumber: true, createdAt: true } } },
       orderBy: [{ session: { date: 'desc' } }, { session: { lessonNumber: 'desc' } }],
     }),
-    prisma.portfolioItem.findMany({
-      where: { studentId },
-      orderBy: { createdAt: 'desc' },
-      select: { id: true, title: true, description: true, emoji: true, createdAt: true, createdBy: { select: { teacher: { select: { name: true } } } } },
-    }),
+    portfolioItems(studentId),
   ]);
   const attended = attendance.filter((a) => a.present).length;
   return {
@@ -67,7 +64,7 @@ export async function studentProfile(studentId: string) {
       ...e, attendance: attendanceSessionId !== null, author: awardedBy?.teacher?.name ?? null,
     })),
     badges: await studentBadges(studentId, student.groupId, attendance),
-    portfolio: portfolio.map(({ createdBy, ...p }) => ({ ...p, author: createdBy.teacher?.name ?? '' })),
+    portfolio,
     attendance: {
       attended,
       total: attendance.length,

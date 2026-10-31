@@ -12,6 +12,7 @@ import { classGoal, goalRoutes } from '../modules/goals/index.js';
 import { createDefaultRewards, decideRequest, groupRequests, groupRewards, pendingRewardGroups } from '../services/rewards.js';
 import { groupTeams, teamRoutes } from '../modules/teams/index.js';
 import { teacherFeedRoutes } from '../modules/feed/index.js';
+import { portfolioRoutes } from '../modules/portfolio/index.js';
 import { MAX_MESSAGE_LENGTH, sendMessage, teacherThread, teacherThreads, threadMessages } from '../services/messages.js';
 import { addCoTeacher, groupTeachers, removeCoTeacher } from '../services/coTeachers.js';
 import { MAX_LESSONS_PER_DAY, attendanceForDate, deleteAttendance, saveAttendance } from '../services/attendance.js';
@@ -41,11 +42,6 @@ const GroupPatch = z.object({
 });
 const StudentsCreate = z.object({
   names: z.array(z.string().trim().max(80)).min(1).max(100),
-});
-const PortfolioBody = z.object({
-  title: z.string().trim().min(1, 'Введите название').max(100),
-  description: z.string().trim().max(1000).default(''),
-  emoji: z.string().trim().min(1).max(16).default('🏆'),
 });
 const RewardBody = z.object({
   title: z.string().trim().min(1, 'Введите название').max(60),
@@ -318,19 +314,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   })
 
   // ───── Портфолио ─────
-  .post('/students/:id/portfolio', async (c) => {
-    const user = c.get('user');
-    const student = await teacherStudent(user, c.req.param('id'));
-    const data = parse(PortfolioBody, await c.req.json().catch(() => null));
-    await prisma.portfolioItem.create({ data: { ...data, studentId: student.id, createdById: user.accountId } });
-    return c.json((await studentProfile(student.id)).portfolio, 201);
-  })
-  .delete('/portfolio/:id', async (c) => {
-    const item = await prisma.portfolioItem.findFirst({ where: { id: c.req.param('id'), student: { group: groupsOf(c.get('user').teacherId!) } } });
-    if (!item) throw notFound('Запись не найдена');
-    await prisma.portfolioItem.delete({ where: { id: item.id } });
-    return c.json((await studentProfile(item.studentId)).portfolio);
-  })
+  .route('/', portfolioRoutes)
 
   // ───── Магазин наград ─────
   .get('/reward-requests', async (c) => c.json(await pendingRewardGroups(c.get('user').teacherId!)))
