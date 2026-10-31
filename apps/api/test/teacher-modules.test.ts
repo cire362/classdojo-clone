@@ -24,6 +24,10 @@ const routes = (groupId: string, studentId: string): [string, string][] => [
   ['POST', `/api/teacher/groups/${groupId}/points`],
   ['POST', '/api/teacher/points/undo'],
   ['DELETE', '/api/teacher/points/any'],
+  ['POST', `/api/teacher/groups/${groupId}/attendance/detect`],
+  ['GET', `/api/teacher/groups/${groupId}/attendance`],
+  ['POST', `/api/teacher/groups/${groupId}/attendance`],
+  ['DELETE', `/api/teacher/groups/${groupId}/attendance`],
 ];
 
 describe('маршруты модулей преподавателя', () => {

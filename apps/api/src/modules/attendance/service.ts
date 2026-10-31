@@ -1,16 +1,37 @@
-import { lockGoalGroup } from '../modules/goals/index.js';
-import { prisma } from '../platform/db.js';
-import { dateKey, dbDate, dbDateKey, localDayStart } from '../platform/dates.js';
-import { HttpError } from '../platform/errors.js';
-import { attendanceReason } from '../modules/reasons/index.js';
+import { lockGoalGroup } from '../goals/index.js';
+import type { AttendanceDay, GroupDetails } from '@heroes/shared/api';
+import { prisma } from '../../platform/db.js';
+import { addDays, dateKey, dbDate, dbDateKey, localDayStart, startOfDay } from '../../platform/dates.js';
+import { HttpError } from '../../platform/errors.js';
+import { attendanceReason } from '../reasons/index.js';
 
 export const MAX_LESSONS_PER_DAY = 8;
+
+/** Отмечать можно сегодня и задним числом, но не в будущем и не старше года */
+export function checkAttendanceDate(date: string) {
+  if (date > dateKey()) throw new HttpError(400, 'Нельзя отметить посещаемость в будущем');
+  if (date < dateKey(addDays(startOfDay(), -366))) throw new HttpError(400, 'Можно отметить посещаемость не старше года');
+}
+
+/** «Сегодня» на экране урока — последний отмеченный сегодня урок */
+export async function todayAttendance(groupId: string): Promise<GroupDetails['todayAttendance']> {
+  const session = await prisma.attendanceSession.findFirst({
+    where: { groupId, date: dbDate(dateKey()) },
+    orderBy: { lessonNumber: 'desc' },
+    include: { records: true },
+  });
+  if (!session) return null;
+  return {
+    peopleOnPhoto: session.peopleOnPhoto,
+    presentStudentIds: session.records.filter((r) => r.present).map((r) => r.studentId),
+  };
+}
 
 /**
  * Отметки группы за день: список уже отмеченных уроков и подробности по выбранному.
  * Если урок не указан, берётся последний отмеченный (или первый, если отметок нет).
  */
-export async function attendanceForDate(groupId: string, date: string, lesson?: number) {
+export async function attendanceForDate(groupId: string, date: string, lesson?: number): Promise<AttendanceDay> {
   const sessions = await prisma.attendanceSession.findMany({
     where: { groupId, date: dbDate(date) },
     orderBy: { lessonNumber: 'asc' },

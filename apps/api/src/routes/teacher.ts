@@ -15,8 +15,7 @@ import { teacherFeedRoutes } from '../modules/feed/index.js';
 import { portfolioRoutes } from '../modules/portfolio/index.js';
 import { MAX_MESSAGE_LENGTH, sendMessage, teacherThread, teacherThreads, threadMessages } from '../services/messages.js';
 import { addCoTeacher, groupTeachers, removeCoTeacher } from '../services/coTeachers.js';
-import { MAX_LESSONS_PER_DAY, attendanceForDate, deleteAttendance, saveAttendance } from '../services/attendance.js';
-import { countPeople } from '../services/detector.js';
+import { attendanceRoutes, todayAttendance } from '../modules/attendance/index.js';
 import { cardSummaries, pointRoutes } from '../modules/points/index.js';
 import { teacherPremium } from '../services/premium.js';
 import { studentProfile } from '../services/profile.js';
@@ -46,14 +45,6 @@ const ParentLink = z.object({ login: z.string().trim().min(1).max(64) });
 const StudentPatch = z.object({ name: z.string().trim().min(1).max(80) });
 const ResetMany = z.object({ studentIds: z.array(id).max(200).optional() });
 const ProfileBody = z.object({ name: z.string().trim().min(1, 'Введите имя').max(80) });
-const lessonNumber = z.coerce.number().int().min(1).max(MAX_LESSONS_PER_DAY);
-const AttendanceBody = z.object({
-  date: z.string().refine(isDateKey, 'Дата в формате ГГГГ-ММ-ДД').optional(),
-  lesson: lessonNumber.default(1),
-  presentStudentIds: z.array(id).max(200),
-  peopleOnPhoto: z.number().int().min(0).max(500).nullable(),
-  subtractedTeacher: z.boolean(),
-});
 
 function period(q: Record<string, string | undefined>) {
   const today = new Date();
@@ -123,19 +114,14 @@ export const teacherRoutes = new Hono<AppEnv>()
   })
   .get('/groups/:id', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
-    const [students, reasons, todaySession] = await Promise.all([
+    const [students, reasons, today] = await Promise.all([
       prisma.student.findMany({
         where: { groupId: group.id },
         orderBy: { name: 'asc' },
         include: { hero: true, account: { select: { login: true } }, _count: { select: { parents: true } } },
       }),
       manualReasons(group.id),
-      // «Сегодня» на экране урока — последний отмеченный сегодня урок
-      prisma.attendanceSession.findFirst({
-        where: { groupId: group.id, date: dbDate(dateKey()) },
-        orderBy: { lessonNumber: 'desc' },
-        include: { records: true },
-      }),
+      todayAttendance(group.id),
     ]);
     const [summaries, teams, pendingRewards, goal] = await Promise.all([
       cardSummaries(students.map((s) => s.id)),
@@ -158,12 +144,7 @@ export const teacherRoutes = new Hono<AppEnv>()
       teams,
       classGoal: goal,
       pendingRewards,
-      todayAttendance: todaySession
-        ? {
-            peopleOnPhoto: todaySession.peopleOnPhoto,
-            presentStudentIds: todaySession.records.filter((r) => r.present).map((r) => r.studentId),
-          }
-        : null,
+      todayAttendance: today,
     });
   })
   .patch('/groups/:id', async (c) => {
@@ -379,55 +360,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   .route('/', pointRoutes)
 
   // ───── Посещаемость ─────
-  .post(
-    '/groups/:id/attendance/detect',
-    bodyLimit({
-      maxSize: env.maxPhotoBytes,
-      onError: () => {
-        throw new HttpError(413, 'Фото слишком большое');
-      },
-    }),
-    async (c) => {
-      await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-      const body = await c.req.parseBody();
-      const photo = body['photo'];
-      if (!(photo instanceof File)) throw new HttpError(400, 'Загрузите фото');
-      if (!photo.type.startsWith('image/')) throw new HttpError(415, 'Нужен файл изображения');
-      // Фото не сохраняется: передаём его из памяти в сервис подсчёта и возвращаем только числа
-      return c.json(await countPeople(photo));
-    },
-  )
-  .get('/groups/:id/attendance', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'));
-    const date = c.req.query('date') ?? dateKey();
-    if (!isDateKey(date)) throw new HttpError(400, 'Дата в формате ГГГГ-ММ-ДД');
-    const lessonRaw = c.req.query('lesson');
-    const lesson = lessonRaw === undefined ? undefined : parse(lessonNumber, lessonRaw);
-    return c.json(await attendanceForDate(group.id, date, lesson));
-  })
-  .delete('/groups/:id/attendance', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-    const date = c.req.query('date') ?? '';
-    if (!isDateKey(date)) throw new HttpError(400, 'Дата в формате ГГГГ-ММ-ДД');
-    await deleteAttendance(group.id, date, parse(lessonNumber, c.req.query('lesson')));
-    return c.json({ ok: true });
-  })
-  .post('/groups/:id/attendance', async (c) => {
-    const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
-    const body = parse(AttendanceBody, await c.req.json().catch(() => null));
-    const date = body.date ?? dateKey();
-    checkAttendanceDate(date);
-    const result = await saveAttendance({
-      groupId: group.id,
-      date,
-      lesson: body.lesson ?? 1,
-      presentStudentIds: body.presentStudentIds,
-      peopleOnPhoto: body.peopleOnPhoto,
-      subtractedTeacher: body.subtractedTeacher,
-      createdById: c.get('user').accountId,
-    });
-    return c.json(result, 201);
-  })
+  .route('/', attendanceRoutes)
 
   // ───── Статистика ─────
   .get('/groups/:id/stats', async (c) => {
@@ -466,9 +399,3 @@ export const teacherRoutes = new Hono<AppEnv>()
       },
     });
   });
-
-/** Отмечать можно сегодня и задним числом, но не в будущем и не старше года */
-function checkAttendanceDate(date: string) {
-  if (date > dateKey()) throw new HttpError(400, 'Нельзя отметить посещаемость в будущем');
-  if (date < dateKey(addDays(startOfDay(), -366))) throw new HttpError(400, 'Можно отметить посещаемость не старше года');
-}
