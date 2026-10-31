@@ -6,6 +6,7 @@ import { prisma } from './platform/db.js';
 import { HttpError } from './platform/errors.js';
 import { notifications } from './services/notifications.js';
 import { adminRoutes, authRoutes } from './modules/accounts/index.js';
+import { activeHeroParts } from './modules/hero/index.js';
 import { parentRoutes } from './routes/parent.js';
 import { studentRoutes } from './routes/student.js';
 import { teacherRoutes } from './routes/teacher.js';
@@ -47,10 +48,7 @@ export function createApp() {
 
   app.get('/api/notifications', requireAuth, async (c) => c.json(await notifications(c.get('user'))));
 
-  app.get('/api/hero-parts', requireAuth, async (c) => {
-    const parts = await prisma.heroPart.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } });
-    return c.json(parts.map((p) => ({ id: p.id, requiredLevel: p.requiredLevel, isPremium: p.isPremium })));
-  });
+  app.get('/api/hero-parts', requireAuth, async (c) => c.json(await activeHeroParts()));
 
   app.notFound((c) => c.json({ error: 'Не найдено' }, 404));
 

@@ -23,9 +23,9 @@ import { weeklyStats } from '../services/weekly-stats.js';
 import { studentReport } from '../services/student-report.js';
 import { reportPdf } from '../services/report-pdf.js';
 import { teacherAccountRoutes } from '../modules/accounts/index.js';
+import { teacherHeroRoutes } from '../modules/hero/index.js';
 import { studentAdminRoutes } from '../modules/students/index.js';
 import { deleteOrphanParents, teacherParentRoutes } from '../modules/parents/index.js';
-import { saveHero } from './student.js';
 
 const id = z.string().min(1).max(64);
 const GroupCreate = z.object({ name: z.string().trim().min(1, 'Введите название').max(60) });
@@ -202,10 +202,7 @@ export const teacherRoutes = new Hono<AppEnv>()
     const student = await teacherStudent(c.get('user'), c.req.param('id'));
     return c.json(await studentProfile(student.id));
   })
-  .put('/students/:id/hero', async (c) => {
-    const student = await teacherStudent(c.get('user'), c.req.param('id'));
-    return c.json(await saveHero(student.id, await c.req.json().catch(() => null)));
-  })
+  .route('/', teacherHeroRoutes)
 
   // ───── Причины ─────
   .route('/', reasonRoutes)
