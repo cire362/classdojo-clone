@@ -1,13 +1,13 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { CalendarCheckIcon, ClockCounterClockwiseIcon, StarIcon, TrashIcon, TrophyIcon } from '@phosphor-icons/react';
 import { MAX_LEVEL } from '@heroes/shared';
-import type { HistoryEvent, PointsSum, Profile } from '../lib/api';
-import { formatDate, pluralize } from '../lib/hooks';
-import { HeroAvatar } from '../features/hero';
+import type { HistoryEvent, PointsSum, Profile } from '../../../lib/api';
+import { formatDate, pluralize } from '../../../lib/hooks';
+import { HeroAvatar } from '../../hero';
 import { Portfolio, type PortfolioEdit } from './Portfolio';
 import { Badges, BadgeSummary } from './Badges';
-import { PetCompanion } from '../features/hero';
-import { EmptyState, ProgressBar } from '../ui';
+import { PetCompanion } from '../../hero';
+import { EmptyState, ProgressBar } from '../../../ui';
 
 function PointsTile({ label, sum, featured = false }: { label: string; sum: PointsSum; featured?: boolean }) {
   return (

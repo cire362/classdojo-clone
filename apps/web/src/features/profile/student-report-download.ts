@@ -1,4 +1,4 @@
-import { ApiError } from './api';
+import { ApiError } from '../../lib/api';
 
 /** Только бинарный ответ PDF; JSON-ошибка не должна скачиваться как документ. */
 export async function fetchReport(studentId: string, from: string, to: string): Promise<Blob> {

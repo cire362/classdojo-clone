@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { PlusIcon, TrashIcon, TrophyIcon } from '@phosphor-icons/react';
-import type { PortfolioItem } from '../lib/api';
-import { formatDate } from '../lib/hooks';
-import { useToast } from '../ui/Toast';
-import { EmptyState } from '../ui';
+import type { PortfolioItem } from '../../../lib/api';
+import { formatDate } from '../../../lib/hooks';
+import { useToast } from '../../../ui/Toast';
+import { EmptyState } from '../../../ui';
 
 export interface PortfolioEdit {
   add: (item: { title: string; description: string; emoji: string }) => Promise<void>;

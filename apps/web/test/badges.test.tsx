@@ -1,8 +1,8 @@
 import { expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import { BADGES, DEFAULT_HERO, levelForPoints, type StudentBadge } from '@heroes/shared';
-import { BadgeSummary, Badges } from '../src/components/Badges';
-import { ProfileView } from '../src/components/ProfileView';
+import { BadgeSummary, Badges } from '../src/features/profile/components/Badges';
+import { ProfileView } from '../src/features/profile/components/ProfileView';
 import { ReasonsPage } from '../src/pages/teacher/Reasons';
 import type { Profile } from '../src/lib/api';
 import { groupData, renderInGroup } from './group-harness';

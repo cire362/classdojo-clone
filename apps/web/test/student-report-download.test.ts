@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { fetchReport } from '../src/lib/student-report-download';
+import { fetchReport } from '../src/features/profile/student-report-download';
 
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 

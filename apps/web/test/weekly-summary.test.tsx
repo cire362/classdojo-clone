@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
 import { api, type WeeklySummary as Summary } from '../src/lib/api';
-import { WeeklySummary } from '../src/components/WeeklySummary';
+import { WeeklySummary } from '../src/features/profile/components/WeeklySummary';
 import { renderApp } from './render';
 
 vi.mock('../src/lib/api', () => ({ api: vi.fn() }));

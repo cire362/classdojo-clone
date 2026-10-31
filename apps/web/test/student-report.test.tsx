@@ -1,10 +1,10 @@
 import { act, fireEvent, screen } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
-import { StudentReport } from '../src/components/StudentReport';
-import { fetchReport, saveReport } from '../src/lib/student-report-download';
+import { StudentReport } from '../src/features/profile/components/StudentReport';
+import { fetchReport, saveReport } from '../src/features/profile/student-report-download';
 import { renderApp } from './render';
 
-vi.mock('../src/lib/student-report-download', () => ({ fetchReport: vi.fn(), saveReport: vi.fn() }));
+vi.mock('../src/features/profile/student-report-download', () => ({ fetchReport: vi.fn(), saveReport: vi.fn() }));
 
 it('выбранный период передаётся при скачивании, файл подписан именем ученика', async () => {
   const pdf = new Blob(['%PDF-']);

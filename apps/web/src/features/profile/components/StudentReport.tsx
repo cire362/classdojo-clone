@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent } from 'react';
 import { CaretDownIcon, DownloadSimpleIcon, FilePdfIcon } from '@phosphor-icons/react';
-import { fetchReport, saveReport } from '../lib/student-report-download';
+import { fetchReport, saveReport } from '../student-report-download';
 
 /** Небольшая панель в профиле преподавателя; период и ошибка сохраняются при повторе. */
 export function StudentReport({ studentId, studentName }: { studentId: string; studentName: string }) {

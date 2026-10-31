@@ -1,6 +1,6 @@
 import { CalendarCheckIcon, HandshakeIcon, TrophyIcon } from '@phosphor-icons/react';
 import type { BadgeId, StudentBadge } from '@heroes/shared';
-import { ProgressBar } from '../ui';
+import { ProgressBar } from '../../../ui';
 
 const ICONS = { 'attendance.streak10': CalendarCheckIcon, 'help.20': HandshakeIcon, 'level.first5': TrophyIcon } satisfies Record<BadgeId, typeof TrophyIcon>;
 
