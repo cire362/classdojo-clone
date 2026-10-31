@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SignOutIcon, XIcon } from '@phosphor-icons/react';
-import { api, type GroupTeachers as Teachers } from '../api';
-import { useLoad } from '../hooks';
+import { api, type GroupTeachers as Teachers } from '../lib/api';
+import { useLoad } from '../lib/hooks';
 import { useToast } from '../ui/Toast';
 import { Skeleton } from '../ui';
 

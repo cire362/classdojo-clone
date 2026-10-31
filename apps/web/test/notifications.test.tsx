@@ -1,14 +1,14 @@
 import { act, screen, waitFor } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
-import { useNotifications, NotificationsProvider } from '../src/notify';
+import { useNotifications, NotificationsProvider } from '../src/features/notifications/notify';
 import { StudentNotificationsPage } from '../src/pages/student/Notifications';
-import type { Me, Notifications, StudentNotifications } from '../src/api';
+import type { Me, Notifications, StudentNotifications } from '../src/lib/api';
 import { renderApp } from './render';
 
 const auth = vi.hoisted(() => ({ user: { login: 'masha.i', role: 'STUDENT', name: 'Маша' } as Me | null }));
-vi.mock('../src/auth', () => ({ useAuth: () => auth }));
-vi.mock('../src/api', async (orig) => ({ ...(await orig<typeof import('../src/api')>()), api: vi.fn() }));
-const { api } = await import('../src/api');
+vi.mock('../src/features/accounts/auth', () => ({ useAuth: () => auth }));
+vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
+const { api } = await import('../src/lib/api');
 
 function page(): StudentNotifications {
   return {

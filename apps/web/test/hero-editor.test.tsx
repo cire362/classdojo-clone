@@ -4,8 +4,8 @@ import { DEFAULT_HERO, HERO_PARTS } from '@heroes/shared';
 import { HeroEditor } from '../src/components/HeroEditor';
 import { renderApp } from './render';
 
-vi.mock('../src/api', async (orig) => ({ ...(await orig<typeof import('../src/api')>()), api: vi.fn() }));
-const { api } = await import('../src/api');
+vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
+const { api } = await import('../src/lib/api');
 
 beforeEach(() => {
   vi.mocked(api).mockImplementation(async (_m: string, path: string) => {

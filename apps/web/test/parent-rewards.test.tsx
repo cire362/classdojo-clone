@@ -1,10 +1,10 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { ParentRewards } from '../src/components/ParentRewards';
-import { api, type ParentRewards as Rewards, type RewardRequest } from '../src/api';
+import { api, type ParentRewards as Rewards, type RewardRequest } from '../src/lib/api';
 import { renderApp } from './render';
 
-vi.mock('../src/api', () => ({ api: vi.fn() }));
+vi.mock('../src/lib/api', () => ({ api: vi.fn() }));
 const request = (id: string, status: RewardRequest['status']): RewardRequest => ({ id, title: `Награда ${id}`, emoji: '🎁', cost: 5, status, createdAt: '2026-10-30T10:00:00.000Z', decidedAt: status === 'PENDING' ? null : '2026-10-31T10:00:00.000Z' });
 const data = (patch: Partial<Rewards> = {}): Rewards => ({ student: { id: 's1', name: 'Маша Иванова', groupName: '5 «А»' }, balance: 10, archived: false, pending: [request('p', 'PENDING')], history: [request('a', 'APPROVED'), request('r', 'REJECTED')], rewards: [{ id: 'rw', title: 'Выбрать игру', emoji: '🎁', cost: 15 }], nextCursor: null, ...patch });
 beforeEach(() => { vi.mocked(api).mockReset(); });

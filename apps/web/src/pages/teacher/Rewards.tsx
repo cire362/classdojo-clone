@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { CheckIcon, GiftIcon, TrashIcon, XIcon } from '@phosphor-icons/react';
-import { api, type Reward, type RewardRequest } from '../../api';
+import { api, type Reward, type RewardRequest } from '../../lib/api';
 import { useToast } from '../../ui/Toast';
 import { EmptyState, ErrorBox, PageTitle, Skeleton } from '../../ui';
-import { formatDateTime, pluralize, useLoad } from '../../hooks';
+import { formatDateTime, pluralize, useLoad } from '../../lib/hooks';
 import { useGroup } from './GroupLayout';
-import { useNotifications } from '../../notify';
+import { useNotifications } from '../../features/notifications';
 
 const EMOJI = ['🎁', '🪑', '🎵', '🧑‍🏫', '⏰', '🎮', '🍬', '📖', '🎨', '⚽', '🌟', '🏅'];
 const STATUS = { PENDING: 'ждёт ответа', APPROVED: 'выдано', REJECTED: 'отказано' } as const;

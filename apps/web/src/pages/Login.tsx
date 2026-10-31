@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { DEFAULT_HERO, type HeroParts } from '@heroes/shared';
-import { useAuth } from '../auth';
+import { useAuth } from '../features/accounts';
 import { HeroAvatar } from '../components/HeroAvatar';
 
 const h = (p: Partial<HeroParts>): HeroParts => ({ ...DEFAULT_HERO, ...p });

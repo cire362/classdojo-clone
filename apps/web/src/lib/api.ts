@@ -14,7 +14,7 @@ export class ApiError extends Error {
  */
 const EARLY_TTL_MS = 15_000;
 type EarlyMap = Map<string, { at: number; response: Promise<Response | null> }>;
-// Общая карта с src/early.ts, который запускается раньше всего приложения
+// Общая карта с src/app/early.ts, который запускается раньше всего приложения
 const early: EarlyMap = ((window as Window & { __heroesEarly?: EarlyMap }).__heroesEarly ??= new Map());
 
 export function prefetchGet(path: string): void {

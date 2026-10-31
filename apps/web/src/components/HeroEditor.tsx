@@ -14,8 +14,8 @@ import {
   type HeroPartDef,
   type HeroSlot,
 } from '@heroes/shared';
-import { api } from '../api';
-import { useLoad } from '../hooks';
+import { api } from '../lib/api';
+import { useLoad } from '../lib/hooks';
 import { HeroAvatar } from './HeroAvatar';
 import { useToast } from '../ui/Toast';
 import { PetAvatar } from './PetCompanion';

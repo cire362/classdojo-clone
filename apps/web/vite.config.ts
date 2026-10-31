@@ -4,12 +4,12 @@ import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 import { defineConfig, type Plugin } from 'vite';
 import type { OutputChunk } from 'rollup';
-import { PAGE_MODULES } from './src/routes';
+import { PAGE_MODULES } from './src/app/routes';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 /**
- * src/early.ts (вместе с src/routes.ts) встраивается в <head> обычным скриптом: он должен
+ * src/app/early.ts (вместе с src/app/routes.ts) встраивается в <head> обычным скриптом: он должен
  * выполниться сразу, не дожидаясь модулей приложения. При сборке рядом кладётся карта
  * «страница → файлы её кода», чтобы ранний скрипт заказал их через modulepreload.
  */
@@ -18,7 +18,7 @@ function inlineEarlyScript(): Plugin {
     name: 'heroes-inline-early-script',
     async transformIndexHtml(html, ctx) {
       const out = await build({
-        entryPoints: [fileURLToPath(new URL('./src/early.ts', import.meta.url))],
+        entryPoints: [fileURLToPath(new URL('./src/app/early.ts', import.meta.url))],
         bundle: true,
         write: false,
         minify: true,
@@ -144,6 +144,21 @@ function phosphorUsedWeights(): Plugin {
   };
 }
 
+/** Ядро приложения, нужное любой странице. Пути записаны строкой: переносишь файл — обнови список */
+const APP_CHUNK = new RegExp(
+  `[\\\\/]src[\\\\/](${[
+    'app/(Layout|ChunkErrorBoundary|pages|routes)',
+    'features/accounts/auth',
+    'features/hero/news',
+    'features/notifications/notify',
+    'features/profile/components/ProfileSkeleton',
+    'lib/(api|hooks|network)',
+    'ui/(index|Toast|PageSkeleton)',
+  ]
+    .join('|')
+    .replaceAll('/', '[\\\\/]')})\\.tsx?$`,
+);
+
 export default defineConfig({
   plugins: [phosphorPerIcon(), phosphorUsedWeights(), react(), tailwindcss(), inlineEarlyScript(), inlineStyles()],
   build: {
@@ -151,8 +166,8 @@ export default defineConfig({
       output: {
         // Библиотеки — в отдельных файлах: они редко меняются и дольше живут в кэше браузера
         manualChunks(id, { getModuleInfo }) {
-          // Ядро приложения, нужное любой странице, — одним файлом, а не россыпью мелких
-          if (/[\\/]src[\\/]((api|auth|news|notify|hooks|pages|routes)\.tsx?|components[\\/](Layout|ChunkErrorBoundary)\.tsx|ui[\\/](index|Toast|PageSkeleton)\.tsx|features[\\/]profile[\\/]components[\\/]ProfileSkeleton\.tsx|lib[\\/]network\.ts)$/.test(id)) {
+          // Одним файлом, а не россыпью мелких
+          if (APP_CHUNK.test(id)) {
             return 'app';
           }
           if (!id.includes('node_modules')) return undefined;

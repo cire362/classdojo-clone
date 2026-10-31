@@ -2,10 +2,10 @@ import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ChunkErrorBoundary } from './ChunkErrorBoundary';
 import { BellIcon, ChatsCircleIcon, GearSixIcon, GiftIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
-import { useAuth } from '../auth';
-import { useNews } from '../news';
-import { CountBadge, useNotifications } from '../notify';
-import { pluralize } from '../hooks';
+import { useAuth } from '../features/accounts';
+import { useNews } from '../features/hero';
+import { CountBadge, useNotifications } from '../features/notifications';
+import { pluralize } from '../lib/hooks';
 import { Skeleton } from '../ui';
 
 export function Logo({ compact = false, hideNameOnMobile = false }: { compact?: boolean; hideNameOnMobile?: boolean }) {

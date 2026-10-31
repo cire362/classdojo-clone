@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarCheckIcon, DownloadSimpleIcon } from '@phosphor-icons/react';
-import { api, type Stats } from '../../api';
+import { api, type Stats } from '../../lib/api';
 import { EmptyState, ErrorBox, Skeleton } from '../../ui';
-import { dateKey, formatDate, useLoad } from '../../hooks';
+import { dateKey, formatDate, useLoad } from '../../lib/hooks';
 import { useGroup } from './GroupLayout';
 import { WeeklyPoints } from '../../components/WeeklyPoints';
 

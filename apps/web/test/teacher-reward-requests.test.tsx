@@ -1,18 +1,18 @@
 import { act, screen, waitFor } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
-import { AppLayout } from '../src/components/Layout';
+import { AppLayout } from '../src/app/Layout';
 import { RewardRequestsPage } from '../src/pages/teacher/RewardRequests';
 import { RewardsPage } from '../src/pages/teacher/Rewards';
-import { NotificationsProvider } from '../src/notify';
-import type { Me } from '../src/api';
+import { NotificationsProvider } from '../src/features/notifications/notify';
+import type { Me } from '../src/lib/api';
 import { renderApp } from './render';
 import { groupData, renderInGroup } from './group-harness';
 
 const auth = vi.hoisted(() => ({ user: { login: 'teacher', role: 'TEACHER', name: 'Анна' } as Me, logout: vi.fn() }));
-vi.mock('../src/auth', () => ({ useAuth: () => auth }));
-vi.mock('../src/news', () => ({ useNews: () => ({ news: null }) }));
-vi.mock('../src/api', async (orig) => ({ ...(await orig<typeof import('../src/api')>()), api: vi.fn() }));
-const { api } = await import('../src/api');
+vi.mock('../src/features/accounts/auth', () => ({ useAuth: () => auth }));
+vi.mock('../src/features/hero/news', () => ({ useNews: () => ({ news: null }) }));
+vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
+const { api } = await import('../src/lib/api');
 beforeEach(() => { vi.mocked(api).mockReset(); auth.user = { login: 'teacher', role: 'TEACHER', name: 'Анна' }; });
 
 it('в шапке есть переход с точным счётчиком, а при нуле остаётся доступная ссылка', async () => {

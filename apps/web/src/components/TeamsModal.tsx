@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { ShuffleIcon, TrashIcon } from '@phosphor-icons/react';
-import { api, type LessonStudent, type Team } from '../api';
+import { api, type LessonStudent, type Team } from '../lib/api';
 import { useToast } from '../ui/Toast';
 import { Modal } from '../ui';
 

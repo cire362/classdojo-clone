@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { CheckIcon } from '@phosphor-icons/react';
-import { pluralize } from '../hooks';
+import { pluralize } from '../lib/hooks';
 import { Modal, Toggle } from '../ui';
 
 export interface ImportPreview {

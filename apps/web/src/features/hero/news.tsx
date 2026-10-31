@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { api, type StudentNews } from './api';
-import { useAuth } from './auth';
+import { api, type StudentNews } from '../../lib/api';
+import { useAuth } from '../accounts';
 
 interface NewsState {
   news: StudentNews | null;

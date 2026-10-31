@@ -1,11 +1,11 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
-import { api, type WeeklyStats } from '../src/api';
+import { api, type WeeklyStats } from '../src/lib/api';
 import { WeeklyPoints, weeklyScale } from '../src/components/WeeklyPoints';
 import { groupData } from './group-harness';
 import { renderApp } from './render';
 
-vi.mock('../src/api', () => ({ api: vi.fn() }));
+vi.mock('../src/lib/api', () => ({ api: vi.fn() }));
 const group = groupData();
 group.teams = [{ id: 't1', name: 'Кометы', color: '#123456' }];
 const report = (patch: Partial<WeeklyStats> = {}): WeeklyStats => ({

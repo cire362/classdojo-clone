@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError } from '../src/api';
+import { ApiError } from '../src/lib/api';
 import { CancelledError, isRetryable, withRetry, type RetryStatus } from '../src/lib/network';
 
 function setOnline(value: boolean) {

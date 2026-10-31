@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Reorder, useDragControls } from 'motion/react';
 import { CaretDownIcon, CaretUpIcon, DotsSixVerticalIcon, MinusIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { api, type Reason } from '../../api';
+import { api, type Reason } from '../../lib/api';
 import { useToast } from '../../ui/Toast';
 import { Modal, PageTitle } from '../../ui';
 import { useGroup } from './GroupLayout';

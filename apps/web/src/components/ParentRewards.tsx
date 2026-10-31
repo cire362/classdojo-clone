@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowClockwiseIcon, GiftIcon } from '@phosphor-icons/react';
-import { api, type ParentRewards as Rewards, type RewardRequest } from '../api';
-import { formatDateTime, points, useLoad } from '../hooks';
+import { api, type ParentRewards as Rewards, type RewardRequest } from '../lib/api';
+import { formatDateTime, points, useLoad } from '../lib/hooks';
 import { EmptyState, ErrorBox, Skeleton } from '../ui';
 
 const STATUS = {

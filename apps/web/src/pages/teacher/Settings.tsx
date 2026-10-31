@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { SparkleIcon, UserIcon } from '@phosphor-icons/react';
-import { api } from '../../api';
-import { useAuth } from '../../auth';
+import { api } from '../../lib/api';
+import { useAuth } from '../../features/accounts';
 import { PasswordCard } from '../../components/PasswordCard';
 import { useToast } from '../../ui/Toast';
 import { Skeleton } from '../../ui';
-import { useLoad } from '../../hooks';
+import { useLoad } from '../../lib/hooks';
 
 export function SettingsPage() {
   const { user, refresh } = useAuth();

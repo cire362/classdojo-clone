@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, ArrowsLeftRightIcon, KeyIcon, PaintBrushIcon } from '@phosphor-icons/react';
-import { api, type Credentials, type Hero, type HistoryEvent, type PortfolioItem, type Profile } from '../../api';
+import { api, type Credentials, type Hero, type HistoryEvent, type PortfolioItem, type Profile } from '../../lib/api';
 import { HeroEditor } from '../../components/HeroEditor';
 import { MoveStudentModal } from '../../components/MoveStudentModal';
 import { ParentAccessCard } from '../../components/ParentAccess';
@@ -9,7 +9,7 @@ import { ProfileView } from '../../components/ProfileView';
 import { StudentReport } from '../../components/StudentReport';
 import { useToast } from '../../ui/Toast';
 import { ErrorBox, Modal, Skeleton } from '../../ui';
-import { formatDateTime, useLoad } from '../../hooks';
+import { formatDateTime, useLoad } from '../../lib/hooks';
 import { ProfileSkeleton } from '../../features/profile';
 import { CredentialsTable } from '../../features/students';
 

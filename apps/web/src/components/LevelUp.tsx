@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from 'motion/react';
 import { LEVELS, type HeroParts } from '@heroes/shared';
-import { pluralize } from '../hooks';
+import { pluralize } from '../lib/hooks';
 import { HeroAvatar } from './HeroAvatar';
 import { PartPreview } from './PartPreview';
 

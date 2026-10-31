@@ -1,4 +1,4 @@
-import { ApiError } from '../api';
+import { ApiError } from './api';
 
 /**
  * Надёжная отправка при плохом интернете (школьный Wi-Fi, мобильная сеть):

@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChatCircleIcon, KeyIcon, LinkSimpleIcon, PrinterIcon, UserPlusIcon, XIcon } from '@phosphor-icons/react';
-import { api, type ParentAccess as Access, type ParentCredentials } from '../api';
-import { useLoad } from '../hooks';
+import { api, type ParentAccess as Access, type ParentCredentials } from '../lib/api';
+import { useLoad } from '../lib/hooks';
 import { CredentialsTable } from '../features/students';
 import { useToast } from '../ui/Toast';
 import { Modal, Skeleton } from '../ui';

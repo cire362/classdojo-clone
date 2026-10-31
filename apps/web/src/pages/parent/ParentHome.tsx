@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { UsersIcon } from '@phosphor-icons/react';
-import { api, type ChatMessage, type ParentChild, type Profile } from '../../api';
+import { api, type ChatMessage, type ParentChild, type Profile } from '../../lib/api';
 import { Feed } from '../../components/Feed';
 import { Thread } from '../../components/Thread';
-import { CountBadge, useNotifications } from '../../notify';
+import { CountBadge, useNotifications } from '../../features/notifications';
 import { HeroHead } from '../../components/HeroAvatar';
 import { ProfileView } from '../../components/ProfileView';
 import { WeeklySummary } from '../../components/WeeklySummary';
 import { ParentRewards } from '../../components/ParentRewards';
 import { EmptyState, ErrorBox, Skeleton } from '../../ui';
-import { useLoad } from '../../hooks';
+import { useLoad } from '../../lib/hooks';
 import { ProfileSkeleton } from '../../features/profile';
 
 /** Выбранный ребёнок запоминается: его профиль ранний скрипт запрашивает сразу при открытии */

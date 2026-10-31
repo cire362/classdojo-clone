@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import { AttendancePage } from '../src/pages/teacher/Attendance';
-import type { AttendanceDay } from '../src/api';
+import type { AttendanceDay } from '../src/lib/api';
 import { groupData, renderInGroup } from './group-harness';
 
-vi.mock('../src/api', async (orig) => ({ ...(await orig<typeof import('../src/api')>()), api: vi.fn() }));
-const { api } = await import('../src/api');
+vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
+const { api } = await import('../src/lib/api');
 
 let day: AttendanceDay;
 

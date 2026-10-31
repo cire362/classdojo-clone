@@ -1,10 +1,10 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, ChatsCircleIcon } from '@phosphor-icons/react';
-import { api, type ChatMessage, type TeacherThread, type ThreadSummary } from '../../api';
+import { api, type ChatMessage, type TeacherThread, type ThreadSummary } from '../../lib/api';
 import { Thread } from '../../components/Thread';
 import { EmptyState, ErrorBox, Skeleton } from '../../ui';
-import { formatDateTime, useLoad } from '../../hooks';
-import { CountBadge, useNotifications } from '../../notify';
+import { formatDateTime, useLoad } from '../../lib/hooks';
+import { CountBadge, useNotifications } from '../../features/notifications';
 
 /** Переписки с родителями по всем группам преподавателя */
 export function MessagesPage() {

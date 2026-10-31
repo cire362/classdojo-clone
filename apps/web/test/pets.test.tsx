@@ -6,8 +6,8 @@ import { HeroAvatar } from '../src/components/HeroAvatar';
 import { PetCompanion } from '../src/components/PetCompanion';
 import { renderApp } from './render';
 
-vi.mock('../src/api', async (orig) => ({ ...(await orig<typeof import('../src/api')>()), api: vi.fn() }));
-const { api } = await import('../src/api');
+vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
+const { api } = await import('../src/lib/api');
 beforeEach(() => vi.mocked(api).mockResolvedValue(HERO_PARTS.map((p) => ({ id: p.id, requiredLevel: p.requiredLevel, isPremium: !!p.premium }))));
 
 it('быстрый переход открывает питомцев, выбор сохраняется вместе с героем, питомца можно убрать', async () => {

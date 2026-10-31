@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowClockwiseIcon, BellIcon, CheckIcon, GiftIcon, MegaphoneIcon } from '@phosphor-icons/react';
-import { api, type StudentNotifications } from '../../api';
+import { api, type StudentNotifications } from '../../lib/api';
 import { EmptyState, ErrorBox, Skeleton } from '../../ui';
 import { useToast } from '../../ui/Toast';
-import { formatDateTime, pluralize, useLoad } from '../../hooks';
-import { useNotifications } from '../../notify';
+import { formatDateTime, pluralize, useLoad } from '../../lib/hooks';
+import { useNotifications } from '../../features/notifications';
 
 export function StudentNotificationsPage() {
   const { counts, refresh } = useNotifications();

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowClockwiseIcon, CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
-import { api, type ParentChild, type WeeklySummary as Summary } from '../api';
-import { formatDate, pluralize, useLoad } from '../hooks';
+import { api, type ParentChild, type WeeklySummary as Summary } from '../lib/api';
+import { formatDate, pluralize, useLoad } from '../lib/hooks';
 import { ErrorBox, Skeleton } from '../ui';
 
 const signed = (value: number) => value > 0 ? `+${value}` : value < 0 ? `−${Math.abs(value)}` : '0';

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { api, type GroupDetails, type WeeklyStats } from '../api';
-import { pluralize, useLoad } from '../hooks';
+import { api, type GroupDetails, type WeeklyStats } from '../lib/api';
+import { pluralize, useLoad } from '../lib/hooks';
 import { ErrorBox, Skeleton } from '../ui';
 
 type Metric = 'earned' | 'lost' | 'net';

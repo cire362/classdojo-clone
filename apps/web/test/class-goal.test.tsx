@@ -5,8 +5,8 @@ import { LessonPage } from '../src/pages/teacher/Lesson';
 import { groupData, renderInGroup } from './group-harness';
 import { renderApp } from './render';
 
-vi.mock('../src/api', async (orig) => ({ ...(await orig<typeof import('../src/api')>()), api: vi.fn() }));
-const { api } = await import('../src/api');
+vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
+const { api } = await import('../src/lib/api');
 const goal = { id: 'goal-1', title: 'Киноурок', target: 5, earned: 4, reached: false, createdAt: '2026-10-29T09:00:00Z' };
 beforeEach(() => { vi.mocked(api).mockReset(); });
 

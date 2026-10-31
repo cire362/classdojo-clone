@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pagesFor } from '../src/routes';
+import { pagesFor } from '../src/app/routes';
 
 describe('код страниц по адресу', () => {
   it('главная: при известной роли — только её страница', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dateKey, formatDate, pluralize, points } from '../src/hooks';
+import { dateKey, formatDate, pluralize, points } from '../src/lib/hooks';
 import { formatName } from '../src/components/ImportStudentsModal';
 
 describe('склонения', () => {

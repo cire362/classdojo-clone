@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { MegaphoneIcon, TrashIcon } from '@phosphor-icons/react';
-import { api, type FeedPost } from '../api';
-import { formatDateTime, useLoad } from '../hooks';
-import { useNotifications } from '../notify';
+import { api, type FeedPost } from '../lib/api';
+import { formatDateTime, useLoad } from '../lib/hooks';
+import { useNotifications } from '../features/notifications';
 import { useToast } from '../ui/Toast';
 import { EmptyState, ErrorBox, Skeleton } from '../ui';
 

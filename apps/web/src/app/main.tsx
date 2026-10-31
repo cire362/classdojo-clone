@@ -3,15 +3,15 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import '@fontsource-variable/onest';
 import '@fontsource-variable/unbounded';
-import './styles.css';
-import { AuthProvider, storedRole, useAuth } from './auth';
-import { NewsProvider } from './news';
-import { NotificationsProvider } from './notify';
-import type { Role } from './api';
-import { AppLayout } from './components/Layout';
-import { ToastProvider } from './ui/Toast';
-import { PageSkeleton } from './ui/PageSkeleton';
-import { ErrorBox } from './ui';
+import '../styles.css';
+import { AuthProvider, storedRole, useAuth } from '../features/accounts';
+import { NewsProvider } from '../features/hero';
+import { NotificationsProvider } from '../features/notifications';
+import type { Role } from '../lib/api';
+import { AppLayout } from './Layout';
+import { ToastProvider } from '../ui/Toast';
+import { PageSkeleton } from '../ui/PageSkeleton';
+import { ErrorBox } from '../ui';
 
 import {
   AdminPage,
@@ -41,7 +41,7 @@ import {
   prefetchPages,
   preloadRoute,
 } from './pages';
-import { ChunkErrorBoundary } from './components/ChunkErrorBoundary';
+import { ChunkErrorBoundary } from './ChunkErrorBoundary';
 
 /** Подгружаем страницы роли в фоне сразу после входа */
 function Prefetch() {

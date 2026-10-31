@@ -4,12 +4,12 @@ import { BADGES, DEFAULT_HERO, levelForPoints, type StudentBadge } from '@heroes
 import { BadgeSummary, Badges } from '../src/components/Badges';
 import { ProfileView } from '../src/components/ProfileView';
 import { ReasonsPage } from '../src/pages/teacher/Reasons';
-import type { Profile } from '../src/api';
+import type { Profile } from '../src/lib/api';
 import { groupData, renderInGroup } from './group-harness';
 import { renderApp } from './render';
 
-vi.mock('../src/api', async (orig) => ({ ...(await orig<typeof import('../src/api')>()), api: vi.fn() }));
-const { api } = await import('../src/api');
+vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
+const { api } = await import('../src/lib/api');
 const badges = (): StudentBadge[] => BADGES.map((b) => ({ ...b, progress: b.id === 'help.20' ? 19 : 0, earnedOn: null, note: null, groupName: null }));
 
 it('закрытый значок показывает доступный прогресс, полученный — дату и группу', () => {

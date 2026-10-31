@@ -11,7 +11,7 @@ import {
   UsersThreeIcon,
   XIcon,
 } from '@phosphor-icons/react';
-import { api, type CardSummary, type ClassGoal, type LessonStudent, type Reason } from '../../api';
+import { api, type CardSummary, type ClassGoal, type LessonStudent, type Reason } from '../../lib/api';
 import { HeroAvatar, heroTint } from '../../components/HeroAvatar';
 import { useToast } from '../../ui/Toast';
 import { ClassGoalPanel } from '../../components/ClassGoal';
@@ -22,7 +22,7 @@ import { StudentSearch } from '../../components/StudentSearch';
 import { matchesStudent } from '../../lib/student-search';
 import { TeamsModal } from '../../components/TeamsModal';
 import { EmptyState, Modal } from '../../ui';
-import { pluralize } from '../../hooks';
+import { pluralize } from '../../lib/hooks';
 import { usePresence } from '../../lib/presence';
 import { useGroup } from './GroupLayout';
 

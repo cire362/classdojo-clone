@@ -1,9 +1,9 @@
 import { GiftIcon, StarIcon } from '@phosphor-icons/react';
-import { api, type Shop } from '../../api';
+import { api, type Shop } from '../../lib/api';
 import { useToast } from '../../ui/Toast';
 import { EmptyState, ErrorBox, Skeleton } from '../../ui';
-import { formatDateTime, pluralize, useLoad } from '../../hooks';
-import { useNotifications } from '../../notify';
+import { formatDateTime, pluralize, useLoad } from '../../lib/hooks';
+import { useNotifications } from '../../features/notifications';
 
 const STATUS = {
   PENDING: { text: 'ждёт ответа учителя', cls: 'bg-accent/25 text-ink' },

@@ -3,8 +3,8 @@ import { screen, within } from '@testing-library/react';
 import { LessonPage } from '../src/pages/teacher/Lesson';
 import { groupData, renderInGroup } from './group-harness';
 
-vi.mock('../src/api', async (orig) => ({ ...(await orig<typeof import('../src/api')>()), api: vi.fn() }));
-const { api } = await import('../src/api');
+vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
+const { api } = await import('../src/lib/api');
 
 beforeEach(() => {
   vi.mocked(api).mockImplementation(async (_m: string, path: string, body?: unknown) => {

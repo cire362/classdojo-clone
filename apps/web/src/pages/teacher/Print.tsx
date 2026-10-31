@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, KeyIcon, PrinterIcon } from '@phosphor-icons/react';
-import { api, type Credentials, type GroupDetails, type ParentCredentials } from '../../api';
+import { api, type Credentials, type GroupDetails, type ParentCredentials } from '../../lib/api';
 import { ErrorBox, Modal, Skeleton } from '../../ui';
-import { useLoad } from '../../hooks';
+import { useLoad } from '../../lib/hooks';
 
 /** Лист для печати: карточки «имя, логин, пароль» под разрезание; для родителей — свой лист */
 export function PrintPage() {

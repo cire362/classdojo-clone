@@ -1,4 +1,4 @@
-import type { Credentials } from '../../../api';
+import type { Credentials } from '../../../lib/api';
 
 /** Логины и пароли, выданные только что: показываются один раз */
 export function CredentialsTable({ rows }: { rows: Credentials[] }) {

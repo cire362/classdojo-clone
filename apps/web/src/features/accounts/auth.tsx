@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { ApiError, api, type Me } from './api';
+import { ApiError, api, type Me } from '../../lib/api';
 
 interface AuthState {
   user: Me | null;

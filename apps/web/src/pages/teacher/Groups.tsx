@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArchiveIcon, ArrowCounterClockwiseIcon, ArrowRightIcon, PlusIcon, UsersThreeIcon } from '@phosphor-icons/react';
-import { api, type GroupListItem } from '../../api';
-import { useAuth } from '../../auth';
+import { api, type GroupListItem } from '../../lib/api';
+import { useAuth } from '../../features/accounts';
 import { HeroHead } from '../../components/HeroAvatar';
 import { ErrorBox, Skeleton } from '../../ui';
-import { pluralize, useLoad } from '../../hooks';
+import { pluralize, useLoad } from '../../lib/hooks';
 
 export function GroupsPage() {
   const { user } = useAuth();

@@ -1,8 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { CalendarCheckIcon, ClockCounterClockwiseIcon, StarIcon, TrashIcon, TrophyIcon } from '@phosphor-icons/react';
 import { MAX_LEVEL } from '@heroes/shared';
-import type { HistoryEvent, PointsSum, Profile } from '../api';
-import { formatDate, pluralize } from '../hooks';
+import type { HistoryEvent, PointsSum, Profile } from '../lib/api';
+import { formatDate, pluralize } from '../lib/hooks';
 import { HeroAvatar } from './HeroAvatar';
 import { Portfolio, type PortfolioEdit } from './Portfolio';
 import { Badges, BadgeSummary } from './Badges';

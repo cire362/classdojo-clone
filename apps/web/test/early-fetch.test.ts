@@ -12,7 +12,7 @@ const json = (data: unknown, status = 200) =>
 
 async function freshApi() {
   vi.resetModules();
-  return import('../src/api');
+  return import('../src/lib/api');
 }
 
 describe('ранние запросы данных страницы', () => {

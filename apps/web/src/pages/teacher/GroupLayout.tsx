@@ -1,10 +1,10 @@
 import { Suspense, type Dispatch, type SetStateAction } from 'react';
 import { Link, NavLink, Outlet, useLocation, useOutletContext, useParams } from 'react-router-dom';
-import { ChunkErrorBoundary } from '../../components/ChunkErrorBoundary';
+import { ChunkErrorBoundary } from '../../app/ChunkErrorBoundary';
 import { ArchiveIcon, ArrowLeftIcon, CameraIcon, ChartBarIcon, GiftIcon, ListChecksIcon, MegaphoneIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
-import { api, type GroupDetails } from '../../api';
+import { api, type GroupDetails } from '../../lib/api';
 import { CardGridSkeleton, ErrorBox, Skeleton } from '../../ui';
-import { pluralize, useLoad } from '../../hooks';
+import { pluralize, useLoad } from '../../lib/hooks';
 
 export interface GroupCtx {
   data: GroupDetails;

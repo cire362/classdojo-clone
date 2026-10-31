@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { ArrowClockwiseIcon, ArrowRightIcon, GiftIcon } from '@phosphor-icons/react';
-import { api, type PendingRewardGroups } from '../../api';
+import { api, type PendingRewardGroups } from '../../lib/api';
 import { EmptyState, ErrorBox, Skeleton } from '../../ui';
-import { pluralize, useLoad } from '../../hooks';
-import { useNotifications } from '../../notify';
+import { pluralize, useLoad } from '../../lib/hooks';
+import { useNotifications } from '../../features/notifications';
 
 /** Общая очередь: переходим в нужную группу, чтобы выдать награду или отказать. */
 export function RewardRequestsPage() {
