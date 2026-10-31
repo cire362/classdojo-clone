@@ -1,9 +1,9 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowCounterClockwiseIcon, PauseIcon, PlayIcon, TimerIcon, XIcon } from '@phosphor-icons/react';
-import { formatTimer, timerDuration } from '../lib/lesson-timer';
-import { useLessonTimer } from '../lib/useLessonTimer';
-import { Switch } from '../ui';
+import { formatTimer, timerDuration } from '../lesson-timer';
+import { useLessonTimer } from '../hooks/useLessonTimer';
+import { Switch } from '../../../ui';
 
 const PRESETS = [1, 3, 5, 10];
 

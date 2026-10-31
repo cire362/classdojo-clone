@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { TIMER_KEY, idleTimer, pauseTimer, remainingTime, restoreTimer, resumeTimer, startTimer, type TimerState } from './lesson-timer';
+import { TIMER_KEY, idleTimer, pauseTimer, remainingTime, restoreTimer, resumeTimer, startTimer, type TimerState } from '../lesson-timer';
 
 /** Компонент с этим хуком монтируется с key=groupId: каждый урок восстанавливает свой отсчёт. */
 export function useLessonTimer(groupId: string) {

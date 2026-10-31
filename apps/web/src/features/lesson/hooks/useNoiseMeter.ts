@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { microphoneError, NOISE_THRESHOLD_KEY, restoreNoiseThreshold, sampleNoiseLevel } from './noise-meter';
+import { microphoneError, NOISE_THRESHOLD_KEY, restoreNoiseThreshold, sampleNoiseLevel } from '../noise-meter';
 
 interface Resources {
   stream: MediaStream;

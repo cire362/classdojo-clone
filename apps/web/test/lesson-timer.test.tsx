@@ -1,8 +1,8 @@
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { LessonTimer } from '../src/components/LessonTimer';
+import { LessonTimer } from '../src/features/lesson/components/LessonTimer';
 import { LessonPage } from '../src/pages/teacher/Lesson';
-import { TIMER_KEY, TIMER_MAX_MS, idleTimer, restoreTimer, startTimer, timerDuration } from '../src/lib/lesson-timer';
+import { TIMER_KEY, TIMER_MAX_MS, idleTimer, restoreTimer, startTimer, timerDuration } from '../src/features/lesson/lesson-timer';
 import { groupData, renderInGroup } from './group-harness';
 import { renderApp } from './render';
 

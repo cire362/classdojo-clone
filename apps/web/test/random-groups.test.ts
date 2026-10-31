@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { randomLessonGroups } from '../src/lib/random-groups';
+import { randomLessonGroups } from '../src/features/lesson/random-groups';
 
 it('каждый участник ровно один раз, вход не меняется, размеры отличаются не больше чем на одного', () => {
   for (let n = 2; n <= 200; n++) for (let size = 2; size <= 10; size++) {

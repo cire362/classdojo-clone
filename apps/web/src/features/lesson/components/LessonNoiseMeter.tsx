@@ -1,8 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MicrophoneIcon, MicrophoneSlashIcon, WaveformIcon, XIcon } from '@phosphor-icons/react';
-import { useNoiseMeter } from '../lib/useNoiseMeter';
-import { noiseBand } from '../lib/noise-meter';
+import { useNoiseMeter } from '../hooks/useNoiseMeter';
+import { noiseBand } from '../noise-meter';
 
 /** Контроллер остаётся на месте при переходе в проектор, переносится только панель. */
 export function LessonNoiseMeter({ groupId, projector, target }: { groupId: string; projector: boolean; target: HTMLElement | null }) {

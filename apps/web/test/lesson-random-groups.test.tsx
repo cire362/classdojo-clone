@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { expect, it } from 'vitest';
-import { LessonRandomGroups } from '../src/components/LessonRandomGroups';
+import { LessonRandomGroups } from '../src/features/lesson/components/LessonRandomGroups';
 
 const students = Array.from({ length: 5 }, (_, i) => ({ id: `s${i}`, name: `Ученик ${i + 1}` }));
 const panel = (patch: Partial<Parameters<typeof LessonRandomGroups>[0]> = {}) => <LessonRandomGroups students={students} presentIds={null} projector={false} target={null} {...patch} />;

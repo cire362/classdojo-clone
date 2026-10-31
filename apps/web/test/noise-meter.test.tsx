@@ -1,8 +1,8 @@
 import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { LessonNoiseMeter } from '../src/components/LessonNoiseMeter';
+import { LessonNoiseMeter } from '../src/features/lesson/components/LessonNoiseMeter';
 import { LessonPage } from '../src/pages/teacher/Lesson';
-import { microphoneError, NOISE_THRESHOLD_KEY, noiseBand, restoreNoiseThreshold, sampleNoiseLevel } from '../src/lib/noise-meter';
+import { microphoneError, NOISE_THRESHOLD_KEY, noiseBand, restoreNoiseThreshold, sampleNoiseLevel } from '../src/features/lesson/noise-meter';
 import { renderApp } from './render';
 import { groupData, renderInGroup } from './group-harness';
 
