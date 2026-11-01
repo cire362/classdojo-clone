@@ -19,6 +19,7 @@ import { ReasonPicker } from './ReasonPicker';
 import { SelectBar } from './SelectBar';
 import { StudentCard } from './StudentCard';
 import { TeamSections } from './TeamSections';
+import { ThinkPairShare } from './ThinkPairShare';
 
 export function LessonBoard() {
   const { data, setData, reload } = useGroup();
@@ -54,6 +55,7 @@ export function LessonBoard() {
   const tools = !archived && (
     <div className="flex flex-wrap items-start gap-2">
       <LessonTimer key={data.group.id} groupId={data.group.id} projector={projector} target={timerTarget} />
+      <ThinkPairShare key={`think-pair-share:${data.group.id}`} groupId={data.group.id} projector={projector} target={timerTarget} />
       <LessonNoiseMeter key={`noise:${data.group.id}`} groupId={data.group.id} projector={projector} target={timerTarget} />
       <LessonRandomGroups
         key={`random-groups:${data.group.id}`}

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ArrowCounterClockwiseIcon, PauseIcon, PlayIcon, TimerIcon, XIcon } from '@phosphor-icons/react';
 import { formatTimer, timerDuration } from '../lesson-timer';
 import { useLessonTimer } from '../hooks/useLessonTimer';
+import { useTimerSound } from '../hooks/useTimerSound';
 import { Switch } from '../../../ui';
 
 const PRESETS = [1, 3, 5, 10];
@@ -15,11 +16,7 @@ export function LessonTimer({ groupId, projector, target }: { groupId: string; p
   const [minutes, setMinutes] = useState(String(Math.floor(timer.durationMs / 60_000)));
   const [seconds, setSeconds] = useState(String((timer.durationMs / 1000) % 60).padStart(2, '0'));
   const [error, setError] = useState('');
-  const [sound, setSound] = useState(false);
-  const [soundError, setSoundError] = useState('');
-  const audio = useRef<AudioContext | null>(null);
-  const soundRequest = useRef(0);
-  const previousStatus = useRef(timer.status);
+  const { sound, soundError, enableSound, disableSound } = useTimerSound(timer.status);
   const toggle = useRef<HTMLButtonElement>(null);
   const primary = useRef<HTMLButtonElement>(null);
   const focusCommand = useRef(false);
@@ -29,43 +26,6 @@ export function LessonTimer({ groupId, projector, target }: { groupId: string; p
   const canConfigure = timer.status === 'idle' || timer.status === 'finished';
   const duration = timerDuration(minutes, seconds);
 
-  async function enableSound() {
-    const request = ++soundRequest.current;
-    try {
-      if (typeof AudioContext === 'undefined') throw new Error();
-      const ctx = audio.current ??= new AudioContext();
-      await ctx.resume();
-      if (ctx.state !== 'running') throw new Error();
-      if (request === soundRequest.current) { setSoundError(''); setSound(true); }
-    } catch {
-      if (request === soundRequest.current) { setSound(false); setSoundError('Звук недоступен. Таймер продолжает работать.'); }
-    }
-  }
-
-  useEffect(() => () => { soundRequest.current++; void audio.current?.close().catch(() => undefined); }, []);
-  useEffect(() => {
-    if (timer.status === 'finished' && previousStatus.current === 'running' && sound) {
-      try {
-        const ctx = audio.current;
-        if (!ctx || ctx.state !== 'running') throw new Error();
-        // Два коротких негромких сигнала, без загружаемых звуковых файлов.
-        for (let i = 0; i < 2; i++) {
-          const oscillator = ctx.createOscillator();
-          const gain = ctx.createGain();
-          const at = ctx.currentTime + i * 0.35;
-          oscillator.type = 'sine';
-          oscillator.frequency.value = i ? 880 : 660;
-          gain.gain.setValueAtTime(0.0001, at);
-          gain.gain.linearRampToValueAtTime(0.08, at + 0.02);
-          gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.25);
-          oscillator.connect(gain); gain.connect(ctx.destination);
-          oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
-          oscillator.start(at); oscillator.stop(at + 0.28);
-        }
-      } catch { setSound(false); setSoundError('Звук недоступен. Таймер продолжает работать.'); }
-    }
-    previousStatus.current = timer.status;
-  }, [timer.status, sound]);
   useEffect(() => {
     if (!expanded && focusToggle.current) { toggle.current?.focus(); focusToggle.current = false; }
   }, [expanded]);
@@ -134,7 +94,7 @@ export function LessonTimer({ groupId, projector, target }: { groupId: string; p
             </>}
           </form>
           <label className={`flex cursor-pointer items-center gap-2 ${projector ? 'justify-center' : ''}`}>
-            <Switch checked={sound} onChange={(on) => { if (on) void enableSound(); else { soundRequest.current++; setSound(false); setSoundError(''); } }} label="Звук по окончании" />
+            <Switch checked={sound} onChange={(on) => { if (on) void enableSound(); else disableSound(); }} label="Звук по окончании" />
             <span className="text-sm text-ink-soft">Звук по окончании</span>
           </label>
           {soundError && <p role="status" className="text-sm text-ink-soft">{soundError}</p>}

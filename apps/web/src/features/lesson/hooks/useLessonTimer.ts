@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { TIMER_KEY, idleTimer, pauseTimer, remainingTime, restoreTimer, resumeTimer, startTimer, type TimerState } from '../lesson-timer';
 
 /** Компонент с этим хуком монтируется с key=groupId: каждый урок восстанавливает свой отсчёт. */
-export function useLessonTimer(groupId: string) {
-  const key = TIMER_KEY + groupId;
+export function useLessonTimer(groupId: string, storageKey = TIMER_KEY) {
+  const key = storageKey + groupId;
   const [timer, setTimer] = useState<TimerState>(() => {
     try { return restoreTimer(sessionStorage.getItem(key), Date.now()); }
     catch { return idleTimer(); }
