@@ -57,3 +57,8 @@ export function formatDateTime(iso: string): string {
 export function dateKey(d = new Date()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+
+/** Значение для поля datetime-local в часовом поясе браузера */
+export function localDateTime(d = new Date()): string {
+  return `${dateKey(d)}T${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}

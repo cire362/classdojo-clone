@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { PrinterIcon, UsersIcon } from '@phosphor-icons/react';
 import { IssueCardsButton } from '../../codes';
 import { GroupSettingsModal, useGroup } from '../../groups';
+import { BroadcastButton } from '../../messages';
 import type { Credentials, LessonStudent } from '../../../lib/api';
 import { pluralize } from '../../../lib/hooks';
 import { PageTitle } from '../../../ui';
@@ -70,6 +71,7 @@ export function StudentsManager() {
                   <PrinterIcon size={18} /> Лист с логинами
                 </Link>
                 {!data.group.archivedAt && <IssueCardsButton groupId={data.group.id} className="btn btn-secondary btn-sm" />}
+                {!data.group.archivedAt && withoutParents < data.students.length && <BroadcastButton groupId={data.group.id} />}
                 {!data.group.archivedAt && withoutParents > 0 && (
                   <button className="btn btn-secondary btn-sm" onClick={() => setParentsConfirm(true)}>
                     <UsersIcon size={18} /> Входы родителям

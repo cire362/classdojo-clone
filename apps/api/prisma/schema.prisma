@@ -77,6 +77,9 @@ model Teacher {
   createdAt DateTime @default(now())
   /// Премиум до этой даты (включает администратор: npm run set-premium). Платежей пока нет
   premiumUntil DateTime?
+  /// Тихие часы в минутах от полуночи; null — выключены
+  quietFrom Int?
+  quietTo   Int?
 
   groups   Group[]
   coGroups GroupTeacher[]
@@ -381,6 +384,7 @@ model Message {
   senderId  String
   sender    Account  @relation(fields: [senderId], references: [id], onDelete: Cascade)
   text      String
+  /// Момент отправки: у отложенного сообщения он в будущем, как у записей ленты
   createdAt DateTime @default(now())
 
   @@index([studentId, parentId, createdAt])

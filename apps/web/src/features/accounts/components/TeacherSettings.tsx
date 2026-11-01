@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { SparkleIcon, UserIcon } from '@phosphor-icons/react';
 import { useAuth } from '../../auth';
+import { QuietHoursCard } from '../../messages';
 import { PasswordCard } from './PasswordCard';
 import { useToast } from '../../../ui/Toast';
 import { Skeleton } from '../../../ui';
@@ -49,6 +50,8 @@ export function TeacherSettings() {
           {savingName ? 'Сохраняем…' : 'Сохранить имя'}
         </button>
       </form>
+
+      <QuietHoursCard />
 
       <PasswordCard endpoint="/teacher/me/password" />
 

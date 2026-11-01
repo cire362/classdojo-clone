@@ -63,6 +63,19 @@ export interface ChatMessage {
   mine: boolean;
   author: string;
   fromParent: boolean;
+  /** Отложено: родитель пока не видит; момент отправки в createdAt */
+  scheduled: boolean;
+}
+
+/** Тихие часы преподавателя, «ЧЧ:ММ» по времени школы */
+export interface QuietHours {
+  from: string;
+  to: string;
+}
+
+/** Подсказка родителю: все преподаватели группы сейчас в тихих часах */
+export interface ParentNotice {
+  quietUntil: string | null;
 }
 
 /** Переписка с родителем в списке у преподавателя */

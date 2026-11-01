@@ -3,7 +3,7 @@ import type { AuthUser } from '../../platform/auth.js';
 import { prisma } from '../../platform/db.js';
 import { groupsOf } from '../access/index.js';
 import { unreadPosts } from '../feed/index.js';
-import { unreadMessages } from '../messages/index.js';
+import { isQuietNow, unreadMessages } from '../messages/index.js';
 import { pendingRequestsOf, unreadRewards } from '../rewards/index.js';
 
 /** Значки в шапке: сообщения, лента, выданные награды ученика или ожидающие запросы преподавателя. */
@@ -17,11 +17,12 @@ export async function notifications(user: AuthUser): Promise<Notifications> {
     const links = threads.length
       ? await prisma.parentStudent.findMany({ where: { OR: threads.map((t) => ({ studentId: t.studentId, parentId: t.parentId })) } })
       : [];
-    const [messages, rewards] = await Promise.all([
+    const [quiet, unread, rewards] = await Promise.all([
+      isQuietNow(user.teacherId),
       unreadMessages(user.accountId, links),
       prisma.rewardRequest.count({ where: pendingRequestsOf(user.teacherId) }),
     ]);
-    return { messages, feed: 0, rewards };
+    return { messages: quiet ? 0 : unread, feed: 0, rewards };
   }
   if (user.studentId) {
     const s = await prisma.student.findUniqueOrThrow({ where: { id: user.studentId }, select: { groupId: true, rewardsReadAt: true } });

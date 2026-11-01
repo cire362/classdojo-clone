@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { UsersIcon } from '@phosphor-icons/react';
 import type { ParentChild } from '../../../lib/api';
 import { Feed } from '../../feed';
-import { Thread, fetchChildMessages, sendChildMessage } from '../../messages';
+import { Thread, fetchChildMessages, fetchParentNotice, sendChildMessage } from '../../messages';
 import { CountBadge, useNotifications } from '../../notifications';
 import { HeroHead } from '../../hero';
 import { ProfileView } from '../../profile';
@@ -119,11 +119,17 @@ function ParentMessages({ child, onRead }: { child: ParentChild; onRead: () => P
     void onRead();
     return list;
   }, [child.id]);
+  const notice = useLoad(() => fetchParentNotice(child.id), [child.id]);
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <Skeleton className="h-60 max-w-2xl" />;
   return (
     <div className="max-w-2xl space-y-3">
       <p className="text-ink-soft">Сообщения видят все преподаватели группы {child.groupName}.</p>
+      {notice.data?.quietUntil && (
+        <p role="status" className="rounded-xl bg-surface-2 px-4 py-3 text-sm">
+          Сейчас у преподавателей тихие часы. Написать можно, ответ будет после {notice.data.quietUntil}.
+        </p>
+      )}
       <Thread messages={data} emptyText="Здесь можно написать преподавателю: о пропуске, успехах или вопросе." send={(text) => sendChildMessage(child.id, text)} />
     </div>
   );

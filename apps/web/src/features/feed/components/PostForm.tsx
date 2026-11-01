@@ -1,16 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import type { FeedPost } from '../../../lib/api';
-import { dateKey } from '../../../lib/hooks';
+import { localDateTime } from '../../../lib/hooks';
 import { useToast } from '../../../ui/Toast';
 import { createPost } from '../api';
 
 const MAX = 2000;
-
-/** Значение для поля datetime-local в часовом поясе браузера */
-const localNow = () => {
-  const now = new Date();
-  return `${dateKey(now)}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-};
 
 export function PostForm({ postTo, onPosted }: { postTo: string; onPosted: (post: FeedPost) => void }) {
   const toast = useToast();
@@ -57,7 +51,7 @@ export function PostForm({ postTo, onPosted }: { postTo: string; onPosted: (post
             type="datetime-local"
             className="input w-auto"
             aria-label="Дата и время публикации"
-            min={localNow()}
+            min={localDateTime()}
             value={publishAt}
             onChange={(e) => setPublishAt(e.target.value)}
           />

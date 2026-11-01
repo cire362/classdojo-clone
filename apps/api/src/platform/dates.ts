@@ -1,3 +1,5 @@
+import { HttpError } from './errors.js';
+
 /**
  * Работа с календарными датами в часовом поясе процесса (переменная TZ,
  * в docker-compose — Europe/Moscow). «Сегодня» и «неделя» считаются по нему.
@@ -47,4 +49,12 @@ export function dbDateKey(d: Date): string {
 export function localDayStart(key: string): Date {
   const [y, m, d] = key.split('-').map(Number);
   return new Date(y, m - 1, d);
+}
+
+/** Момент отложенной отправки: только в будущем и в пределах срока */
+export function scheduledAt(value: string, maxDays = 60): Date {
+  const at = new Date(value);
+  if (+at <= Date.now()) throw new HttpError(400, 'Выберите время в будущем');
+  if (+at > Date.now() + maxDays * 24 * 3600 * 1000) throw new HttpError(400, `Отложить можно не больше чем на ${maxDays} дней`);
+  return at;
 }

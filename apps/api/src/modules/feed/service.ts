@@ -1,5 +1,6 @@
 import { REACTION_KINDS, type ReactionKind } from '@heroes/shared';
 import type { FeedPost } from '@heroes/shared/api';
+import { scheduledAt } from '../../platform/dates.js';
 import { prisma } from '../../platform/db.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { HttpError, notFound } from '../../platform/errors.js';
@@ -9,7 +10,6 @@ import { ARCHIVED_MESSAGE, groupsOf } from '../access/index.js';
 export const MAX_POST_LENGTH = 2000;
 const PAGE = 100;
 const MAX_PINNED = 3;
-const MAX_SCHEDULE_DAYS = 60;
 const COMMENTS_SHOWN = 50;
 
 export type Viewer = { accountId: string; role: 'teacher' | 'student' | 'parent'; teacherId?: string | null; isOwner?: boolean };
@@ -112,12 +112,7 @@ export async function markFeedRead(
 }
 
 export async function createPost(groupId: string, viewer: Viewer, text: string, publishAt?: string): Promise<FeedPost> {
-  const at = publishAt ? new Date(publishAt) : undefined;
-  const now = Date.now();
-  if (at && +at <= now) throw new HttpError(400, 'Выберите время в будущем');
-  if (at && +at > now + MAX_SCHEDULE_DAYS * 24 * 3600 * 1000) {
-    throw new HttpError(400, `Отложить можно не больше чем на ${MAX_SCHEDULE_DAYS} дней`);
-  }
+  const at = publishAt ? scheduledAt(publishAt) : undefined;
   const post = await prisma.post.create({ data: { groupId, authorId: viewer.teacherId!, text, ...(at ? { createdAt: at } : {}) } });
   return feedPost(groupId, post.id, viewer);
 }

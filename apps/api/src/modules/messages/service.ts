@@ -1,6 +1,7 @@
 import type { ChatMessage, TeacherThread, ThreadSummary } from '@heroes/shared/api';
+import { scheduledAt } from '../../platform/dates.js';
 import { prisma } from '../../platform/db.js';
-import { notFound } from '../../platform/errors.js';
+import { HttpError, notFound } from '../../platform/errors.js';
 import { groupsOf } from '../access/index.js';
 
 /**
@@ -27,14 +28,20 @@ export async function teacherThread(teacherId: string, studentId: string, parent
   };
 }
 
-export async function threadMessages(studentId: string, parentId: string, accountId: string): Promise<ChatMessage[]> {
+/** Отложенные сообщения видят только преподаватели группы; родителю они придут в своё время */
+export async function threadMessages(
+  studentId: string,
+  parentId: string,
+  accountId: string,
+  teacherView = false,
+): Promise<ChatMessage[]> {
+  const now = new Date();
   const messages = await prisma.message.findMany({
-    where: { studentId, parentId },
+    where: { studentId, parentId, ...(teacherView ? {} : { createdAt: { lte: now } }) },
     orderBy: { createdAt: 'asc' },
     take: 500,
     include: { sender: { include: { teacher: { select: { name: true } } } } },
   });
-  const now = new Date();
   await prisma.threadRead.upsert({
     where: { accountId_studentId_parentId: { accountId, studentId, parentId } },
     create: { accountId, studentId, parentId, readAt: now },
@@ -48,6 +55,7 @@ export async function threadMessages(studentId: string, parentId: string, accoun
     // Подпись: имя преподавателя или «Родитель»
     author: m.sender.teacher?.name ?? 'Родитель',
     fromParent: m.sender.role === 'PARENT',
+    scheduled: m.createdAt > now,
   }));
 }
 
@@ -56,11 +64,46 @@ export async function sendMessage(studentId: string, parentId: string, senderId:
   return threadMessages(studentId, parentId, senderId);
 }
 
+/** Сообщение преподавателя: сразу или в выбранное время */
+export async function sendTeacherMessage(studentId: string, parentId: string, senderId: string, text: string, sendAt?: string) {
+  const at = sendAt ? scheduledAt(sendAt) : undefined;
+  await prisma.message.create({ data: { studentId, parentId, senderId, text, ...(at ? { createdAt: at } : {}) } });
+  return threadMessages(studentId, parentId, senderId, true);
+}
+
+/** Отменить можно только своё сообщение и только пока оно не ушло */
+export async function cancelMessage(studentId: string, parentId: string, messageId: string, accountId: string) {
+  const { count } = await prisma.message.deleteMany({
+    where: { id: messageId, studentId, parentId, senderId: accountId, createdAt: { gt: new Date() } },
+  });
+  if (!count) throw notFound('Сообщение уже отправлено');
+  return threadMessages(studentId, parentId, accountId, true);
+}
+
+/**
+ * Рассылка: у каждого родителя сообщение в его обычной ветке, ответ придёт туда же.
+ * Родитель двоих детей группы получает его один раз: в ветке первого ребёнка.
+ */
+export async function broadcastMessage(groupId: string, senderId: string, text: string, sendAt?: string) {
+  const at = sendAt ? scheduledAt(sendAt) : undefined;
+  const links = await prisma.parentStudent.findMany({
+    where: { student: { groupId } },
+    orderBy: { student: { name: 'asc' } },
+    select: { parentId: true, studentId: true },
+  });
+  const byParent = new Map(links.map((l) => [l.parentId, l]).reverse() as [string, (typeof links)[number]][]);
+  if (!byParent.size) throw new HttpError(400, 'В группе пока нет родителей с входом');
+  const data = [...byParent.values()].map((l) => ({ ...l, senderId, text, ...(at ? { createdAt: at } : {}) }));
+  await prisma.message.createMany({ data });
+  return { sent: data.length };
+}
+
 /** Ветки для преподавателя: все переписки по ученикам его групп, новые сверху */
 export async function teacherThreads(teacherId: string, accountId: string): Promise<ThreadSummary[]> {
+  const now = new Date();
   const last = await prisma.message.groupBy({
     by: ['studentId', 'parentId'],
-    where: { student: { group: groupsOf(teacherId) } },
+    where: { student: { group: groupsOf(teacherId) }, createdAt: { lte: now } },
     _max: { createdAt: true },
   });
   if (!last.length) return [];
@@ -81,13 +124,16 @@ export async function teacherThreads(teacherId: string, accountId: string): Prom
       if (!link) return null; // родителя уже отвязали — переписка скрыта
       const key = `${l.studentId}|${l.parentId}`;
       const [lastMessage, unread] = await Promise.all([
-        prisma.message.findFirst({ where: { studentId: l.studentId, parentId: l.parentId }, orderBy: { createdAt: 'desc' } }),
+        prisma.message.findFirst({
+          where: { studentId: l.studentId, parentId: l.parentId, createdAt: { lte: now } },
+          orderBy: { createdAt: 'desc' },
+        }),
         prisma.message.count({
           where: {
             studentId: l.studentId,
             parentId: l.parentId,
             senderId: { not: accountId },
-            ...(readAt.has(key) ? { createdAt: { gt: readAt.get(key)! } } : {}),
+            createdAt: { lte: now, ...(readAt.has(key) ? { gt: readAt.get(key)! } : {}) },
           },
         }),
       ]);
@@ -114,11 +160,17 @@ export async function unreadMessages(accountId: string, threads: { studentId: st
   if (!threads.length) return 0;
   const reads = await prisma.threadRead.findMany({ where: { accountId } });
   const readAt = new Map(reads.map((r) => [`${r.studentId}|${r.parentId}`, r.readAt]));
+  const now = new Date();
   const counts = await Promise.all(
     threads.map((t) => {
       const at = readAt.get(`${t.studentId}|${t.parentId}`);
       return prisma.message.count({
-        where: { studentId: t.studentId, parentId: t.parentId, senderId: { not: accountId }, ...(at ? { createdAt: { gt: at } } : {}) },
+        where: {
+          studentId: t.studentId,
+          parentId: t.parentId,
+          senderId: { not: accountId },
+          createdAt: { lte: now, ...(at ? { gt: at } : {}) },
+        },
       });
     }),
   );

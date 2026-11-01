@@ -4,7 +4,7 @@ import { Thread } from './Thread';
 import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { formatDateTime, useLoad } from '../../../lib/hooks';
 import { CountBadge, useNotifications } from '../../notifications';
-import { fetchTeacherThread, fetchThreads, sendTeacherMessage } from '../api';
+import { cancelMessage, fetchTeacherThread, fetchThreads, sendTeacherMessage } from '../api';
 
 /** Переписки с родителями по всем группам преподавателя */
 export function MessageThreads() {
@@ -68,7 +68,8 @@ export function ThreadView() {
       <Thread
         messages={data.messages}
         emptyText="Напишите первое сообщение — родители увидят его в своём кабинете."
-        send={(text) => sendTeacherMessage(studentId!, parentId!, text)}
+        send={(text, sendAt) => sendTeacherMessage(studentId!, parentId!, text, sendAt)}
+        cancel={(messageId) => cancelMessage(studentId!, parentId!, messageId)}
       />
     </div>
   );
