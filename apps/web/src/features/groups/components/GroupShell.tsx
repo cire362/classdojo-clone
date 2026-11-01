@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router-dom';
 import { ChunkErrorBoundary } from '../../../ui/ChunkErrorBoundary';
-import { ArchiveIcon, ArrowLeftIcon, CameraIcon, ChartBarIcon, GiftIcon, ListChecksIcon, MegaphoneIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
+import { ArchiveIcon, ArrowLeftIcon, CalendarBlankIcon, CameraIcon, ChartBarIcon, GiftIcon, ListChecksIcon, MegaphoneIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { CardGridSkeleton, ErrorBox, Skeleton } from '../../../ui';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import type { GroupCtx } from '../hooks/useGroup';
@@ -15,6 +15,7 @@ const TABS = [
   { to: 'stats', label: 'Статистика', icon: ChartBarIcon },
   { to: 'rewards', label: 'Награды', icon: GiftIcon },
   { to: 'feed', label: 'Лента', icon: MegaphoneIcon },
+  { to: 'calendar', label: 'Календарь', icon: CalendarBlankIcon },
 ];
 
 export function GroupShell() {

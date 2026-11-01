@@ -117,6 +117,17 @@ export async function createPost(groupId: string, viewer: Viewer, text: string, 
   return feedPost(groupId, post.id, viewer);
 }
 
+/** Запись ленты в будущем: напоминание календаря выйдет само */
+export async function schedulePost(groupId: string, authorId: string, text: string, at: Date) {
+  const post = await prisma.post.create({ data: { groupId, authorId, text, createdAt: at }, select: { id: true } });
+  return post.id;
+}
+
+/** Снимает запись, только пока она не вышла: вышедшую уже могли прочитать */
+export async function dropScheduledPost(postId: string) {
+  await prisma.post.deleteMany({ where: { id: postId, createdAt: { gt: new Date() } } });
+}
+
 /** Закрепить запись может любой преподаватель группы. Лимит проверяется в транзакции с блокировкой группы */
 export async function setPinned(groupId: string, postId: string, viewer: Viewer, pinned: boolean) {
   await prisma.$transaction(async (tx) => {

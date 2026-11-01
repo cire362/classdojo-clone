@@ -21,7 +21,7 @@ test('страницы помещаются в 375 px', async ({ page, request, 
     const student = await (await browser.newContext({ baseURL: test.info().project.use.baseURL, viewport: { width: 375, height: 812 } })).newPage();
     await loginUi(student, s.login, s.password);
     await expect(student.getByRole('link', { name: 'Собрать героя' })).toBeVisible();
-    for (const path of ['/', '/hero', '/shop', '/feed']) await noHorizontalScroll(student, path);
+    for (const path of ['/', '/hero', '/shop', '/feed', '/calendar']) await noHorizontalScroll(student, path);
     await student.context().close();
   } finally {
     await g.remove();

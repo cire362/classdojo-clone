@@ -15,5 +15,7 @@ describe('код страниц по адресу', () => {
     expect(pagesFor('/q')).toEqual(['codeLogin']);
     expect(pagesFor('/join')).toEqual(['codeLogin']);
     expect(pagesFor('/invite')).toEqual(['invite']);
+    expect(pagesFor('/calendar')).toEqual(['studentCalendar']);
+    expect(pagesFor('/g/abc/calendar')).toEqual(['groupLayout', 'groupCalendar']);
   });
 });

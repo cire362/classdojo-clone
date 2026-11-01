@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { requireRole, type AppEnv } from '../platform/auth.js';
 import { teacherAccountRoutes } from '../modules/accounts/index.js';
 import { attendanceRoutes } from '../modules/attendance/index.js';
+import { teacherCalendarRoutes } from '../modules/calendar/index.js';
 import { teacherCodeRoutes } from '../modules/codes/index.js';
 import { teacherFeedRoutes } from '../modules/feed/index.js';
 import { goalRoutes } from '../modules/goals/index.js';
@@ -34,6 +35,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   .route('/', teacherRewardRoutes)
   .route('/', teamRoutes)
   .route('/', teacherFeedRoutes)
+  .route('/', teacherCalendarRoutes)
   .route('/', reasonRoutes)
   .route('/', goalRoutes)
   .route('/', planRoutes)

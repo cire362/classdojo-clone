@@ -44,6 +44,11 @@ export function AppLayout() {
       <CountBadge count={counts.rewards} label={pluralize(counts.rewards, 'выданная награда', 'выданные награды', 'выданных наград')} />
     </NavLink>
   );
+  const calendarLink = (
+    <NavLink to="/calendar" className={navClass}>
+      Календарь
+    </NavLink>
+  );
   const feedLink = (
     <NavLink to="/feed" className={navClass}>
       Лента
@@ -65,6 +70,7 @@ export function AppLayout() {
               {heroLink}
               {shopLink}
               {feedLink}
+              {calendarLink}
             </nav>
           )}
           <div className="ml-auto flex items-center gap-1">
@@ -131,6 +137,7 @@ export function AppLayout() {
             {heroLink}
             {shopLink}
             {feedLink}
+            {calendarLink}
           </nav>
         )}
       </header>

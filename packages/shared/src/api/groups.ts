@@ -66,6 +66,16 @@ export interface ClassGoal {
   createdAt: string;
 }
 
+/** Событие календаря: дата «ГГГГ-ММ-ДД», время «ЧЧ:ММ» или null на весь день */
+export interface ClassEvent {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string | null;
+  remindDays: number | null;
+}
+
 /** План урока: шаги по порядку и номер текущего, с нуля */
 export interface LessonPlan {
   steps: string[];

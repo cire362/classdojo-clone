@@ -33,6 +33,7 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   attendance: remember(() => import('../pages/teacher/Attendance')),
   stats: remember(() => import('../pages/teacher/Stats')),
   groupFeed: remember(() => import('../pages/teacher/Feed')),
+  groupCalendar: remember(() => import('../pages/teacher/Calendar')),
   rewards: remember(() => import('../pages/teacher/Rewards')),
   rewardRequests: remember(() => import('../pages/teacher/RewardRequests')),
   messages: remember(() => import('../pages/teacher/Messages')),
@@ -42,6 +43,7 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   myHero: remember(() => import('../pages/student/MyHero')),
   parentHome: remember(() => import('../pages/parent/ParentHome')),
   studentFeed: remember(() => import('../pages/student/StudentFeed')),
+  studentCalendar: remember(() => import('../pages/student/Calendar')),
   shop: remember(() => import('../pages/student/Shop')),
   notifications: remember(() => import('../pages/student/Notifications')),
 };
@@ -82,6 +84,8 @@ export const CabinetPage = page(loaders.cabinet, 'CabinetPage');
 export const MyHeroPage = page(loaders.myHero, 'MyHeroPage');
 export const ParentHomePage = page(loaders.parentHome, 'ParentHomePage');
 export const GroupFeedPage = page(loaders.groupFeed, 'GroupFeedPage');
+export const GroupCalendarPage = page(loaders.groupCalendar, 'GroupCalendarPage');
+export const StudentCalendarPage = page(loaders.studentCalendar, 'StudentCalendarPage');
 export const MessagesPage = page(loaders.messages, 'MessagesPage');
 export const ThreadPage = page(loaders.messages, 'ThreadPage');
 export const StudentFeedPage = page(loaders.studentFeed, 'StudentFeedPage');
@@ -92,8 +96,8 @@ export const StudentNotificationsPage = page(loaders.notifications, 'StudentNoti
 
 const byRole = {
   ADMIN: [loaders.admin],
-  TEACHER: [loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons, loaders.attendance, loaders.stats, loaders.studentView, loaders.settings, loaders.groupFeed, loaders.messages, loaders.rewards, loaders.rewardRequests],
-  STUDENT: [loaders.cabinet, loaders.myHero, loaders.studentFeed, loaders.shop, loaders.notifications],
+  TEACHER: [loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons, loaders.attendance, loaders.stats, loaders.studentView, loaders.settings, loaders.groupFeed, loaders.groupCalendar, loaders.messages, loaders.rewards, loaders.rewardRequests],
+  STUDENT: [loaders.cabinet, loaders.myHero, loaders.studentFeed, loaders.studentCalendar, loaders.shop, loaders.notifications],
   PARENT: [loaders.parentHome],
 };
 

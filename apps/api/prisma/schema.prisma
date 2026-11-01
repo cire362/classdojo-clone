@@ -110,6 +110,7 @@ model Group {
   teams              Team[]
   classGoal          ClassGoal?
   lessonPlan         LessonPlan?
+  events             ClassEvent[]
   classCode          ClassCode?
   /// Первенство по уровням учитывается только с момента запуска значков
   badgeTrackingStartedAt DateTime @default(now())
@@ -334,6 +335,7 @@ model Post {
 
   reactions PostReaction[]
   comments  PostComment[]
+  reminderFor ClassEvent?
 
   @@index([groupId, createdAt])
 }
@@ -477,6 +479,26 @@ model Team {
 }
 
 /// Одна общая текущая цель класса; новая цель начинается с нуля.
+/// Событие календаря группы. Дата и время хранятся как есть: это время школы, а не момент на шкале
+model ClassEvent {
+  id             String   @id @default(cuid())
+  groupId        String
+  group          Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  title          String
+  description    String   @default("")
+  date           DateTime @db.Date
+  /// «ЧЧ:ММ»; null — событие на весь день
+  time           String?
+  /// За сколько дней напомнить; null — без напоминания
+  remindDays     Int?
+  /// Напоминание — отложенная запись ленты: придёт само вместе со значками и уведомлениями
+  reminderPostId String?  @unique
+  reminderPost   Post?    @relation(fields: [reminderPostId], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+
+  @@index([groupId, date])
+}
+
 /// Общий код класса: короткий и живёт недолго, поэтому хранится открыто и показывается преподавателю повторно
 model ClassCode {
   groupId   String   @id

@@ -17,6 +17,7 @@ export const PAGE_MODULES = {
   attendance: 'pages/teacher/Attendance.tsx',
   stats: 'pages/teacher/Stats.tsx',
   groupFeed: 'pages/teacher/Feed.tsx',
+  groupCalendar: 'pages/teacher/Calendar.tsx',
   rewards: 'pages/teacher/Rewards.tsx',
   rewardRequests: 'pages/teacher/RewardRequests.tsx',
   messages: 'pages/teacher/Messages.tsx',
@@ -26,6 +27,7 @@ export const PAGE_MODULES = {
   myHero: 'pages/student/MyHero.tsx',
   parentHome: 'pages/parent/ParentHome.tsx',
   studentFeed: 'pages/student/StudentFeed.tsx',
+  studentCalendar: 'pages/student/Calendar.tsx',
   shop: 'pages/student/Shop.tsx',
   notifications: 'pages/student/Notifications.tsx',
 } as const;
@@ -46,12 +48,14 @@ const ROUTE_PAGES: [RegExp, PageKey[]][] = [
   [/^\/g\/[^/]+\/reasons$/, ['groupLayout', 'reasons']],
   [/^\/g\/[^/]+\/stats$/, ['groupLayout', 'stats']],
   [/^\/g\/[^/]+\/feed$/, ['groupLayout', 'groupFeed']],
+  [/^\/g\/[^/]+\/calendar$/, ['groupLayout', 'groupCalendar']],
   [/^\/g\/[^/]+\/rewards$/, ['groupLayout', 'rewards']],
   [/^\/shop$/, ['shop']],
   [/^\/notifications$/, ['notifications']],
   [/^\/reward-requests$/, ['rewardRequests']],
   [/^\/messages(\/|$)/, ['messages']],
   [/^\/feed$/, ['studentFeed']],
+  [/^\/calendar$/, ['studentCalendar']],
   [/^\/g\/[^/]+\/?$/, ['groupLayout', 'lesson']],
 ];
 

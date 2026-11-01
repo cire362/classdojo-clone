@@ -11,6 +11,7 @@ import { ParentRewards } from '../../rewards';
 import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { useLoad } from '../../../lib/hooks';
 import { ProfileSkeleton } from '../../profile';
+import { Calendar } from '../../calendar';
 import { fetchChildProfile, fetchChildren } from '../api';
 
 /** Выбранный ребёнок запоминается: его профиль ранний скрипт запрашивает сразу при открытии */
@@ -28,7 +29,7 @@ function storedChild(): string | null {
 export function ParentDashboard() {
   const children = useLoad(() => fetchChildren(), []);
   const [selected, setSelected] = useState<string | null>(storedChild);
-  const [section, setSection] = useState<'profile' | 'week' | 'rewards' | 'feed' | 'messages'>('profile');
+  const [section, setSection] = useState<'profile' | 'week' | 'rewards' | 'feed' | 'calendar' | 'messages'>('profile');
   const list = children.data ?? [];
   const current = list.find((c) => c.id === selected) ?? list[0];
   const profile = useLoad(
@@ -82,6 +83,7 @@ export function ParentDashboard() {
               ['week', 'Итог недели', 0],
               ['rewards', 'Награды', 0],
               ['feed', 'Лента класса', current.unread.feed],
+              ['calendar', 'Календарь', 0],
               ['messages', 'Сообщения', current.unread.messages],
             ] as const
           ).map(([key, label, count]) => (
@@ -95,6 +97,7 @@ export function ParentDashboard() {
       {current && section === 'feed' && (
         <Feed key={current.id} path={`/parent/children/${current.id}/feed`} commentsNote="Комментарии сейчас закрыты." onLoaded={() => void children.reload()} readOnlyNote={`Объявления преподавателей группы ${current.groupName}.`} />
       )}
+      {current && section === 'calendar' && <Calendar key={current.id} path={`/parent/children/${current.id}/events`} />}
       {current && section === 'messages' && <ParentMessages key={current.id} child={current} onRead={children.reload} />}
       {current && section === 'week' && <WeeklySummary key={current.id} child={current} />}
       {current && section === 'rewards' && <ParentRewards key={current.id} childId={current.id} />}
