@@ -102,6 +102,7 @@ model Group {
   rewards            Reward[]
   teams              Team[]
   classGoal          ClassGoal?
+  lessonPlan         LessonPlan?
   /// Первенство по уровням учитывается только с момента запуска значков
   badgeTrackingStartedAt DateTime @default(now())
   awardedPoints      PointEvent[] @relation("AwardedInGroup")
@@ -422,6 +423,17 @@ model Team {
 }
 
 /// Одна общая текущая цель класса; новая цель начинается с нуля.
+/// План урока группы: шаги по порядку и текущий шаг на экране
+model LessonPlan {
+  groupId   String   @id
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  /// Тексты шагов по порядку
+  steps     Json
+  /// Номер текущего шага в steps, с нуля
+  current   Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
 model ClassGoal {
   id          String   @id @default(cuid())
   groupId     String   @unique

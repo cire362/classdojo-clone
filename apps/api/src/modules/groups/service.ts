@@ -5,6 +5,7 @@ import { groupsOf } from '../access/index.js';
 import { todayAttendance } from '../attendance/index.js';
 import { classGoal } from '../goals/index.js';
 import { deleteOrphanParents } from '../parents/index.js';
+import { lessonPlan } from '../plan/index.js';
 import { cardSummaries } from '../points/index.js';
 import { createDefaultReasons, manualReasons } from '../reasons/index.js';
 import { createDefaultRewards, pendingRequestCount } from '../rewards/index.js';
@@ -59,11 +60,12 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
     manualReasons(group.id),
     todayAttendance(group.id),
   ]);
-  const [summaries, teams, pendingRewards, goal] = await Promise.all([
+  const [summaries, teams, pendingRewards, goal, plan] = await Promise.all([
     cardSummaries(students.map((s) => s.id)),
     groupTeams(group.id),
     pendingRequestCount(group.id),
     classGoal(group.id),
+    lessonPlan(group.id),
   ]);
   return {
     group: {
@@ -85,6 +87,7 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
     reasons,
     teams,
     classGoal: goal,
+    plan,
     pendingRewards,
     todayAttendance: today,
   };

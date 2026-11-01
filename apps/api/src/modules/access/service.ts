@@ -40,6 +40,13 @@ export async function teacherStudent(user: AuthUser, studentId: string) {
   return student;
 }
 
+/** Записи, зависящие от состояния группы, сериализуются: начисление не попадёт в удалённую цель, план не потеряет правку соавтора. */
+export async function lockGroup(tx: Prisma.TransactionClient, groupId: string) {
+  const rows = await tx.$queryRaw<{ archivedAt: Date | null }[]>`SELECT "archivedAt" FROM "Group" WHERE id = ${groupId} FOR UPDATE`;
+  if (!rows.length) throw notFound('Группа не найдена');
+  if (rows[0].archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
+}
+
 /** Ребёнок родителя или 404: родитель не может открыть чужого ученика */
 export async function parentChild(parentId: string, studentId: string): Promise<string> {
   const link = await prisma.parentStudent.findUnique({ where: { parentId_studentId: { parentId, studentId } } });

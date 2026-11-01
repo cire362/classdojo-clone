@@ -66,8 +66,15 @@ export interface ClassGoal {
   createdAt: string;
 }
 
+/** План урока: шаги по порядку и номер текущего, с нуля */
+export interface LessonPlan {
+  steps: string[];
+  current: number;
+}
+
 export interface GroupDetails {
   classGoal: ClassGoal | null;
+  plan: LessonPlan;
   group: { id: string; name: string; subtractTeacher: boolean; archivedAt: string | null; isOwner: boolean };
   students: LessonStudent[];
   reasons: Reason[];

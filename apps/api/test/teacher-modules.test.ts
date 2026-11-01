@@ -48,6 +48,8 @@ const routes = (groupId: string, studentId: string): [string, string][] => [
   ['GET', `/api/teacher/groups/${groupId}/stats/weekly`],
   ['GET', `/api/teacher/groups/${groupId}/stats.xlsx`],
   ['GET', `/api/teacher/students/${studentId}/report.pdf`],
+  ['PUT', `/api/teacher/groups/${groupId}/plan`],
+  ['PUT', `/api/teacher/groups/${groupId}/plan/current`],
   ['GET', '/api/teacher/groups'],
   ['POST', '/api/teacher/groups'],
   ['GET', `/api/teacher/groups/${groupId}`],

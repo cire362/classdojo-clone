@@ -1,4 +1,4 @@
-import { api, type CardSummary, type ClassGoal } from '../../lib/api';
+import { api, type CardSummary, type ClassGoal, type LessonPlan } from '../../lib/api';
 
 interface AwardResult {
   value: number;
@@ -14,3 +14,8 @@ export const undoPoints = (eventIds: string[]) =>
   api<{ summaries: Record<string, CardSummary> }>('POST', '/teacher/points/undo', { eventIds });
 
 export const fetchGoal = (groupId: string) => api<ClassGoal | null>('GET', `/teacher/groups/${groupId}/goal`);
+
+export const savePlan = (groupId: string, steps: string[]) => api<LessonPlan>('PUT', `/teacher/groups/${groupId}/plan`, { steps });
+
+export const setPlanStep = (groupId: string, current: number) =>
+  api<LessonPlan>('PUT', `/teacher/groups/${groupId}/plan/current`, { current });

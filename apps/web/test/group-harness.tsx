@@ -17,6 +17,7 @@ export function groupData(overrides: Partial<GroupDetails['group']> = {}): Group
       { id: 'r2', name: 'Опоздал', emoji: '⏰', value: -1 },
     ],
     classGoal: null,
+    plan: { steps: [], current: 0 },
     teams: [],
     pendingRewards: 0,
     todayAttendance: null,

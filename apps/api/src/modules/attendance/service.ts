@@ -1,8 +1,8 @@
-import { lockGoalGroup } from '../goals/index.js';
 import type { AttendanceDay, GroupDetails } from '@heroes/shared/api';
 import { prisma } from '../../platform/db.js';
 import { addDays, dateKey, dbDate, dbDateKey, localDayStart, startOfDay } from '../../platform/dates.js';
 import { HttpError } from '../../platform/errors.js';
+import { lockGroup } from '../access/index.js';
 import { attendanceReason } from '../reasons/index.js';
 
 export const MAX_LESSONS_PER_DAY = 8;
@@ -95,7 +95,7 @@ export async function saveAttendance(params: {
       : new Date(localDayStart(params.date).getTime() + (11 + params.lesson) * 3600_000);
 
   return prisma.$transaction(async (tx) => {
-    await lockGoalGroup(tx, params.groupId);
+    await lockGroup(tx, params.groupId);
     const goal = await tx.classGoal.findUnique({ where: { groupId: params.groupId }, select: { id: true } });
     const reason = await attendanceReason(tx, params.groupId);
     const date = dbDate(params.date);

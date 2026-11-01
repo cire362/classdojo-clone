@@ -8,6 +8,7 @@ import { groupRoutes } from '../modules/groups/index.js';
 import { teacherHeroRoutes } from '../modules/hero/index.js';
 import { teacherMessageRoutes } from '../modules/messages/index.js';
 import { teacherParentRoutes } from '../modules/parents/index.js';
+import { planRoutes } from '../modules/plan/index.js';
 import { pointRoutes } from '../modules/points/index.js';
 import { portfolioRoutes } from '../modules/portfolio/index.js';
 import { teacherProfileRoutes } from '../modules/profile/index.js';
@@ -33,6 +34,7 @@ export const teacherRoutes = new Hono<AppEnv>()
   .route('/', teacherFeedRoutes)
   .route('/', reasonRoutes)
   .route('/', goalRoutes)
+  .route('/', planRoutes)
   .route('/', pointRoutes)
   .route('/', attendanceRoutes)
   .route('/', teacherReportRoutes);

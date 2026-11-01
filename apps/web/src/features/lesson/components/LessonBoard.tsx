@@ -11,6 +11,7 @@ import { useAward } from '../hooks/useAward';
 import { useProjector } from '../hooks/useProjector';
 import { useTeamMode } from '../hooks/useTeamMode';
 import { LessonNoiseMeter } from './LessonNoiseMeter';
+import { LessonPlanPanel } from './LessonPlanPanel';
 import { LessonRandomGroups } from './LessonRandomGroups';
 import { LessonTimer } from './LessonTimer';
 import { LessonToolbar } from './LessonToolbar';
@@ -54,6 +55,7 @@ export function LessonBoard() {
   const goalPanel = <ClassGoalPanel goal={data.classGoal} groupId={data.group.id} archived={archived} onChange={changeGoal} />;
   const tools = !archived && (
     <div className="flex flex-wrap items-start gap-2">
+      <LessonPlanPanel key={`plan:${data.group.id}`} projector={projector} target={timerTarget} />
       <LessonTimer key={data.group.id} groupId={data.group.id} projector={projector} target={timerTarget} />
       <ThinkPairShare key={`think-pair-share:${data.group.id}`} groupId={data.group.id} projector={projector} target={timerTarget} />
       <LessonNoiseMeter key={`noise:${data.group.id}`} groupId={data.group.id} projector={projector} target={timerTarget} />
