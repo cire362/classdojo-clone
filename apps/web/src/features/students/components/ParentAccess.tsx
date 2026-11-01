@@ -1,12 +1,21 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChatCircleIcon, KeyIcon, LinkSimpleIcon, PrinterIcon, UserPlusIcon, XIcon } from '@phosphor-icons/react';
-import type { ParentAccess as Access, ParentCredentials } from '../../../lib/api';
+import {
+  ChatCircleIcon,
+  EnvelopeSimpleIcon,
+  KeyIcon,
+  LinkSimpleIcon,
+  PrinterIcon,
+  UserPlusIcon,
+  XIcon,
+} from '@phosphor-icons/react';
+import type { ParentAccess as Access, ParentCredentials, ParentInvite } from '../../../lib/api';
 import { useLoad } from '../../../lib/hooks';
 import { CredentialsTable } from './CredentialsTable';
+import { InviteModal } from './InviteModal';
 import { useToast } from '../../../ui/Toast';
 import { Modal, Skeleton } from '../../../ui';
-import { fetchStudentParents, issueParent, linkParent, resetParentPassword, unlinkParent } from '../api';
+import { createInvite, fetchInvites, fetchStudentParents, issueParent, linkParent, resetParentPassword, revokeInvite, unlinkParent } from '../api';
 
 /** Входы родителей в карточке ученика: выдать, привязать общий вход брата или сестры, сбросить пароль, отвязать */
 export function ParentAccessCard({ student, groupId, archived }: { student: { id: string; name: string }; groupId: string; archived: boolean }) {
@@ -18,6 +27,8 @@ export function ParentAccessCard({ student, groupId, archived }: { student: { id
   const [login, setLogin] = useState('');
   const [unlinking, setUnlinking] = useState<Access | null>(null);
   const [busy, setBusy] = useState(false);
+  const [invite, setInvite] = useState<ParentInvite | null>(null);
+  const invites = useLoad(() => fetchInvites(student.id), [student.id]);
 
   async function run<T>(fn: () => Promise<T>): Promise<T | undefined> {
     setBusy(true);
@@ -35,6 +46,19 @@ export function ParentAccessCard({ student, groupId, archived }: { student: { id
     run(async () => {
       setIssued(await issueParent(student.id));
       await reload();
+    });
+
+  const sendInvite = () =>
+    run(async () => {
+      setInvite(await createInvite(student.id));
+      await invites.reload();
+    });
+
+  const cancelInvite = (id: string) =>
+    run(async () => {
+      await revokeInvite(student.id, id);
+      await invites.reload();
+      toast({ text: 'Приглашение отозвано', tone: 'neutral' });
     });
 
   const resetPassword = (p: Access) =>
@@ -66,6 +90,9 @@ export function ParentAccessCard({ student, groupId, archived }: { student: { id
         </h2>
         {!archived && (
           <div className="flex flex-wrap gap-2">
+            <button className="btn btn-primary btn-sm" disabled={busy} onClick={sendInvite}>
+              <EnvelopeSimpleIcon size={18} aria-hidden /> Пригласить
+            </button>
             <button className="btn btn-secondary btn-sm" disabled={busy} onClick={issue}>
               <UserPlusIcon size={18} /> Выдать вход
             </button>
@@ -104,6 +131,34 @@ export function ParentAccessCard({ student, groupId, archived }: { student: { id
           ))}
         </ul>
       )}
+
+      {!!invites.data?.length && (
+        <ul aria-label="Действующие приглашения" className="divide-y divide-line rounded-xl border border-dashed border-line">
+          {invites.data.map((item) => (
+            <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
+              <span>Приглашение ждёт родителя, до {new Date(item.expiresAt).toLocaleDateString('ru-RU')}</span>
+              <button
+                className="icon-btn"
+                title="Отозвать"
+                aria-label="Отозвать приглашение"
+                disabled={busy}
+                onClick={() => cancelInvite(item.id)}
+              >
+                <XIcon size={20} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <InviteModal
+        invite={invite}
+        groupId={groupId}
+        onClose={() => {
+          setInvite(null);
+          void reload();
+        }}
+      />
 
       <Modal open={!!issued} title="Вход для родителей" onClose={() => setIssued(null)}>
         {issued && (

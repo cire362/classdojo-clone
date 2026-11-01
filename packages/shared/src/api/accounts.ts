@@ -52,6 +52,32 @@ export interface ParentCredentials {
   password: string;
 }
 
+/** Приглашение родителя при выдаче: код показывается один раз */
+export interface ParentInvite {
+  id: string;
+  studentId: string;
+  studentName: string;
+  code: string;
+  expiresAt: string;
+}
+
+/** Действующее приглашение в карточке ученика: кода здесь уже нет */
+export interface ActiveInvite {
+  id: string;
+  expiresAt: string;
+}
+
+/** Что родитель видит, открыв приглашение */
+export interface InvitePreview {
+  studentName: string;
+  groupName: string;
+}
+
+export interface InviteAccepted {
+  user: Me;
+  login: string;
+}
+
 export interface TeacherCredentials { id: string; name: string; login: string; password: string }
 
 export interface AdminTeacher {

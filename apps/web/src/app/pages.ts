@@ -23,6 +23,7 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   admin: remember(() => import('../pages/admin/Admin')),
   login: remember(() => import('../pages/Login')),
   codeLogin: remember(() => import('../pages/CodeLogin')),
+  invite: remember(() => import('../pages/Invite')),
   groups: remember(() => import('../pages/teacher/Groups')),
   groupLayout: remember(() => import('../pages/teacher/GroupLayout')),
   lesson: remember(() => import('../pages/teacher/Lesson')),
@@ -65,6 +66,7 @@ export const AdminPage = page(loaders.admin, 'AdminPage');
 export const LoginPage = page(loaders.login, 'LoginPage');
 export const QrLoginPage = page(loaders.codeLogin, 'QrLoginPage');
 export const JoinClassPage = page(loaders.codeLogin, 'JoinClassPage');
+export const InvitePage = page(loaders.invite, 'InvitePage');
 export const GroupsPage = page(loaders.groups, 'GroupsPage');
 export const GroupLayout = page(loaders.groupLayout, 'GroupLayout');
 export const LessonPage = page(loaders.lesson, 'LessonPage');

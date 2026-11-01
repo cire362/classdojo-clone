@@ -1,13 +1,24 @@
 import type { Me } from '@heroes/shared/api';
+import type { Context } from 'hono';
 import { z } from 'zod';
-import { ACCOUNT_PROFILE, accountName, checkLoginRate, resetLoginRate, type AuthUser } from '../../platform/auth.js';
+import {
+  ACCOUNT_PROFILE,
+  accountName,
+  checkLoginRate,
+  createSession,
+  destroySession,
+  resetLoginRate,
+  type AuthUser,
+} from '../../platform/auth.js';
 import { prisma } from '../../platform/db.js';
 import { hashPassword, verifyPassword } from '../../platform/credentials.js';
 import { HttpError, parse } from '../../platform/errors.js';
 
+export const NewPassword = z.string().min(8, 'Пароль должен быть не короче 8 символов').max(200);
+
 const PasswordBody = z.object({
   currentPassword: z.string().min(1).max(200),
-  newPassword: z.string().min(8, 'Пароль должен быть не короче 8 символов').max(200),
+  newPassword: NewPassword,
 });
 
 // Хеш-заглушка: при несуществующем логине всё равно тратим время на проверку,
@@ -26,6 +37,13 @@ export async function checkCredentials(login: string, password: string): Promise
 export async function accountView(accountId: string): Promise<Me> {
   const user = await prisma.account.findUniqueOrThrow({ where: { id: accountId }, include: ACCOUNT_PROFILE });
   return { login: user.login, role: user.role, name: accountName(user) };
+}
+
+/** Вход без пароля (QR, код, приглашение): прежняя сессия этого браузера закрывается */
+export async function signInAs(c: Context, accountId: string): Promise<Me> {
+  await destroySession(c);
+  await createSession(c, accountId);
+  return accountView(accountId);
 }
 
 export async function renameTeacher(teacherId: string, name: string) {

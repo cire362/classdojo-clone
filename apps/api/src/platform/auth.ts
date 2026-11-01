@@ -148,6 +148,18 @@ export async function releaseLoginAttempt(key: string): Promise<void> {
   await prisma.loginAttempt.updateMany({ where: { key: sha256(key), count: { gt: 0 } }, data: { count: { decrement: 1 } } });
 }
 
+/** Ошибочных попыток с одного адреса за 15 минут: с запасом на опечатки целого класса */
+const CODE_ATTEMPT_LIMIT = 60;
+
+/** Все виды кодов считают ошибки вместе: перебирать один вид, пока лимит другого свободен, нельзя */
+export async function limitedCodeAttempt<T>(c: Context, check: () => Promise<T>): Promise<T> {
+  const key = `code|${clientIp(c)}`;
+  await checkLoginRate(key, CODE_ATTEMPT_LIMIT);
+  const result = await check();
+  await releaseLoginAttempt(key);
+  return result;
+}
+
 export async function resetLoginRate(key: string): Promise<void> {
   await prisma.loginAttempt.deleteMany({ where: { key: sha256(key) } });
 }

@@ -14,5 +14,6 @@ describe('код страниц по адресу', () => {
     expect(pagesFor('/unknown')).toEqual([]);
     expect(pagesFor('/q')).toEqual(['codeLogin']);
     expect(pagesFor('/join')).toEqual(['codeLogin']);
+    expect(pagesFor('/invite')).toEqual(['invite']);
   });
 });

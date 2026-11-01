@@ -3,16 +3,18 @@ import { fetchGroup } from '../../groups';
 import { useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, KeyIcon, PrinterIcon } from '@phosphor-icons/react';
-import type { Credentials, LoginCard, ParentCredentials } from '../../../lib/api';
+import type { Credentials, LoginCard, ParentCredentials, ParentInvite } from '../../../lib/api';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { useLoad } from '../../../lib/hooks';
 import { resetGroupPasswords } from '../api';
+import { ParentInvitesSheet } from './ParentInvitesSheet';
 
 /** Лист для печати: карточки «имя, логин, пароль» под разрезание; для родителей — свой лист */
 export function PrintSheet() {
   const location = useLocation();
-  const state = location.state as { parents?: ParentCredentials[]; cards?: LoginCard[] } | null;
+  const state = location.state as { parents?: ParentCredentials[]; cards?: LoginCard[]; invites?: ParentInvite[] } | null;
   if (state?.cards) return <LoginCardsSheet cards={state.cards} />;
+  if (state?.invites) return <ParentInvitesSheet invites={state.invites} />;
   return state?.parents ? <ParentsSheet rows={state.parents} /> : <StudentsSheet />;
 }
 

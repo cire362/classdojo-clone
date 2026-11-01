@@ -191,6 +191,7 @@ export function LoginForm() {
               {busy ? 'Входим…' : 'Войти'}
             </button>
             <Link to="/join" className="btn btn-ghost w-full">Войти по коду класса</Link>
+            <Link to="/invite" className="btn btn-ghost w-full">У меня приглашение для родителей</Link>
           </div>
         </form>
       </div>

@@ -19,6 +19,7 @@ import {
   CabinetPage,
   GroupLayout,
   GroupsPage,
+  InvitePage,
   LessonPage,
   JoinClassPage,
   LoginPage,
@@ -113,6 +114,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/login" element={<LoginPage />} />
             <Route path="/q" element={<QrLoginPage />} />
             <Route path="/join" element={<JoinClassPage />} />
+            <Route path="/invite" element={<InvitePage />} />
             {/* Печать и режим проектора — без общей шапки */}
             <Route path="/g/:groupId/print" element={teacher(<PrintPage />)} />
             <Route element={<AppLayout />}>

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { pluralize } from '../../../lib/hooks';
 import { Modal } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
-import { issueGroupParents } from '../api';
+import { createGroupInvites, issueGroupParents } from '../api';
 
 /** Входы родителям всей группы: создаём и открываем лист для печати */
 export function ParentsIssueModal({ open, groupId, withoutParents, onClose, onIssued }: {
@@ -17,18 +17,20 @@ export function ParentsIssueModal({ open, groupId, withoutParents, onClose, onIs
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
 
-  async function issue() {
+  async function run(request: () => Promise<Record<string, unknown>>) {
     setBusy(true);
     try {
-      const r = await issueGroupParents(groupId);
+      const state = await request();
       await onIssued();
-      navigate(`/g/${groupId}/print`, { state: { parents: r.credentials } });
+      navigate(`/g/${groupId}/print`, { state });
     } catch (e) {
       toast({ text: (e as Error).message, tone: 'error' });
     } finally {
       setBusy(false);
     }
   }
+  const issue = () => run(async () => ({ parents: (await issueGroupParents(groupId)).credentials }));
+  const invite = () => run(async () => ({ invites: (await createGroupInvites(groupId)).invites }));
 
   return (
     <Modal open={open} title="Входы для родителей" onClose={onClose}>
@@ -41,8 +43,11 @@ export function ParentsIssueModal({ open, groupId, withoutParents, onClose, onIs
           Родители увидят героя, баллы, историю и посещаемость только своего ребёнка. Пароли показываются один раз.
         </p>
         <div className="flex gap-2">
-          <button className="btn btn-primary" disabled={busy} onClick={issue}>
-            {busy ? 'Создаём…' : 'Создать и распечатать'}
+          <button className="btn btn-primary" disabled={busy} onClick={invite}>
+            {busy ? 'Создаём…' : 'Приглашения с QR-кодом'}
+          </button>
+          <button className="btn btn-secondary" disabled={busy} onClick={issue}>
+            Создать и распечатать
           </button>
           <button className="btn btn-secondary" onClick={onClose}>
             Отмена

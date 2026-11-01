@@ -11,8 +11,13 @@ import { unreadMessages } from '../messages/index.js';
  * Родители. Аккаунты создаёт преподаватель (регистрации нет), как и для учеников.
  * Один родительский вход может быть привязан к нескольким детям; родитель видит только их.
  */
+export const MAX_STUDENT_PARENTS = 4;
+export const MAX_PARENT_CHILDREN = 10;
+export const TOO_MANY_PARENTS = `У ученика может быть не больше ${MAX_STUDENT_PARENTS} родительских входов`;
+export const TOO_MANY_CHILDREN = `К одному родителю можно привязать не больше ${MAX_PARENT_CHILDREN} детей`;
+
 /** «Маша Иванова» → parent.masha.i (при совпадении parent.masha.i2 …) */
-async function freeParentLogins(names: string[]): Promise<string[]> {
+export async function freeParentLogins(names: string[]): Promise<string[]> {
   const bases = names.map((n) => `parent.${loginBase(n)}`);
   const rows = await prisma.account.findMany({
     where: { OR: [...new Set(bases)].map((b) => ({ login: { startsWith: b } })) },
@@ -55,8 +60,8 @@ async function createParents(students: { id: string; name: string }[]): Promise<
 
 /** Вход родителя для одного ученика: не больше четырёх на ученика */
 export async function issueParent(student: { id: string; name: string }): Promise<ParentCredentials> {
-  if ((await prisma.parentStudent.count({ where: { studentId: student.id } })) >= 4) {
-    throw new HttpError(400, 'У ученика может быть не больше 4 родительских входов');
+  if ((await prisma.parentStudent.count({ where: { studentId: student.id } })) >= MAX_STUDENT_PARENTS) {
+    throw new HttpError(400, TOO_MANY_PARENTS);
   }
   const [credentials] = await createParents([student]);
   return credentials;
@@ -115,7 +120,7 @@ export async function linkParent(teacherId: string, studentId: string, login: st
   const exists = await prisma.parentStudent.findUnique({ where: { parentId_studentId: { parentId: parent.id, studentId } } });
   if (exists) throw new HttpError(409, 'Этот родитель уже привязан к ученику');
   const count = await prisma.parentStudent.count({ where: { parentId: parent.id } });
-  if (count >= 10) throw new HttpError(400, 'К одному родителю можно привязать не больше 10 детей');
+  if (count >= MAX_PARENT_CHILDREN) throw new HttpError(400, TOO_MANY_CHILDREN);
   await prisma.parentStudent.create({ data: { parentId: parent.id, studentId } });
 }
 

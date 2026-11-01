@@ -1,9 +1,11 @@
 import {
   api,
+  type ActiveInvite,
   type Credentials,
   type Hero,
   type ParentAccess,
   type ParentCredentials,
+  type ParentInvite,
   type PortfolioItem,
   type Profile,
 } from '../../lib/api';
@@ -57,3 +59,13 @@ export const deletePointEvent = (eventId: string) => api('DELETE', `/teacher/poi
 
 export const saveStudentHero = (studentId: string, name: string, parts: Record<string, string>) =>
   api<Hero>('PUT', `/teacher/students/${studentId}/hero`, { name, parts });
+
+export const fetchInvites = (studentId: string) => api<ActiveInvite[]>('GET', `/teacher/students/${studentId}/parent-invites`);
+
+export const createInvite = (studentId: string) => api<ParentInvite>('POST', `/teacher/students/${studentId}/parent-invites`);
+
+export const revokeInvite = (studentId: string, inviteId: string) =>
+  api('DELETE', `/teacher/students/${studentId}/parent-invites/${inviteId}`);
+
+export const createGroupInvites = (groupId: string) =>
+  api<{ invites: ParentInvite[] }>('POST', `/teacher/groups/${groupId}/parent-invites`);

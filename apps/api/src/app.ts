@@ -8,6 +8,7 @@ import { notifications } from './modules/notifications/index.js';
 import { adminRoutes, authRoutes } from './modules/accounts/index.js';
 import { codeLoginRoutes } from './modules/codes/index.js';
 import { activeHeroParts } from './modules/hero/index.js';
+import { inviteRoutes } from './modules/parents/index.js';
 import { parentRoutes } from './routes/parent.js';
 import { studentRoutes } from './routes/student.js';
 import { teacherRoutes } from './routes/teacher.js';
@@ -35,6 +36,7 @@ export function createApp() {
 
   app.route('/api/auth', authRoutes);
   app.route('/api/auth', codeLoginRoutes);
+  app.route('/api/auth', inviteRoutes);
 
   app.use('/api/admin/*', requireAuth);
   app.route('/api/admin', adminRoutes);

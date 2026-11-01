@@ -152,6 +152,7 @@ model Student {
   team        Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   loginCard LoginCard?
+  parentInvites ParentInvite[]
 
   @@index([groupId])
 }
@@ -167,6 +168,18 @@ model Parent {
   children    ParentStudent[]
   messages    Message[]
   threadReads ThreadRead[]
+}
+
+/// Приглашение родителя: одноразовое, в базе только хеш кода
+model ParentInvite {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  codeHash  String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([studentId])
 }
 
 model ParentStudent {
