@@ -10,6 +10,7 @@ import { EmptyState } from '../../../ui';
 import { useAward } from '../hooks/useAward';
 import { useProjector } from '../hooks/useProjector';
 import { useTeamMode } from '../hooks/useTeamMode';
+import { LessonMusic } from './LessonMusic';
 import { LessonNoiseMeter } from './LessonNoiseMeter';
 import { LessonPlanPanel } from './LessonPlanPanel';
 import { LessonRandomGroups } from './LessonRandomGroups';
@@ -58,6 +59,7 @@ export function LessonBoard() {
       <LessonPlanPanel key={`plan:${data.group.id}`} projector={projector} target={timerTarget} />
       <LessonTimer key={data.group.id} groupId={data.group.id} projector={projector} target={timerTarget} />
       <ThinkPairShare key={`think-pair-share:${data.group.id}`} groupId={data.group.id} projector={projector} target={timerTarget} />
+      <LessonMusic key={`music:${data.group.id}`} projector={projector} target={timerTarget} />
       <LessonNoiseMeter key={`noise:${data.group.id}`} groupId={data.group.id} projector={projector} target={timerTarget} />
       <LessonRandomGroups
         key={`random-groups:${data.group.id}`}
