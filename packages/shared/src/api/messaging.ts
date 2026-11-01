@@ -1,4 +1,5 @@
 /** Типы ответов API: счётчики, уведомления ученика, лента и переписка */
+import type { ReactionKind } from '../feed.js';
 
 /** Счётчики: новые сообщения, записи в ленте и выданные награды ученика */
 export interface Notifications {
@@ -27,12 +28,32 @@ export interface StudentNotifications {
   unreadCount: number;
 }
 
+export interface FeedComment {
+  id: string;
+  author: string;
+  text: string;
+  createdAt: string;
+  canDelete: boolean;
+}
+
 export interface FeedPost {
   id: string;
   text: string;
+  /** Момент публикации; у отложенной записи он в будущем */
   createdAt: string;
   author: string;
   canDelete: boolean;
+  pinned: boolean;
+  /** Отложена: её пока видят только преподаватели группы */
+  scheduled: boolean;
+  reactions: Record<ReactionKind, number>;
+  myReaction: ReactionKind | null;
+  /** Ученикам комментарии не показываются */
+  comments: FeedComment[];
+  /** Что этот зритель может сделать с записью сейчас */
+  canComment: boolean;
+  canReact: boolean;
+  canPin: boolean;
 }
 
 export interface ChatMessage {

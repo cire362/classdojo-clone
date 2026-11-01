@@ -93,7 +93,7 @@ export function ParentDashboard() {
         </nav>
       )}
       {current && section === 'feed' && (
-        <Feed key={current.id} path={`/parent/children/${current.id}/feed`} onLoaded={() => void children.reload()} readOnlyNote={`Объявления преподавателей группы ${current.groupName}.`} />
+        <Feed key={current.id} path={`/parent/children/${current.id}/feed`} commentsNote="Комментарии сейчас закрыты." onLoaded={() => void children.reload()} readOnlyNote={`Объявления преподавателей группы ${current.groupName}.`} />
       )}
       {current && section === 'messages' && <ParentMessages key={current.id} child={current} onRead={children.reload} />}
       {current && section === 'week' && <WeeklySummary key={current.id} child={current} />}

@@ -5,3 +5,4 @@ export * from './hero/render.js';
 export * from './hero/validate.js';
 export * from './hero/pets.js';
 export * from './badges.js';
+export * from './feed.js';

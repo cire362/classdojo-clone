@@ -46,6 +46,8 @@ model Account {
   portfolio   PortfolioItem[]
   decisions   RewardRequest[] @relation("DecidedBy")
   awarded  PointEvent[] @relation("AwardedBy")
+  postReactions PostReaction[]
+  postComments  PostComment[]
 }
 
 model Session {
@@ -88,6 +90,8 @@ model Group {
   teacher         Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   /// Вычитать преподавателя из числа людей на фото
   subtractTeacher Boolean   @default(true)
+  /// Родители могут комментировать записи ленты
+  feedComments    Boolean   @default(true)
   /// Дата переноса в архив; null — группа активна
   archivedAt      DateTime?
   createdAt       DateTime  @default(now())
@@ -321,9 +325,39 @@ model Post {
   authorId  String
   author    Teacher  @relation(fields: [authorId], references: [id], onDelete: Cascade)
   text      String
+  /// Момент публикации: у отложенной записи он в будущем, поэтому лента и счётчики покажут её сами, без планировщика
   createdAt DateTime @default(now())
+  pinned    Boolean  @default(false)
+
+  reactions PostReaction[]
+  comments  PostComment[]
 
   @@index([groupId, createdAt])
+}
+
+/// Реакция аккаунта на запись: одна на запись, повторный выбор заменяет
+model PostReaction {
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  kind      String
+
+  @@id([postId, accountId])
+}
+
+/// Комментарий родителя или преподавателя; подпись сохраняется при написании
+model PostComment {
+  id         String   @id @default(cuid())
+  postId     String
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  accountId  String
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  authorName String
+  text       String
+  createdAt  DateTime @default(now())
+
+  @@index([postId, createdAt])
 }
 
 /// До какого момента аккаунт прочитал ленту группы — для счётчика новых записей

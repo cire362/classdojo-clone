@@ -75,7 +75,7 @@ export interface LessonPlan {
 export interface GroupDetails {
   classGoal: ClassGoal | null;
   plan: LessonPlan;
-  group: { id: string; name: string; subtractTeacher: boolean; archivedAt: string | null; isOwner: boolean };
+  group: { id: string; name: string; subtractTeacher: boolean; feedComments: boolean; archivedAt: string | null; isOwner: boolean };
   students: LessonStudent[];
   reasons: Reason[];
   teams: Team[];

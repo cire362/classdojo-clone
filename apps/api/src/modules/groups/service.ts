@@ -11,7 +11,7 @@ import { createDefaultReasons, manualReasons } from '../reasons/index.js';
 import { createDefaultRewards, pendingRequestCount } from '../rewards/index.js';
 import { groupTeams } from '../teams/index.js';
 
-type OwnedGroup = { id: string; name: string; subtractTeacher: boolean; archivedAt: Date | null; isOwner: boolean };
+type OwnedGroup = { id: string; name: string; subtractTeacher: boolean; feedComments: boolean; archivedAt: Date | null; isOwner: boolean };
 
 export async function teacherGroups(teacherId: string): Promise<GroupListItem[]> {
   const groups = await prisma.group.findMany({
@@ -72,6 +72,7 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
       id: group.id,
       name: group.name,
       subtractTeacher: group.subtractTeacher,
+      feedComments: group.feedComments,
       archivedAt: group.archivedAt?.toISOString() ?? null,
       isOwner: group.isOwner,
     },
@@ -93,9 +94,9 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
   };
 }
 
-export async function updateGroup(groupId: string, data: { name?: string; subtractTeacher?: boolean }) {
+export async function updateGroup(groupId: string, data: { name?: string; subtractTeacher?: boolean; feedComments?: boolean }) {
   const g = await prisma.group.update({ where: { id: groupId }, data });
-  return { id: g.id, name: g.name, subtractTeacher: g.subtractTeacher };
+  return { id: g.id, name: g.name, subtractTeacher: g.subtractTeacher, feedComments: g.feedComments };
 }
 
 /** Архив: группа скрывается из списка и замораживается (просмотр, статистика и Excel остаются) */
