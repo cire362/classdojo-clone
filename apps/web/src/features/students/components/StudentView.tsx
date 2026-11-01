@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, ArrowsLeftRightIcon, KeyIcon, PaintBrushIcon } from '@phosphor-icons/react';
 import type { Credentials, HistoryEvent } from '../../../lib/api';
+import { IssueCardsButton } from '../../codes';
 import { HeroEditor } from '../../hero';
 import { MoveStudentModal } from './MoveStudentModal';
 import { ParentAccessCard } from './ParentAccess';
@@ -63,6 +64,9 @@ export function StudentProfileView() {
             >
               <KeyIcon size={20} /> Новый пароль
             </button>
+            {!data.student.group.archivedAt && (
+              <IssueCardsButton groupId={data.student.group.id} studentId={data.student.id} className="btn btn-secondary" />
+            )}
             <button className="btn btn-secondary" onClick={() => setMoving(true)}>
               <ArrowsLeftRightIcon size={20} /> Перевести
             </button>

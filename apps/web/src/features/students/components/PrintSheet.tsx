@@ -1,8 +1,9 @@
+import { LoginCardsSheet } from '../../codes';
 import { fetchGroup } from '../../groups';
 import { useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, KeyIcon, PrinterIcon } from '@phosphor-icons/react';
-import type { Credentials, ParentCredentials } from '../../../lib/api';
+import type { Credentials, LoginCard, ParentCredentials } from '../../../lib/api';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { useLoad } from '../../../lib/hooks';
 import { resetGroupPasswords } from '../api';
@@ -10,8 +11,9 @@ import { resetGroupPasswords } from '../api';
 /** Лист для печати: карточки «имя, логин, пароль» под разрезание; для родителей — свой лист */
 export function PrintSheet() {
   const location = useLocation();
-  const parents = (location.state as { parents?: ParentCredentials[] } | null)?.parents;
-  return parents ? <ParentsSheet rows={parents} /> : <StudentsSheet />;
+  const state = location.state as { parents?: ParentCredentials[]; cards?: LoginCard[] } | null;
+  if (state?.cards) return <LoginCardsSheet cards={state.cards} />;
+  return state?.parents ? <ParentsSheet rows={state.parents} /> : <StudentsSheet />;
 }
 
 /**
@@ -132,7 +134,7 @@ function StudentsSheet() {
 
       <Modal open={confirm} title="Выдать новые пароли?" onClose={() => setConfirm(false)}>
         <div className="space-y-5">
-          <p>Старые пароли всех учеников группы перестанут работать, ученики выйдут из аккаунтов на всех устройствах.</p>
+          <p>Старые пароли и QR-карточки всех учеников группы перестанут работать, ученики выйдут из аккаунтов на всех устройствах.</p>
           <div className="flex gap-2">
             <button className="btn btn-primary" disabled={busy} onClick={resetAll}>
               {busy ? 'Создаём…' : 'Да, выдать новые'}

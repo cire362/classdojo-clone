@@ -103,6 +103,7 @@ model Group {
   teams              Team[]
   classGoal          ClassGoal?
   lessonPlan         LessonPlan?
+  classCode          ClassCode?
   /// Первенство по уровням учитывается только с момента запуска значков
   badgeTrackingStartedAt DateTime @default(now())
   awardedPoints      PointEvent[] @relation("AwardedInGroup")
@@ -149,6 +150,8 @@ model Student {
   /// Команда на уроке (командный режим); команда принадлежит группе ученика
   teamId      String?
   team        Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  loginCard LoginCard?
 
   @@index([groupId])
 }
@@ -423,6 +426,24 @@ model Team {
 }
 
 /// Одна общая текущая цель класса; новая цель начинается с нуля.
+/// Общий код класса: короткий и живёт недолго, поэтому хранится открыто и показывается преподавателю повторно
+model ClassCode {
+  groupId   String   @id
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  code      String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+/// QR-карточка ученика: в базе только хеш токена, поэтому карточку можно выпустить, но не показать повторно
+model LoginCard {
+  studentId String   @id
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
 /// План урока группы: шаги по порядку и текущий шаг на экране
 model LessonPlan {
   groupId   String   @id

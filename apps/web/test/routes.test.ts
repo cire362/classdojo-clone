@@ -12,5 +12,7 @@ describe('код страниц по адресу', () => {
     expect(pagesFor('/', null)).toEqual(['groups', 'cabinet', 'parentHome', 'admin']);
     expect(pagesFor('/g/abc/stats', 'TEACHER')).toEqual(['groupLayout', 'stats']);
     expect(pagesFor('/unknown')).toEqual([]);
+    expect(pagesFor('/q')).toEqual(['codeLogin']);
+    expect(pagesFor('/join')).toEqual(['codeLogin']);
   });
 });

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DiceFiveIcon, UserPlusIcon, XIcon } from '@phosphor-icons/react';
+import { ClassCodePanel } from '../../codes';
 import { ClassGoalPanel } from '../../goals';
 import { useGroup } from '../../groups';
 import { StudentSearch, matchesStudent } from '../../students';
@@ -59,6 +60,7 @@ export function LessonBoard() {
       <LessonPlanPanel key={`plan:${data.group.id}`} projector={projector} target={timerTarget} />
       <LessonTimer key={data.group.id} groupId={data.group.id} projector={projector} target={timerTarget} />
       <ThinkPairShare key={`think-pair-share:${data.group.id}`} groupId={data.group.id} projector={projector} target={timerTarget} />
+      <ClassCodePanel key={`class-code:${data.group.id}`} groupId={data.group.id} projector={projector} target={timerTarget} />
       <LessonMusic key={`music:${data.group.id}`} projector={projector} target={timerTarget} />
       <LessonNoiseMeter key={`noise:${data.group.id}`} groupId={data.group.id} projector={projector} target={timerTarget} />
       <LessonRandomGroups

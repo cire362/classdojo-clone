@@ -50,7 +50,10 @@ export function accountName(a: AccountWithProfile): string {
   return a.login;
 }
 
-const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
+export const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
+
+/** Адрес клиента для ограничения попыток: прокси передаёт его в заголовке */
+export const clientIp = (c: Context) => c.req.header('x-real-ip') ?? c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
 
 export async function createSession(c: Context, accountId: string): Promise<void> {
   const token = randomBytes(32).toString('base64url');
@@ -135,6 +138,14 @@ export async function checkLoginRate(key: string, limit = env.loginRateLimit): P
     const minutes = Math.ceil(seconds / 60);
     throw new HttpError(429, `Слишком много попыток входа. Попробуйте через ${minutes} мин.`, { 'Retry-After': String(seconds) });
   }
+}
+
+/**
+ * Вернуть попытку после успеха: для кодов считаются только ошибки, иначе весь класс за одним адресом
+ * упёрся бы в лимит. Сам счётчик атомарный, поэтому параллельные запросы его не обходят.
+ */
+export async function releaseLoginAttempt(key: string): Promise<void> {
+  await prisma.loginAttempt.updateMany({ where: { key: sha256(key), count: { gt: 0 } }, data: { count: { decrement: 1 } } });
 }
 
 export async function resetLoginRate(key: string): Promise<void> {

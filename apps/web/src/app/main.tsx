@@ -20,7 +20,9 @@ import {
   GroupLayout,
   GroupsPage,
   LessonPage,
+  JoinClassPage,
   LoginPage,
+  QrLoginPage,
   GroupFeedPage,
   MessagesPage,
   MyHeroPage,
@@ -109,6 +111,8 @@ createRoot(document.getElementById('root')!).render(
           <Suspense fallback={<PageSkeleton />}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/q" element={<QrLoginPage />} />
+            <Route path="/join" element={<JoinClassPage />} />
             {/* Печать и режим проектора — без общей шапки */}
             <Route path="/g/:groupId/print" element={teacher(<PrintPage />)} />
             <Route element={<AppLayout />}>

@@ -6,6 +6,7 @@
 export const PAGE_MODULES = {
   admin: 'pages/admin/Admin.tsx',
   login: 'pages/Login.tsx',
+  codeLogin: 'pages/CodeLogin.tsx',
   groups: 'pages/teacher/Groups.tsx',
   groupLayout: 'pages/teacher/GroupLayout.tsx',
   lesson: 'pages/teacher/Lesson.tsx',
@@ -32,6 +33,7 @@ export type PageKey = keyof typeof PAGE_MODULES;
 
 const ROUTE_PAGES: [RegExp, PageKey[]][] = [
   [/^\/login$/, ['login']],
+  [/^\/(q|join)$/, ['codeLogin']],
   [/^\/$/, ['groups', 'cabinet', 'parentHome', 'admin']],
   [/^\/hero$/, ['myHero']],
   [/^\/settings$/, ['settings']],

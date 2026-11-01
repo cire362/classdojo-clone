@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { DEFAULT_HERO, type HeroParts } from '@heroes/shared';
 import { useAuth } from '../../auth';
 import { HeroAvatar } from '../../hero';
@@ -190,6 +190,7 @@ export function LoginForm() {
             <button className="btn btn-primary btn-lg w-full" disabled={busy || !form.login || !form.password}>
               {busy ? 'Входим…' : 'Войти'}
             </button>
+            <Link to="/join" className="btn btn-ghost w-full">Войти по коду класса</Link>
           </div>
         </form>
       </div>

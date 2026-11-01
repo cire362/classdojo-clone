@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ApiError, api, type Me } from '../../lib/api';
 
 interface AuthState {
@@ -8,6 +8,8 @@ interface AuthState {
   offline: boolean;
   login: (login: string, password: string) => Promise<Me>;
   logout: () => Promise<void>;
+  /** Вход уже выполнен сервером (по QR или коду класса) */
+  signedIn: (user: Me) => void;
   /** Перечитать данные пользователя (после смены имени) */
   refresh: () => Promise<void>;
 }
@@ -45,14 +47,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const [offline, setOffline] = useState(false);
+  // Вход по QR начинается одновременно со стартовой проверкой, и её устаревший ответ не должен его отменить
+  const signedInMeanwhile = useRef(false);
 
   useEffect(() => {
     api<{ user: Me | null }>('GET', '/auth/me')
       .then((r) => {
+        if (signedInMeanwhile.current) return;
         setUser(r.user);
         rememberRole(r.user?.role ?? null);
       })
       .catch((e) => {
+        if (signedInMeanwhile.current) return;
         setUser(null);
         if (e instanceof ApiError && e.status === 0) setOffline(true);
       })
@@ -69,6 +75,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return r.user;
   }, []);
 
+  const signedIn = useCallback((next: Me) => {
+    signedInMeanwhile.current = true;
+    setUser(next);
+    rememberRole(next.role);
+  }, []);
+
   const logout = useCallback(async () => {
     await api('POST', '/auth/logout').catch(() => undefined);
     setUser(null);
@@ -81,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setOffline(false);
   }, []);
 
-  return <AuthContext.Provider value={{ user, loading, offline, login, logout, refresh }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, offline, login, signedIn, logout, refresh }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthState {

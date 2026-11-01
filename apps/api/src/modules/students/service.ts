@@ -1,6 +1,7 @@
 import { randomHero } from '@heroes/shared';
 import type { Credentials } from '@heroes/shared/api';
 import { prisma } from '../../platform/db.js';
+import { revokeLoginCard } from '../codes/index.js';
 import { deleteOrphanParents } from '../parents/index.js';
 import { generatePassword, hashPassword, loginBase, pickLogin } from '../../platform/credentials.js';
 import { HttpError } from '../../platform/errors.js';
@@ -94,13 +95,15 @@ export async function resetGroupPasswords(groupId: string, studentIds?: string[]
   return credentials;
 }
 
-/** Новый пароль для ученика; все его активные сессии завершаются */
+/** Новый пароль для ученика; все его активные сессии и QR-карточка перестают работать */
 export async function resetStudentPassword(studentId: string): Promise<Credentials> {
   const student = await prisma.student.findUniqueOrThrow({ where: { id: studentId }, include: { account: true } });
   const password = generatePassword();
   await prisma.$transaction([
     prisma.account.update({ where: { id: student.accountId }, data: { passwordHash: await hashPassword(password) } }),
     prisma.session.deleteMany({ where: { accountId: student.accountId } }),
+    // Пароль меняют, когда вход ушёл в чужие руки: карточка не должна его сохранять
+    revokeLoginCard(student.id),
   ]);
   return { id: student.id, name: student.name, login: student.account.login, password };
 }

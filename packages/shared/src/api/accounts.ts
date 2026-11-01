@@ -1,4 +1,5 @@
 /** Типы ответов API: учётные записи, выданные входы и панель администратора */
+import type { Hero } from './profile.js';
 
 export type Role = 'TEACHER' | 'STUDENT' | 'PARENT' | 'ADMIN';
 
@@ -13,6 +14,26 @@ export interface Credentials {
   name: string;
   login: string;
   password: string;
+}
+
+/** QR-карточка ученика: токен показывается один раз, при выпуске */
+export interface LoginCard {
+  studentId: string;
+  name: string;
+  token: string;
+  expiresAt: string;
+}
+
+/** Общий код класса */
+export interface ClassCode {
+  code: string;
+  expiresAt: string;
+}
+
+/** Список для выбора имени по коду класса */
+export interface ClassRoster {
+  groupName: string;
+  students: { id: string; name: string; hero: Hero }[];
 }
 
 /** Родительский вход, привязанный к ученику */
