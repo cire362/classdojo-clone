@@ -2,7 +2,7 @@ import type { ParentRewards, PendingRewardGroups, Reward, RewardRequest, Shop } 
 import type { Prisma } from '../../generated/prisma/client';
 import { prisma } from '../../platform/db.js';
 import { HttpError, notFound } from '../../platform/errors.js';
-import { groupsOf } from '../access/index.js';
+import { groupsOf, lockStudent } from '../access/index.js';
 
 /**
  * Магазин наград. Баланс = все баллы (плюсы минус минусы) минус потраченное на награды.
@@ -173,7 +173,7 @@ export async function parentRewards(studentId: string, before?: string): Promise
 /** Ученик просит награду. Баланс проверяется под блокировкой строки ученика: два запроса сразу не потратят баллы дважды */
 export async function requestReward(studentId: string, rewardId: string) {
   return prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;
+    await lockStudent(tx, studentId);
     const student = await tx.student.findUniqueOrThrow({
       where: { id: studentId },
       select: { groupId: true, group: { select: { archivedAt: true } } },

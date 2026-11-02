@@ -47,6 +47,11 @@ export async function lockGroup(tx: Prisma.TransactionClient, groupId: string) {
   if (rows[0].archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
 }
 
+/** Записи, зависящие от суммы по ученику, сериализуются: два запроса сразу не обойдут проверку */
+export async function lockStudent(tx: Prisma.TransactionClient, studentId: string) {
+  await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;
+}
+
 /** Ребёнок родителя или 404: родитель не может открыть чужого ученика */
 export async function parentChild(parentId: string, studentId: string): Promise<string> {
   const link = await prisma.parentStudent.findUnique({ where: { parentId_studentId: { parentId, studentId } } });

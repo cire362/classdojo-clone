@@ -2,6 +2,7 @@ import { Suspense, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PaintBrushIcon, SparkleIcon } from '@phosphor-icons/react';
 import { LevelUpOverlay, PartPreview, fetchStudentProfile } from '../../hero';
+import { HomePoints } from '../../home';
 import { ProfileView } from './ProfileView';
 import { ErrorBox } from '../../../ui';
 import { ProfileSkeleton } from './ProfileSkeleton';
@@ -54,6 +55,8 @@ export function StudentCabinet() {
           </Link>
         }
       />
+
+      <HomePoints path="/student/home" />
 
       {levelUpUsed && (
         <Suspense fallback={null}>

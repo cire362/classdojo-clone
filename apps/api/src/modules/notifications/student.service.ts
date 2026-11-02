@@ -1,6 +1,7 @@
 import type { StudentNotifications } from '@heroes/shared/api';
 import { prisma } from '../../platform/db.js';
 import { HttpError } from '../../platform/errors.js';
+import { lockStudent } from '../access/index.js';
 import { markFeedRead } from '../feed/index.js';
 import { markRewardNotificationsRead } from '../rewards/index.js';
 
@@ -98,7 +99,7 @@ export async function studentNotifications(
 export async function readStudentNotifications(studentId: string, groupId: string, value: string) {
   const through = snapshot(value);
   await prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;
+    await lockStudent(tx, studentId);
     const s = await tx.student.findUniqueOrThrow({ where: { id: studentId }, select: { groupId: true, accountId: true } });
     if (s.groupId !== groupId) throw new HttpError(409, 'Группа изменилась. Обнови уведомления');
     await markFeedRead(s.accountId, s.groupId, through, tx);

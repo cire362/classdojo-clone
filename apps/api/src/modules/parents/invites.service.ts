@@ -5,6 +5,7 @@ import { sha256 } from '../../platform/auth.js';
 import { hashPassword } from '../../platform/credentials.js';
 import { prisma } from '../../platform/db.js';
 import { HttpError, notFound } from '../../platform/errors.js';
+import { lockStudent } from '../access/index.js';
 import { MAX_PARENT_CHILDREN, MAX_STUDENT_PARENTS, TOO_MANY_CHILDREN, TOO_MANY_PARENTS, freeParentLogins } from './service.js';
 
 const INVITE_DAYS = 14;
@@ -88,10 +89,6 @@ async function findInvite(code: string) {
 export async function previewInvite(code: string): Promise<InvitePreview> {
   const invite = await findInvite(code);
   return { studentName: invite.student.name, groupName: invite.student.group.name };
-}
-
-async function lockStudent(tx: Prisma.TransactionClient, studentId: string) {
-  await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;
 }
 
 /** Приглашение одноразовое: списание внутри транзакции, поэтому два открытых окна не создадут два входа */

@@ -3,6 +3,7 @@ import { requireRole, type AppEnv } from '../platform/auth.js';
 import { studentCalendarRoutes } from '../modules/calendar/index.js';
 import { studentFeedRoutes } from '../modules/feed/index.js';
 import { studentHeroRoutes } from '../modules/hero/index.js';
+import { studentHomeRoutes } from '../modules/home/index.js';
 import { studentRewardRoutes } from '../modules/rewards/index.js';
 import { studentProfileRoutes } from '../modules/profile/index.js';
 import { studentNotificationRoutes } from '../modules/notifications/index.js';
@@ -13,6 +14,7 @@ export const studentRoutes = new Hono<AppEnv>()
   .route('/', studentProfileRoutes)
   .route('/', studentNotificationRoutes)
   .route('/', studentHeroRoutes)
+  .route('/', studentHomeRoutes)
   .route('/', studentRewardRoutes)
   .route('/', studentCalendarRoutes)
   .route('/', studentFeedRoutes);

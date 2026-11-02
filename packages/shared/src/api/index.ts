@@ -3,6 +3,7 @@ export type * from './accounts.js';
 export type * from './messaging.js';
 export type * from './profile.js';
 export type * from './groups.js';
+export type * from './home.js';
 export type * from './rewards.js';
 export type * from './attendance.js';
 export type * from './stats.js';

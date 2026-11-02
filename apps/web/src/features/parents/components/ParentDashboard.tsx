@@ -12,6 +12,7 @@ import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { useLoad } from '../../../lib/hooks';
 import { ProfileSkeleton } from '../../profile';
 import { Calendar } from '../../calendar';
+import { HomePoints } from '../../home';
 import { fetchChildProfile, fetchChildren } from '../api';
 
 /** Выбранный ребёнок запоминается: его профиль ранний скрипт запрашивает сразу при открытии */
@@ -25,11 +26,11 @@ function storedChild(): string | null {
   }
 }
 
-/** Кабинет родителя: герой, баллы, история и посещаемость своих детей — только просмотр */
+/** Кабинет родителя: школьные данные своих детей только для просмотра, домашние баллы родитель ведёт сам */
 export function ParentDashboard() {
   const children = useLoad(() => fetchChildren(), []);
   const [selected, setSelected] = useState<string | null>(storedChild);
-  const [section, setSection] = useState<'profile' | 'week' | 'rewards' | 'feed' | 'calendar' | 'messages'>('profile');
+  const [section, setSection] = useState<'profile' | 'week' | 'rewards' | 'home' | 'feed' | 'calendar' | 'messages'>('profile');
   const list = children.data ?? [];
   const current = list.find((c) => c.id === selected) ?? list[0];
   const profile = useLoad(
@@ -54,8 +55,21 @@ export function ParentDashboard() {
       </EmptyState>
     );
   }
+  const sections = [
+    ['profile', 'Профиль', 0],
+    ['week', 'Итог недели', 0],
+    ['rewards', 'Награды', 0],
+    ['home', 'Дома', 0],
+    ['feed', 'Лента класса', current?.unread.feed ?? 0],
+    ['calendar', 'Календарь', 0],
+    ['messages', 'Сообщения', current?.unread.messages ?? 0],
+  ] as const;
   return (
     <div className="space-y-6">
+      {/* В профиле заголовок первого уровня — имя героя */}
+      {current && section !== 'profile' && (
+        <h1 className="sr-only">{current.name}: {sections.find(([key]) => key === section)?.[1]}</h1>
+      )}
       {list.length > 1 && (
         <div className="flex flex-wrap gap-2" role="tablist" aria-label="Дети">
           {list.map((c) => (
@@ -77,16 +91,7 @@ export function ParentDashboard() {
       )}
       {current && (
         <nav className="flex gap-1 overflow-x-auto" aria-label="Разделы">
-          {(
-            [
-              ['profile', 'Профиль', 0],
-              ['week', 'Итог недели', 0],
-              ['rewards', 'Награды', 0],
-              ['feed', 'Лента класса', current.unread.feed],
-              ['calendar', 'Календарь', 0],
-              ['messages', 'Сообщения', current.unread.messages],
-            ] as const
-          ).map(([key, label, count]) => (
+          {sections.map(([key, label, count]) => (
             <button key={key} className={`tab ${section === key ? 'active' : ''}`} aria-current={section === key ? 'page' : undefined} onClick={() => setSection(key)}>
               {label}
               <CountBadge count={count} label="новых" />
@@ -101,6 +106,7 @@ export function ParentDashboard() {
       {current && section === 'messages' && <ParentMessages key={current.id} child={current} onRead={children.reload} />}
       {current && section === 'week' && <WeeklySummary key={current.id} child={current} />}
       {current && section === 'rewards' && <ParentRewards key={current.id} childId={current.id} />}
+      {current && section === 'home' && <HomePoints key={current.id} path={`/parent/children/${current.id}/home`} editable />}
       {section === 'profile' &&
         (profile.error ? (
           <ErrorBox message={profile.error} onRetry={profile.reload} />
