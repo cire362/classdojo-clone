@@ -7,6 +7,7 @@ import { HttpError } from './platform/errors.js';
 import { notifications } from './modules/notifications/index.js';
 import { adminRoutes, authRoutes } from './modules/accounts/index.js';
 import { codeLoginRoutes } from './modules/codes/index.js';
+import { fileRoutes } from './modules/files/index.js';
 import { activeHeroParts } from './modules/hero/index.js';
 import { inviteRoutes } from './modules/parents/index.js';
 import { parentRoutes } from './routes/parent.js';
@@ -49,6 +50,9 @@ export function createApp() {
 
   app.use('/api/parent/*', requireAuth);
   app.route('/api/parent', parentRoutes);
+
+  app.use('/api/files/*', requireAuth);
+  app.route('/api/files', fileRoutes);
 
   app.get('/api/notifications', requireAuth, async (c) => c.json(await notifications(c.get('user'))));
 

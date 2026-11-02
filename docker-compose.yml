@@ -41,6 +41,7 @@ services:
       DETECTOR_URL: http://detector:8000
       TZ: Europe/Moscow
       PORT: "3000"
+      FILES_DIR: /data/files
       # Включите, если сайт открывается по HTTPS
       COOKIE_SECURE: "false"
       SEED_ADMIN_LOGIN: admin
@@ -51,6 +52,9 @@ services:
       SEED_PARENT_PASSWORD: parent12345
       # Пока оплаты нет, премиум-коллекция открыта всем; false — только по сроку у преподавателя
       PREMIUM_FOR_ALL: "true"
+    # Загруженные файлы. Наружу отдаёт только API с проверкой прав: nginx этого тома не видит
+    volumes:
+      - files:/data/files
     depends_on:
       db:
         condition: service_healthy
@@ -84,3 +88,4 @@ services:
 
 volumes:
   pgdata:
+  files:

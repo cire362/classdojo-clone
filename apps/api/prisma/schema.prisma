@@ -48,6 +48,7 @@ model Account {
   awarded  PointEvent[] @relation("AwardedBy")
   postReactions PostReaction[]
   postComments  PostComment[]
+  uploadedFiles StoredFile[]
 }
 
 model Session {
@@ -117,6 +118,7 @@ model Group {
   awardedPoints      PointEvent[] @relation("AwardedInGroup")
 
   @@index([teacherId])
+  files StoredFile[]
 }
 
 /// Соавтор группы: ведёт уроки, отметку, учеников и родителей наравне с владельцем.
@@ -163,6 +165,7 @@ model Student {
   parentInvites ParentInvite[]
   homeGoals  HomeGoal[]
   homePoints HomePoint[]
+  files      StoredFile[]
 
   @@index([groupId])
 }
@@ -230,6 +233,33 @@ model HomePoint {
 
   @@index([studentId, createdAt])
   @@index([goalId])
+}
+
+/// Загруженный файл. Хозяин один: группа (видят все её участники) или ученик (видят он, его
+/// родители и преподаватели его группы). Это проверяет ограничение CHECK в миграции.
+/// Байты лежат в томе, отдельно от базы
+model StoredFile {
+  id           String   @id @default(cuid())
+  groupId      String?
+  group        Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  studentId    String?
+  student      Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  uploadedById String?
+  uploadedBy   Account? @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  name         String
+  mime         String
+  size         Int
+  createdAt    DateTime @default(now())
+
+  @@index([groupId])
+  @@index([studentId])
+  @@index([uploadedById])
+}
+
+/// Очередь очистки диска. Заполняется триггером при любом удалении StoredFile, в том числе каскадном
+model DeletedFile {
+  id        String   @id
+  deletedAt DateTime @default(now())
 }
 
 model Hero {

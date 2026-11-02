@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { AppEnv } from '../../platform/auth.js';
 import { HttpError, parse } from '../../platform/errors.js';
 import { OWNER_ONLY_MESSAGE, teacherGroup } from '../access/index.js';
+import { purgeDeletedFiles } from '../files/index.js';
 import { GroupCreate, GroupPatch, TeacherLogin } from './schemas.js';
 import { archiveGroup, createGroup, deleteGroup, groupDetails, restoreGroup, teacherGroups, updateGroup } from './service.js';
 import { addCoTeacher, groupTeachers, removeCoTeacher } from './teachers.service.js';
@@ -34,6 +35,7 @@ export const groupRoutes = new Hono<AppEnv>()
   .delete('/groups/:id', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'), { owner: true });
     await deleteGroup(group.id);
+    await purgeDeletedFiles();
     return c.json({ ok: true });
   })
   .get('/groups/:id/teachers', async (c) => {

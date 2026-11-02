@@ -4,6 +4,7 @@ import type { AppEnv } from '../../platform/auth.js';
 import { HttpError, parse } from '../../platform/errors.js';
 import { teacherGroup, teacherStudent } from '../access/index.js';
 import { MAX_IMPORT_BYTES } from './import.js';
+import { purgeDeletedFiles } from '../files/index.js';
 import { MoveBody, ResetMany, StudentPatch, StudentsCreate } from './schemas.js';
 import {
   addStudents,
@@ -51,6 +52,7 @@ export const studentAdminRoutes = new Hono<AppEnv>()
   .delete('/students/:id', async (c) => {
     const student = await teacherStudent(c.get('user'), c.req.param('id'));
     await deleteStudent(student.id);
+    await purgeDeletedFiles();
     return c.json({ ok: true });
   })
   .post('/students/:id/move', async (c) => {

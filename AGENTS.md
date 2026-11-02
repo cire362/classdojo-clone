@@ -16,12 +16,12 @@ modules/<домен>/
   routes.ts      HTTP: разбор запроса, права, вызов сервиса (при нескольких ролях: teacher.routes.ts, student.routes.ts)
   service.ts     бизнес-правила и работа с базой (несколько тем: stats.service.ts, weekly-stats.service.ts)
   schemas.ts     схемы zod, если их больше двух
-platform/        db, auth, env, errors, dates, credentials: без знания о доменах
+platform/        db, auth, env, errors, dates, credentials, storage: без знания о доменах
 routes/          сборки ролей: teacher.ts, student.ts, parent.ts
 app.ts           сборка приложения
 ```
 
-Домены: `access`, `accounts`, `codes`, `groups`, `students`, `parents`, `reasons`, `points`, `attendance`, `rewards`, `teams`, `goals`, `plan`, `calendar`, `home`, `feed`, `messages`, `notifications`, `hero`, `badges`, `portfolio`, `profile`, `reports`.
+Домены: `access`, `accounts`, `codes`, `groups`, `students`, `parents`, `reasons`, `points`, `attendance`, `rewards`, `teams`, `goals`, `plan`, `calendar`, `home`, `files`, `feed`, `messages`, `notifications`, `hero`, `badges`, `portfolio`, `profile`, `reports`.
 
 - `routes/*.ts` только собирают кабинет роли: роль проверяется один раз, модули подключаются через `.route()`. Запросов и правил там нет.
 - `routes` не обращается к Prisma напрямую: запросы и правила живут в `service`.

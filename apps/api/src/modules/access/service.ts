@@ -47,6 +47,23 @@ export async function lockGroup(tx: Prisma.TransactionClient, groupId: string) {
   if (rows[0].archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
 }
 
+/** Преподаватель группы, её ученик или родитель её ученика, иначе 404 */
+export async function groupReader(user: AuthUser, groupId: string) {
+  if (user.teacherId) return void (await teacherGroup(user, groupId));
+  const member = await prisma.student.findFirst({
+    where: { groupId, OR: [{ id: user.studentId ?? '' }, { parents: { some: { parentId: user.parentId ?? '' } } }] },
+    select: { id: true },
+  });
+  if (!member) throw notFound('Группа не найдена');
+}
+
+/** Преподаватель ученика, сам ученик или его родитель, иначе 404 */
+export async function studentReader(user: AuthUser, studentId: string) {
+  if (user.teacherId) return void (await teacherStudent(user, studentId));
+  if (user.parentId) return void (await parentChild(user.parentId, studentId));
+  if (user.studentId !== studentId) throw notFound('Ученик не найден');
+}
+
 /** Записи, зависящие от суммы по ученику, сериализуются: два запроса сразу не обойдут проверку */
 export async function lockStudent(tx: Prisma.TransactionClient, studentId: string) {
   await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;
