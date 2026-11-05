@@ -5,7 +5,10 @@ import { dateKey, useLoad } from '../../../lib/hooks';
 import { CancelledError, withRetry, type RetryStatus } from '../../../lib/network';
 import { useToast } from '../../../ui/Toast';
 import { deleteAttendance, detectPeople, fetchAttendanceDay, saveAttendance, setSubtractTeacher } from '../api';
-import { prepareImage } from '../photo';
+import { prepareImage } from '../../../lib/photo';
+
+/** Сервису подсчёта хватает 1600 точек, а загрузка с телефона идёт быстрее */
+const PHOTO_SIDE = 1600;
 
 type Phase = 'start' | 'detecting' | 'review' | 'saved';
 
@@ -118,7 +121,7 @@ export function useAttendance() {
     setError(null);
     setPhase('detecting');
     try {
-      const blob = await prepareImage(file);
+      const blob = await prepareImage(file, PHOTO_SIDE);
       dropPhoto();
       photoRef.current = blob;
       setPreview(URL.createObjectURL(blob));

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { mkdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -6,26 +7,26 @@ import { env } from './env.js';
 
 /**
  * Байты файлов в томе. Это весь интерфейс хранилища: при замене тома меняется только этот файл.
- * id приходит из базы, а не из запроса. Вложенная папка не даёт одному каталогу разрастись.
+ * Ключ приходит из базы, а не из запроса. Вложенная папка по хешу не даёт одному каталогу разрастись.
  */
-const location = (id: string) => join(env.filesDir, id.slice(-2), id);
+const location = (key: string) => join(env.filesDir, createHash('sha256').update(key).digest('hex').slice(0, 2), key);
 
 /** Запись через временный файл: при сбое на диске не останется половины файла под настоящим именем */
-export async function putBytes(id: string, bytes: Uint8Array) {
-  const path = location(id);
+export async function putBytes(key: string, bytes: Uint8Array) {
+  const path = location(key);
   await mkdir(dirname(path), { recursive: true, mode: 0o700 });
   await writeFile(`${path}.tmp`, bytes, { mode: 0o600 });
   await rename(`${path}.tmp`, path);
 }
 
-/** Поток байтов или null, если файла на диске нет */
-export async function readBytes(id: string): Promise<ReadableStream<Uint8Array> | null> {
-  const path = location(id);
+/** Поток байтов с размером или null, если на диске ничего нет */
+export async function readBytes(key: string): Promise<{ stream: ReadableStream<Uint8Array>; size: number } | null> {
+  const path = location(key);
   const found = await stat(path).catch(() => null);
-  return found ? (Readable.toWeb(createReadStream(path)) as ReadableStream<Uint8Array>) : null;
+  return found ? { stream: Readable.toWeb(createReadStream(path)) as ReadableStream<Uint8Array>, size: found.size } : null;
 }
 
-export async function removeBytes(id: string) {
-  await rm(location(id), { force: true });
-  await rm(`${location(id)}.tmp`, { force: true });
+export async function removeBytes(key: string) {
+  await rm(location(key), { force: true });
+  await rm(`${location(key)}.tmp`, { force: true });
 }

@@ -1,12 +1,11 @@
-const MAX_SIDE = 1600;
-
 /**
  * Уменьшаем фото в браузере: быстрее загрузка с телефона, учитывается поворот
  * из EXIF, а сами EXIF-метаданные (геолокация и т.п.) не уходят на сервер.
+ * Сервер всё равно пересобирает фото сам: запрос мог прийти не из браузера.
  */
-export async function prepareImage(file: File): Promise<Blob> {
+export async function prepareImage(file: File, maxSide: number): Promise<Blob> {
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);

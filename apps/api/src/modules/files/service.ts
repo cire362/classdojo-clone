@@ -4,11 +4,15 @@ import { env } from '../../platform/env.js';
 import { HttpError, notFound } from '../../platform/errors.js';
 import { putBytes, readBytes, removeBytes } from '../../platform/storage.js';
 import { lockGroup } from '../access/index.js';
+import { isPhoto, rebuildPhoto } from './photo.js';
 import { sniffType } from './sniff.js';
 
 /** Загрузка и удаление файлов. Какой файл кому показывать, решают routes через модуль access */
 const PURGE_BATCH = 500;
 const MAX_NAME = 120;
+
+/** Уменьшенная копия фото для списков и ленты */
+export const previewKey = (id: string) => `${id}-preview`;
 
 type Owner = { groupId: string; studentId?: undefined } | { studentId: string; groupId?: undefined };
 
@@ -32,9 +36,11 @@ const view = (f: Omit<FileInfo, 'createdAt'> & { createdAt: Date }): FileInfo =>
  */
 export async function storeFile(owner: Owner, groupId: string, uploaderId: string, file: File): Promise<FileInfo> {
   if (file.size > env.maxFileBytes) throw new HttpError(413, 'Файл слишком большой');
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const mime = sniffType(bytes);
-  if (!mime) throw new HttpError(415, 'Подходят только фото JPEG, PNG, WebP и файлы PDF');
+  const raw = new Uint8Array(await file.arrayBuffer());
+  const mime = sniffType(raw);
+  if (!mime) throw new HttpError(415, 'Подходят только фото JPEG и PNG и файлы PDF');
+  const photo = isPhoto(mime) ? await rebuildPhoto(raw, mime) : null;
+  const bytes = photo?.full ?? raw;
   const row = await prisma.$transaction(async (tx) => {
     await lockGroup(tx, groupId);
     const { _sum } = await tx.storedFile.aggregate({
@@ -46,6 +52,7 @@ export async function storeFile(owner: Owner, groupId: string, uploaderId: strin
   });
   try {
     await putBytes(row.id, bytes);
+    if (photo) await putBytes(previewKey(row.id), photo.preview);
   } catch (err) {
     await prisma.storedFile.delete({ where: { id: row.id } });
     throw err;
@@ -59,8 +66,9 @@ export async function findFile(id: string) {
   return file;
 }
 
-export async function fileBytes(id: string) {
-  const bytes = await readBytes(id);
+/** preview: уменьшенная копия, если она есть; у PDF её нет, и отдаётся сам файл */
+export async function fileBytes(id: string, preview = false) {
+  const bytes = (preview && (await readBytes(previewKey(id)))) || (await readBytes(id));
   if (!bytes) throw notFound('Файл не найден');
   return bytes;
 }
@@ -79,6 +87,7 @@ export async function purgeDeletedFiles() {
   for (const { id } of queue) {
     try {
       await removeBytes(id);
+      await removeBytes(previewKey(id));
       await prisma.deletedFile.delete({ where: { id } });
     } catch (err) {
       console.error('Не удалось удалить файл', id, err);
