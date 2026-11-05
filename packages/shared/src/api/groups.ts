@@ -49,6 +49,8 @@ export interface LessonStudent extends CardSummary {
   /** Сколько родительских входов выдано */
   parentsCount: number;
   teamId: string | null;
+  /** Фото ученика не публикуются в ленте */
+  noPhotos: boolean;
 }
 
 export interface Team {

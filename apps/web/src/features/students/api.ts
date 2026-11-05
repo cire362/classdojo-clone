@@ -20,7 +20,8 @@ export function previewImport(groupId: string, file: File) {
   return api<ImportPreview>('POST', `/teacher/groups/${groupId}/students/import-preview`, form);
 }
 
-export const renameStudent = (studentId: string, name: string) => api('PATCH', `/teacher/students/${studentId}`, { name });
+export const updateStudent = (studentId: string, data: { name: string; noPhotos: boolean }) =>
+  api('PATCH', `/teacher/students/${studentId}`, data);
 
 export const deleteStudent = (studentId: string) => api('DELETE', `/teacher/students/${studentId}`);
 

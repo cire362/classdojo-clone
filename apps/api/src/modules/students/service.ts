@@ -65,9 +65,9 @@ export async function importPreview(groupId: string, file: File) {
   return { ...preview, names: preview.names.map((name) => ({ name, alreadyInGroup: have.has(name.toLowerCase()) })) };
 }
 
-export async function renameStudent(studentId: string, name: string) {
-  const s = await prisma.student.update({ where: { id: studentId }, data: { name } });
-  return { id: s.id, name: s.name };
+export async function updateStudent(studentId: string, data: { name?: string; noPhotos?: boolean }) {
+  const s = await prisma.student.update({ where: { id: studentId }, data });
+  return { id: s.id, name: s.name, noPhotos: s.noPhotos };
 }
 
 /**

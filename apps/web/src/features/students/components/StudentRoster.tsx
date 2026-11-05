@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowsLeftRightIcon, KeyIcon, PencilSimpleIcon, TrashIcon } from '@phosphor-icons/react';
+import { ArrowsLeftRightIcon, CameraSlashIcon, KeyIcon, PencilSimpleIcon, TrashIcon } from '@phosphor-icons/react';
 import { HeroHead } from '../../hero';
 import type { LessonStudent } from '../../../lib/api';
 
@@ -18,12 +18,15 @@ export function StudentRoster({ students, onRename, onMove, onResetPassword, onD
           <Link to={`/s/${s.id}`} className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-auto">
             <HeroHead parts={s.hero.parts} />
             <span className="min-w-0">
-              <span className="block truncate font-semibold">{s.name}</span>
+              <span className="flex items-center gap-1.5 font-semibold">
+                <span className="truncate">{s.name}</span>
+                {s.noPhotos && <CameraSlashIcon size={16} className="shrink-0 text-ink-soft" aria-label="Фото не публикуются" />}
+              </span>
               <span className="block truncate font-mono text-sm text-ink-soft">{s.login}</span>
             </span>
           </Link>
           <div className="ml-auto flex shrink-0 items-center gap-1">
-            <button className="icon-btn" title="Переименовать" aria-label={`Переименовать ${s.name}`} onClick={() => onRename(s)}>
+            <button className="icon-btn" title="Изменить" aria-label={`Изменить: ${s.name}`} onClick={() => onRename(s)}>
               <PencilSimpleIcon size={20} />
             </button>
             <button className="icon-btn" title="Перевести в другую группу" aria-label={`Перевести ${s.name} в другую группу`} onClick={() => onMove(s)}>

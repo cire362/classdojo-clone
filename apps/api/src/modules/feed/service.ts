@@ -4,13 +4,15 @@ import { scheduledAt } from '../../platform/dates.js';
 import { prisma } from '../../platform/db.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { HttpError, notFound } from '../../platform/errors.js';
-import { ARCHIVED_MESSAGE, groupsOf } from '../access/index.js';
+import { ARCHIVED_MESSAGE, groupsOf, lockGroup } from '../access/index.js';
+import { addFileRows, prepareUpload, purgeDeletedFiles, writeUploads, type Upload } from '../files/index.js';
 
 /** Лента класса: объявления преподавателей группы для учеников и их родителей */
 export const MAX_POST_LENGTH = 2000;
 const PAGE = 100;
 const MAX_PINNED = 3;
 const COMMENTS_SHOWN = 50;
+export const MAX_PHOTOS = 10;
 
 export type Viewer = { accountId: string; role: 'teacher' | 'student' | 'parent'; teacherId?: string | null; isOwner?: boolean };
 
@@ -26,6 +28,7 @@ const POST_INCLUDE = {
   // Новые важнее: показываем последние, но по порядку написания
   comments: { orderBy: { createdAt: 'desc' }, take: COMMENTS_SHOWN },
   group: { select: { feedComments: true, archivedAt: true } },
+  files: { select: { id: true }, orderBy: { position: 'asc' } },
 } as const;
 
 type LoadedPost = Prisma.PostGetPayload<{ include: typeof POST_INCLUDE }>;
@@ -37,6 +40,7 @@ function postView(p: LoadedPost, viewer: Viewer, now: Date): FeedPost {
   return {
     id: p.id,
     text: p.text,
+    photos: p.files.map((f) => f.id),
     createdAt: p.createdAt.toISOString(),
     author: p.author.name,
     // Удалить запись может её автор и создатель группы
@@ -111,9 +115,29 @@ export async function markFeedRead(
   `;
 }
 
-export async function createPost(groupId: string, viewer: Viewer, text: string, publishAt?: string): Promise<FeedPost> {
+/**
+ * Запись с фото создаётся целиком или никак: фото пересобираются заранее, строки появляются в одной
+ * транзакции с записью, а при сбое записи на диск запись удаляется вместе с ними.
+ */
+export async function createPost(groupId: string, viewer: Viewer, text: string, publishAt?: string, photos: File[] = []) {
+  if (photos.length > MAX_PHOTOS) throw new HttpError(400, `В записи может быть не больше ${MAX_PHOTOS} фото`);
+  if (!text && !photos.length) throw new HttpError(400, 'Напишите текст или добавьте фото');
   const at = publishAt ? scheduledAt(publishAt) : undefined;
-  const post = await prisma.post.create({ data: { groupId, authorId: viewer.teacherId!, text, ...(at ? { createdAt: at } : {}) } });
+  const uploads: Upload[] = [];
+  for (const photo of photos) uploads.push(await prepareUpload(photo, true));
+  const { post, rows } = await prisma.$transaction(async (tx) => {
+    await lockGroup(tx, groupId);
+    const post = await tx.post.create({ data: { groupId, authorId: viewer.teacherId!, text, ...(at ? { createdAt: at } : {}) } });
+    const rows = await addFileRows(tx, groupId, { groupId }, viewer.accountId, uploads, { postId: post.id, visibleFrom: at });
+    return { post, rows };
+  });
+  try {
+    await writeUploads(rows, uploads);
+  } catch (err) {
+    await prisma.post.delete({ where: { id: post.id } });
+    await purgeDeletedFiles();
+    throw err;
+  }
   return feedPost(groupId, post.id, viewer);
 }
 
@@ -126,6 +150,7 @@ export async function schedulePost(groupId: string, authorId: string, text: stri
 /** Снимает запись, только пока она не вышла: вышедшую уже могли прочитать */
 export async function dropScheduledPost(postId: string) {
   await prisma.post.deleteMany({ where: { id: postId, createdAt: { gt: new Date() } } });
+  await purgeDeletedFiles();
 }
 
 /** Закрепить запись может любой преподаватель группы. Лимит проверяется в транзакции с блокировкой группы */
@@ -149,6 +174,7 @@ export async function deletePost(teacherId: string, postId: string) {
     throw new HttpError(403, 'Удалить запись может её автор или создатель группы');
   }
   await prisma.post.delete({ where: { id: post.id } });
+  await purgeDeletedFiles();
 }
 
 /** Сколько новых записей в лентах групп с момента последнего просмотра */

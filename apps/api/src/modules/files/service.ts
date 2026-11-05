@@ -1,4 +1,5 @@
 import type { FileInfo } from '@heroes/shared/api';
+import type { Prisma } from '../../generated/prisma/client';
 import { prisma } from '../../platform/db.js';
 import { env } from '../../platform/env.js';
 import { HttpError, notFound } from '../../platform/errors.js';
@@ -14,7 +15,10 @@ const MAX_NAME = 120;
 /** Уменьшенная копия фото для списков и ленты */
 export const previewKey = (id: string) => `${id}-preview`;
 
-type Owner = { groupId: string; studentId?: undefined } | { studentId: string; groupId?: undefined };
+export type Owner = { groupId: string; studentId?: undefined } | { studentId: string; groupId?: undefined };
+
+/** Проверенный файл, готовый к записи */
+export type Upload = { name: string; mime: string; bytes: Uint8Array; preview: Uint8Array | null };
 
 /** Имя только для показа и скачивания: на диске файл лежит под своим id */
 function cleanName(name: string) {
@@ -30,31 +34,60 @@ const view = (f: Omit<FileInfo, 'createdAt'> & { createdAt: Date }): FileInfo =>
   createdAt: f.createdAt.toISOString(),
 });
 
-/**
- * Строка создаётся раньше байтов: при сбое останется запись без файла, а не файл, про который никто
- * не знает и который никогда не удалится. Группа блокируется, чтобы параллельные загрузки не обошли лимит.
- */
-export async function storeFile(owner: Owner, groupId: string, uploaderId: string, file: File): Promise<FileInfo> {
+/** Проверка и пересборка фото идут до транзакции: это долго, а группа блокируется ненадолго */
+export async function prepareUpload(file: File, photosOnly = false): Promise<Upload> {
   if (file.size > env.maxFileBytes) throw new HttpError(413, 'Файл слишком большой');
   const raw = new Uint8Array(await file.arrayBuffer());
   const mime = sniffType(raw);
-  if (!mime) throw new HttpError(415, 'Подходят только фото JPEG и PNG и файлы PDF');
+  if (!mime || (photosOnly && !isPhoto(mime))) {
+    throw new HttpError(415, photosOnly ? 'Подходят только фото JPEG и PNG' : 'Подходят только фото JPEG и PNG и файлы PDF');
+  }
   const photo = isPhoto(mime) ? await rebuildPhoto(raw, mime) : null;
-  const bytes = photo?.full ?? raw;
-  const row = await prisma.$transaction(async (tx) => {
+  return { name: cleanName(file.name), mime, bytes: photo?.full ?? raw, preview: photo?.preview ?? null };
+}
+
+/**
+ * Строки файлов в транзакции вызывающего, группа уже заблокирована: параллельные загрузки не обойдут лимит.
+ * Строки создаются раньше байтов: при сбое останется запись без файла, а не файл, про который никто не знает.
+ */
+export async function addFileRows(
+  tx: Prisma.TransactionClient,
+  groupId: string,
+  owner: Owner,
+  uploaderId: string,
+  uploads: Upload[],
+  place: { postId?: string; visibleFrom?: Date } = {},
+) {
+  const { _sum } = await tx.storedFile.aggregate({ where: { OR: [{ groupId }, { student: { groupId } }] }, _sum: { size: true } });
+  const adding = uploads.reduce((sum, u) => sum + u.bytes.length, 0);
+  if ((_sum.size ?? 0) + adding > env.groupFilesQuota) throw new HttpError(409, 'Место для файлов группы закончилось');
+  const rows = [];
+  for (const [position, u] of uploads.entries()) {
+    rows.push(await tx.storedFile.create({
+      data: { ...owner, ...place, position, uploadedById: uploaderId, name: u.name, mime: u.mime, size: u.bytes.length },
+    }));
+  }
+  return rows;
+}
+
+/** Байты после транзакции. При сбое вызывающий удаляет строки, а очередь сотрёт уже записанное */
+export async function writeUploads(rows: { id: string }[], uploads: Upload[]) {
+  for (const [i, { id }] of rows.entries()) {
+    await putBytes(id, uploads[i].bytes);
+    if (uploads[i].preview) await putBytes(previewKey(id), uploads[i].preview!);
+  }
+}
+
+export async function storeFile(owner: Owner, groupId: string, uploaderId: string, file: File): Promise<FileInfo> {
+  const upload = await prepareUpload(file);
+  const [row] = await prisma.$transaction(async (tx) => {
     await lockGroup(tx, groupId);
-    const { _sum } = await tx.storedFile.aggregate({
-      where: { OR: [{ groupId }, { student: { groupId } }] },
-      _sum: { size: true },
-    });
-    if ((_sum.size ?? 0) + bytes.length > env.groupFilesQuota) throw new HttpError(409, 'Место для файлов группы закончилось');
-    return tx.storedFile.create({ data: { ...owner, uploadedById: uploaderId, name: cleanName(file.name), mime, size: bytes.length } });
+    return addFileRows(tx, groupId, owner, uploaderId, [upload]);
   });
   try {
-    await putBytes(row.id, bytes);
-    if (photo) await putBytes(previewKey(row.id), photo.preview);
+    await writeUploads([row], [upload]);
   } catch (err) {
-    await prisma.storedFile.delete({ where: { id: row.id } });
+    await deleteFile(row.id);
     throw err;
   }
   return view(row);
@@ -79,8 +112,8 @@ export async function deleteFile(id: string) {
 }
 
 /**
- * Удаляет с диска файлы, строки которых исчезли: триггер в базе ловит и каскады от ученика, группы
- * и преподавателя. Ошибка диска не мешает удалению в базе: файл уже недоступен, очистка повторится.
+ * Удаляет с диска файлы, строки которых исчезли: триггер в базе ловит и каскады от ученика, группы,
+ * записи ленты и преподавателя. Ошибка диска не мешает удалению в базе: файл уже недоступен, очистка повторится.
  */
 export async function purgeDeletedFiles() {
   const queue = await prisma.deletedFile.findMany({ take: PURGE_BATCH, orderBy: { deletedAt: 'asc' } });

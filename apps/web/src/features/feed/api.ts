@@ -4,7 +4,15 @@ import { api, type FeedPost } from '../../lib/api';
 /** Адрес ленты свой у каждой роли, поэтому его передаёт страница */
 export const fetchPosts = (path: string) => api<FeedPost[]>('GET', path);
 
-export const createPost = (path: string, text: string, publishAt?: string) => api<FeedPost>('POST', path, { text, publishAt });
+/** Запись с фото уходит одним запросом multipart: сервер сохранит её целиком или никак */
+export function createPost(path: string, text: string, publishAt?: string, photos: Blob[] = []) {
+  if (!photos.length) return api<FeedPost>('POST', path, { text, publishAt });
+  const data = new FormData();
+  data.append('text', text);
+  if (publishAt) data.append('publishAt', publishAt);
+  photos.forEach((photo, i) => data.append('photo', photo, `photo-${i + 1}.jpg`));
+  return api<FeedPost>('POST', path, data);
+}
 
 export const deletePost = (postId: string) => api('DELETE', `/teacher/posts/${postId}`);
 

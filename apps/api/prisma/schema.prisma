@@ -142,6 +142,9 @@ model Student {
   groupId         String
   group           Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   createdAt       DateTime @default(now())
+  /// Фото ученика не публикуются, например без согласия родителей. Это напоминание преподавателю:
+  /// лиц на снимках система не распознаёт
+  noPhotos        Boolean  @default(false)
   /// До какого уровня ученик уже видел поздравление
   celebratedLevel Int      @default(1)
   /// До какого уровня ученик уже видел новые детали в конструкторе
@@ -250,7 +253,15 @@ model StoredFile {
   mime         String
   size         Int
   createdAt    DateTime @default(now())
+  /// Фото записи ленты: удаляются вместе с ней
+  postId       String?
+  post         Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  /// Порядок внутри записи
+  position     Int      @default(0)
+  /// До этого момента файл видят только преподаватели: так фото отложенной записи не откроются раньше неё
+  visibleFrom  DateTime?
 
+  @@index([postId])
   @@index([groupId])
   @@index([studentId])
   @@index([uploadedById])
@@ -397,6 +408,7 @@ model Post {
   reactions PostReaction[]
   comments  PostComment[]
   reminderFor ClassEvent?
+  files     StoredFile[]
 
   @@index([groupId, createdAt])
 }

@@ -83,6 +83,7 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
       hero: { name: s.hero?.name ?? '', parts: normalizeHero(s.hero?.parts) },
       parentsCount: s._count.parents,
       teamId: s.teamId,
+      noPhotos: s.noPhotos,
       ...summaries.get(s.id)!,
     })),
     reasons,

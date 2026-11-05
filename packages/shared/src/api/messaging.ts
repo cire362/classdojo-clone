@@ -39,6 +39,8 @@ export interface FeedComment {
 export interface FeedPost {
   id: string;
   text: string;
+  /** id фото по порядку: GET /api/files/:id, превью ?size=preview */
+  photos: string[];
   /** Момент публикации; у отложенной записи он в будущем */
   createdAt: string;
   author: string;

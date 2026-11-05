@@ -9,9 +9,10 @@ import { PostCard } from './PostCard';
 import { PostForm } from './PostForm';
 
 /** Лента класса. С compose — форма для преподавателя (postTo — адрес публикации) */
-export function Feed({ path, postTo, readOnlyNote, commentsNote, onLoaded }: {
+export function Feed({ path, postTo, noPhotoNames, readOnlyNote, commentsNote, onLoaded }: {
   path: string;
   postTo?: string;
+  noPhotoNames?: string[];
   readOnlyNote?: string;
   commentsNote?: string;
   onLoaded?: () => void;
@@ -39,7 +40,9 @@ export function Feed({ path, postTo, readOnlyNote, commentsNote, onLoaded }: {
   return (
     <div className="max-w-2xl space-y-4">
       <h2 className="sr-only">Лента класса</h2>
-      {postTo && <PostForm postTo={postTo} onPosted={(post) => setData((current) => [post, ...(current ?? [])])} />}
+      {postTo && (
+        <PostForm postTo={postTo} noPhotoNames={noPhotoNames} onPosted={(post) => setData((current) => [post, ...(current ?? [])])} />
+      )}
       {readOnlyNote && <p className="text-sm text-ink-soft">{readOnlyNote}</p>}
       {error && <ErrorBox message={error} onRetry={reload} />}
       {!data && !error && <Skeleton className="h-32" />}

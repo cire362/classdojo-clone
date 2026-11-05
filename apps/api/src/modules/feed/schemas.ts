@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { MAX_POST_LENGTH } from './service.js';
 
 export const PostBody = z.object({
-  text: z.string().trim().min(1, 'Напишите текст').max(MAX_POST_LENGTH),
+  text: z.string().trim().max(MAX_POST_LENGTH).default(''),
   publishAt: z.string().datetime().optional(),
 });
 export const PinBody = z.object({ pinned: z.boolean() });

@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../../platform/auth.js';
+import { notFound } from '../../platform/errors.js';
 import { groupReader, studentReader } from '../access/index.js';
 import { fileBytes, findFile } from './service.js';
 
@@ -12,6 +13,7 @@ export const fileRoutes = new Hono<AppEnv>().get('/:id', async (c) => {
   const user = c.get('user');
   if (file.groupId) await groupReader(user, file.groupId);
   else await studentReader(user, file.studentId!);
+  if (file.visibleFrom && file.visibleFrom > new Date() && !user.teacherId) throw notFound('Файл не найден');
   // Файл не меняется, но права могут: no-cache проверяет их при каждом показе, а 304 экономит трафик
   const preview = c.req.query('size') === 'preview';
   const headers = {

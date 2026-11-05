@@ -11,7 +11,7 @@ import {
   deleteStudent,
   importPreview,
   moveStudent,
-  renameStudent,
+  updateStudent,
   resetGroupPasswords,
   resetStudentPassword,
 } from './service.js';
@@ -46,8 +46,7 @@ export const studentAdminRoutes = new Hono<AppEnv>()
   })
   .patch('/students/:id', async (c) => {
     const student = await teacherStudent(c.get('user'), c.req.param('id'));
-    const { name } = parse(StudentPatch, await c.req.json().catch(() => null));
-    return c.json(await renameStudent(student.id, name));
+    return c.json(await updateStudent(student.id, parse(StudentPatch, await c.req.json().catch(() => null))));
   })
   .delete('/students/:id', async (c) => {
     const student = await teacherStudent(c.get('user'), c.req.param('id'));

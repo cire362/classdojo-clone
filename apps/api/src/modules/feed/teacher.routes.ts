@@ -1,10 +1,26 @@
 import { Hono, type Context } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import type { AppEnv } from '../../platform/auth.js';
-import { parse } from '../../platform/errors.js';
+import { HttpError, parse } from '../../platform/errors.js';
 import { teacherGroup } from '../access/index.js';
 import { addComment, deleteComment } from './comments.service.js';
 import { CommentBody, PinBody, PostBody, ReactionBody } from './schemas.js';
-import { createPost, deletePost, groupFeed, setPinned, setReaction, type Viewer } from './service.js';
+import { MAX_PHOTOS, createPost, deletePost, groupFeed, setPinned, setReaction, type Viewer } from './service.js';
+
+/** Фото уже уменьшены браузером; предел с запасом на случай, если запрос пришёл не из браузера */
+const MAX_POST_BYTES = 40 * 1024 * 1024;
+
+/** Запись без фото приходит JSON, с фото — multipart: поля text и publishAt и файлы photo */
+async function postInput(c: Context<AppEnv>) {
+  if (!c.req.header('content-type')?.startsWith('multipart/form-data')) {
+    return { ...parse(PostBody, await c.req.json().catch(() => null)), photos: [] as File[] };
+  }
+  const body = await c.req.parseBody({ all: true });
+  const photos = [body.photo ?? []].flat().filter((p): p is File => p instanceof File);
+  if (photos.length > MAX_PHOTOS) throw new HttpError(400, `В записи может быть не больше ${MAX_PHOTOS} фото`);
+  const field = (name: string) => (typeof body[name] === 'string' ? (body[name] as string) : undefined);
+  return { ...parse(PostBody, { text: field('text'), publishAt: field('publishAt') || undefined }), photos };
+}
 
 /** Группа и зритель запроса; изменения закрыты в архивной группе */
 async function access(c: Context<AppEnv>, writable = false) {
@@ -20,11 +36,20 @@ export const teacherFeedRoutes = new Hono<AppEnv>()
     const { group, viewer } = await access(c);
     return c.json(await groupFeed(group.id, viewer));
   })
-  .post('/groups/:id/feed', async (c) => {
-    const { group, viewer } = await access(c, true);
-    const { text, publishAt } = parse(PostBody, await c.req.json().catch(() => null));
-    return c.json(await createPost(group.id, viewer, text, publishAt), 201);
-  })
+  .post(
+    '/groups/:id/feed',
+    bodyLimit({
+      maxSize: MAX_POST_BYTES,
+      onError: () => {
+        throw new HttpError(413, 'Фото слишком большие');
+      },
+    }),
+    async (c) => {
+      const { group, viewer } = await access(c, true);
+      const { text, publishAt, photos } = await postInput(c);
+      return c.json(await createPost(group.id, viewer, text, publishAt, photos), 201);
+    },
+  )
   .put('/groups/:id/feed/:postId/pin', async (c) => {
     const { group, viewer } = await access(c, true);
     const { pinned } = parse(PinBody, await c.req.json().catch(() => null));

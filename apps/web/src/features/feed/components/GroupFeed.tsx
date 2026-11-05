@@ -33,6 +33,7 @@ export function GroupFeed() {
         key={String(feedComments)}
         path={`/teacher/groups/${id}/feed`}
         postTo={archived ? undefined : `/teacher/groups/${id}/feed`}
+        noPhotoNames={data.students.filter((s) => s.noPhotos).map((s) => s.name)}
         readOnlyNote={archived ? 'Группа в архиве: новые объявления публиковать нельзя.' : undefined}
       />
     </div>
