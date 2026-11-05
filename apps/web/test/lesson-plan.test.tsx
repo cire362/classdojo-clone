@@ -27,13 +27,14 @@ it('без плана кнопка открывает редактор; пуст
   replyWith();
   renderInGroup(<LessonPage />, groupData());
   open();
-  expect(area()).toHaveFocus();
+  // Фокус окно ставит в следующем кадре: под нагрузкой синхронная проверка не успевала
+  await waitFor(() => expect(area()).toHaveFocus());
   expect(button('Сохранить')).toBeDisabled();
   fireEvent.change(area(), { target: { value: ' Разминка \n\n  \nИтоги\n' } });
   fireEvent.click(button('Сохранить'));
   await screen.findByText('Сейчас, шаг 1 из 2');
   expect(api).toHaveBeenCalledWith('PUT', '/teacher/groups/g1/plan', { steps: ['Разминка', 'Итоги'] });
-  expect(button('Следующий шаг')).toHaveFocus();
+  await waitFor(() => expect(button('Следующий шаг')).toHaveFocus());
 });
 
 it('лимиты видны сразу: больше 20 шагов или длинный шаг не сохранить', () => {
