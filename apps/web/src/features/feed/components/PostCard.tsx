@@ -6,7 +6,7 @@ import { formatDateTime } from '../../../lib/hooks';
 import { useToast } from '../../../ui/Toast';
 import { addComment, deleteComment, setPinned, setReaction } from '../api';
 import { PostComments } from './PostComments';
-import { PostPhotos } from './PostPhotos';
+import { PostMedia } from './PostMedia';
 
 const REACTIONS: Record<ReactionKind, { label: string; icon: typeof HeartIcon }> = {
   like: { label: 'Нравится', icon: ThumbsUpIcon },
@@ -71,7 +71,7 @@ export function PostCard({ post, path, commentsNote, onChange, onDelete }: {
         </div>
       </div>
       {post.text && <p className="mt-2 whitespace-pre-line break-words">{post.text}</p>}
-      <PostPhotos ids={post.photos} />
+      <PostMedia media={post.media} />
       {!post.scheduled && (
         <div role="group" aria-label="Реакции" className="mt-3 flex flex-wrap gap-1.5">
           {REACTION_KINDS.map((kind) => {

@@ -11,7 +11,7 @@ const api = vi.mocked((await import('../src/lib/api')).api);
 beforeEach(() => { api.mockReset(); });
 
 const POST: FeedPost = {
-  id: 'p1', text: 'Экскурсия', photos: [], createdAt: '2026-11-02T10:00:00.000Z', author: 'Анна Сергеевна', canDelete: true, pinned: false, scheduled: false,
+  id: 'p1', text: 'Экскурсия', media: [], createdAt: '2026-11-02T10:00:00.000Z', author: 'Анна Сергеевна', canDelete: true, pinned: false, scheduled: false,
   reactions: { like: 1, heart: 0, star: 0 }, myReaction: null, comments: [], canComment: true, canReact: true, canPin: true,
 };
 const PATH = '/teacher/groups/g1/feed';

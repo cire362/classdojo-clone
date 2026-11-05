@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { prisma } from '../src/platform/db.js';
 import { env } from '../src/platform/env.js';
-import { readBytes } from '../src/platform/storage.js';
+import { sizeOf as storedSize } from '../src/platform/storage.js';
 import { call, login, setupTeacher } from './helpers.js';
 import { picture, sizeOf } from './images.js';
 
@@ -24,19 +24,19 @@ async function parentOf(t: Teacher) {
 }
 
 const photo = (cookie: string, id: string, preview = false) => call('GET', `/api/files/${id}${preview ? '?size=preview' : ''}`, { cookie });
-const onDisk = async (id: string) => (await readBytes(id)) !== null;
+const onDisk = async (id: string) => (await storedSize(id)) !== null;
 
 it('запись с фото видят ученики и родители группы, фото идут по порядку', async () => {
   const t = await setupTeacher(['Маша Иванова']);
   const wide = await picture(90, 30, 'image/jpeg');
   const res = await post(t, { text: 'Экскурсия в музей', photos: [JPEG, wide] });
   expect(res.status).toBe(201);
-  expect(res.body.photos).toHaveLength(2);
-  const [first, second] = res.body.photos;
+  expect(res.body.media).toHaveLength(2);
+  const [first, second] = res.body.media.map((m: { id: string }) => m.id);
 
   const student = await t.studentCookie(0);
   const seen = (await call('GET', '/api/student/feed', { cookie: student })).body;
-  expect(seen[0]).toMatchObject({ text: 'Экскурсия в музей', photos: [first, second] });
+  expect(seen[0]).toMatchObject({ text: 'Экскурсия в музей', media: [{ id: first, kind: 'photo' }, { id: second, kind: 'photo' }] });
   expect(await sizeOf((await photo(student, second)).body)).toEqual({ width: 90, height: 30 });
   expect((await photo(student, first, true)).status).toBe(200);
   expect((await photo(await parentOf(t), first)).status).toBe(200);
@@ -44,10 +44,10 @@ it('запись с фото видят ученики и родители гр�
 
 it('запись может состоять только из фото, но не может быть пустой', async () => {
   const t = await setupTeacher(['Маша Иванова']);
-  expect((await post(t, { photos: [JPEG] })).body).toMatchObject({ text: '', photos: [expect.any(String)] });
+  expect((await post(t, { photos: [JPEG] })).body).toMatchObject({ text: '', media: [{ id: expect.any(String), kind: 'photo' }] });
   expect((await post(t, { text: '   ' })).status).toBe(400);
   expect((await call('POST', feed(t), { cookie: t.cookie, body: { text: '' } })).status).toBe(400);
-  expect((await call('POST', feed(t), { cookie: t.cookie, body: { text: 'Без фото' } })).body.photos).toEqual([]);
+  expect((await call('POST', feed(t), { cookie: t.cookie, body: { text: 'Без фото' } })).body.media).toEqual([]);
 });
 
 it('неподходящий файл отменяет всю запись', async () => {
@@ -71,7 +71,7 @@ it('фото отложенной записи до её выхода видят
   const t = await setupTeacher(['Маша Иванова']);
   const publishAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
   const res = await post(t, { text: 'Сюрприз к празднику', publishAt, photos: [JPEG] });
-  const [id] = res.body.photos;
+  const [{ id }] = res.body.media;
   const student = await t.studentCookie(0);
   const parent = await parentOf(t);
   expect((await photo(t.cookie, id)).status).toBe(200);
@@ -87,9 +87,10 @@ it('фото отложенной записи до её выхода видят
 it('удаление записи стирает её фото с диска', async () => {
   const t = await setupTeacher(['Маша Иванова']);
   const res = await post(t, { text: 'Удалю', photos: [JPEG, JPEG] });
-  for (const id of res.body.photos) expect(await onDisk(id)).toBe(true);
+  const ids = res.body.media.map((m: { id: string }) => m.id);
+  for (const id of ids) expect(await onDisk(id)).toBe(true);
   expect((await call('DELETE', `/api/teacher/posts/${res.body.id}`, { cookie: t.cookie })).status).toBe(200);
-  for (const id of res.body.photos) {
+  for (const id of ids) {
     expect(await onDisk(id)).toBe(false);
     expect(await onDisk(`${id}-preview`)).toBe(false);
     expect((await photo(t.cookie, id)).status).toBe(404);
@@ -100,7 +101,7 @@ it('чужой преподаватель и архивная группа', asy
   const t = await setupTeacher(['Маша Иванова']);
   const other = await setupTeacher(['Петя Сидоров']);
   const res = await post(t, { text: 'Наше', photos: [JPEG] });
-  expect((await photo(other.cookie, res.body.photos[0])).status).toBe(404);
+  expect((await photo(other.cookie, res.body.media[0].id)).status).toBe(404);
   expect((await call('POST', feed(t), { cookie: other.cookie, raw: new FormData() })).status).toBe(404);
   await call('POST', `/api/teacher/groups/${t.group.id}/archive`, { cookie: t.cookie });
   expect((await post(t, { text: 'В архив', photos: [JPEG] })).status).toBe(409);

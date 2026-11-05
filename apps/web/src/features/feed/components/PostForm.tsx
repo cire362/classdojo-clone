@@ -3,9 +3,10 @@ import { WarningIcon } from '@phosphor-icons/react';
 import type { FeedPost } from '../../../lib/api';
 import { localDateTime } from '../../../lib/hooks';
 import { prepareImage } from '../../../lib/photo';
+import { videoPoster } from '../../../lib/video';
 import { useToast } from '../../../ui/Toast';
-import { createPost } from '../api';
-import { PhotoPicker, type PickedPhoto } from './PhotoPicker';
+import { createPost, type PostFiles } from '../api';
+import { MediaPicker, type PickedMedia } from './MediaPicker';
 
 const MAX = 2000;
 /** Как на сервере: больше не нужно для экрана и проектора */
@@ -19,7 +20,7 @@ export function PostForm({ postTo, noPhotoNames = [], onPosted }: {
 }) {
   const toast = useToast();
   const [text, setText] = useState('');
-  const [photos, setPhotos] = useState<PickedPhoto[]>([]);
+  const [media, setMedia] = useState<PickedMedia[]>([]);
   const [later, setLater] = useState(false);
   const [publishAt, setPublishAt] = useState('');
   const [busy, setBusy] = useState(false);
@@ -29,12 +30,15 @@ export function PostForm({ postTo, noPhotoNames = [], onPosted }: {
     setBusy(true);
     try {
       // По одному: несколько больших снимков сразу заняли бы много памяти телефона
-      const prepared: Blob[] = [];
-      for (const photo of photos) prepared.push(await prepareImage(photo.file, PHOTO_SIDE));
-      onPosted(await createPost(postTo, text.trim(), later ? new Date(publishAt).toISOString() : undefined, prepared));
-      photos.forEach((p) => URL.revokeObjectURL(p.url));
+      const files: PostFiles = { photos: [] };
+      for (const item of media) {
+        if (item.kind === 'photo') files.photos.push(await prepareImage(item.file, PHOTO_SIDE));
+        else files.video = { file: item.file, poster: await videoPoster(item.file) };
+      }
+      onPosted(await createPost(postTo, text.trim(), later ? new Date(publishAt).toISOString() : undefined, files));
+      media.forEach((m) => URL.revokeObjectURL(m.url));
       setText('');
-      setPhotos([]);
+      setMedia([]);
       setLater(false);
       setPublishAt('');
     } catch (err) {
@@ -57,11 +61,11 @@ export function PostForm({ postTo, noPhotoNames = [], onPosted }: {
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
-      <PhotoPicker photos={photos} onChange={setPhotos} disabled={busy} />
-      {photos.length > 0 && noPhotoNames.length > 0 && (
+      <MediaPicker media={media} onChange={setMedia} disabled={busy} />
+      {media.length > 0 && noPhotoNames.length > 0 && (
         <p className="flex gap-2 rounded-xl bg-surface-2 px-3 py-2 text-sm">
           <WarningIcon size={18} className="mt-0.5 shrink-0" aria-hidden />
-          <span>Проверьте снимки: нельзя публиковать фото {noPhotoNames.join(', ')}.</span>
+          <span>Проверьте снимки и видео. Нельзя публиковать: {noPhotoNames.join(', ')}.</span>
         </p>
       )}
       <div className="flex flex-wrap items-center gap-3">
@@ -82,8 +86,8 @@ export function PostForm({ postTo, noPhotoNames = [], onPosted }: {
       </div>
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm text-ink-soft tabular-nums">{text.length > MAX - 200 ? `${text.length} / ${MAX}` : ''}</span>
-        <button className="btn btn-primary" disabled={busy || (!text.trim() && !photos.length) || (later && !publishAt)}>
-          {busy && photos.length ? 'Загружаем фото…' : later ? 'Запланировать' : 'Опубликовать'}
+        <button className="btn btn-primary" disabled={busy || (!text.trim() && !media.length) || (later && !publishAt)}>
+          {busy && media.length ? 'Загружаем…' : later ? 'Запланировать' : 'Опубликовать'}
         </button>
       </div>
     </form>

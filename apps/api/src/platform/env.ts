@@ -16,6 +16,8 @@ export const env = {
   filesDir: process.env.FILES_DIR ?? './data/files',
   /** Максимальный размер одного файла, байт */
   maxFileBytes: num('MAX_FILE_BYTES', 10 * 1024 * 1024),
+  /** Максимальный размер видео: его нельзя уменьшить на сервере без перекодирования */
+  maxVideoBytes: num('MAX_VIDEO_BYTES', 100 * 1024 * 1024),
   /** Сколько файлов может занимать группа вместе с файлами своих учеников, байт */
   groupFilesQuota: num('GROUP_FILES_QUOTA', 500 * 1024 * 1024),
   loginRateLimit: num('LOGIN_RATE_LIMIT', 10),

@@ -12,7 +12,7 @@ export const MAX_POST_LENGTH = 2000;
 const PAGE = 100;
 const MAX_PINNED = 3;
 const COMMENTS_SHOWN = 50;
-export const MAX_PHOTOS = 10;
+export const MAX_MEDIA = 10;
 
 export type Viewer = { accountId: string; role: 'teacher' | 'student' | 'parent'; teacherId?: string | null; isOwner?: boolean };
 
@@ -28,7 +28,7 @@ const POST_INCLUDE = {
   // Новые важнее: показываем последние, но по порядку написания
   comments: { orderBy: { createdAt: 'desc' }, take: COMMENTS_SHOWN },
   group: { select: { feedComments: true, archivedAt: true } },
-  files: { select: { id: true }, orderBy: { position: 'asc' } },
+  files: { select: { id: true, mime: true }, orderBy: { position: 'asc' } },
 } as const;
 
 type LoadedPost = Prisma.PostGetPayload<{ include: typeof POST_INCLUDE }>;
@@ -40,7 +40,7 @@ function postView(p: LoadedPost, viewer: Viewer, now: Date): FeedPost {
   return {
     id: p.id,
     text: p.text,
-    photos: p.files.map((f) => f.id),
+    media: p.files.map((f) => ({ id: f.id, kind: f.mime.startsWith('video/') ? ('video' as const) : ('photo' as const) })),
     createdAt: p.createdAt.toISOString(),
     author: p.author.name,
     // Удалить запись может её автор и создатель группы
@@ -115,16 +115,21 @@ export async function markFeedRead(
   `;
 }
 
+/** Фото записи и одно видео с обложкой, снятой браузером */
+export type PostMedia = { photos: File[]; video?: File; poster?: File };
+
 /**
- * Запись с фото создаётся целиком или никак: фото пересобираются заранее, строки появляются в одной
- * транзакции с записью, а при сбое записи на диск запись удаляется вместе с ними.
+ * Запись с фото и видео создаётся целиком или никак: файлы проверяются заранее, строки появляются в одной
+ * транзакции с записью, а при сбое записи на диск запись удаляется вместе с ними. Видео идёт первым.
  */
-export async function createPost(groupId: string, viewer: Viewer, text: string, publishAt?: string, photos: File[] = []) {
-  if (photos.length > MAX_PHOTOS) throw new HttpError(400, `В записи может быть не больше ${MAX_PHOTOS} фото`);
-  if (!text && !photos.length) throw new HttpError(400, 'Напишите текст или добавьте фото');
+export async function createPost(groupId: string, viewer: Viewer, text: string, publishAt?: string, media?: PostMedia) {
+  const files = [...(media?.video ? [media.video] : []), ...(media?.photos ?? [])];
+  if (files.length > MAX_MEDIA) throw new HttpError(400, `В записи может быть не больше ${MAX_MEDIA} фото и видео`);
+  if (!text && !files.length) throw new HttpError(400, 'Напишите текст или добавьте фото');
   const at = publishAt ? scheduledAt(publishAt) : undefined;
   const uploads: Upload[] = [];
-  for (const photo of photos) uploads.push(await prepareUpload(photo, true));
+  for (const file of files) uploads.push(await prepareUpload(file, 'media', file === media?.video ? media.poster : undefined));
+  if (uploads.filter((u) => u.mime.startsWith('video/')).length > 1) throw new HttpError(400, 'В записи может быть одно видео');
   const { post, rows } = await prisma.$transaction(async (tx) => {
     await lockGroup(tx, groupId);
     const post = await tx.post.create({ data: { groupId, authorId: viewer.teacherId!, text, ...(at ? { createdAt: at } : {}) } });

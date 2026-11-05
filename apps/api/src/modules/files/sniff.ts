@@ -1,3 +1,5 @@
+import { isVideo } from './video.js';
+
 /**
  * Тип определяется по содержимому: имя и Content-Type задаёт отправитель.
  * SVG и HTML не принимаются никогда: браузер выполнил бы скрипт из них на нашем адресе.
@@ -11,5 +13,6 @@ export function sniffType(bytes: Uint8Array): string | null {
   if (startsWith(bytes, [0xff, 0xd8, 0xff])) return 'image/jpeg';
   if (startsWith(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return 'image/png';
   if (startsWith(bytes, ascii('%PDF-'))) return 'application/pdf';
+  if (isVideo(bytes)) return 'video/mp4';
   return null;
 }

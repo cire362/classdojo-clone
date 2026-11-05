@@ -19,11 +19,15 @@ export async function putBytes(key: string, bytes: Uint8Array) {
   await rename(`${path}.tmp`, path);
 }
 
-/** Поток байтов с размером или null, если на диске ничего нет */
-export async function readBytes(key: string): Promise<{ stream: ReadableStream<Uint8Array>; size: number } | null> {
-  const path = location(key);
-  const found = await stat(path).catch(() => null);
-  return found ? { stream: Readable.toWeb(createReadStream(path)) as ReadableStream<Uint8Array>, size: found.size } : null;
+/** Размер в байтах или null, если на диске ничего нет */
+export async function sizeOf(key: string): Promise<number | null> {
+  const found = await stat(location(key)).catch(() => null);
+  return found?.size ?? null;
+}
+
+/** Поток байтов целиком или части: end включительно, как в заголовке Range */
+export function streamBytes(key: string, range?: { start: number; end: number }): ReadableStream<Uint8Array> {
+  return Readable.toWeb(createReadStream(location(key), range)) as ReadableStream<Uint8Array>;
 }
 
 export async function removeBytes(key: string) {

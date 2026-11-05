@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { prisma } from '../src/platform/db.js';
 import { env } from '../src/platform/env.js';
-import { readBytes } from '../src/platform/storage.js';
+import { sizeOf as storedSize } from '../src/platform/storage.js';
 import { purgeDeletedFiles } from '../src/modules/files/index.js';
 import { hashPassword } from '../src/platform/credentials.js';
 import { call, login, setupTeacher } from './helpers.js';
@@ -38,7 +38,7 @@ async function parentOf(t: Teacher, index: number) {
   return login(issued.login, issued.password);
 }
 
-const onDisk = async (id: string) => (await readBytes(id)) !== null;
+const onDisk = async (id: string) => (await storedSize(id)) !== null;
 
 it('преподаватель загружает файл, участник группы получает те же байты', async () => {
   const t = await setupTeacher(['Маша Иванова']);

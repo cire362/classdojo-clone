@@ -3,10 +3,11 @@ import type { Prisma } from '../../generated/prisma/client';
 import { prisma } from '../../platform/db.js';
 import { env } from '../../platform/env.js';
 import { HttpError, notFound } from '../../platform/errors.js';
-import { putBytes, readBytes, removeBytes } from '../../platform/storage.js';
+import { putBytes, removeBytes, sizeOf } from '../../platform/storage.js';
 import { lockGroup } from '../access/index.js';
 import { isPhoto, rebuildPhoto } from './photo.js';
 import { sniffType } from './sniff.js';
+import { stripVideoMetadata } from './video.js';
 
 /** Загрузка и удаление файлов. Какой файл кому показывать, решают routes через модуль access */
 const PURGE_BATCH = 500;
@@ -34,16 +35,36 @@ const view = (f: Omit<FileInfo, 'createdAt'> & { createdAt: Date }): FileInfo =>
   createdAt: f.createdAt.toISOString(),
 });
 
-/** Проверка и пересборка фото идут до транзакции: это долго, а группа блокируется ненадолго */
-export async function prepareUpload(file: File, photosOnly = false): Promise<Upload> {
-  if (file.size > env.maxFileBytes) throw new HttpError(413, 'Файл слишком большой');
+/**
+ * documents — фото и PDF для работ и вложений, media — фото и видео для ленты.
+ * Проверка, пересборка фото и очистка видео идут до транзакции: это долго, а группа блокируется ненадолго.
+ * У видео превью — обложка, снятая браузером: сервер не декодирует видео.
+ */
+export async function prepareUpload(file: File, kind: 'documents' | 'media' = 'documents', poster?: File): Promise<Upload> {
+  const limit = kind === 'media' ? Math.max(env.maxFileBytes, env.maxVideoBytes) : env.maxFileBytes;
+  if (file.size > limit) throw new HttpError(413, 'Файл слишком большой');
   const raw = new Uint8Array(await file.arrayBuffer());
   const mime = sniffType(raw);
-  if (!mime || (photosOnly && !isPhoto(mime))) {
-    throw new HttpError(415, photosOnly ? 'Подходят только фото JPEG и PNG' : 'Подходят только фото JPEG и PNG и файлы PDF');
+  const allowed = kind === 'media' ? isPhoto(mime ?? '') || mime === 'video/mp4' : mime !== 'video/mp4';
+  if (!mime || !allowed) {
+    const hint = kind === 'media' ? 'Подходят фото JPEG и PNG и видео MP4 и MOV' : 'Подходят только фото JPEG и PNG и файлы PDF';
+    throw new HttpError(415, hint);
   }
+  if (mime === 'video/mp4') {
+    return { name: cleanName(file.name), mime, bytes: stripVideoMetadata(raw), preview: poster ? await posterBytes(poster) : null };
+  }
+  if (raw.length > env.maxFileBytes) throw new HttpError(413, 'Фото слишком большое');
   const photo = isPhoto(mime) ? await rebuildPhoto(raw, mime) : null;
   return { name: cleanName(file.name), mime, bytes: photo?.full ?? raw, preview: photo?.preview ?? null };
+}
+
+/** Обложка проходит ту же пересборку, что и фото: метаданных в ней тоже не будет */
+async function posterBytes(poster: File) {
+  if (poster.size > env.maxFileBytes) throw new HttpError(413, 'Обложка видео слишком большая');
+  const raw = new Uint8Array(await poster.arrayBuffer());
+  const mime = sniffType(raw);
+  if (!mime || !isPhoto(mime)) throw new HttpError(415, 'Обложка видео должна быть JPEG или PNG');
+  return (await rebuildPhoto(raw, mime)).full;
 }
 
 /**
@@ -99,11 +120,19 @@ export async function findFile(id: string) {
   return file;
 }
 
-/** preview: уменьшенная копия, если она есть; у PDF её нет, и отдаётся сам файл */
-export async function fileBytes(id: string, preview = false) {
-  const bytes = (preview && (await readBytes(previewKey(id)))) || (await readBytes(id));
-  if (!bytes) throw notFound('Файл не найден');
-  return bytes;
+/**
+ * Ключ на диске и размер. preview: уменьшенная копия фото или обложка видео. У PDF превью нет, и отдаётся сам
+ * файл, а видео без обложки отвечает 404: подставлять вместо картинки целый ролик нельзя.
+ */
+export async function fileBytes(file: { id: string; mime: string }, preview = false) {
+  if (preview) {
+    const size = await sizeOf(previewKey(file.id));
+    if (size !== null) return { key: previewKey(file.id), size };
+    if (file.mime.startsWith('video/')) throw notFound('У видео нет обложки');
+  }
+  const size = await sizeOf(file.id);
+  if (size === null) throw notFound('Файл не найден');
+  return { key: file.id, size };
 }
 
 export async function deleteFile(id: string) {
