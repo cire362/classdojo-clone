@@ -6,6 +6,7 @@ import { unreadPosts } from '../feed/index.js';
 import { isQuietNow, unreadMessages } from '../messages/index.js';
 import { pendingRequestsOf, unreadRewards } from '../rewards/index.js';
 import { unseenWorks } from '../works/index.js';
+import { unseenAssignments } from '../assignments/index.js';
 
 /** Значки в шапке: сообщения, лента, выданные награды и решения по работам ученика или ожидающие запросы преподавателя. */
 export async function notifications(user: AuthUser): Promise<Notifications> {
@@ -23,16 +24,17 @@ export async function notifications(user: AuthUser): Promise<Notifications> {
       unreadMessages(user.accountId, links),
       prisma.rewardRequest.count({ where: pendingRequestsOf(user.teacherId) }),
     ]);
-    return { messages: quiet ? 0 : unread, feed: 0, rewards, works: 0 };
+    return { messages: quiet ? 0 : unread, feed: 0, rewards, works: 0, assignments: 0 };
   }
   if (user.studentId) {
     const s = await prisma.student.findUniqueOrThrow({ where: { id: user.studentId }, select: { groupId: true, rewardsReadAt: true } });
-    const [feed, rewards, works] = await Promise.all([
+    const [feed, rewards, works, assignments] = await Promise.all([
       unreadPosts(user.accountId, [s.groupId]),
       unreadRewards(user.studentId, s.rewardsReadAt),
       unseenWorks(user.studentId),
+      unseenAssignments(user.studentId),
     ]);
-    return { messages: 0, feed, rewards, works };
+    return { messages: 0, feed, rewards, works, assignments };
   }
   if (user.parentId) {
     const links = await prisma.parentStudent.findMany({
@@ -43,7 +45,7 @@ export async function notifications(user: AuthUser): Promise<Notifications> {
       unreadMessages(user.accountId, links.map((l) => ({ studentId: l.studentId, parentId: user.parentId! }))),
       unreadPosts(user.accountId, [...new Set(links.map((l) => l.student.groupId))]),
     ]);
-    return { messages, feed, rewards: 0, works: 0 };
+    return { messages, feed, rewards: 0, works: 0, assignments: 0 };
   }
-  return { messages: 0, feed: 0, rewards: 0, works: 0 };
+  return { messages: 0, feed: 0, rewards: 0, works: 0, assignments: 0 };
 }

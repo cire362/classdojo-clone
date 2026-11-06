@@ -59,7 +59,7 @@ export async function groupArchive(groupId: string) {
   const group = await prisma.group.findUniqueOrThrow({ where: { id: groupId }, select: { name: true } });
   const [posts, own, students] = await Promise.all([
     prisma.storedFile.findMany({ where: { groupId, postId: { not: null } }, include: { post: true }, ...POST_FILES }),
-    prisma.storedFile.findMany({ where: { groupId, postId: null }, orderBy: { createdAt: 'asc' } }),
+    prisma.storedFile.findMany({ where: { groupId, postId: null }, include: { assignment: true }, orderBy: { createdAt: 'asc' } }),
     prisma.storedFile.findMany({ where: { student: { groupId } }, include: { student: true, work: true }, orderBy: { createdAt: 'asc' } }),
   ]);
   const entries = new Entries();
@@ -68,17 +68,19 @@ export async function groupArchive(groupId: string) {
   for (const f of own) {
     const message = f.broadcastId ? broadcasts.get(f.broadcastId) : undefined;
     if (message) entries.named(`Рассылки/${folder(message.createdAt, message.text, 'Рассылка')}`, f, message.createdAt);
+    else if (f.assignment) entries.named(`Задания/${folder(f.assignment.createdAt, f.assignment.title, 'Задание')}`, f);
     else entries.named('Файлы группы', f);
   }
   for (const f of students) {
     const dir = `Ученики/${clean(f.student!.name) || 'Ученик'}`;
-    entries.named(f.work ? `${dir}/Работы/${folder(f.work.createdAt, f.work.title, 'Работа')}` : dir, f);
+    const kind = f.work?.assignmentId ? 'Задания' : 'Работы';
+    entries.named(f.work ? `${dir}/${kind}/${folder(f.work.createdAt, f.work.title, 'Работа')}` : dir, f);
   }
   const readme = `
 Фото, видео и файлы группы «${group.name}» на ${dateKey()}.
 Лента — фото и видео записей, в том числе скрытых и запланированных.
-Рассылки и Файлы группы — вложения рассылок родителям и файлы, загруженные для всей группы.
-Ученики — вложения переписки с родителями, работы и файлы каждого ученика, в том числе неодобренные работы.
+Рассылки, Задания и Файлы группы — вложения рассылок родителям, файлы заданий и файлы для всей группы.
+Ученики — вложения переписки с родителями, работы, ответы на задания и файлы каждого ученика, в том числе непроверенные.
 Метаданные и геопозиция из фото и видео удалены при загрузке.`;
   return { name: group.name, entries: entries.withReadme(readme) };
 }

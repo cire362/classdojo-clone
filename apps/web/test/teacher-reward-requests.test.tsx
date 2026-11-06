@@ -48,7 +48,7 @@ it('список групп восстанавливается после оши
 
 it('опрос обновляет распределение даже при прежнем общем числе запросов', async () => {
   let group = 'Первая группа';
-  vi.mocked(api).mockImplementation(async (_method, path) => path === '/notifications' ? { messages: 0, feed: 0, rewards: 1, works: 0 } : { groups: [{ id: 'g1', name: group, count: 1 }], total: 1 });
+  vi.mocked(api).mockImplementation(async (_method, path) => path === '/notifications' ? { messages: 0, feed: 0, rewards: 1, works: 0, assignments: 0 } : { groups: [{ id: 'g1', name: group, count: 1 }], total: 1 });
   renderApp(<NotificationsProvider><RewardRequestsPage /></NotificationsProvider>);
   await screen.findByRole('link', { name: /Первая группа/ });
   group = 'Вторая группа';

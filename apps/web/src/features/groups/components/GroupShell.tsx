@@ -2,8 +2,8 @@ import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router-dom';
 import { ChunkErrorBoundary } from '../../../ui/ChunkErrorBoundary';
 import {
-  ArchiveIcon, ArrowLeftIcon, CalendarBlankIcon, CameraIcon, ChartBarIcon, GiftIcon, ListChecksIcon, MegaphoneIcon, NotebookIcon,
-  SparkleIcon, UsersThreeIcon,
+  ArchiveIcon, ArrowLeftIcon, CalendarBlankIcon, CameraIcon, ChartBarIcon, ClipboardTextIcon, GiftIcon, ListChecksIcon,
+  MegaphoneIcon, NotebookIcon, SparkleIcon, UsersThreeIcon,
 } from '@phosphor-icons/react';
 import { CardGridSkeleton, ErrorBox, Skeleton } from '../../../ui';
 import { exportUrl, longDate } from '../../../lib/files';
@@ -20,6 +20,7 @@ const TABS = [
   { to: 'rewards', label: 'Награды', icon: GiftIcon },
   { to: 'feed', label: 'Лента', icon: MegaphoneIcon },
   { to: 'calendar', label: 'Календарь', icon: CalendarBlankIcon },
+  { to: 'assignments', label: 'Задания', icon: ClipboardTextIcon },
   { to: 'works', label: 'Работы', icon: NotebookIcon },
 ];
 
@@ -81,6 +82,12 @@ export function GroupShell() {
                 <span className="chip min-w-6 justify-center bg-accent px-1.5 text-xs text-on-accent">
                   {data.pendingRewards}
                   <span className="sr-only"> {pluralize(data.pendingRewards, 'запрос', 'запроса', 'запросов')}</span>
+                </span>
+              )}
+              {to === 'assignments' && data && data.pendingAnswers > 0 && (
+                <span className="chip min-w-6 justify-center bg-accent px-1.5 text-xs text-on-accent">
+                  {data.pendingAnswers}
+                  <span className="sr-only"> {pluralize(data.pendingAnswers, 'ответ ждёт', 'ответа ждут', 'ответов ждут')} проверки</span>
                 </span>
               )}
               {to === 'works' && data && data.pendingWorks > 0 && (

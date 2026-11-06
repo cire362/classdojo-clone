@@ -2,12 +2,14 @@
 import type { ReactionKind } from '../feed.js';
 import type { FileInfo } from './files.js';
 
-/** Счётчики: новые сообщения, записи в ленте, выданные награды и решения по работам ученика */
+/** Счётчики: новые сообщения, записи в ленте, выданные награды, решения по работам и задания ученика */
 export interface Notifications {
   messages: number;
   feed: number;
   rewards: number;
   works: number;
+  /** Новые задания и новые решения по ответам на них */
+  assignments: number;
 }
 
 export interface StudentNotification {

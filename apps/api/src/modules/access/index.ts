@@ -1,6 +1,7 @@
 export {
   ARCHIVED_MESSAGE,
   OWNER_ONLY_MESSAGE,
+  assignmentReader,
   broadcastReader,
   groupReader,
   groupsOf,

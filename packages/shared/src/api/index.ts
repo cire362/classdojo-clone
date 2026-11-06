@@ -10,3 +10,4 @@ export type * from './attendance.js';
 export type * from './stats.js';
 export type * from './moderation.js';
 export type * from './works.js';
+export type * from './assignments.js';

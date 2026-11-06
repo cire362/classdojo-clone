@@ -13,6 +13,7 @@ import { createDefaultReasons, manualReasons } from '../reasons/index.js';
 import { createDefaultRewards, pendingRequestCount } from '../rewards/index.js';
 import { groupTeams } from '../teams/index.js';
 import { pendingWorkCount } from '../works/index.js';
+import { pendingAnswerCount } from '../assignments/index.js';
 
 type OwnedGroup = { id: string; name: string; subtractTeacher: boolean; feedComments: boolean; archivedAt: Date | null; isOwner: boolean };
 
@@ -63,11 +64,12 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
     manualReasons(group.id),
     todayAttendance(group.id),
   ]);
-  const [summaries, teams, pendingRewards, pendingWorks, goal, plan] = await Promise.all([
+  const [summaries, teams, pendingRewards, pendingWorks, pendingAnswers, goal, plan] = await Promise.all([
     cardSummaries(students.map((s) => s.id)),
     groupTeams(group.id),
     pendingRequestCount(group.id),
     pendingWorkCount(group.id),
+    pendingAnswerCount(group.id),
     classGoal(group.id),
     lessonPlan(group.id),
   ]);
@@ -98,6 +100,7 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
     plan,
     pendingRewards,
     pendingWorks,
+    pendingAnswers,
     todayAttendance: today,
   };
 }

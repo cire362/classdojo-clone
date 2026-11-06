@@ -78,7 +78,7 @@ export async function addFileRows(
   owner: Owner,
   uploaderId: string,
   uploads: Upload[],
-  place: { postId?: string; messageId?: string; broadcastId?: string; workId?: string; visibleFrom?: Date } = {},
+  place: { postId?: string; messageId?: string; broadcastId?: string; workId?: string; assignmentId?: string; visibleFrom?: Date } = {},
 ) {
   const { _sum } = await tx.storedFile.aggregate({ where: { OR: [{ groupId }, { student: { groupId } }] }, _sum: { size: true } });
   const adding = uploads.reduce((sum, u) => sum + u.bytes.length, 0);

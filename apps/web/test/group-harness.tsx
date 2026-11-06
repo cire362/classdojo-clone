@@ -26,6 +26,7 @@ export function groupData(overrides: Partial<GroupDetails['group']> = {}): Group
     teams: [],
     pendingRewards: 0,
     pendingWorks: 0,
+    pendingAnswers: 0,
     todayAttendance: null,
   };
 }

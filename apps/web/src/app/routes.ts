@@ -19,6 +19,7 @@ export const PAGE_MODULES = {
   groupFeed: 'pages/teacher/Feed.tsx',
   groupCalendar: 'pages/teacher/Calendar.tsx',
   groupWorks: 'pages/teacher/Works.tsx',
+  groupAssignments: 'pages/teacher/Assignments.tsx',
   rewards: 'pages/teacher/Rewards.tsx',
   rewardRequests: 'pages/teacher/RewardRequests.tsx',
   messages: 'pages/teacher/Messages.tsx',
@@ -32,6 +33,7 @@ export const PAGE_MODULES = {
   shop: 'pages/student/Shop.tsx',
   notifications: 'pages/student/Notifications.tsx',
   studentWorks: 'pages/student/Works.tsx',
+  studentAssignments: 'pages/student/Assignments.tsx',
 } as const;
 
 export type PageKey = keyof typeof PAGE_MODULES;
@@ -53,6 +55,7 @@ const ROUTE_PAGES: [RegExp, PageKey[]][] = [
   [/^\/g\/[^/]+\/calendar$/, ['groupLayout', 'groupCalendar']],
   [/^\/g\/[^/]+\/rewards$/, ['groupLayout', 'rewards']],
   [/^\/g\/[^/]+\/works$/, ['groupLayout', 'groupWorks']],
+  [/^\/g\/[^/]+\/assignments(\/[^/]+)?$/, ['groupLayout', 'groupAssignments']],
   [/^\/shop$/, ['shop']],
   [/^\/notifications$/, ['notifications']],
   [/^\/reward-requests$/, ['rewardRequests']],
@@ -60,6 +63,7 @@ const ROUTE_PAGES: [RegExp, PageKey[]][] = [
   [/^\/feed$/, ['studentFeed']],
   [/^\/calendar$/, ['studentCalendar']],
   [/^\/works$/, ['studentWorks']],
+  [/^\/assignments$/, ['studentAssignments']],
   [/^\/g\/[^/]+\/?$/, ['groupLayout', 'lesson']],
 ];
 

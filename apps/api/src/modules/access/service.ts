@@ -81,6 +81,19 @@ export async function broadcastReader(user: AuthUser, groupId: string, broadcast
   if (!copy) throw notFound('Рассылка не найдена');
 }
 
+/** Задание видят преподаватели группы, получившие его ученики и их родители */
+export async function assignmentReader(user: AuthUser, groupId: string, assignmentId: string) {
+  if (user.teacherId) return void (await teacherGroup(user, groupId));
+  const receiver = await prisma.assignmentStudent.findFirst({
+    where: {
+      assignmentId,
+      student: { groupId, OR: [{ id: user.studentId ?? '' }, { parents: { some: { parentId: user.parentId ?? '' } } }] },
+    },
+    select: { studentId: true },
+  });
+  if (!receiver) throw notFound('Задание не найдено');
+}
+
 /** Записи, зависящие от суммы по ученику, сериализуются: два запроса сразу не обойдут проверку */
 export async function lockStudent(tx: Prisma.TransactionClient, studentId: string) {
   await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;

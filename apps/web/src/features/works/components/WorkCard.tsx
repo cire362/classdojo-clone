@@ -11,8 +11,10 @@ const STATUS: Record<WorkStatus, { label: string; icon: typeof CheckCircleIcon; 
 };
 
 /** Работа: название, текст, файлы и, если нужно, состояние проверки с комментарием преподавателя */
-export function WorkCard({ work, heading, showStatus = true, level = 3, children }: {
+export function WorkCard({ work, heading, showStatus = true, level = 3, answer = false, children }: {
   work: StudentWork;
+  /** Ответ на задание: его не публикуют, а принимают */
+  answer?: boolean;
   /** Уровень заголовка работы: под заголовком раздела третьего уровня — четвёртый */
   level?: 3 | 4;
   /** Над названием: например, имя ученика в очереди преподавателя */
@@ -20,7 +22,8 @@ export function WorkCard({ work, heading, showStatus = true, level = 3, children
   showStatus?: boolean;
   children?: ReactNode;
 }) {
-  const { label, icon: Icon, className } = STATUS[work.status];
+  const { icon: Icon, className } = STATUS[work.status];
+  const label = answer && work.status === 'APPROVED' ? 'Принят' : STATUS[work.status].label;
   const Title = level === 3 ? 'h3' : 'h4';
   return (
     <li className="card space-y-2 p-4">

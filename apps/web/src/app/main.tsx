@@ -27,6 +27,7 @@ import {
   GroupCalendarPage,
   GroupFeedPage,
   GroupWorksPage,
+  GroupAssignmentsPage,
   MessagesPage,
   MyHeroPage,
   ParentHomePage,
@@ -37,6 +38,7 @@ import {
   StudentFeedPage,
   StudentNotificationsPage,
   StudentWorksPage,
+  StudentAssignmentsPage,
   ThreadPage,
   PrintPage,
   ReasonsPage,
@@ -134,6 +136,8 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="calendar" element={<GroupCalendarPage />} />
                 <Route path="rewards" element={<RewardsPage />} />
                 <Route path="works" element={<GroupWorksPage />} />
+                <Route path="assignments" element={<GroupAssignmentsPage />} />
+                <Route path="assignments/:assignmentId" element={<GroupAssignmentsPage />} />
               </Route>
               <Route path="/settings" element={teacher(<SettingsPage />)} />
               <Route path="/messages" element={teacher(<MessagesPage />)} />
@@ -142,6 +146,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/feed" element={student(<StudentFeedPage />)} />
               <Route path="/calendar" element={student(<StudentCalendarPage />)} />
               <Route path="/works" element={student(<StudentWorksPage />)} />
+              <Route path="/assignments" element={student(<StudentAssignmentsPage />)} />
               <Route path="/shop" element={student(<ShopPage />)} />
               <Route path="/notifications" element={student(<StudentNotificationsPage />)} />
               <Route path="/s/:studentId" element={teacher(<StudentViewPage />)} />

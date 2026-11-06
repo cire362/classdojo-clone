@@ -106,5 +106,7 @@ export interface GroupDetails {
   pendingRewards: number;
   /** Работы учеников, ждущие проверки */
   pendingWorks: number;
+  /** Ответы на задания, ждущие проверки */
+  pendingAnswers: number;
   todayAttendance: { peopleOnPhoto: number | null; presentStudentIds: string[] } | null;
 }

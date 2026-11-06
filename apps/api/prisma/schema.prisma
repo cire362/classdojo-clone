@@ -52,6 +52,7 @@ model Account {
   reports       ContentReport[]
   moderation    ModerationAction[]
   decidedWorks  StudentWork[] @relation("WorkDecidedBy")
+  assignments   Assignment[]
 }
 
 model Session {
@@ -124,6 +125,7 @@ model Group {
   files      StoredFile[]
   reports    ContentReport[]
   moderation ModerationAction[]
+  assignments Assignment[]
 }
 
 /// Соавтор группы: ведёт уроки, отметку, учеников и родителей наравне с владельцем.
@@ -165,6 +167,7 @@ model Student {
   threadReads ThreadRead[]
   portfolio   PortfolioItem[]
   works       StudentWork[]
+  assignments AssignmentStudent[]
   rewardRequests RewardRequest[]
   /// Команда на уроке (командный режим); команда принадлежит группе ученика
   teamId      String?
@@ -274,11 +277,15 @@ model StoredFile {
   /// Файл работы ученика: родители видят его только после одобрения работы
   workId       String?
   work         StudentWork? @relation(fields: [workId], references: [id], onDelete: Cascade)
+  /// Файл задания: видят преподаватели группы, получившие задание ученики и их родители
+  assignmentId String?
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
 
   @@index([postId])
   @@index([messageId])
   @@index([broadcastId])
   @@index([workId])
+  @@index([assignmentId])
   @@index([groupId])
   @@index([studentId])
   @@index([uploadedById])
@@ -355,6 +362,8 @@ model PointEvent {
   helpBadge           Boolean @default(false)
   awardedGroupId      String?
   awardedGroup        Group? @relation("AwardedInGroup", fields: [awardedGroupId], references: [id], onDelete: SetNull)
+  /// Баллы за принятый ответ на задание
+  assignmentWork      StudentWork?
 
   @@index([awardedGroupId, createdAt])
   @@index([studentId, createdAt])
@@ -601,9 +610,49 @@ model StudentWork {
   /// Ученик открыл список после решения: решение больше не считается новым
   seenAt      DateTime?
   files       StoredFile[]
+  /// Ответ на задание; без него — работа для портфолио
+  assignmentId String?
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  /// Баллы за принятый ответ: снимаются, если ответ вернули на доработку
+  pointEventId String?     @unique
+  pointEvent   PointEvent? @relation(fields: [pointEventId], references: [id], onDelete: SetNull)
 
   @@index([studentId, createdAt])
   @@index([status])
+  @@index([assignmentId])
+}
+
+/// Задание группе: всему классу, команде или выбранным ученикам. Кому выдано — снимок в AssignmentStudent
+model Assignment {
+  id          String              @id @default(cuid())
+  groupId     String
+  group       Group               @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  title       String
+  description String              @default("")
+  /// Сдать до этого дня включительно; позже сдать можно, но с отметкой об опоздании
+  dueOn       DateTime?           @db.Date
+  /// Баллы за принятый ответ
+  points      Int                 @default(0)
+  createdById String?
+  createdBy   Account?            @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime            @default(now())
+  students    AssignmentStudent[]
+  files       StoredFile[]
+  works       StudentWork[]
+
+  @@index([groupId, createdAt])
+}
+
+model AssignmentStudent {
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  /// Ученик видел задание: оно больше не считается новым
+  seenAt       DateTime?
+
+  @@id([assignmentId, studentId])
+  @@index([studentId])
 }
 
 enum RewardStatus {

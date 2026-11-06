@@ -9,8 +9,14 @@ import { submitWork } from '../api';
 import { EMPTY, type Drawing } from '../drawing';
 import { DrawingPad } from './DrawingPad';
 
-/** Сдача работы: название, текст и до пяти фото, PDF или рисунков с холста. Хотя бы текст или файл */
-export function WorkForm({ onSubmitted }: { onSubmitted: (works: StudentWork[]) => void }) {
+/**
+ * Сдача работы: название, текст и до пяти фото, PDF или рисунков с холста. Хотя бы текст или файл.
+ * answerTo — ответ на задание: название берёт задание, отправляет его send, заголовок формы ниже уровнем.
+ */
+export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
+  onSubmitted: (result: T) => void;
+  answerTo?: { send: (answer: { text: string; files: File[] }) => Promise<T> };
+}) {
   const id = useId();
   const toast = useToast();
   const [title, setTitle] = useState('');
@@ -24,7 +30,7 @@ export function WorkForm({ onSubmitted }: { onSubmitted: (works: StudentWork[]) 
     setFiles([...files, file]);
     setDrawing(EMPTY);
     setDrawingOpen(false);
-    if (!title.trim()) setTitle('Рисунок');
+    if (!title.trim() && !answerTo) setTitle('Рисунок');
   }
 
   async function submit(e: FormEvent) {
@@ -32,11 +38,12 @@ export function WorkForm({ onSubmitted }: { onSubmitted: (works: StudentWork[]) 
     setBusy(true);
     try {
       const ready = await prepareAttachments(files);
-      onSubmitted(await submitWork({ title: title.trim(), text: text.trim(), files: ready }));
+      const work = { title: title.trim(), text: text.trim(), files: ready };
+      onSubmitted(answerTo ? await answerTo.send(work) : ((await submitWork(work)) as T));
       setTitle('');
       setText('');
       setFiles([]);
-      toast({ text: 'Работа отправлена преподавателю', tone: 'ok' });
+      toast({ text: answerTo ? 'Ответ отправлен преподавателю' : 'Работа отправлена преподавателю', tone: 'ok' });
     } catch (err) {
       toast({ text: (err as Error).message, tone: 'error' });
     } finally {
@@ -46,14 +53,20 @@ export function WorkForm({ onSubmitted }: { onSubmitted: (works: StudentWork[]) 
 
   return (
     <form onSubmit={submit} className="card space-y-3 p-4" aria-labelledby={`${id}-title`}>
-      <h2 id={`${id}-title`} className="text-lg">Новая работа</h2>
-      <p className="text-sm text-ink-soft">Её увидит преподаватель. Родители увидят работу, когда преподаватель её опубликует.</p>
+      {answerTo ? (
+        <h3 id={`${id}-title`} className="text-base">Ваш ответ</h3>
+      ) : (
+        <>
+          <h2 id={`${id}-title`} className="text-lg">Новая работа</h2>
+          <p className="text-sm text-ink-soft">Её увидит преподаватель. Родители увидят работу, когда преподаватель её опубликует.</p>
+          <div>
+            <label className="label" htmlFor={`${id}-name`}>Название</label>
+            <input id={`${id}-name`} className="input" maxLength={100} value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+        </>
+      )}
       <div>
-        <label className="label" htmlFor={`${id}-name`}>Название</label>
-        <input id={`${id}-name`} className="input" maxLength={100} value={title} onChange={(e) => setTitle(e.target.value)} />
-      </div>
-      <div>
-        <label className="label" htmlFor={`${id}-text`}>Текст, если нужен</label>
+        <label className="label" htmlFor={`${id}-text`}>{answerTo ? 'Текст ответа, если нужен' : 'Текст, если нужен'}</label>
         <textarea
           id={`${id}-text`}
           className="input min-h-24 resize-y"
@@ -76,8 +89,8 @@ export function WorkForm({ onSubmitted }: { onSubmitted: (works: StudentWork[]) 
       <Modal open={drawingOpen} title="Рисунок" size="lg" onClose={() => setDrawingOpen(false)}>
         <DrawingPad drawing={drawing} onChange={setDrawing} onDone={attachDrawing} />
       </Modal>
-      <button className="btn btn-primary" disabled={busy || !title.trim() || (!text.trim() && !files.length)}>
-        Отправить преподавателю
+      <button className="btn btn-primary" disabled={busy || (!answerTo && !title.trim()) || (!text.trim() && !files.length)}>
+        {answerTo ? 'Сдать ответ' : 'Отправить преподавателю'}
       </button>
     </form>
   );

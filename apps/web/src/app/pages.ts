@@ -35,6 +35,7 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   groupFeed: remember(() => import('../pages/teacher/Feed')),
   groupCalendar: remember(() => import('../pages/teacher/Calendar')),
   groupWorks: remember(() => import('../pages/teacher/Works')),
+  groupAssignments: remember(() => import('../pages/teacher/Assignments')),
   rewards: remember(() => import('../pages/teacher/Rewards')),
   rewardRequests: remember(() => import('../pages/teacher/RewardRequests')),
   messages: remember(() => import('../pages/teacher/Messages')),
@@ -48,6 +49,7 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   shop: remember(() => import('../pages/student/Shop')),
   notifications: remember(() => import('../pages/student/Notifications')),
   studentWorks: remember(() => import('../pages/student/Works')),
+  studentAssignments: remember(() => import('../pages/student/Assignments')),
 };
 
 /**
@@ -97,17 +99,19 @@ export const ShopPage = page(loaders.shop, 'ShopPage');
 export const StudentNotificationsPage = page(loaders.notifications, 'StudentNotificationsPage');
 export const StudentWorksPage = page(loaders.studentWorks, 'StudentWorksPage');
 export const GroupWorksPage = page(loaders.groupWorks, 'GroupWorksPage');
+export const GroupAssignmentsPage = page(loaders.groupAssignments, 'GroupAssignmentsPage');
+export const StudentAssignmentsPage = page(loaders.studentAssignments, 'StudentAssignmentsPage');
 
 const byRole = {
   ADMIN: [loaders.admin],
   TEACHER: [
     loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons,
     loaders.attendance, loaders.stats, loaders.studentView, loaders.settings, loaders.groupFeed, loaders.groupCalendar,
-    loaders.messages, loaders.rewards, loaders.rewardRequests, loaders.groupWorks,
+    loaders.messages, loaders.rewards, loaders.rewardRequests, loaders.groupWorks, loaders.groupAssignments,
   ],
   STUDENT: [
     loaders.cabinet, loaders.myHero, loaders.studentFeed, loaders.studentCalendar,
-    loaders.shop, loaders.notifications, loaders.studentWorks,
+    loaders.shop, loaders.notifications, loaders.studentWorks, loaders.studentAssignments,
   ],
   PARENT: [loaders.parentHome],
 };

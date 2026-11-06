@@ -15,8 +15,8 @@ describe('лента класса', () => {
 
     const post = await call('POST', `/api/teacher/groups/${t.group.id}/feed`, { cookie: t.cookie, body: { text: 'Завтра экскурсия в планетарий' } });
     expect(post.status).toBe(201);
-    expect((await call('GET', '/api/notifications', { cookie: student })).body).toEqual({ messages: 0, feed: 1, rewards: 0, works: 0 });
-    expect((await call('GET', '/api/notifications', { cookie: parent.cookie })).body).toEqual({ messages: 0, feed: 1, rewards: 0, works: 0 });
+    expect((await call('GET', '/api/notifications', { cookie: student })).body).toEqual({ messages: 0, feed: 1, rewards: 0, works: 0, assignments: 0 });
+    expect((await call('GET', '/api/notifications', { cookie: parent.cookie })).body).toEqual({ messages: 0, feed: 1, rewards: 0, works: 0, assignments: 0 });
 
     const feed = await call('GET', '/api/student/feed', { cookie: student });
     expect(feed.body).toMatchObject([{ text: 'Завтра экскурсия в планетарий', author: 'Тестовый учитель', canDelete: false }]);
