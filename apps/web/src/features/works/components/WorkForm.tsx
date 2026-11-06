@@ -1,11 +1,15 @@
 import { useId, useState, type FormEvent } from 'react';
+import { PaintBrushIcon } from '@phosphor-icons/react';
 import type { StudentWork } from '../../../lib/api';
-import { prepareAttachments } from '../../../lib/attachments';
+import { MAX_ATTACHMENTS, prepareAttachments } from '../../../lib/attachments';
+import { Modal } from '../../../ui';
 import { AttachmentPicker } from '../../../ui/Attachments';
 import { useToast } from '../../../ui/Toast';
 import { submitWork } from '../api';
+import { EMPTY, type Drawing } from '../drawing';
+import { DrawingPad } from './DrawingPad';
 
-/** Сдача работы: название, текст и до пяти фото или PDF. Хотя бы текст или файл */
+/** Сдача работы: название, текст и до пяти фото, PDF или рисунков с холста. Хотя бы текст или файл */
 export function WorkForm({ onSubmitted }: { onSubmitted: (works: StudentWork[]) => void }) {
   const id = useId();
   const toast = useToast();
@@ -13,6 +17,15 @@ export function WorkForm({ onSubmitted }: { onSubmitted: (works: StudentWork[]) 
   const [text, setText] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
+  const [drawing, setDrawing] = useState<Drawing>(EMPTY);
+  const [drawingOpen, setDrawingOpen] = useState(false);
+
+  function attachDrawing(file: File) {
+    setFiles([...files, file]);
+    setDrawing(EMPTY);
+    setDrawingOpen(false);
+    if (!title.trim()) setTitle('Рисунок');
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -51,7 +64,18 @@ export function WorkForm({ onSubmitted }: { onSubmitted: (works: StudentWork[]) 
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <AttachmentPicker files={files} onChange={setFiles} disabled={busy} />
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          disabled={busy || files.length >= MAX_ATTACHMENTS}
+          onClick={() => setDrawingOpen(true)}
+        >
+          <PaintBrushIcon size={18} aria-hidden /> {drawing.strokes.length ? 'Продолжить рисунок' : 'Нарисовать'}
+        </button>
       </div>
+      <Modal open={drawingOpen} title="Рисунок" size="lg" onClose={() => setDrawingOpen(false)}>
+        <DrawingPad drawing={drawing} onChange={setDrawing} onDone={attachDrawing} />
+      </Modal>
       <button className="btn btn-primary" disabled={busy || !title.trim() || (!text.trim() && !files.length)}>
         Отправить преподавателю
       </button>

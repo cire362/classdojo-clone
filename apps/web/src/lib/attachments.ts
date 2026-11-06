@@ -6,6 +6,13 @@ export const MAX_FILE_MB = 10;
 const PHOTO_SIDE = 2048;
 
 export const isPhotoFile = (file: File) => file.type.startsWith('image/');
+
+/** Файлы, которые уже готовы к отправке как есть, например рисунок с холста: PNG не пережимается в JPEG */
+const prepared = new WeakSet<File>();
+export function markPrepared(file: File) {
+  prepared.add(file);
+  return file;
+}
 const isPdf = (file: File) => file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
 
 /** Причина, по которой файл нельзя приложить, или null */
@@ -16,13 +23,13 @@ export function rejectReason(file: File) {
 }
 
 /**
- * Фото уходят уменьшенными JPEG без метаданных, PDF — как есть. По одному: несколько больших снимков сразу
+ * Фото уходят уменьшенными JPEG без метаданных, PDF и готовые файлы — как есть. По одному: несколько больших снимков сразу
  * заняли бы много памяти телефона. Имя фото сохраняется, меняется только расширение.
  */
 export async function prepareAttachments(files: File[]) {
   const ready: File[] = [];
   for (const file of files) {
-    if (!isPhotoFile(file)) ready.push(file);
+    if (!isPhotoFile(file) || prepared.has(file)) ready.push(file);
     else {
       const name = `${file.name.replace(/\.[^.]+$/, '') || 'фото'}.jpg`;
       ready.push(new File([await prepareImage(file, PHOTO_SIDE)], name, { type: 'image/jpeg' }));
