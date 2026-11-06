@@ -147,6 +147,21 @@ export function reportPdf(report: StudentReport): Promise<Buffer> {
         report.attendance.records.map((r) => [fmt(r.date), String(r.lesson), r.present ? 'Посещение' : 'Пропуск', r.groupName]),
         'Отметок посещаемости за выбранный период нет.',
       );
+      const STATUS = { NONE: 'Не сдано', PENDING: 'На проверке', APPROVED: 'Принято', RETURNED: 'На доработке' } as const;
+      table(
+        'Задания за период',
+        ['Задание', 'Срок', 'Состояние', 'Баллы'],
+        [width - 254, 82, 112, 60],
+        report.assignments.map((a) => [a.title, a.dueOn ? fmt(a.dueOn) : 'Без срока', STATUS[a.status], a.points ? plus(a.points) : '-']),
+        'За выбранный период заданий не было.',
+      );
+      table(
+        'Опубликованные работы',
+        ['Дата', 'Работа'],
+        [82, width - 82],
+        report.works.map((w) => [fmt(w.date), w.title]),
+        'За выбранный период опубликованных работ нет.',
+      );
       const pages = doc.bufferedPageRange();
       for (let i = pages.start; i < pages.start + pages.count; i++) {
         doc.switchToPage(i);

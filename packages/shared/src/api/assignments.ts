@@ -50,3 +50,15 @@ export interface StudentAssignment extends Assignment {
   /** Ответы ученика, новые сверху */
   works: StudentWork[];
 }
+
+/**
+ * Задание глазами родителя: состояние и решение преподавателя. Содержимое ответа — только принятого:
+ * до проверки ответ видят лишь ученик и преподаватели, как и работы
+ */
+export interface ParentAssignment extends Assignment {
+  status: AnswerStatus;
+  overdue: boolean;
+  /** Комментарий преподавателя к последнему решению */
+  comment: string;
+  accepted: StudentWork | null;
+}

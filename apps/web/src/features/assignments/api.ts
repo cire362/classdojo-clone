@@ -1,4 +1,4 @@
-import { api, type AssignmentDetail, type StudentAssignment, type TeacherAssignment } from '../../lib/api';
+import { api, type AssignmentDetail, type ParentAssignment, type StudentAssignment, type TeacherAssignment } from '../../lib/api';
 
 const base = (groupId: string) => `/teacher/groups/${groupId}/assignments`;
 
@@ -46,3 +46,5 @@ export function submitAnswer(id: string, answer: { text: string; files: File[] }
   answer.files.forEach((file) => data.append('file', file, file.name));
   return api<StudentAssignment[]>('POST', `/student/assignments/${id}/answers`, data);
 }
+
+export const fetchChildAssignments = (childId: string) => api<ParentAssignment[]>('GET', `/parent/children/${childId}/assignments`);

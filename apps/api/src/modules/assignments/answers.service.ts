@@ -1,4 +1,4 @@
-import type { AnswerStatus, StudentAssignment } from '@heroes/shared/api';
+import type { AnswerStatus, ParentAssignment, StudentAssignment } from '@heroes/shared/api';
 import { dateKey } from '../../platform/dates.js';
 import { prisma } from '../../platform/db.js';
 import { HttpError, notFound } from '../../platform/errors.js';
@@ -11,8 +11,8 @@ import { ASSIGNMENT_INCLUDE, assignmentDetail, assignmentView } from './service.
  * Баллы за принятый ответ начисляются один раз и снимаются, если ответ вернули.
  */
 
-/** Задания ученика, новые сверху. Открытый список отмечает новые задания и решения увиденными */
-export async function studentAssignments(studentId: string): Promise<StudentAssignment[]> {
+/** Выданные ученику задания, новые сверху, и его ответы на них */
+async function assignedTo(studentId: string) {
   const links = await prisma.assignmentStudent.findMany({
     where: { studentId },
     orderBy: { assignment: { createdAt: 'desc' } },
@@ -20,6 +20,29 @@ export async function studentAssignments(studentId: string): Promise<StudentAssi
   });
   const works = await findWorks({ studentId, assignmentId: { in: links.map((l) => l.assignmentId) } });
   const today = dateKey();
+  return links.map(({ assignment, seenAt }) => {
+    const view = assignmentView(assignment);
+    const own = works.filter((w) => w.assignmentId === assignment.id).map(({ studentId: _, assignmentId: __, ...w }) => w);
+    const status: AnswerStatus = own.length ? own[0].status : 'NONE';
+    const overdue = !!view.dueOn && today > view.dueOn && (status === 'NONE' || status === 'RETURNED');
+    return { view, own, status, overdue, seenAt };
+  });
+}
+
+/** Задания ребёнка для родителя: ничего не отмечает увиденным, непроверенные ответы не раскрывает */
+export async function parentAssignments(studentId: string): Promise<ParentAssignment[]> {
+  return (await assignedTo(studentId)).map(({ view, own, status, overdue }) => ({
+    ...view,
+    status,
+    overdue,
+    comment: own[0]?.decidedAt ? own[0].comment : '',
+    accepted: own.find((w) => w.status === 'APPROVED') ?? null,
+  }));
+}
+
+/** Задания ученика, новые сверху. Открытый список отмечает новые задания и решения увиденными */
+export async function studentAssignments(studentId: string): Promise<StudentAssignment[]> {
+  const list = await assignedTo(studentId);
   const now = new Date();
   await Promise.all([
     prisma.assignmentStudent.updateMany({ where: { studentId, seenAt: null }, data: { seenAt: now } }),
@@ -28,18 +51,7 @@ export async function studentAssignments(studentId: string): Promise<StudentAssi
       data: { seenAt: now },
     }),
   ]);
-  return links.map(({ assignment, seenAt }) => {
-    const view = assignmentView(assignment);
-    const own = works.filter((w) => w.assignmentId === assignment.id);
-    const status: AnswerStatus = own.length ? own[0].status : 'NONE';
-    return {
-      ...view,
-      status,
-      isNew: !seenAt,
-      overdue: !!view.dueOn && today > view.dueOn && (status === 'NONE' || status === 'RETURNED'),
-      works: own.map(({ studentId: _, assignmentId: __, ...w }) => w),
-    };
-  });
+  return list.map(({ view, own, status, overdue, seenAt }) => ({ ...view, status, isNew: !seenAt, overdue, works: own }));
 }
 
 /** Новые задания и решения по ответам, которых ученик не видел: для значка */

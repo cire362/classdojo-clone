@@ -13,6 +13,7 @@ import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { useLoad } from '../../../lib/hooks';
 import { ProfileSkeleton } from '../../profile';
 import { Calendar } from '../../calendar';
+import { ParentAssignments } from '../../assignments';
 import { HomePoints } from '../../home';
 import { fetchChildProfile, fetchChildren } from '../api';
 
@@ -31,7 +32,9 @@ function storedChild(): string | null {
 export function ParentDashboard() {
   const children = useLoad(() => fetchChildren(), []);
   const [selected, setSelected] = useState<string | null>(storedChild);
-  const [section, setSection] = useState<'profile' | 'week' | 'rewards' | 'home' | 'feed' | 'calendar' | 'messages'>('profile');
+  const [section, setSection] = useState<'profile' | 'week' | 'rewards' | 'home' | 'assignments' | 'feed' | 'calendar' | 'messages'>(
+    'profile',
+  );
   const list = children.data ?? [];
   const current = list.find((c) => c.id === selected) ?? list[0];
   const profile = useLoad(
@@ -61,6 +64,7 @@ export function ParentDashboard() {
     ['week', 'Итог недели', 0],
     ['rewards', 'Награды', 0],
     ['home', 'Дома', 0],
+    ['assignments', 'Задания', 0],
     ['feed', 'Лента класса', current?.unread.feed ?? 0],
     ['calendar', 'Календарь', 0],
     ['messages', 'Сообщения', current?.unread.messages ?? 0],
@@ -115,6 +119,7 @@ export function ParentDashboard() {
           />
         </div>
       )}
+      {current && section === 'assignments' && <ParentAssignments key={current.id} childId={current.id} />}
       {current && section === 'calendar' && <Calendar key={current.id} path={`/parent/children/${current.id}/events`} />}
       {current && section === 'messages' && <ParentMessages key={current.id} child={current} onRead={children.reload} />}
       {current && section === 'week' && <WeeklySummary key={current.id} child={current} />}
