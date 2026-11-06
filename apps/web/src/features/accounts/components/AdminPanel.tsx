@@ -2,20 +2,21 @@ import { useState, type FormEvent } from 'react';
 import { DownloadSimpleIcon, KeyIcon, PlusIcon, MagnifyingGlassIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import type { AdminTeacher, TeacherCredentials } from '../../../lib/api';
 import { PasswordCard } from './PasswordCard';
+import { SchoolTitle } from './SchoolTitle';
 import { useToast } from '../../../ui/Toast';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { exportUrl, longDate } from '../../../lib/files';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import { createTeacher, fetchAdminGroups, fetchTeachers, resetTeacherPassword, setTeacherPremium } from '../api';
 
-/** Администратор школы: преподаватели, доступы и обзор всех групп. */
+/** Администратор школы: преподаватели, доступы и обзор групп своей школы. Других школ он не видит */
 export function AdminPanel() {
   const [tab, setTab] = useState<'teachers' | 'groups' | 'password'>('teachers');
   return (
     <div className="space-y-6">
       <div>
-        <p className="mb-2 text-sm font-semibold text-ink-soft">Управление школой</p>
-        <h1 className="text-2xl sm:text-3xl">Администратор</h1>
+        <p className="mb-2 text-sm font-semibold text-ink-soft">Администратор школы</p>
+        <SchoolTitle />
       </div>
       <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0" aria-label="Разделы школы">
         <button className={`tab ${tab === 'teachers' ? 'active' : ''}`} aria-current={tab === 'teachers' ? 'page' : undefined} onClick={() => setTab('teachers')}>Преподаватели</button>

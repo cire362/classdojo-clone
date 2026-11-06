@@ -1,4 +1,4 @@
-import type { AdminGroup, AdminTeachers, TeacherCredentials } from '@heroes/shared/api';
+import type { AdminGroup, AdminTeachers, SchoolInfo, TeacherCredentials } from '@heroes/shared/api';
 import { prisma } from '../../platform/db.js';
 import { addDays, localDayStart } from '../../platform/dates.js';
 import { env } from '../../platform/env.js';
@@ -7,8 +7,22 @@ import { HttpError, notFound } from '../../platform/errors.js';
 import { filesExpireAt } from '../files/index.js';
 import { isActive } from './premium.service.js';
 
-export async function adminTeachers(): Promise<AdminTeachers> {
+/**
+ * Администратор видит и меняет только свою школу: её преподавателей и группы, созданные ими.
+ * Чужой преподаватель или группа отвечают 404, как несуществующие.
+ */
+export async function schoolInfo(schoolId: string): Promise<SchoolInfo> {
+  const school = await prisma.school.findUniqueOrThrow({ where: { id: schoolId }, select: { id: true, name: true } });
+  return school;
+}
+
+export async function renameSchool(schoolId: string, name: string): Promise<SchoolInfo> {
+  return prisma.school.update({ where: { id: schoolId }, data: { name }, select: { id: true, name: true } });
+}
+
+export async function adminTeachers(schoolId: string): Promise<AdminTeachers> {
   const teachers = await prisma.teacher.findMany({
+    where: { schoolId },
     orderBy: [{ name: 'asc' }, { id: 'asc' }],
     select: {
       id: true, name: true, premiumUntil: true, account: { select: { login: true } },
@@ -29,11 +43,15 @@ export async function adminTeachers(): Promise<AdminTeachers> {
   };
 }
 
-export async function createTeacher(name: string, login: string): Promise<TeacherCredentials> {
+export async function createTeacher(schoolId: string, name: string, login: string): Promise<TeacherCredentials> {
   const password = generatePassword();
   try {
     const teacher = await prisma.teacher.create({
-      data: { name, account: { create: { login, role: 'TEACHER', passwordHash: await hashPassword(password) } } },
+      data: {
+        name,
+        school: { connect: { id: schoolId } },
+        account: { create: { login, role: 'TEACHER', passwordHash: await hashPassword(password) } },
+      },
       select: { id: true },
     });
     return { id: teacher.id, name, login, password };
@@ -46,9 +64,9 @@ export async function createTeacher(name: string, login: string): Promise<Teache
   }
 }
 
-export async function resetTeacherPassword(teacherId: string): Promise<TeacherCredentials> {
-  const teacher = await prisma.teacher.findUnique({
-    where: { id: teacherId },
+export async function resetTeacherPassword(schoolId: string, teacherId: string): Promise<TeacherCredentials> {
+  const teacher = await prisma.teacher.findFirst({
+    where: { id: teacherId, schoolId },
     select: { id: true, name: true, accountId: true, account: { select: { login: true } } },
   });
   if (!teacher) throw notFound('Преподаватель не найден');
@@ -63,16 +81,17 @@ export async function resetTeacherPassword(teacherId: string): Promise<TeacherCr
 }
 
 /** Доступ до конца выбранного дня в часовом поясе школы */
-export async function setTeacherPremium(teacherId: string, until: string | null) {
+export async function setTeacherPremium(schoolId: string, teacherId: string, until: string | null) {
   const premiumUntil = until ? new Date(addDays(localDayStart(until), 1).getTime() - 1) : null;
   if (premiumUntil && premiumUntil <= new Date()) throw new HttpError(400, 'Выберите сегодняшнюю или будущую дату');
-  const { count } = await prisma.teacher.updateMany({ where: { id: teacherId }, data: { premiumUntil } });
+  const { count } = await prisma.teacher.updateMany({ where: { id: teacherId, schoolId }, data: { premiumUntil } });
   if (!count) throw notFound('Преподаватель не найден');
   return { premiumUntil: premiumUntil?.toISOString() ?? null, premiumActive: isActive(premiumUntil), freeForAll: env.premiumForAll };
 }
 
-export async function adminGroups(): Promise<AdminGroup[]> {
+export async function adminGroups(schoolId: string): Promise<AdminGroup[]> {
   const groups = await prisma.group.findMany({
+    where: { teacher: { schoolId } },
     orderBy: [{ name: 'asc' }, { id: 'asc' }],
     select: {
       id: true, name: true, archivedAt: true,

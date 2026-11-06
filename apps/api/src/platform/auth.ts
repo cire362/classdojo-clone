@@ -18,6 +18,8 @@ export interface AuthUser {
   teacherId: string | null;
   studentId: string | null;
   parentId: string | null;
+  /** Школа преподавателя или администратора; у ученика и родителя её нет */
+  schoolId: string | null;
 }
 
 export type AppEnv = { Variables: { user: AuthUser } };
@@ -96,6 +98,7 @@ export async function loadUser(c: Context): Promise<AuthUser | null> {
     teacherId: a.teacher?.id ?? null,
     studentId: a.student?.id ?? null,
     parentId: a.parent?.id ?? null,
+    schoolId: a.teacher?.schoolId ?? a.admin?.schoolId ?? null,
   };
 }
 

@@ -25,9 +25,13 @@ export async function groupTeachers(groupId: string, me: string): Promise<GroupT
   };
 }
 
-/** Добавить коллегу по логину. Аккаунты преподавателей создаёт администратор (create-teacher) */
+/**
+ * Добавить коллегу по логину. Аккаунты преподавателей создаёт администратор школы. Соавтор — только из школы
+ * создателя группы: преподаватель другой школы для неё как несуществующий
+ */
 export async function addCoTeacher(group: { id: string; teacherId: string }, login: string) {
-  const teacher = await prisma.teacher.findFirst({ where: { account: { login, role: 'TEACHER' } } });
+  const { schoolId } = await prisma.teacher.findUniqueOrThrow({ where: { id: group.teacherId }, select: { schoolId: true } });
+  const teacher = await prisma.teacher.findFirst({ where: { account: { login, role: 'TEACHER' }, schoolId } });
   if (!teacher) throw notFound('Преподаватель с таким логином не найден');
   if (teacher.id === group.teacherId) throw new HttpError(400, 'Это создатель группы');
   const exists = await prisma.groupTeacher.findUnique({ where: { groupId_teacherId: { groupId: group.id, teacherId: teacher.id } } });

@@ -94,3 +94,9 @@ export interface AdminGroup {
   owner: { id: string; name: string; login: string };
   colleagues: { id: string; name: string }[];
 }
+
+/** Школа администратора */
+export interface SchoolInfo {
+  id: string;
+  name: string;
+}

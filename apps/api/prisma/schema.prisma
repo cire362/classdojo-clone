@@ -67,11 +67,26 @@ model Session {
 }
 
 /// Администратор управляет преподавателями и видит группы всей установки (одна школа).
+/// Школа: её администраторы, преподаватели, их группы и ученики. Данные разных школ не пересекаются.
+/// Группа принадлежит школе своего создателя; соавтором может быть только преподаватель той же школы
+model School {
+  id        String    @id @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+  admins    Admin[]
+  teachers  Teacher[]
+}
+
 model Admin {
   id        String  @id @default(cuid())
   accountId String  @unique
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
   name      String
+  /// По умолчанию — первая школа установки: её создаёт миграция
+  schoolId  String  @default("school-default")
+  school    School  @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId])
 }
 
 model Teacher {
@@ -80,6 +95,9 @@ model Teacher {
   account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
   name      String
   createdAt DateTime @default(now())
+  /// По умолчанию — первая школа установки: так учётки из старых команд и тестов попадают в неё
+  schoolId  String   @default("school-default")
+  school    School   @relation(fields: [schoolId], references: [id])
   /// Премиум до этой даты (включает администратор: npm run set-premium). Платежей пока нет
   premiumUntil DateTime?
   /// Тихие часы в минутах от полуночи; null — выключены
@@ -89,6 +107,8 @@ model Teacher {
   groups   Group[]
   coGroups GroupTeacher[]
   posts    Post[]
+
+  @@index([schoolId])
 }
 
 model Group {

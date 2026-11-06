@@ -32,9 +32,10 @@ export const parentExportRoutes = new Hono<AppEnv>().get('/children/:id/export',
   return download(c, await childArchive(studentId, c.get('user').parentId!));
 });
 
-/** Администратор школы выгружает файлы любой группы, например перед удалением по сроку хранения */
+/** Администратор школы выгружает файлы любой группы своей школы, например перед удалением по сроку хранения */
 export const adminExportRoutes = new Hono<AppEnv>().use(requireRole('ADMIN')).get('/groups/:id/export', async (c) => {
-  const group = await prisma.group.findUnique({ where: { id: c.req.param('id') }, select: { id: true } });
+  const where = { id: c.req.param('id'), teacher: { schoolId: c.get('user').schoolId ?? '' } };
+  const group = await prisma.group.findFirst({ where, select: { id: true } });
   if (!group) throw notFound('Группа не найдена');
   return download(c, await groupArchive(group.id));
 });

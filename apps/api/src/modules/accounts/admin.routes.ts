@@ -3,13 +3,16 @@ import { z } from 'zod';
 import { requireRole, type AppEnv } from '../../platform/auth.js';
 import { LOGIN_PATTERN } from '../../platform/credentials.js';
 import { parse } from '../../platform/errors.js';
-import { adminGroups, adminTeachers, createTeacher, resetTeacherPassword, setTeacherPremium } from './admin.service.js';
+import {
+  adminGroups, adminTeachers, createTeacher, renameSchool, resetTeacherPassword, schoolInfo, setTeacherPremium,
+} from './admin.service.js';
 import { changeOwnPassword } from './service.js';
 
 const TeacherBody = z.object({
   name: z.string().trim().min(1, 'Введите имя преподавателя').max(80),
   login: z.string().trim().toLowerCase().regex(LOGIN_PATTERN, 'Логин: 3–64 символа, латиница, цифры, точка или дефис'),
 });
+const SchoolBody = z.object({ name: z.string().trim().min(1, 'Введите название школы').max(120) });
 const PremiumBody = z.object({
   until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((key) => {
     const d = new Date(`${key}T00:00:00Z`);
@@ -17,21 +20,26 @@ const PremiumBody = z.object({
   }, 'Укажите существующую дату').nullable(),
 });
 
-/** Вся установка — одна школа. Эти маршруты закрыты от всех остальных ролей. */
+/** Администратор школы: всё в пределах своей школы, остальным ролям маршруты закрыты */
 export const adminRoutes = new Hono<AppEnv>()
   .use(requireRole('ADMIN'))
   .post('/me/password', async (c) => {
     await changeOwnPassword(c.get('user'), await c.req.json().catch(() => null));
     return c.json({ ok: true });
   })
-  .get('/teachers', async (c) => c.json(await adminTeachers()))
+  .get('/school', async (c) => c.json(await schoolInfo(c.get('user').schoolId!)))
+  .patch('/school', async (c) => {
+    const { name } = parse(SchoolBody, await c.req.json().catch(() => null));
+    return c.json(await renameSchool(c.get('user').schoolId!, name));
+  })
+  .get('/teachers', async (c) => c.json(await adminTeachers(c.get('user').schoolId!)))
   .post('/teachers', async (c) => {
     const { name, login } = parse(TeacherBody, await c.req.json().catch(() => null));
-    return c.json(await createTeacher(name, login), 201);
+    return c.json(await createTeacher(c.get('user').schoolId!, name, login), 201);
   })
-  .post('/teachers/:id/reset-password', async (c) => c.json(await resetTeacherPassword(c.req.param('id'))))
+  .post('/teachers/:id/reset-password', async (c) => c.json(await resetTeacherPassword(c.get('user').schoolId!, c.req.param('id'))))
   .put('/teachers/:id/premium', async (c) => {
     const { until } = parse(PremiumBody, await c.req.json().catch(() => null));
-    return c.json(await setTeacherPremium(c.req.param('id'), until));
+    return c.json(await setTeacherPremium(c.get('user').schoolId!, c.req.param('id'), until));
   })
-  .get('/groups', async (c) => c.json(await adminGroups()));
+  .get('/groups', async (c) => c.json(await adminGroups(c.get('user').schoolId!)));

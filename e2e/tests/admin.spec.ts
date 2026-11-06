@@ -6,7 +6,20 @@ const ADMIN = { login: process.env.E2E_ADMIN_LOGIN ?? 'admin', password: process
 
 test('администратор создаёт преподавателя и восстанавливает ему вход', async ({ page, browser }) => {
   await loginUi(page, ADMIN.login, ADMIN.password);
-  await expect(page.getByRole('heading', { name: 'Администратор', exact: true })).toBeVisible();
+  await expect(page.getByRole('main').getByText('Администратор школы', { exact: true })).toBeVisible();
+
+  // Название школы меняется и возвращается: стенд общий для всех тестов
+  const title = page.getByRole('heading', { level: 1 });
+  const original = await title.innerText();
+  await page.getByRole('button', { name: 'Переименовать школу' }).click();
+  await page.getByLabel('Название школы').fill('E2E Гимназия');
+  await page.getByRole('button', { name: 'Сохранить' }).click();
+  await expect(title).toHaveText('E2E Гимназия');
+  await page.getByRole('button', { name: 'Переименовать школу' }).click();
+  await page.getByLabel('Название школы').fill(original);
+  await page.getByRole('button', { name: 'Сохранить' }).click();
+  await expect(title).toHaveText(original);
+
   const login = `e2e.${Date.now().toString(36)}`;
   const name = 'E2E Новый преподаватель';
   await page.getByRole('button', { name: 'Добавить преподавателя' }).click();
@@ -49,7 +62,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
   test(`администратор: доступность и телефон (${colorScheme})`, async ({ page }) => {
     await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
     await loginUi(page, ADMIN.login, ADMIN.password);
-    await expect(page.getByRole('heading', { name: 'Администратор', exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByText('Администратор школы', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     for (const section of ['Преподаватели', 'Группы школы']) {
       await page.getByRole('button', { name: section, exact: true }).click();
       await expect(page.locator('main li').first()).toBeVisible();

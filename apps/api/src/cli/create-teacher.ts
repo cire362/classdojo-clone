@@ -1,10 +1,10 @@
 /**
  * Создание преподавателя из командной строки:
- *   npm run create-teacher -w @heroes/api -- --login ivanova --name "Анна Ивановна" [--password секрет]
+ *   npm run create-teacher -w @heroes/api -- --login ivanova --name "Анна Ивановна" [--password секрет] [--school id]
  * В docker:
  *   docker compose exec api npm run create-teacher -- --login ivanova --name "Анна Ивановна"
  * Если пароль не указан, он будет сгенерирован и выведен один раз.
- * С флагом --reset меняет пароль существующему преподавателю.
+ * С флагом --reset меняет пароль существующему преподавателю. Без --school преподаватель попадает в первую школу установки.
  */
 import { parseArgs } from 'node:util';
 import { prisma } from '../platform/db.js';
@@ -16,6 +16,7 @@ const { values } = parseArgs({
     name: { type: 'string' },
     password: { type: 'string' },
     reset: { type: 'boolean', default: false },
+    school: { type: 'string' },
   },
 });
 
@@ -45,8 +46,16 @@ if (existing) {
     console.error('Укажите --name');
     process.exit(1);
   }
+  if (values.school && !(await prisma.school.findUnique({ where: { id: values.school } }))) {
+    console.error(`Школа «${values.school}» не найдена`);
+    process.exit(1);
+  }
   await prisma.teacher.create({
-    data: { name, account: { create: { login, passwordHash: await hashPassword(password), role: 'TEACHER' } } },
+    data: {
+      name,
+      ...(values.school ? { school: { connect: { id: values.school } } } : {}),
+      account: { create: { login, passwordHash: await hashPassword(password), role: 'TEACHER' } },
+    },
   });
   console.log(`Преподаватель создан: ${name}, логин «${login}».`);
 }

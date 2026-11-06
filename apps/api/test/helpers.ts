@@ -42,13 +42,15 @@ export async function login(loginName: string, password: string): Promise<string
 }
 
 /** Преподаватель с группой и учениками; возвращает cookie для входа */
-export async function setupTeacher(studentNames = ['Маша Иванова', 'Петя Смирнов', 'Оля Котова']) {
+/** Преподаватель с группой и учениками; без schoolId — в первой школе установки, как все старые учётки */
+export async function setupTeacher(studentNames = ['Маша Иванова', 'Петя Смирнов', 'Оля Котова'], schoolId?: string) {
   await syncHeroParts();
   const loginName = `t${randomUUID().slice(0, 8)}`;
   const password = 'teacher-pass-123';
   const teacher = await prisma.teacher.create({
     data: {
       name: 'Тестовый учитель',
+      ...(schoolId ? { school: { connect: { id: schoolId } } } : {}),
       account: { create: { login: loginName, passwordHash: await hashPassword(password), role: 'TEACHER' } },
     },
   });

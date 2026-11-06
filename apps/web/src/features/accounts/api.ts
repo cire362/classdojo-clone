@@ -1,4 +1,4 @@
-import { api, type AdminGroup, type AdminTeachers, type TeacherCredentials } from '../../lib/api';
+import { api, type AdminGroup, type AdminTeachers, type SchoolInfo, type TeacherCredentials } from '../../lib/api';
 
 export const fetchTeachers = () => api<AdminTeachers>('GET', '/admin/teachers');
 
@@ -9,6 +9,10 @@ export const resetTeacherPassword = (teacherId: string) => api<TeacherCredential
 export const setTeacherPremium = (teacherId: string, until: string | null) => api('PUT', `/admin/teachers/${teacherId}/premium`, { until });
 
 export const fetchAdminGroups = () => api<AdminGroup[]>('GET', '/admin/groups');
+
+export const fetchSchool = () => api<SchoolInfo>('GET', '/admin/school');
+
+export const renameSchool = (name: string) => api<SchoolInfo>('PATCH', '/admin/school', { name });
 
 /** Адрес свой у каждой роли, поэтому его передаёт вызывающий */
 export const changePassword = (endpoint: string, currentPassword: string, newPassword: string) =>
