@@ -34,6 +34,7 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   stats: remember(() => import('../pages/teacher/Stats')),
   groupFeed: remember(() => import('../pages/teacher/Feed')),
   groupCalendar: remember(() => import('../pages/teacher/Calendar')),
+  groupWorks: remember(() => import('../pages/teacher/Works')),
   rewards: remember(() => import('../pages/teacher/Rewards')),
   rewardRequests: remember(() => import('../pages/teacher/RewardRequests')),
   messages: remember(() => import('../pages/teacher/Messages')),
@@ -46,6 +47,7 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   studentCalendar: remember(() => import('../pages/student/Calendar')),
   shop: remember(() => import('../pages/student/Shop')),
   notifications: remember(() => import('../pages/student/Notifications')),
+  studentWorks: remember(() => import('../pages/student/Works')),
 };
 
 /**
@@ -93,11 +95,20 @@ export const RewardsPage = page(loaders.rewards, 'RewardsPage');
 export const RewardRequestsPage = page(loaders.rewardRequests, 'RewardRequestsPage');
 export const ShopPage = page(loaders.shop, 'ShopPage');
 export const StudentNotificationsPage = page(loaders.notifications, 'StudentNotificationsPage');
+export const StudentWorksPage = page(loaders.studentWorks, 'StudentWorksPage');
+export const GroupWorksPage = page(loaders.groupWorks, 'GroupWorksPage');
 
 const byRole = {
   ADMIN: [loaders.admin],
-  TEACHER: [loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons, loaders.attendance, loaders.stats, loaders.studentView, loaders.settings, loaders.groupFeed, loaders.groupCalendar, loaders.messages, loaders.rewards, loaders.rewardRequests],
-  STUDENT: [loaders.cabinet, loaders.myHero, loaders.studentFeed, loaders.studentCalendar, loaders.shop, loaders.notifications],
+  TEACHER: [
+    loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons,
+    loaders.attendance, loaders.stats, loaders.studentView, loaders.settings, loaders.groupFeed, loaders.groupCalendar,
+    loaders.messages, loaders.rewards, loaders.rewardRequests, loaders.groupWorks,
+  ],
+  STUDENT: [
+    loaders.cabinet, loaders.myHero, loaders.studentFeed, loaders.studentCalendar,
+    loaders.shop, loaders.notifications, loaders.studentWorks,
+  ],
   PARENT: [loaders.parentHome],
 };
 

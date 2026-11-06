@@ -78,7 +78,7 @@ export async function addFileRows(
   owner: Owner,
   uploaderId: string,
   uploads: Upload[],
-  place: { postId?: string; messageId?: string; broadcastId?: string; visibleFrom?: Date } = {},
+  place: { postId?: string; messageId?: string; broadcastId?: string; workId?: string; visibleFrom?: Date } = {},
 ) {
   const { _sum } = await tx.storedFile.aggregate({ where: { OR: [{ groupId }, { student: { groupId } }] }, _sum: { size: true } });
   const adding = uploads.reduce((sum, u) => sum + u.bytes.length, 0);
@@ -118,7 +118,11 @@ export async function storeFile(owner: Owner, groupId: string, uploaderId: strin
 export async function findFile(id: string) {
   const file = await prisma.storedFile.findUnique({
     where: { id },
-    include: { message: { select: { studentId: true, parentId: true } }, post: { select: { hiddenAt: true } } },
+    include: {
+      message: { select: { studentId: true, parentId: true } },
+      post: { select: { hiddenAt: true } },
+      work: { select: { status: true } },
+    },
   });
   if (!file) throw notFound('Файл не найден');
   return file;

@@ -60,7 +60,7 @@ export async function groupArchive(groupId: string) {
   const [posts, own, students] = await Promise.all([
     prisma.storedFile.findMany({ where: { groupId, postId: { not: null } }, include: { post: true }, ...POST_FILES }),
     prisma.storedFile.findMany({ where: { groupId, postId: null }, orderBy: { createdAt: 'asc' } }),
-    prisma.storedFile.findMany({ where: { student: { groupId } }, include: { student: true }, orderBy: { createdAt: 'asc' } }),
+    prisma.storedFile.findMany({ where: { student: { groupId } }, include: { student: true, work: true }, orderBy: { createdAt: 'asc' } }),
   ]);
   const entries = new Entries();
   for (const f of posts) entries.media(`Лента/${folder(f.post!.createdAt, f.post!.text, 'Запись')}`, f);
@@ -70,12 +70,15 @@ export async function groupArchive(groupId: string) {
     if (message) entries.named(`Рассылки/${folder(message.createdAt, message.text, 'Рассылка')}`, f, message.createdAt);
     else entries.named('Файлы группы', f);
   }
-  for (const f of students) entries.named(`Ученики/${clean(f.student!.name) || 'Ученик'}`, f);
+  for (const f of students) {
+    const dir = `Ученики/${clean(f.student!.name) || 'Ученик'}`;
+    entries.named(f.work ? `${dir}/Работы/${folder(f.work.createdAt, f.work.title, 'Работа')}` : dir, f);
+  }
   const readme = `
 Фото, видео и файлы группы «${group.name}» на ${dateKey()}.
 Лента — фото и видео записей, в том числе скрытых и запланированных.
 Рассылки и Файлы группы — вложения рассылок родителям и файлы, загруженные для всей группы.
-Ученики — вложения переписки с родителями и файлы каждого ученика.
+Ученики — вложения переписки с родителями, работы и файлы каждого ученика, в том числе неодобренные работы.
 Метаданные и геопозиция из фото и видео удалены при загрузке.`;
   return { name: group.name, entries: entries.withReadme(readme) };
 }
@@ -86,7 +89,7 @@ export async function childArchive(studentId: string, parentId: string) {
   const student = await prisma.student.findUniqueOrThrow({ where: { id: studentId }, select: { name: true, groupId: true } });
   const visible = { createdAt: { lte: now }, studentId, parentId };
   const received = await prisma.message.findMany({ where: { ...visible, broadcastId: { not: null } }, select: { broadcastId: true } });
-  const [posts, attachments, broadcastFiles] = await Promise.all([
+  const [posts, attachments, broadcastFiles, works] = await Promise.all([
     prisma.storedFile.findMany({
       where: { groupId: student.groupId, post: { hiddenAt: null, createdAt: { lte: now } } },
       include: { post: true },
@@ -94,6 +97,11 @@ export async function childArchive(studentId: string, parentId: string) {
     }),
     prisma.storedFile.findMany({ where: { message: visible }, include: { message: true }, orderBy: { createdAt: 'asc' } }),
     prisma.storedFile.findMany({ where: { broadcastId: { in: received.map((m) => m.broadcastId!) } }, orderBy: { createdAt: 'asc' } }),
+    prisma.storedFile.findMany({
+      where: { work: { studentId, status: 'APPROVED' } },
+      include: { work: true },
+      orderBy: { createdAt: 'asc' },
+    }),
   ]);
   const entries = new Entries();
   for (const f of posts) entries.media(`Лента класса/${folder(f.post!.createdAt, f.post!.text, 'Запись')}`, f);
@@ -103,10 +111,12 @@ export async function childArchive(studentId: string, parentId: string) {
     ...broadcastFiles.map((f) => ({ f, date: broadcasts.get(f.broadcastId!)?.createdAt ?? f.createdAt })),
   ].sort((a, b) => +a.date - +b.date);
   for (const { f, date } of messages) entries.named(`Сообщения/${dateKey(date)}`, f, date);
+  for (const f of works) entries.named(`Работы/${folder(f.work!.createdAt, f.work!.title, 'Работа')}`, f);
   const readme = `
 Фото, видео и файлы для родителя ученика ${student.name} на ${dateKey()}.
 Лента класса — фото и видео опубликованных записей группы.
 Сообщения — фото и файлы из переписки с преподавателями, по дням.
+Работы — одобренные преподавателем работы ученика.
 Метаданные и геопозиция из фото и видео удалены при загрузке.`;
   return { name: student.name, entries: entries.withReadme(readme) };
 }

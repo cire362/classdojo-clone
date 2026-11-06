@@ -37,7 +37,7 @@ it('неподходящие и лишние файлы не прикладыв�
   expect(screen.queryByRole('list', { name: 'Выбранные файлы' })).not.toBeInTheDocument();
 
   pick(Array.from({ length: 6 }, (_, i) => pdf(`${i}.pdf`)));
-  expect(await screen.findByText('К сообщению можно приложить не больше 5 файлов')).toBeVisible();
+  expect(await screen.findByText('Можно приложить не больше 5 файлов')).toBeVisible();
   expect(screen.getAllByRole('button', { name: /^Убрать/ })).toHaveLength(5);
   expect(screen.getByRole('button', { name: 'Прикрепить' })).toBeDisabled();
   click('Убрать 0.pdf');

@@ -4,8 +4,8 @@ import type { ChatMessage } from '../../../lib/api';
 import { formatDateTime } from '../../../lib/hooks';
 import { useToast } from '../../../ui/Toast';
 import type { Outgoing } from '../api';
-import { prepareAttachments } from '../attachments';
-import { AttachmentPicker, MessageFiles } from './Attachments';
+import { prepareAttachments } from '../../../lib/attachments';
+import { AttachedFiles, AttachmentPicker } from '../../../ui/Attachments';
 import { SendLater } from './SendLater';
 
 /** Переписка: сообщения и поле ответа. send возвращает обновлённую ветку; cancel есть только у преподавателя */
@@ -66,7 +66,7 @@ export function Thread({ messages, send, cancel, emptyText }: {
                 <span className="font-semibold text-ink">{m.mine ? 'Вы' : m.author}</span> · {formatDateTime(m.createdAt)}
               </div>
               {m.text && <p className="mt-1 whitespace-pre-line break-words">{m.text}</p>}
-              {m.files.length > 0 && <MessageFiles files={m.files} />}
+              {m.files.length > 0 && <AttachedFiles files={m.files} />}
               {m.scheduled && (
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                   <span className="inline-flex items-center gap-1 font-semibold">

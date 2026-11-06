@@ -22,6 +22,7 @@ import { teacherReportRoutes } from '../modules/reports/index.js';
 import { teacherRewardRoutes } from '../modules/rewards/index.js';
 import { studentAdminRoutes } from '../modules/students/index.js';
 import { teamRoutes } from '../modules/teams/index.js';
+import { teacherWorkRoutes } from '../modules/works/index.js';
 
 /** Кабинет преподавателя: роль проверяется здесь один раз, доступ к группе и ученику — в модулях */
 export const teacherRoutes = new Hono<AppEnv>()
@@ -47,4 +48,5 @@ export const teacherRoutes = new Hono<AppEnv>()
   .route('/', attendanceRoutes)
   .route('/', teacherFileRoutes)
   .route('/', teacherExportRoutes)
-  .route('/', teacherReportRoutes);
+  .route('/', teacherReportRoutes)
+  .route('/', teacherWorkRoutes);

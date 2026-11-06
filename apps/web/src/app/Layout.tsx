@@ -44,6 +44,12 @@ export function AppLayout() {
       <CountBadge count={counts.rewards} label={pluralize(counts.rewards, 'выданная награда', 'выданные награды', 'выданных наград')} />
     </NavLink>
   );
+  const worksLink = (
+    <NavLink to="/works" className={navClass}>
+      Мои работы
+      <CountBadge count={counts.works} label={pluralize(counts.works, 'новое решение', 'новых решения', 'новых решений')} />
+    </NavLink>
+  );
   const calendarLink = (
     <NavLink to="/calendar" className={navClass}>
       Календарь
@@ -70,6 +76,7 @@ export function AppLayout() {
               {heroLink}
               {shopLink}
               {feedLink}
+              {worksLink}
               {calendarLink}
             </nav>
           )}
@@ -137,6 +144,7 @@ export function AppLayout() {
             {heroLink}
             {shopLink}
             {feedLink}
+            {worksLink}
             {calendarLink}
           </nav>
         )}

@@ -1,9 +1,9 @@
 import { useRef } from 'react';
 import { FilePdfIcon, PaperclipIcon, XIcon } from '@phosphor-icons/react';
-import type { FileInfo } from '../../../lib/api';
-import { fileUrl, formatSize } from '../../../lib/files';
-import { useToast } from '../../../ui/Toast';
-import { MAX_ATTACHMENTS, rejectReason } from '../attachments';
+import type { FileInfo } from '../lib/api';
+import { MAX_ATTACHMENTS, rejectReason } from '../lib/attachments';
+import { fileUrl, formatSize } from '../lib/files';
+import { useToast } from './Toast';
 
 /** Кнопка «Прикрепить» и выбранные файлы с кнопкой «Убрать» */
 export function AttachmentPicker({ files, onChange, disabled }: { files: File[]; onChange: (files: File[]) => void; disabled?: boolean }) {
@@ -18,7 +18,7 @@ export function AttachmentPicker({ files, onChange, disabled }: { files: File[];
       else picked.push(file);
     }
     const room = MAX_ATTACHMENTS - files.length;
-    if (picked.length > room) toast({ text: `К сообщению можно приложить не больше ${MAX_ATTACHMENTS} файлов`, tone: 'error' });
+    if (picked.length > room) toast({ text: `Можно приложить не больше ${MAX_ATTACHMENTS} файлов`, tone: 'error' });
     onChange([...files, ...picked.slice(0, room)]);
     if (input.current) input.current.value = '';
   }
@@ -63,8 +63,8 @@ export function AttachmentPicker({ files, onChange, disabled }: { files: File[];
   );
 }
 
-/** Вложения сообщения: фото миниатюрами, PDF строкой с размером. Открываются в новой вкладке */
-export function MessageFiles({ files }: { files: FileInfo[] }) {
+/** Вложения сообщения или работы: фото миниатюрами, PDF строкой с размером. Открываются в новой вкладке */
+export function AttachedFiles({ files }: { files: FileInfo[] }) {
   const photos = files.filter((f) => f.mime.startsWith('image/'));
   const documents = files.filter((f) => !f.mime.startsWith('image/'));
   return (

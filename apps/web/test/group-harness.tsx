@@ -25,6 +25,7 @@ export function groupData(overrides: Partial<GroupDetails['group']> = {}): Group
     plan: { steps: [], current: 0 },
     teams: [],
     pendingRewards: 0,
+    pendingWorks: 0,
     todayAttendance: null,
   };
 }

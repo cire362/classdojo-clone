@@ -1,6 +1,6 @@
-import { prepareImage } from '../../lib/photo';
+import { prepareImage } from './photo';
 
-/** Как на сервере: до пяти файлов, PDF до 10 МБ. Фото браузер уменьшает сам, поэтому их размер не важен */
+/** Как на сервере: до пяти файлов к сообщению или работе, PDF до 10 МБ. Фото браузер уменьшает сам, поэтому их размер не важен */
 export const MAX_ATTACHMENTS = 5;
 export const MAX_FILE_MB = 10;
 const PHOTO_SIDE = 2048;

@@ -104,5 +104,7 @@ export interface GroupDetails {
   teams: Team[];
   /** Запросы наград, ждущие ответа */
   pendingRewards: number;
+  /** Работы учеников, ждущие проверки */
+  pendingWorks: number;
   todayAttendance: { peopleOnPhoto: number | null; presentStudentIds: string[] } | null;
 }

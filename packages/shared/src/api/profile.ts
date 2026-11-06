@@ -3,6 +3,7 @@ import type { StudentBadge } from '../badges.js';
 import type { HeroParts } from '../hero/catalog.js';
 import type { LevelInfo } from '../levels.js';
 import type { Notifications } from './messaging.js';
+import type { StudentWork } from './works.js';
 
 export interface Hero {
   name: string;
@@ -40,6 +41,8 @@ export interface Profile {
   /** Открыта ли премиум-коллекция деталей героя */
   premium: boolean;
   portfolio: PortfolioItem[];
+  /** Одобренные работы ученика, новые сверху */
+  works: StudentWork[];
   badges: StudentBadge[];
   student: { id: string; name: string; login: string; group: { id: string; name: string; archivedAt: string | null } };
   hero: Hero;

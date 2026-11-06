@@ -51,6 +51,7 @@ model Account {
   uploadedFiles StoredFile[]
   reports       ContentReport[]
   moderation    ModerationAction[]
+  decidedWorks  StudentWork[] @relation("WorkDecidedBy")
 }
 
 model Session {
@@ -163,6 +164,7 @@ model Student {
   messages    Message[]
   threadReads ThreadRead[]
   portfolio   PortfolioItem[]
+  works       StudentWork[]
   rewardRequests RewardRequest[]
   /// Команда на уроке (командный режим); команда принадлежит группе ученика
   teamId      String?
@@ -269,10 +271,14 @@ model StoredFile {
   message      Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
   /// Вложение рассылки: одно на все её копии, видят преподаватели группы и получившие её родители
   broadcastId  String?
+  /// Файл работы ученика: родители видят его только после одобрения работы
+  workId       String?
+  work         StudentWork? @relation(fields: [workId], references: [id], onDelete: Cascade)
 
   @@index([postId])
   @@index([messageId])
   @@index([broadcastId])
+  @@index([workId])
   @@index([groupId])
   @@index([studentId])
   @@index([uploadedById])
@@ -570,6 +576,34 @@ model Reward {
   requests RewardRequest[]
 
   @@index([groupId])
+}
+
+enum WorkStatus {
+  PENDING
+  APPROVED
+  RETURNED
+}
+
+/// Работа ученика: текст и фото или PDF. Без одобрения её видят только сам ученик и преподаватели группы
+model StudentWork {
+  id          String       @id @default(cuid())
+  studentId   String
+  student     Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title       String
+  text        String       @default("")
+  status      WorkStatus   @default(PENDING)
+  /// Слова преподавателя: что доделать или похвала
+  comment     String       @default("")
+  createdAt   DateTime     @default(now())
+  decidedAt   DateTime?
+  decidedById String?
+  decidedBy   Account?     @relation("WorkDecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+  /// Ученик открыл список после решения: решение больше не считается новым
+  seenAt      DateTime?
+  files       StoredFile[]
+
+  @@index([studentId, createdAt])
+  @@index([status])
 }
 
 enum RewardStatus {

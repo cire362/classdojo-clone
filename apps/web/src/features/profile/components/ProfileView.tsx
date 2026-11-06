@@ -8,6 +8,7 @@ import { Portfolio, type PortfolioEdit } from './Portfolio';
 import { Badges, BadgeSummary } from './Badges';
 import { PetCompanion } from '../../hero';
 import { EmptyState, ProgressBar } from '../../../ui';
+import { WorkCard } from '../../works';
 
 function PointsTile({ label, sum, featured = false }: { label: string; sum: PointsSum; featured?: boolean }) {
   return (
@@ -111,13 +112,25 @@ export function ProfileView({
           </button>
           <button role="tab" aria-selected={tab === 'portfolio'} className={`tab flex-col justify-center gap-1 px-1 py-2 text-xs sm:flex-row sm:gap-2 sm:px-4 sm:py-0 sm:text-sm ${tab === 'portfolio' ? 'active' : 'bg-surface-2'}`} onClick={() => setTab('portfolio')}>
             <TrophyIcon size={18} weight="bold" /> Портфолио
-            {profile.portfolio.length > 0 && <span className="hidden tabular-nums opacity-70 sm:inline">{profile.portfolio.length}</span>}
+            {profile.portfolio.length + profile.works.length > 0 && (
+              <span className="hidden tabular-nums opacity-70 sm:inline">{profile.portfolio.length + profile.works.length}</span>
+            )}
           </button>
         </div>
 
         <h2 className="sr-only">{tab === 'history' ? 'История начислений' : tab === 'attendance' ? 'Посещаемость' : 'Портфолио'}</h2>
         {tab === 'portfolio' && <div className="space-y-8">
           <Badges badges={profile.badges} />
+          <section aria-label="Работы" className="space-y-4">
+            <h3 className="font-sans text-lg font-semibold">Работы</h3>
+            {profile.works.length === 0 ? (
+              <p className="text-sm text-ink-soft">Здесь появятся работы ученика, когда преподаватель их опубликует.</p>
+            ) : (
+              <ul className="space-y-3">
+                {profile.works.map((w) => <WorkCard key={w.id} work={w} showStatus={false} level={4} />)}
+              </ul>
+            )}
+          </section>
           <section aria-label="Достижения от преподавателя" className="space-y-4">
             <h3 className="font-sans text-lg font-semibold">Достижения от преподавателя</h3>
             <Portfolio items={profile.portfolio} edit={portfolioEdit} />

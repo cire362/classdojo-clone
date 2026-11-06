@@ -4,8 +4,8 @@ import { pluralize } from '../../../lib/hooks';
 import { Modal } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { broadcast } from '../api';
-import { prepareAttachments } from '../attachments';
-import { AttachmentPicker } from './Attachments';
+import { prepareAttachments } from '../../../lib/attachments';
+import { AttachmentPicker } from '../../../ui/Attachments';
 import { SendLater } from './SendLater';
 
 /** Сообщение всем родителям группы: каждому в его обычную переписку, отвечают туда же */

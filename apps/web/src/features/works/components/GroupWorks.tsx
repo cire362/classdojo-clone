@@ -1,0 +1,113 @@
+import { useId, useState } from 'react';
+import { NotebookIcon } from '@phosphor-icons/react';
+import type { GroupWork, GroupWorks as Works } from '../../../lib/api';
+import { useLoad } from '../../../lib/hooks';
+import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
+import { useToast } from '../../../ui/Toast';
+import { useGroup } from '../../groups';
+import { decideWork, deleteWork, fetchGroupWorks } from '../api';
+import { WorkCard } from './WorkCard';
+
+const student = (w: GroupWork) => <p className="text-sm font-semibold text-ink-soft">{w.student.name}</p>;
+
+/**
+ * Проверка работ группы: опубликовать для родителей или вернуть с комментарием. Решение можно поменять,
+ * а работу с неподходящим содержимым — удалить вместе с файлами.
+ */
+export function GroupWorks() {
+  const id = useId();
+  const toast = useToast();
+  const { data: group, setData: setGroup } = useGroup();
+  const groupId = group.group.id;
+  const { data, setData, error, reload } = useLoad(() => fetchGroupWorks(groupId), [groupId]);
+  const [comments, setComments] = useState<Record<string, string>>({});
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function act(request: () => Promise<Works>, done: string) {
+    setBusy(true);
+    try {
+      const works = await request();
+      setData(works);
+      // Значок на вкладке группы: сколько работ ещё ждёт
+      setGroup((current) => current && { ...current, pendingWorks: works.pending.length });
+      toast({ text: done, tone: 'ok' });
+    } catch (err) {
+      toast({ text: (err as Error).message, tone: 'error' });
+    } finally {
+      setBusy(false);
+    }
+  }
+  const decide = (w: GroupWork, status: 'APPROVED' | 'RETURNED') =>
+    act(
+      () => decideWork(groupId, w.id, status, (comments[w.id] ?? w.comment).trim()),
+      status === 'APPROVED' ? 'Работа опубликована: её видят родители' : 'Работа возвращена ученику',
+    );
+
+  if (error) return <ErrorBox message={error} onRetry={reload} />;
+  if (!data) return <Skeleton className="h-48 max-w-2xl" />;
+  return (
+    <div className="max-w-2xl space-y-8">
+      <section className="space-y-3" aria-labelledby={`${id}-pending`}>
+        <h2 id={`${id}-pending`} className="text-lg">На проверке: {data.pending.length}</h2>
+        {data.pending.length === 0 && (
+          <EmptyState icon={<NotebookIcon size={28} />} title="Новых работ нет">
+            Ученики сдают работы в своём кабинете, во вкладке «Мои работы». До публикации их видите только вы и сам ученик.
+          </EmptyState>
+        )}
+        <ul className="space-y-3">
+          {data.pending.map((w) => (
+            <WorkCard key={w.id} work={w} heading={student(w)} showStatus={false}>
+              <label className="label" htmlFor={`${id}-${w.id}`}>Комментарий ученику</label>
+              <textarea
+                id={`${id}-${w.id}`}
+                className="input min-h-16 resize-y"
+                maxLength={500}
+                placeholder="Похвала или что доделать"
+                value={comments[w.id] ?? ''}
+                onChange={(e) => setComments({ ...comments, [w.id]: e.target.value })}
+              />
+              <div className="flex flex-wrap gap-2">
+                <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => decide(w, 'APPROVED')}>Опубликовать</button>
+                <button className="btn btn-secondary btn-sm" disabled={busy} onClick={() => decide(w, 'RETURNED')}>
+                  Вернуть на доработку
+                </button>
+              </div>
+            </WorkCard>
+          ))}
+        </ul>
+      </section>
+      {data.decided.length > 0 && (
+        <section className="space-y-3" aria-labelledby={`${id}-decided`}>
+          <h2 id={`${id}-decided`} className="text-lg">Проверенные</h2>
+          <ul className="space-y-3">
+            {data.decided.map((w) => (
+              <WorkCard key={w.id} work={{ ...w, unseen: false }} heading={student(w)}>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    disabled={busy}
+                    onClick={() => decide(w, w.status === 'APPROVED' ? 'RETURNED' : 'APPROVED')}
+                  >
+                    {w.status === 'APPROVED' ? 'Снять с публикации' : 'Опубликовать'}
+                  </button>
+                  {deleting === w.id ? (
+                    <button
+                      className="btn btn-danger btn-sm"
+                      disabled={busy}
+                      onClick={() => act(() => deleteWork(w.id), 'Работа удалена вместе с файлами')}
+                    >
+                      Точно удалить
+                    </button>
+                  ) : (
+                    <button className="btn btn-ghost btn-sm" onClick={() => setDeleting(w.id)}>Удалить</button>
+                  )}
+                </div>
+              </WorkCard>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}

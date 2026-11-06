@@ -2,6 +2,7 @@ import { levelForPoints, normalizeHero } from '@heroes/shared';
 import type { Profile } from '@heroes/shared/api';
 import { prisma } from '../../platform/db.js';
 import { portfolioItems } from '../portfolio/index.js';
+import { approvedWorks } from '../works/index.js';
 import { studentBadges } from '../badges/index.js';
 import { isActive } from '../accounts/index.js';
 import { dbDateKey, startOfDay, startOfWeek } from '../../platform/dates.js';
@@ -27,7 +28,7 @@ export async function studentProfile(studentId: string): Promise<Profile> {
       hero: true,
     },
   });
-  const [today, week, total, history, attendance, portfolio] = await Promise.all([
+  const [today, week, total, history, attendance, portfolio, works] = await Promise.all([
     sums(studentId, startOfDay()),
     sums(studentId, startOfWeek()),
     sums(studentId),
@@ -46,6 +47,7 @@ export async function studentProfile(studentId: string): Promise<Profile> {
       orderBy: [{ session: { date: 'desc' } }, { session: { lessonNumber: 'desc' } }],
     }),
     portfolioItems(studentId),
+    approvedWorks(studentId),
   ]);
   const attended = attendance.filter((a) => a.present).length;
   return {
@@ -69,6 +71,7 @@ export async function studentProfile(studentId: string): Promise<Profile> {
     })),
     badges: await studentBadges(studentId, student.groupId, attendance),
     portfolio,
+    works,
     attendance: {
       attended,
       total: attendance.length,

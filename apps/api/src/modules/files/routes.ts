@@ -30,6 +30,8 @@ export const fileRoutes = new Hono<AppEnv>().get('/:id', async (c) => {
   else if (file.broadcastId) await broadcastReader(user, file.groupId!, file.broadcastId);
   else if (file.groupId) await groupReader(user, file.groupId);
   else await studentReader(user, file.studentId!);
+  // Файлы работы до одобрения видят только сам ученик и преподаватели группы
+  if (file.work && file.work.status !== 'APPROVED' && user.parentId) throw notFound('Файл не найден');
   // Фото отложенной или скрытой записи видят только преподаватели
   const concealed = (file.visibleFrom && file.visibleFrom > new Date()) || file.post?.hiddenAt;
   if (concealed && !user.teacherId) throw notFound('Файл не найден');
