@@ -54,6 +54,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
       const latest = page.getByRole('listitem').filter({ hasText: 'Сбор у входа в 10:00.' });
       await expect(latest.getByText('Новое', { exact: true })).toBeVisible();
       await latest.getByRole('link', { name: 'В ленту класса' }).click();
+      // Сначала дождаться ленты: тот же текст виден и в уведомлениях, пока страница не сменилась
+      await expect(page.getByRole('heading', { name: 'Лента класса', level: 1 })).toBeVisible();
       await expect(page.getByText('Сбор у входа в 10:00.', { exact: true })).toBeVisible();
       await bell.click();
       await expect(page.getByRole('button', { name: 'Прочитать все' })).toBeDisabled();
