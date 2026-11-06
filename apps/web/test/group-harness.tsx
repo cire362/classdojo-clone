@@ -7,7 +7,10 @@ import { renderApp } from './render';
 
 export function groupData(overrides: Partial<GroupDetails['group']> = {}): GroupDetails {
   return {
-    group: { id: 'g1', name: '5 «А»', subtractTeacher: true, feedComments: true, archivedAt: null, isOwner: true, ...overrides },
+    group: {
+      id: 'g1', name: '5 «А»', subtractTeacher: true, feedComments: true, archivedAt: null, isOwner: true, filesExpireAt: null, filesKeptDays: 365,
+      ...overrides,
+    },
     students: [
       { id: 's1', name: 'Маша Иванова', login: 'masha.i', hero: { name: '', parts: DEFAULT_HERO }, todayEarned: 0, totalEarned: 4, level: 1, parentsCount: 0, teamId: null,
         noPhotos: false },

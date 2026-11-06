@@ -4,6 +4,7 @@ import { teacherAccountRoutes } from '../modules/accounts/index.js';
 import { attendanceRoutes } from '../modules/attendance/index.js';
 import { teacherCalendarRoutes } from '../modules/calendar/index.js';
 import { teacherCodeRoutes } from '../modules/codes/index.js';
+import { teacherExportRoutes } from '../modules/exports/index.js';
 import { teacherFeedRoutes } from '../modules/feed/index.js';
 import { teacherFileRoutes } from '../modules/files/index.js';
 import { goalRoutes } from '../modules/goals/index.js';
@@ -45,4 +46,5 @@ export const teacherRoutes = new Hono<AppEnv>()
   .route('/', pointRoutes)
   .route('/', attendanceRoutes)
   .route('/', teacherFileRoutes)
+  .route('/', teacherExportRoutes)
   .route('/', teacherReportRoutes);

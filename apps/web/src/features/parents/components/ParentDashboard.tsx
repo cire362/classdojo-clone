@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { UsersIcon } from '@phosphor-icons/react';
+import { DownloadSimpleIcon, UsersIcon } from '@phosphor-icons/react';
+import { exportUrl } from '../../../lib/files';
 import type { ParentChild } from '../../../lib/api';
 import { Feed } from '../../feed';
 import { Thread, fetchChildMessages, fetchParentNotice, sendChildMessage } from '../../messages';
@@ -100,7 +101,19 @@ export function ParentDashboard() {
         </nav>
       )}
       {current && section === 'feed' && (
-        <Feed key={current.id} path={`/parent/children/${current.id}/feed`} commentsNote="Комментарии сейчас закрыты." onLoaded={() => void children.reload()} readOnlyNote={`Объявления преподавателей группы ${current.groupName}.`} />
+        <div className="max-w-2xl space-y-4">
+          {/* Фото ленты и вложения переписки одним архивом: можно сохранить себе до того, как файлы удалят */}
+          <a className="btn btn-secondary btn-sm" href={exportUrl(`/parent/children/${current.id}`)} download>
+            <DownloadSimpleIcon size={18} aria-hidden /> Скачать фото и файлы
+          </a>
+          <Feed
+            key={current.id}
+            path={`/parent/children/${current.id}/feed`}
+            commentsNote="Комментарии сейчас закрыты."
+            onLoaded={() => void children.reload()}
+            readOnlyNote={`Объявления преподавателей группы ${current.groupName}.`}
+          />
+        </div>
       )}
       {current && section === 'calendar' && <Calendar key={current.id} path={`/parent/children/${current.id}/events`} />}
       {current && section === 'messages' && <ParentMessages key={current.id} child={current} onRead={children.reload} />}

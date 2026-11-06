@@ -4,6 +4,7 @@ import { prisma } from '../../platform/db.js';
 import { env } from '../../platform/env.js';
 import { HttpError, notFound } from '../../platform/errors.js';
 import { putBytes, removeBytes, sizeOf } from '../../platform/storage.js';
+import { addDays } from '../../platform/dates.js';
 import { lockGroup } from '../access/index.js';
 import { isPhoto, rebuildPhoto } from './photo.js';
 import { sniffType } from './sniff.js';
@@ -141,6 +142,20 @@ export async function fileBytes(file: { id: string; mime: string }, preview = fa
 export async function deleteFile(id: string) {
   await prisma.storedFile.delete({ where: { id } });
   await purgeDeletedFiles();
+}
+
+/** Когда удалятся файлы архивной группы; у действующей группы срока нет */
+export const filesExpireAt = (archivedAt: Date | null) => (archivedAt ? addDays(archivedAt, env.archivedFilesDays) : null);
+
+/**
+ * Срок хранения: файлы групп, которые лежат в архиве дольше ARCHIVED_FILES_DAYS, удаляются вместе с файлами
+ * их учеников. Сама группа, баллы и статистика остаются. Возврат из архива до срока отменяет удаление.
+ */
+export async function expireArchivedFiles(now = new Date()) {
+  const archived = { archivedAt: { lte: addDays(now, -env.archivedFilesDays) } };
+  const { count } = await prisma.storedFile.deleteMany({ where: { OR: [{ group: archived }, { student: { group: archived } }] } });
+  if (count) await purgeDeletedFiles();
+  return count;
 }
 
 /**

@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router-dom'
 import { ChunkErrorBoundary } from '../../../ui/ChunkErrorBoundary';
 import { ArchiveIcon, ArrowLeftIcon, CalendarBlankIcon, CameraIcon, ChartBarIcon, GiftIcon, ListChecksIcon, MegaphoneIcon, SparkleIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { CardGridSkeleton, ErrorBox, Skeleton } from '../../../ui';
+import { exportUrl, longDate } from '../../../lib/files';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import type { GroupCtx } from '../hooks/useGroup';
 import { fetchGroup, restoreGroup } from '../api';
@@ -37,9 +38,19 @@ export function GroupShell() {
         {data?.group.archivedAt && (
           <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface-2 px-4 py-3">
             <ArchiveIcon size={22} className="shrink-0" />
-            <p className="min-w-0 flex-1 text-sm">
+            {/* На узком экране кнопка уходит под текст, а не сжимает его в узкую колонку */}
+            <p className="min-w-0 flex-1 basis-56 text-sm">
               <b>Группа в архиве</b> с {new Date(data.group.archivedAt).toLocaleDateString('ru-RU')}. Статистика, профили и
               Excel доступны, а начислять баллы и отмечать посещаемость нельзя.
+              {data.group.filesExpireAt && (
+                <>
+                  {/* Дата по-русски уже кончается на «г.» */}
+                  {' '}Фото и файлы группы удалятся <b>{longDate(data.group.filesExpireAt)}</b>{' '}
+                  <a className="font-semibold underline" href={exportUrl(`/teacher/groups/${data.group.id}`)} download>
+                    Скачать архив
+                  </a>
+                </>
+              )}
             </p>
             {data.group.isOwner && (
               <button

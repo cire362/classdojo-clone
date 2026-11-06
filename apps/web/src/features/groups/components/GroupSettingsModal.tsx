@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArchiveIcon } from '@phosphor-icons/react';
+import { ArchiveIcon, DownloadSimpleIcon } from '@phosphor-icons/react';
+import { exportUrl } from '../../../lib/files';
+import { pluralize } from '../../../lib/hooks';
 import { Modal } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { useGroup } from '../hooks/useGroup';
@@ -17,6 +19,15 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
     <Modal open={open} title="Настройки группы" onClose={onClose}>
       <div className="space-y-8">
         <GroupTeachersSection groupId={data.group.id} isOwner={data.group.isOwner} />
+        <div className="space-y-3">
+          <h3 className="text-base">Фото и файлы</h3>
+          <p className="text-sm text-ink-soft">
+            Фото и видео ленты, вложения переписки с родителями и файлы учеников одним архивом ZIP, по папкам.
+          </p>
+          <a className="btn btn-secondary" href={exportUrl(`/teacher/groups/${data.group.id}`)} download>
+            <DownloadSimpleIcon size={20} aria-hidden /> Скачать архив
+          </a>
+        </div>
         {data.group.isOwner && (
           <>
             <form
@@ -46,6 +57,10 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
                 <p className="text-sm text-ink-soft">
                   Для групп, которые закончили занятия. Группа уйдёт из списка на главной, баллы и посещаемость заморозятся, а
                   статистика, профили и Excel останутся. Ученики по-прежнему смогут входить. Вернуть группу можно в любой момент.
+                </p>
+                <p className="text-sm text-ink-soft">
+                  Фото и файлы архивной группы хранятся {data.group.filesKeptDays}{' '}
+                  {pluralize(data.group.filesKeptDays, 'день', 'дня', 'дней')}, потом удаляются. Баллы и статистика остаются.
                 </p>
                 <button
                   className="btn btn-secondary"

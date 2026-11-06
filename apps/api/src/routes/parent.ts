@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { requireRole, type AppEnv } from '../platform/auth.js';
 import { parentCalendarRoutes } from '../modules/calendar/index.js';
+import { parentExportRoutes } from '../modules/exports/index.js';
 import { parentFeedRoutes } from '../modules/feed/index.js';
 import { parentHomeRoutes } from '../modules/home/index.js';
 import { parentMessageRoutes } from '../modules/messages/index.js';
@@ -20,4 +21,5 @@ export const parentRoutes = new Hono<AppEnv>()
   .route('/', parentMessageRoutes)
   .route('/', parentProfileRoutes)
   .route('/', parentReportRoutes)
-  .route('/', parentRewardRoutes);
+  .route('/', parentRewardRoutes)
+  .route('/', parentExportRoutes);

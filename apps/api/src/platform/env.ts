@@ -20,6 +20,8 @@ export const env = {
   maxVideoBytes: num('MAX_VIDEO_BYTES', 100 * 1024 * 1024),
   /** Сколько файлов может занимать группа вместе с файлами своих учеников, байт */
   groupFilesQuota: num('GROUP_FILES_QUOTA', 500 * 1024 * 1024),
+  /** Сколько дней хранятся фото и файлы группы после переноса в архив; потом удаляются, сама группа остаётся */
+  archivedFilesDays: num('ARCHIVED_FILES_DAYS', 365),
   loginRateLimit: num('LOGIN_RATE_LIMIT', 10),
   /** Пока оплаты нет, премиум бесплатен для всех. PREMIUM_FOR_ALL=false включает обычные правила (срок у преподавателя) */
   premiumForAll: process.env.PREMIUM_FOR_ALL !== 'false',

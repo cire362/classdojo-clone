@@ -89,6 +89,8 @@ export interface AdminTeachers { freeForAll: boolean; teachers: AdminTeacher[] }
 
 export interface AdminGroup {
   id: string; name: string; archivedAt: string | null; studentsCount: number;
+  /** Когда удалятся фото и файлы архивной группы */
+  filesExpireAt: string | null;
   owner: { id: string; name: string; login: string };
   colleagues: { id: string; name: string }[];
 }

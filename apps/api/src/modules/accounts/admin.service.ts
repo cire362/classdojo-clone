@@ -4,6 +4,7 @@ import { addDays, localDayStart } from '../../platform/dates.js';
 import { env } from '../../platform/env.js';
 import { generatePassword, hashPassword } from '../../platform/credentials.js';
 import { HttpError, notFound } from '../../platform/errors.js';
+import { filesExpireAt } from '../files/index.js';
 import { isActive } from './premium.service.js';
 
 export async function adminTeachers(): Promise<AdminTeachers> {
@@ -84,6 +85,7 @@ export async function adminGroups(): Promise<AdminGroup[]> {
     id: g.id,
     name: g.name,
     archivedAt: g.archivedAt?.toISOString() ?? null,
+    filesExpireAt: filesExpireAt(g.archivedAt)?.toISOString() ?? null,
     owner: { id: g.teacher.id, name: g.teacher.name, login: g.teacher.account.login },
     colleagues: g.coTeachers.map((t) => t.teacher),
     studentsCount: g._count.students,

@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react';
-import { KeyIcon, PlusIcon, MagnifyingGlassIcon, UsersThreeIcon } from '@phosphor-icons/react';
+import { DownloadSimpleIcon, KeyIcon, PlusIcon, MagnifyingGlassIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import type { AdminTeacher, TeacherCredentials } from '../../../lib/api';
 import { PasswordCard } from './PasswordCard';
 import { useToast } from '../../../ui/Toast';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
+import { exportUrl, longDate } from '../../../lib/files';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import { createTeacher, fetchAdminGroups, fetchTeachers, resetTeacherPassword, setTeacherPremium } from '../api';
 
@@ -190,6 +191,15 @@ function Groups() {
           <p className="break-words text-sm"><b>{g.owner.name}</b><span className="block break-all font-mono text-ink-soft">{g.owner.login}</span></p>
           {g.colleagues.length > 0 && <p className="break-words text-sm text-ink-soft">Соавторы: {g.colleagues.map((t) => t.name).join(', ')}</p>}
           <p className="flex items-center gap-2 text-sm text-ink-soft"><UsersThreeIcon size={18} aria-hidden />{g.studentsCount} {pluralize(g.studentsCount, 'ученик', 'ученика', 'учеников')}</p>
+          {g.filesExpireAt && <p className="text-sm">Фото и файлы удалятся {longDate(g.filesExpireAt)}</p>}
+          <a
+            className="btn btn-secondary btn-sm"
+            href={exportUrl(`/admin/groups/${g.id}`)}
+            download
+            aria-label={`Скачать файлы группы ${g.name}`}
+          >
+            <DownloadSimpleIcon size={18} aria-hidden /> Скачать файлы
+          </a>
         </li>)}
         {!visible.length && <li className="text-ink-soft">{search ? 'Группы не найдены.' : 'Групп пока нет. Их создают преподаватели в своём кабинете.'}</li>}
       </ul>}

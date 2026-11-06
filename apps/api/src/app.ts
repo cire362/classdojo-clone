@@ -7,6 +7,7 @@ import { HttpError } from './platform/errors.js';
 import { notifications } from './modules/notifications/index.js';
 import { adminRoutes, authRoutes } from './modules/accounts/index.js';
 import { codeLoginRoutes } from './modules/codes/index.js';
+import { adminExportRoutes } from './modules/exports/index.js';
 import { fileRoutes } from './modules/files/index.js';
 import { activeHeroParts } from './modules/hero/index.js';
 import { inviteRoutes } from './modules/parents/index.js';
@@ -41,6 +42,7 @@ export function createApp() {
 
   app.use('/api/admin/*', requireAuth);
   app.route('/api/admin', adminRoutes);
+  app.route('/api/admin', adminExportRoutes);
 
   app.use('/api/teacher/*', requireAuth);
   app.route('/api/teacher', teacherRoutes);

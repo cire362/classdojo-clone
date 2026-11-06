@@ -1,8 +1,10 @@
 import { normalizeHero } from '@heroes/shared';
 import type { GroupDetails, GroupListItem } from '@heroes/shared/api';
 import { prisma } from '../../platform/db.js';
+import { env } from '../../platform/env.js';
 import { groupsOf } from '../access/index.js';
 import { todayAttendance } from '../attendance/index.js';
+import { filesExpireAt } from '../files/index.js';
 import { classGoal } from '../goals/index.js';
 import { deleteOrphanParents } from '../parents/index.js';
 import { lessonPlan } from '../plan/index.js';
@@ -75,6 +77,8 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
       feedComments: group.feedComments,
       archivedAt: group.archivedAt?.toISOString() ?? null,
       isOwner: group.isOwner,
+      filesExpireAt: filesExpireAt(group.archivedAt)?.toISOString() ?? null,
+      filesKeptDays: env.archivedFilesDays,
     },
     students: students.map((s) => ({
       id: s.id,

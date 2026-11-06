@@ -87,7 +87,18 @@ export interface LessonPlan {
 export interface GroupDetails {
   classGoal: ClassGoal | null;
   plan: LessonPlan;
-  group: { id: string; name: string; subtractTeacher: boolean; feedComments: boolean; archivedAt: string | null; isOwner: boolean };
+  group: {
+    id: string;
+    name: string;
+    subtractTeacher: boolean;
+    feedComments: boolean;
+    archivedAt: string | null;
+    isOwner: boolean;
+    /** Когда удалятся фото и файлы архивной группы; у действующей null */
+    filesExpireAt: string | null;
+    /** Сколько дней файлы хранятся после переноса в архив */
+    filesKeptDays: number;
+  };
   students: LessonStudent[];
   reasons: Reason[];
   teams: Team[];
