@@ -3,6 +3,7 @@ import { scheduledAt } from '../../platform/dates.js';
 import { prisma } from '../../platform/db.js';
 import { HttpError, notFound } from '../../platform/errors.js';
 import { groupsOf } from '../access/index.js';
+import { attachmentsOf, createBroadcast, createMessage, dropMessageFiles } from './attachments.service.js';
 
 /**
  * Сообщения родителя и преподавателей группы о конкретном ребёнке. Ветка — пара (родитель, ученик):
@@ -42,6 +43,7 @@ export async function threadMessages(
     take: 500,
     include: { sender: { include: { teacher: { select: { name: true } } } } },
   });
+  const filesOf = await attachmentsOf(messages);
   await prisma.threadRead.upsert({
     where: { accountId_studentId_parentId: { accountId, studentId, parentId } },
     create: { accountId, studentId, parentId, readAt: now },
@@ -50,6 +52,7 @@ export async function threadMessages(
   return messages.map((m) => ({
     id: m.id,
     text: m.text,
+    files: filesOf(m),
     createdAt: m.createdAt.toISOString(),
     mine: m.senderId === accountId,
     // Подпись: имя преподавателя или «Родитель»
@@ -59,24 +62,30 @@ export async function threadMessages(
   }));
 }
 
-export async function sendMessage(studentId: string, parentId: string, senderId: string, text: string): Promise<ChatMessage[]> {
-  await prisma.message.create({ data: { studentId, parentId, senderId, text } });
+export async function sendMessage(studentId: string, parentId: string, senderId: string, text: string, files: File[] = []) {
+  await createMessage({ studentId, parentId, senderId, text }, files);
   return threadMessages(studentId, parentId, senderId);
 }
 
 /** Сообщение преподавателя: сразу или в выбранное время */
-export async function sendTeacherMessage(studentId: string, parentId: string, senderId: string, text: string, sendAt?: string) {
-  const at = sendAt ? scheduledAt(sendAt) : undefined;
-  await prisma.message.create({ data: { studentId, parentId, senderId, text, ...(at ? { createdAt: at } : {}) } });
+export async function sendTeacherMessage(
+  studentId: string,
+  parentId: string,
+  senderId: string,
+  message: { text: string; sendAt?: string; files?: File[] },
+) {
+  const at = message.sendAt ? scheduledAt(message.sendAt) : undefined;
+  await createMessage({ studentId, parentId, senderId, text: message.text, ...(at ? { createdAt: at } : {}) }, message.files);
   return threadMessages(studentId, parentId, senderId, true);
 }
 
 /** Отменить можно только своё сообщение и только пока оно не ушло */
 export async function cancelMessage(studentId: string, parentId: string, messageId: string, accountId: string) {
-  const { count } = await prisma.message.deleteMany({
-    where: { id: messageId, studentId, parentId, senderId: accountId, createdAt: { gt: new Date() } },
-  });
-  if (!count) throw notFound('Сообщение уже отправлено');
+  const where = { id: messageId, studentId, parentId, senderId: accountId, createdAt: { gt: new Date() } };
+  const message = await prisma.message.findFirst({ where, select: { broadcastId: true } });
+  const { count } = await prisma.message.deleteMany({ where });
+  if (!message || !count) throw notFound('Сообщение уже отправлено');
+  await dropMessageFiles(message.broadcastId);
   return threadMessages(studentId, parentId, accountId, true);
 }
 
@@ -84,7 +93,8 @@ export async function cancelMessage(studentId: string, parentId: string, message
  * Рассылка: у каждого родителя сообщение в его обычной ветке, ответ придёт туда же.
  * Родитель двоих детей группы получает его один раз: в ветке первого ребёнка.
  */
-export async function broadcastMessage(groupId: string, senderId: string, text: string, sendAt?: string) {
+export async function broadcastMessage(groupId: string, senderId: string, message: { text: string; sendAt?: string; files?: File[] }) {
+  const { text, sendAt, files } = message;
   const at = sendAt ? scheduledAt(sendAt) : undefined;
   const links = await prisma.parentStudent.findMany({
     where: { student: { groupId } },
@@ -93,9 +103,8 @@ export async function broadcastMessage(groupId: string, senderId: string, text: 
   });
   const byParent = new Map(links.map((l) => [l.parentId, l]).reverse() as [string, (typeof links)[number]][]);
   if (!byParent.size) throw new HttpError(400, 'В группе пока нет родителей с входом');
-  const data = [...byParent.values()].map((l) => ({ ...l, senderId, text, ...(at ? { createdAt: at } : {}) }));
-  await prisma.message.createMany({ data });
-  return { sent: data.length };
+  await createBroadcast(groupId, [...byParent.values()], senderId, text, at, files);
+  return { sent: byParent.size };
 }
 
 /** Ветки для преподавателя: все переписки по ученикам его групп, новые сверху */
@@ -143,7 +152,7 @@ export async function teacherThreads(teacherId: string, accountId: string): Prom
         studentName: link.student.name,
         groupName: link.student.group.name,
         parentLogin: link.parent.account.login,
-        lastText: lastMessage!.text,
+        lastText: lastMessage!.text || 'Вложение',
         lastAt: lastMessage!.createdAt,
         unread,
       };

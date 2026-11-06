@@ -68,7 +68,7 @@ export function ThreadView() {
       <Thread
         messages={data.messages}
         emptyText="Напишите первое сообщение — родители увидят его в своём кабинете."
-        send={(text, sendAt) => sendTeacherMessage(studentId!, parentId!, text, sendAt)}
+        send={(message) => sendTeacherMessage(studentId!, parentId!, message)}
         cancel={(messageId) => cancelMessage(studentId!, parentId!, messageId)}
       />
     </div>

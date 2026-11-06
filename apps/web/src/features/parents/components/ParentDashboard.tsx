@@ -139,7 +139,11 @@ function ParentMessages({ child, onRead }: { child: ParentChild; onRead: () => P
           Сейчас у преподавателей тихие часы. Написать можно, ответ будет после {notice.data.quietUntil}.
         </p>
       )}
-      <Thread messages={data} emptyText="Здесь можно написать преподавателю: о пропуске, успехах или вопросе." send={(text) => sendChildMessage(child.id, text)} />
+      <Thread
+        messages={data}
+        emptyText="Здесь можно написать преподавателю: о пропуске, успехах или вопросе. Можно приложить фото или PDF."
+        send={(message) => sendChildMessage(child.id, message)}
+      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 export {
   ARCHIVED_MESSAGE,
   OWNER_ONLY_MESSAGE,
+  broadcastReader,
   groupReader,
   groupsOf,
   lockGroup,
@@ -9,4 +10,5 @@ export {
   studentReader,
   teacherGroup,
   teacherStudent,
+  threadReader,
 } from './service.js';

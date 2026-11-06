@@ -3,18 +3,22 @@ import { ClockIcon, PaperPlaneRightIcon } from '@phosphor-icons/react';
 import type { ChatMessage } from '../../../lib/api';
 import { formatDateTime } from '../../../lib/hooks';
 import { useToast } from '../../../ui/Toast';
+import type { Outgoing } from '../api';
+import { prepareAttachments } from '../attachments';
+import { AttachmentPicker, MessageFiles } from './Attachments';
 import { SendLater } from './SendLater';
 
 /** Переписка: сообщения и поле ответа. send возвращает обновлённую ветку; cancel есть только у преподавателя */
 export function Thread({ messages, send, cancel, emptyText }: {
   messages: ChatMessage[];
-  send: (text: string, sendAt?: string) => Promise<ChatMessage[]>;
+  send: (message: Outgoing) => Promise<ChatMessage[]>;
   cancel?: (messageId: string) => Promise<ChatMessage[]>;
   emptyText: string;
 }) {
   const toast = useToast();
   const [list, setList] = useState(messages);
   const [text, setText] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [later, setLater] = useState(false);
   const [sendAt, setSendAt] = useState('');
@@ -29,8 +33,10 @@ export function Thread({ messages, send, cancel, emptyText }: {
     e.preventDefault();
     setBusy(true);
     try {
-      setList(await send(text.trim(), later ? new Date(sendAt).toISOString() : undefined));
+      const ready = await prepareAttachments(files);
+      setList(await send({ text: text.trim(), sendAt: later ? new Date(sendAt).toISOString() : undefined, files: ready }));
       setText('');
+      setFiles([]);
       setLater(false);
       setSendAt('');
     } catch (err) {
@@ -59,7 +65,8 @@ export function Thread({ messages, send, cancel, emptyText }: {
               <div className={`text-xs ${m.mine ? 'text-ink' : 'text-ink-soft'}`}>
                 <span className="font-semibold text-ink">{m.mine ? 'Вы' : m.author}</span> · {formatDateTime(m.createdAt)}
               </div>
-              <p className="mt-1 whitespace-pre-line break-words">{m.text}</p>
+              {m.text && <p className="mt-1 whitespace-pre-line break-words">{m.text}</p>}
+              {m.files.length > 0 && <MessageFiles files={m.files} />}
               {m.scheduled && (
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                   <span className="inline-flex items-center gap-1 font-semibold">
@@ -91,11 +98,18 @@ export function Thread({ messages, send, cancel, emptyText }: {
               if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) e.currentTarget.form?.requestSubmit();
             }}
           />
-          <button className="btn btn-primary shrink-0" disabled={busy || !text.trim() || (later && !sendAt)} aria-label="Отправить">
+          <button
+            className="btn btn-primary shrink-0"
+            disabled={busy || (!text.trim() && !files.length) || (later && !sendAt)}
+            aria-label="Отправить"
+          >
             <PaperPlaneRightIcon size={20} weight="fill" />
           </button>
         </div>
-        {cancel && <SendLater on={later} at={sendAt} onToggle={setLater} onTime={setSendAt} />}
+        <div className="flex flex-wrap items-center gap-3">
+          <AttachmentPicker files={files} onChange={setFiles} disabled={busy} />
+          {cancel && <SendLater on={later} at={sendAt} onToggle={setLater} onTime={setSendAt} />}
+        </div>
       </form>
     </div>
   );

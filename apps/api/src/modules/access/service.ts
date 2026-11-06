@@ -64,6 +64,23 @@ export async function studentReader(user: AuthUser, studentId: string) {
   if (user.studentId !== studentId) throw notFound('Ученик не найден');
 }
 
+/** Участник переписки о ребёнке: преподаватель его группы или этот родитель, пока он привязан к ребёнку */
+export async function threadReader(user: AuthUser, studentId: string, parentId: string) {
+  if (user.teacherId) return void (await teacherStudent(user, studentId));
+  if (user.parentId !== parentId) throw notFound('Переписка не найдена');
+  await parentChild(parentId, studentId);
+}
+
+/** Рассылку видят преподаватели группы и родители, которым она пришла и которые ещё привязаны к ребёнку */
+export async function broadcastReader(user: AuthUser, groupId: string, broadcastId: string) {
+  if (user.teacherId) return void (await teacherGroup(user, groupId));
+  const copy = await prisma.message.findFirst({
+    where: { broadcastId, parentId: user.parentId ?? '', student: { groupId, parents: { some: { parentId: user.parentId ?? '' } } } },
+    select: { id: true },
+  });
+  if (!copy) throw notFound('Рассылка не найдена');
+}
+
 /** Записи, зависящие от суммы по ученику, сериализуются: два запроса сразу не обойдут проверку */
 export async function lockStudent(tx: Prisma.TransactionClient, studentId: string) {
   await tx.$queryRaw`SELECT id FROM "Student" WHERE id = ${studentId} FOR UPDATE`;

@@ -4,6 +4,8 @@ import { pluralize } from '../../../lib/hooks';
 import { Modal } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { broadcast } from '../api';
+import { prepareAttachments } from '../attachments';
+import { AttachmentPicker } from './Attachments';
 import { SendLater } from './SendLater';
 
 /** Сообщение всем родителям группы: каждому в его обычную переписку, отвечают туда же */
@@ -11,6 +13,7 @@ export function BroadcastButton({ groupId }: { groupId: string }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
   const [later, setLater] = useState(false);
   const [sendAt, setSendAt] = useState('');
   const [busy, setBusy] = useState(false);
@@ -19,11 +22,14 @@ export function BroadcastButton({ groupId }: { groupId: string }) {
     e.preventDefault();
     setBusy(true);
     try {
-      const { sent } = await broadcast(groupId, text.trim(), later ? new Date(sendAt).toISOString() : undefined);
+      const ready = await prepareAttachments(files);
+      const at = later ? new Date(sendAt).toISOString() : undefined;
+      const { sent } = await broadcast(groupId, { text: text.trim(), sendAt: at, files: ready });
       const whom = `${sent} ${pluralize(sent, 'родителю', 'родителям', 'родителям')}`;
       toast({ text: later ? `Запланировано: ${whom}` : `Отправлено: ${whom}`, tone: 'ok' });
       setOpen(false);
       setText('');
+      setFiles([]);
       setLater(false);
       setSendAt('');
     } catch (err) {
@@ -54,8 +60,11 @@ export function BroadcastButton({ groupId }: { groupId: string }) {
               onChange={(e) => setText(e.target.value)}
             />
           </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <AttachmentPicker files={files} onChange={setFiles} disabled={busy} />
+          </div>
           <SendLater on={later} at={sendAt} onToggle={setLater} onTime={setSendAt} />
-          <button className="btn btn-primary" disabled={busy || !text.trim() || (later && !sendAt)}>
+          <button className="btn btn-primary" disabled={busy || (!text.trim() && !files.length) || (later && !sendAt)}>
             {later ? 'Запланировать' : 'Отправить всем'}
           </button>
         </form>

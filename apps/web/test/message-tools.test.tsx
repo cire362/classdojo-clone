@@ -11,7 +11,7 @@ vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../sr
 const api = vi.mocked((await import('../src/lib/api')).api);
 beforeEach(() => { api.mockReset(); });
 
-const MESSAGE: ChatMessage = { id: 'm1', text: 'Собрание', createdAt: '2030-01-15T09:30:00.000Z', mine: true, author: 'Анна', fromParent: false, scheduled: true };
+const MESSAGE: ChatMessage = { id: 'm1', text: 'Собрание', createdAt: '2030-01-15T09:30:00.000Z', mine: true, author: 'Анна', fromParent: false, scheduled: true, files: [] };
 const click = (name: string) => fireEvent.click(screen.getByRole('button', { name }));
 
 it('время для поля datetime-local собирается по местному времени', () => {
@@ -26,7 +26,7 @@ it('преподаватель откладывает сообщение: без
   expect(screen.getByRole('button', { name: 'Отправить' })).toBeDisabled();
   fireEvent.change(screen.getByLabelText('Дата и время отправки'), { target: { value: '2030-01-15T09:30' } });
   await act(async () => click('Отправить'));
-  expect(send).toHaveBeenCalledWith('Собрание', new Date('2030-01-15T09:30').toISOString());
+  expect(send).toHaveBeenCalledWith({ text: 'Собрание', sendAt: new Date('2030-01-15T09:30').toISOString(), files: [] });
   expect(screen.getByText('Уйдёт в это время')).toBeVisible();
   expect(screen.getByLabelText('Отправить позже')).not.toBeChecked();
 });

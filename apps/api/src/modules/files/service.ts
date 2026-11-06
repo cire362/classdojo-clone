@@ -27,7 +27,7 @@ function cleanName(name: string) {
   return base.replace(/[\x00-\x1f\x7f]/g, '').trim().slice(-MAX_NAME) || 'файл';
 }
 
-const view = (f: Omit<FileInfo, 'createdAt'> & { createdAt: Date }): FileInfo => ({
+export const view = (f: Omit<FileInfo, 'createdAt'> & { createdAt: Date }): FileInfo => ({
   id: f.id,
   name: f.name,
   mime: f.mime,
@@ -77,7 +77,7 @@ export async function addFileRows(
   owner: Owner,
   uploaderId: string,
   uploads: Upload[],
-  place: { postId?: string; visibleFrom?: Date } = {},
+  place: { postId?: string; messageId?: string; broadcastId?: string; visibleFrom?: Date } = {},
 ) {
   const { _sum } = await tx.storedFile.aggregate({ where: { OR: [{ groupId }, { student: { groupId } }] }, _sum: { size: true } });
   const adding = uploads.reduce((sum, u) => sum + u.bytes.length, 0);
@@ -115,7 +115,7 @@ export async function storeFile(owner: Owner, groupId: string, uploaderId: strin
 }
 
 export async function findFile(id: string) {
-  const file = await prisma.storedFile.findUnique({ where: { id } });
+  const file = await prisma.storedFile.findUnique({ where: { id }, include: { message: { select: { studentId: true, parentId: true } } } });
   if (!file) throw notFound('Файл не найден');
   return file;
 }

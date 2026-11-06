@@ -260,8 +260,15 @@ model StoredFile {
   position     Int      @default(0)
   /// До этого момента файл видят только преподаватели: так фото отложенной записи не откроются раньше неё
   visibleFrom  DateTime?
+  /// Вложение сообщения: видят только участники этой переписки, удаляется вместе с сообщением
+  messageId    String?
+  message      Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  /// Вложение рассылки: одно на все её копии, видят преподаватели группы и получившие её родители
+  broadcastId  String?
 
   @@index([postId])
+  @@index([messageId])
+  @@index([broadcastId])
   @@index([groupId])
   @@index([studentId])
   @@index([uploadedById])
@@ -451,19 +458,23 @@ model FeedRead {
 
 /// Переписка родителя с преподавателями группы о конкретном ребёнке: ветка = (родитель, ученик)
 model Message {
-  id        String   @id @default(cuid())
-  studentId String
-  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  parentId  String
-  parent    Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
-  senderId  String
-  sender    Account  @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  text      String
+  id          String       @id @default(cuid())
+  studentId   String
+  student     Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  parentId    String
+  parent      Parent       @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      Account      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  text        String
   /// Момент отправки: у отложенного сообщения он в будущем, как у записей ленты
-  createdAt DateTime @default(now())
+  createdAt   DateTime     @default(now())
+  /// Общий для всех копий одной рассылки: по нему находятся её вложения
+  broadcastId String?
+  files       StoredFile[]
 
   @@index([studentId, parentId, createdAt])
   @@index([parentId])
+  @@index([broadcastId])
 }
 
 model ThreadRead {

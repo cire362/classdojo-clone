@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { AppEnv } from '../../platform/auth.js';
 import { HttpError, notFound } from '../../platform/errors.js';
 import { streamBytes } from '../../platform/storage.js';
-import { groupReader, studentReader } from '../access/index.js';
+import { broadcastReader, groupReader, studentReader, threadReader } from '../access/index.js';
 import { fileBytes, findFile } from './service.js';
 
 /** Картинки и видео показываются на странице, всё остальное только скачивается */
@@ -25,7 +25,10 @@ function byteRange(header: string | undefined, size: number): { start: number; e
 export const fileRoutes = new Hono<AppEnv>().get('/:id', async (c) => {
   const file = await findFile(c.req.param('id'));
   const user = c.get('user');
-  if (file.groupId) await groupReader(user, file.groupId);
+  // Вложения переписки видят только её участники: ни ученик, ни второй родитель ребёнка их не откроют
+  if (file.message) await threadReader(user, file.message.studentId, file.message.parentId);
+  else if (file.broadcastId) await broadcastReader(user, file.groupId!, file.broadcastId);
+  else if (file.groupId) await groupReader(user, file.groupId);
   else await studentReader(user, file.studentId!);
   if (file.visibleFrom && file.visibleFrom > new Date() && !user.teacherId) throw notFound('Файл не найден');
   // Файл не меняется, но права могут: no-cache проверяет их при каждом показе, а 304 экономит трафик

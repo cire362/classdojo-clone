@@ -1,5 +1,6 @@
 /** Типы ответов API: счётчики, уведомления ученика, лента и переписка */
 import type { ReactionKind } from '../feed.js';
+import type { FileInfo } from './files.js';
 
 /** Счётчики: новые сообщения, записи в ленте и выданные награды ученика */
 export interface Notifications {
@@ -60,7 +61,10 @@ export interface FeedPost {
 
 export interface ChatMessage {
   id: string;
+  /** Пустой, если в сообщении только файлы */
   text: string;
+  /** Фото и PDF: GET /api/files/:id, превью фото — ?size=preview */
+  files: FileInfo[];
   createdAt: string;
   mine: boolean;
   author: string;
