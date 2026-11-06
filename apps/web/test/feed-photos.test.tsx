@@ -103,7 +103,7 @@ it('ошибка сервера оставляет фото и текст в ф�
 });
 
 it('лента группы напоминает, чьи фото нельзя публиковать, только когда фото выбраны', async () => {
-  api.mockResolvedValue([] as never);
+  api.mockImplementation(async (_method, path) => (path.endsWith('/moderation') ? { reports: [], log: [] } : []) as never);
   renderInGroup(<GroupFeed />, groupData());
   await screen.findByText('Пока без объявлений');
   expect(screen.queryByText(/нельзя публиковать фото/)).toBeNull();

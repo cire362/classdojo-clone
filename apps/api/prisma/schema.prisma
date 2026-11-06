@@ -49,6 +49,8 @@ model Account {
   postReactions PostReaction[]
   postComments  PostComment[]
   uploadedFiles StoredFile[]
+  reports       ContentReport[]
+  moderation    ModerationAction[]
 }
 
 model Session {
@@ -118,7 +120,9 @@ model Group {
   awardedPoints      PointEvent[] @relation("AwardedInGroup")
 
   @@index([teacherId])
-  files StoredFile[]
+  files      StoredFile[]
+  reports    ContentReport[]
+  moderation ModerationAction[]
 }
 
 /// Соавтор группы: ведёт уроки, отметку, учеников и родителей наравне с владельцем.
@@ -411,9 +415,12 @@ model Post {
   /// Момент публикации: у отложенной записи он в будущем, поэтому лента и счётчики покажут её сами, без планировщика
   createdAt DateTime @default(now())
   pinned    Boolean  @default(false)
+  /// Скрыта преподавателем или по жалобам: видят только преподаватели группы
+  hiddenAt  DateTime?
 
   reactions PostReaction[]
   comments  PostComment[]
+  reports   ContentReport[]
   reminderFor ClassEvent?
   files     StoredFile[]
 
@@ -441,8 +448,52 @@ model PostComment {
   authorName String
   text       String
   createdAt  DateTime @default(now())
+  hiddenAt   DateTime?
+  reports    ContentReport[]
 
   @@index([postId, createdAt])
+}
+
+/// Жалоба родителя на запись ленты или комментарий. Открыта, пока преподаватель её не разобрал
+model ContentReport {
+  id         String       @id @default(cuid())
+  groupId    String
+  group      Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  postId     String
+  post       Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  /// Жалоба на комментарий; без него — на саму запись
+  commentId  String?
+  comment    PostComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reporterId String
+  reporter   Account      @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reason     String
+  note       String       @default("")
+  createdAt  DateTime     @default(now())
+  resolvedAt DateTime?
+
+  @@index([groupId, resolvedAt])
+  @@index([postId])
+  @@index([commentId])
+  @@index([reporterId])
+}
+
+/// Журнал модерации группы. Текст сохраняется коротким отрывком: запись или комментарий могли удалить
+model ModerationAction {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  /// Кто сделал; пусто — скрыто автоматически по жалобам или аккаунт уже удалён
+  actorId   String?
+  actor     Account? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorName String
+  action    String
+  target    String
+  targetId  String
+  excerpt   String
+  createdAt DateTime @default(now())
+
+  @@index([groupId, createdAt])
+  @@index([actorId])
 }
 
 /// До какого момента аккаунт прочитал ленту группы — для счётчика новых записей

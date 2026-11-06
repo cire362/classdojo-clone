@@ -35,6 +35,13 @@ export interface FeedComment {
   text: string;
   createdAt: string;
   canDelete: boolean;
+  /** Скрыт: его видят только преподаватели группы */
+  hidden: boolean;
+  /** Открытые жалобы; видны только преподавателям, остальным 0 */
+  reports: number;
+  /** Может пожаловаться: родитель на чужой комментарий, пока не жаловался */
+  canReport: boolean;
+  reported: boolean;
 }
 
 export interface FeedPost {
@@ -57,6 +64,15 @@ export interface FeedPost {
   canComment: boolean;
   canReact: boolean;
   canPin: boolean;
+  /** Скрыта: её видят только преподаватели группы */
+  hidden: boolean;
+  /** Открытые жалобы на запись; видны только преподавателям */
+  reports: number;
+  canReport: boolean;
+  /** Этот зритель уже пожаловался */
+  reported: boolean;
+  /** Преподаватель может скрыть запись и комментарии и вернуть их */
+  canModerate: boolean;
 }
 
 export interface ChatMessage {

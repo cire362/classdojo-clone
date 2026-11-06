@@ -30,7 +30,9 @@ export const fileRoutes = new Hono<AppEnv>().get('/:id', async (c) => {
   else if (file.broadcastId) await broadcastReader(user, file.groupId!, file.broadcastId);
   else if (file.groupId) await groupReader(user, file.groupId);
   else await studentReader(user, file.studentId!);
-  if (file.visibleFrom && file.visibleFrom > new Date() && !user.teacherId) throw notFound('Файл не найден');
+  // Фото отложенной или скрытой записи видят только преподаватели
+  const concealed = (file.visibleFrom && file.visibleFrom > new Date()) || file.post?.hiddenAt;
+  if (concealed && !user.teacherId) throw notFound('Файл не найден');
   // Файл не меняется, но права могут: no-cache проверяет их при каждом показе, а 304 экономит трафик
   const preview = c.req.query('size') === 'preview';
   const headers = {

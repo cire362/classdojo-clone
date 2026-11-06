@@ -58,7 +58,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await page.setViewportSize({ width: 375, height: 812 });
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(376);
       await post.screenshot({ path: test.info().outputPath(`feed-post-mobile-${colorScheme}.png`) });
-      await page.getByRole('checkbox', { name: 'Комментарии родителей' }).click({ force: true });
+      // Без force: при прокрутке переключатель может уйти под закреплённую шапку
+      await page.getByText('Комментарии родителей', { exact: true }).click();
       await expect(page.getByRole('checkbox', { name: 'Комментарии родителей' })).not.toBeChecked();
       await expect(post.getByRole('list', { name: 'Комментарии' })).toBeVisible();
       await expect(post.getByRole('textbox', { name: 'Комментарий', exact: true })).toHaveCount(0);

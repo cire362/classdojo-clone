@@ -73,10 +73,12 @@ export const teacherFeedRoutes = new Hono<AppEnv>()
     return c.json(await addComment(group.id, c.req.param('postId'), viewer, user.name, text), 201);
   })
   .delete('/groups/:id/feed/:postId/comments/:commentId', async (c) => {
-    const { group, viewer } = await access(c);
-    return c.json(await deleteComment(group.id, c.req.param('postId'), c.req.param('commentId'), viewer));
+    const { group, user, viewer } = await access(c);
+    const actor = { accountId: user.accountId, name: user.name };
+    return c.json(await deleteComment(group.id, c.req.param('postId'), c.req.param('commentId'), viewer, actor));
   })
   .delete('/posts/:id', async (c) => {
-    await deletePost(c.get('user').teacherId!, c.req.param('id'));
+    const user = c.get('user');
+    await deletePost(user.teacherId!, { accountId: user.accountId, name: user.name }, c.req.param('id'));
     return c.json({ ok: true });
   });

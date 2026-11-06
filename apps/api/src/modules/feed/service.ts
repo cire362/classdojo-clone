@@ -6,6 +6,7 @@ import type { Prisma } from '../../generated/prisma/client.js';
 import { HttpError, notFound } from '../../platform/errors.js';
 import { ARCHIVED_MESSAGE, groupsOf, lockGroup } from '../access/index.js';
 import { addFileRows, prepareUpload, purgeDeletedFiles, writeUploads, type Upload } from '../files/index.js';
+import { logAction, type Actor } from '../moderation/index.js';
 
 /** Лента класса: объявления преподавателей группы для учеников и их родителей */
 export const MAX_POST_LENGTH = 2000;
@@ -29,6 +30,7 @@ const POST_INCLUDE = {
   comments: { orderBy: { createdAt: 'desc' }, take: COMMENTS_SHOWN },
   group: { select: { feedComments: true, archivedAt: true } },
   files: { select: { id: true, mime: true }, orderBy: { position: 'asc' } },
+  reports: { select: { reporterId: true, commentId: true, resolvedAt: true } },
 } as const;
 
 type LoadedPost = Prisma.PostGetPayload<{ include: typeof POST_INCLUDE }>;
@@ -37,6 +39,11 @@ function postView(p: LoadedPost, viewer: Viewer, now: Date): FeedPost {
   const reactions = Object.fromEntries(REACTION_KINDS.map((k) => [k, p.reactions.filter((r) => r.kind === k).length]));
   const isTeacher = viewer.role === 'teacher';
   const open = !p.group.archivedAt && p.createdAt <= now;
+  // Жалобы: преподаватель видит число открытых, родитель — подал ли он сам
+  const reportsOn = (commentId: string | null) => p.reports.filter((r) => r.commentId === commentId);
+  const openReports = (commentId: string | null) => (isTeacher ? reportsOn(commentId).filter((r) => !r.resolvedAt).length : 0);
+  const reported = (commentId: string | null) => reportsOn(commentId).some((r) => r.reporterId === viewer.accountId);
+  const published = p.createdAt <= now;
   return {
     id: p.id,
     text: p.text,
@@ -50,23 +57,32 @@ function postView(p: LoadedPost, viewer: Viewer, now: Date): FeedPost {
     reactions: reactions as FeedPost['reactions'],
     myReaction: (p.reactions.find((r) => r.accountId === viewer.accountId)?.kind ?? null) as ReactionKind | null,
     // Комментарии — разговор взрослых, ученики их не видят
-    comments: viewer.role === 'student' ? [] : [...p.comments].reverse().map((c) => ({
+    comments: viewer.role === 'student' ? [] : [...p.comments].reverse().filter((c) => isTeacher || !c.hiddenAt).map((c) => ({
       id: c.id,
       author: c.authorName,
       text: c.text,
       createdAt: c.createdAt.toISOString(),
       canDelete: isTeacher || c.accountId === viewer.accountId,
+      hidden: !!c.hiddenAt,
+      reports: openReports(c.id),
+      canReport: viewer.role === 'parent' && c.accountId !== viewer.accountId && !reported(c.id),
+      reported: reported(c.id),
     })),
     canComment: viewer.role !== 'student' && p.group.feedComments && open,
     canReact: open,
     canPin: isTeacher && !p.group.archivedAt,
+    hidden: !!p.hiddenAt,
+    reports: openReports(null),
+    canReport: viewer.role === 'parent' && published && !reported(null),
+    reported: reported(null),
+    canModerate: isTeacher,
   };
 }
 
 export async function groupFeed(groupId: string, viewer: Viewer): Promise<FeedPost[]> {
   const through = new Date();
   const posts = await prisma.post.findMany({
-    where: { groupId, ...(viewer.role === 'teacher' ? {} : { createdAt: { lte: through } }) },
+    where: { groupId, ...(viewer.role === 'teacher' ? {} : { createdAt: { lte: through }, hiddenAt: null }) },
     orderBy: [{ pinned: 'desc' }, { createdAt: 'desc' }],
     take: PAGE,
     include: POST_INCLUDE,
@@ -76,9 +92,10 @@ export async function groupFeed(groupId: string, viewer: Viewer): Promise<FeedPo
   return posts.map((p) => postView(p, viewer, through));
 }
 
-/** Запись после изменения, глазами того, кто её изменил */
+/** Запись после изменения, глазами того, кто её изменил. Скрытую видят только преподаватели */
 export async function feedPost(groupId: string, postId: string, viewer: Viewer): Promise<FeedPost> {
-  const post = await prisma.post.findFirst({ where: { id: postId, groupId }, include: POST_INCLUDE });
+  const hidden = viewer.role === 'teacher' ? {} : { hiddenAt: null };
+  const post = await prisma.post.findFirst({ where: { id: postId, groupId, ...hidden }, include: POST_INCLUDE });
   if (!post) throw notFound('Запись не найдена');
   return postView(post, viewer, new Date());
 }
@@ -86,7 +103,7 @@ export async function feedPost(groupId: string, postId: string, viewer: Viewer):
 /** Опубликованная запись группы, которую ещё можно менять: отложенной для учеников и родителей нет */
 export async function openPost(groupId: string, postId: string) {
   const post = await prisma.post.findFirst({
-    where: { id: postId, groupId, createdAt: { lte: new Date() } },
+    where: { id: postId, groupId, createdAt: { lte: new Date() }, hiddenAt: null },
     select: { id: true, group: { select: { feedComments: true, archivedAt: true } } },
   });
   if (!post) throw notFound('Запись не найдена');
@@ -172,13 +189,17 @@ export async function setPinned(groupId: string, postId: string, viewer: Viewer,
   return feedPost(groupId, postId, viewer);
 }
 
-export async function deletePost(teacherId: string, postId: string) {
+/** Удаление попадает в журнал модерации: запись могли удалить по жалобе */
+export async function deletePost(teacherId: string, actor: Actor, postId: string) {
   const post = await prisma.post.findFirst({ where: { id: postId, group: groupsOf(teacherId) }, include: { group: true } });
   if (!post) throw notFound('Запись не найдена');
   if (post.authorId !== teacherId && post.group.teacherId !== teacherId) {
     throw new HttpError(403, 'Удалить запись может её автор или создатель группы');
   }
-  await prisma.post.delete({ where: { id: post.id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.post.delete({ where: { id: post.id } });
+    await logAction(tx, post.groupId, actor, 'delete', 'post', post);
+  });
   await purgeDeletedFiles();
 }
 
@@ -190,7 +211,9 @@ export async function unreadPosts(accountId: string, groupIds: string[]): Promis
   const now = new Date();
   const counts = await Promise.all(
     groupIds.map((groupId) =>
-      prisma.post.count({ where: { groupId, createdAt: { lte: now, ...(readAt.has(groupId) ? { gt: readAt.get(groupId)! } : {}) } } }),
+      prisma.post.count({
+        where: { groupId, hiddenAt: null, createdAt: { lte: now, ...(readAt.has(groupId) ? { gt: readAt.get(groupId)! } : {}) } },
+      }),
     ),
   );
   return counts.reduce((a, b) => a + b, 0);

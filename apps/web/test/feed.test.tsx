@@ -13,10 +13,14 @@ beforeEach(() => { api.mockReset(); });
 const POST: FeedPost = {
   id: 'p1', text: 'Экскурсия', media: [], createdAt: '2026-11-02T10:00:00.000Z', author: 'Анна Сергеевна', canDelete: true, pinned: false, scheduled: false,
   reactions: { like: 1, heart: 0, star: 0 }, myReaction: null, comments: [], canComment: true, canReact: true, canPin: true,
+  hidden: false, reports: 0, canReport: false, reported: false, canModerate: true,
 };
+const COMMENT = { hidden: false, reports: 0, canReport: false, reported: false };
+const EMPTY_QUEUE = { reports: [], log: [] };
 const PATH = '/teacher/groups/g1/feed';
 function reply(posts: FeedPost[], result?: Partial<FeedPost>) {
-  api.mockImplementation(async (method) => (method === 'GET' ? posts : { ...POST, ...result }) as never);
+  api.mockImplementation(async (method, path) =>
+    (path.endsWith('/moderation') ? EMPTY_QUEUE : method === 'GET' ? posts : { ...POST, ...result }) as never);
 }
 const render = (props: Partial<Parameters<typeof Feed>[0]> = {}) => renderApp(<Feed path={PATH} {...props} />);
 const click = async (name: string | RegExp) => fireEvent.click(await screen.findByRole('button', { name }));
@@ -33,7 +37,7 @@ it('реакция ставится и снимается повторным н�
 });
 
 it('комментарий отправляется и очищает поле; ошибка оставляет текст', async () => {
-  const comment = { id: 'c1', author: 'Родитель: Маша И.', text: 'Спасибо', createdAt: POST.createdAt, canDelete: true };
+  const comment = { id: 'c1', author: 'Родитель: Маша И.', text: 'Спасибо', createdAt: POST.createdAt, canDelete: true, ...COMMENT };
   api.mockImplementation(async (method) => (method === 'GET' ? [POST] : { ...POST, comments: [comment] }) as never);
   render();
   const field = await screen.findByLabelText('Комментарий');
@@ -50,8 +54,8 @@ it('комментарий отправляется и очищает поле; 
 });
 
 it('комментарий удаляется, если это разрешено', async () => {
-  const mine = { id: 'c1', author: 'Я', text: 'Мой', createdAt: POST.createdAt, canDelete: true };
-  const other = { id: 'c2', author: 'Другой', text: 'Чужой', createdAt: POST.createdAt, canDelete: false };
+  const mine = { id: 'c1', author: 'Я', text: 'Мой', createdAt: POST.createdAt, canDelete: true, ...COMMENT };
+  const other = { id: 'c2', author: 'Другой', text: 'Чужой', createdAt: POST.createdAt, canDelete: false, ...COMMENT };
   api.mockImplementation(async (method) => (method === 'GET' ? [{ ...POST, comments: [mine, other] }] : { ...POST, comments: [other] }) as never);
   render();
   expect(await screen.findAllByRole('button', { name: 'Удалить комментарий' })).toHaveLength(1);

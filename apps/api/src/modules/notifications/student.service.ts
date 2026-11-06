@@ -49,7 +49,7 @@ export async function studentNotifications(
   const read = await prisma.feedRead.findUnique({ where: { accountId_groupId: { accountId: s.accountId, groupId: s.groupId } } });
   const [posts, rewards, feedUnread, rewardUnread] = await Promise.all([
     prisma.post.findMany({
-      where: { groupId: s.groupId, createdAt: { lte: through }, ...before('createdAt', 'feed', cursor) },
+      where: { groupId: s.groupId, hiddenAt: null, createdAt: { lte: through }, ...before('createdAt', 'feed', cursor) },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: PAGE + 1,
       select: { id: true, text: true, createdAt: true, author: { select: { name: true } } },
     }),
@@ -58,7 +58,7 @@ export async function studentNotifications(
       orderBy: [{ decidedAt: 'desc' }, { id: 'desc' }], take: PAGE + 1,
       select: { id: true, title: true, cost: true, decidedAt: true, decidedBy: { select: { teacher: { select: { name: true } } } } },
     }),
-    prisma.post.count({ where: { groupId: s.groupId, createdAt: { lte: through, ...(read ? { gt: read.readAt } : {}) } } }),
+    prisma.post.count({ where: { groupId: s.groupId, hiddenAt: null, createdAt: { lte: through, ...(read ? { gt: read.readAt } : {}) } } }),
     prisma.rewardRequest.count({ where: { studentId, status: 'APPROVED', decidedAt: { gt: s.rewardsReadAt, lte: through } } }),
   ]);
   const items = [

@@ -115,7 +115,10 @@ export async function storeFile(owner: Owner, groupId: string, uploaderId: strin
 }
 
 export async function findFile(id: string) {
-  const file = await prisma.storedFile.findUnique({ where: { id }, include: { message: { select: { studentId: true, parentId: true } } } });
+  const file = await prisma.storedFile.findUnique({
+    where: { id },
+    include: { message: { select: { studentId: true, parentId: true } }, post: { select: { hiddenAt: true } } },
+  });
   if (!file) throw notFound('Файл не найден');
   return file;
 }

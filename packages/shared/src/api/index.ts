@@ -8,3 +8,4 @@ export type * from './home.js';
 export type * from './rewards.js';
 export type * from './attendance.js';
 export type * from './stats.js';
+export type * from './moderation.js';
