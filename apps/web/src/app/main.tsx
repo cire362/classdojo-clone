@@ -21,6 +21,7 @@ import {
   GroupsPage,
   InvitePage,
   SchoolJoinPage,
+  SchoolNewsPage,
   LessonPage,
   JoinClassPage,
   LoginPage,
@@ -72,13 +73,13 @@ function Offline() {
   );
 }
 
-function RequireRole({ role, children }: { role: Role; children: ReactNode }) {
+function RequireRole({ role, children }: { role: Role | Role[]; children: ReactNode }) {
   const { user, loading, offline } = useAuth();
   const location = useLocation();
   if (loading) return <PageSkeleton />;
   if (!user && offline) return <Offline />;
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
-  if (user.role !== role) return <Navigate to="/" replace />;
+  if (![role].flat().includes(user.role)) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -128,6 +129,7 @@ createRoot(document.getElementById('root')!).render(
             <Route element={<AppLayout />}>
               <Route path="/" element={<Home />} />
               <Route path="/hero" element={student(<MyHeroPage />)} />
+              <Route path="/school" element={<RequireRole role={['TEACHER', 'PARENT']}><SchoolNewsPage /></RequireRole>} />
               <Route path="/g/:groupId" element={teacher(<GroupLayout />)}>
                 <Route index element={<LessonPage />} />
                 <Route path="attendance" element={<AttendancePage />} />

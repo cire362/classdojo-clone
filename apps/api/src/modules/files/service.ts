@@ -122,6 +122,7 @@ export async function findFile(id: string) {
       message: { select: { studentId: true, parentId: true } },
       post: { select: { hiddenAt: true } },
       work: { select: { status: true } },
+      schoolPost: { select: { schoolId: true } },
     },
   });
   if (!file) throw notFound('Файл не найден');

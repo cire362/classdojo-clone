@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { api, type Notifications } from '../../lib/api';
 import { useAuth } from '../auth';
 
-const EMPTY: Notifications = { messages: 0, feed: 0, rewards: 0, works: 0, assignments: 0 };
+const EMPTY: Notifications = { messages: 0, feed: 0, rewards: 0, works: 0, assignments: 0, school: 0 };
 const POLL_MS = 60_000;
 
 interface NotifyState {

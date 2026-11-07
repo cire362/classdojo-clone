@@ -59,6 +59,8 @@ model Account {
   postReactions PostReaction[]
   postComments  PostComment[]
   uploadedFiles StoredFile[]
+  schoolPosts   SchoolPost[] @relation("SchoolPostAuthor")
+  schoolFeedReads SchoolFeedRead[]
   reports       ContentReport[]
   moderation    ModerationAction[]
   decidedWorks  StudentWork[] @relation("WorkDecidedBy")
@@ -87,6 +89,38 @@ model School {
   joinCode  String?   @unique
   admins    Admin[]
   teachers  Teacher[]
+  posts     SchoolPost[]
+  feedReads SchoolFeedRead[]
+}
+
+/// Запись ленты школы от директора или завуча. Видят администрация, преподаватели школы и родители её учеников
+model SchoolPost {
+  id         String   @id @default(cuid())
+  schoolId   String
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  authorId   String?
+  author     Account? @relation("SchoolPostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  /// Подпись сохраняется при публикации: запись остаётся, даже если вход автора удалят
+  authorName String
+  text       String
+  /// Объявление всем семьям: выделено в ленте, администрация видит, сколько семей его прочитали
+  important  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  files      StoredFile[]
+
+  @@index([schoolId, createdAt])
+}
+
+/// До какого момента аккаунт прочитал ленту школы
+model SchoolFeedRead {
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  seenAt    DateTime
+
+  @@id([accountId, schoolId])
+  @@index([schoolId])
 }
 
 model Admin {
@@ -316,12 +350,16 @@ model StoredFile {
   /// Файл задания: видят преподаватели группы, получившие задание ученики и их родители
   assignmentId String?
   assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  /// Файл записи ленты школы: видят все, кто видит саму ленту
+  schoolPostId String?
+  schoolPost   SchoolPost? @relation(fields: [schoolPostId], references: [id], onDelete: Cascade)
 
   @@index([postId])
   @@index([messageId])
   @@index([broadcastId])
   @@index([workId])
   @@index([assignmentId])
+  @@index([schoolPostId])
   @@index([groupId])
   @@index([studentId])
   @@index([uploadedById])

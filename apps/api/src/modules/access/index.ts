@@ -9,6 +9,8 @@ export {
   lockSchool,
   lockStudent,
   parentChild,
+  schoolReader,
+  schoolsOf,
   studentReader,
   teacherGroup,
   teacherStudent,

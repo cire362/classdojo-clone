@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLoad } from '../../../lib/hooks';
+import { AdminSchoolFeed } from '../../schoolfeed';
 import { ErrorBox, Skeleton } from '../../../ui';
 import { fetchSchool } from '../api';
 import { ROLE_NAMES, canManageTeachers } from '../roles';
@@ -10,10 +11,11 @@ import { SchoolTeachers } from './SchoolTeachers';
 import { SchoolTitle } from './SchoolTitle';
 import { TeacherRequests } from './TeacherRequests';
 
-type Tab = 'teachers' | 'groups' | 'staff' | 'password';
+type Tab = 'teachers' | 'groups' | 'feed' | 'staff' | 'password';
 const TABS: [Tab, string][] = [
   ['teachers', 'Преподаватели'],
   ['groups', 'Группы школы'],
+  ['feed', 'Лента школы'],
   ['staff', 'Администрация'],
   ['password', 'Мой пароль'],
 ];
@@ -64,6 +66,7 @@ export function AdminPanel() {
         </div>
       )}
       {tab === 'groups' && <SchoolGroups canExport={manager} />}
+      {tab === 'feed' && <AdminSchoolFeed canWrite={manager} />}
       {tab === 'staff' && <SchoolStaff isDirector={school.role === 'DIRECTOR'} />}
       {tab === 'password' && <div className="max-w-2xl"><PasswordCard endpoint="/admin/me/password" /></div>}
     </div>

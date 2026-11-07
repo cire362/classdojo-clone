@@ -10,6 +10,8 @@ export interface Notifications {
   works: number;
   /** Новые задания и новые решения по ответам на них */
   assignments: number;
+  /** Новые записи ленты школы: у преподавателя и родителя */
+  school: number;
 }
 
 export interface StudentNotification {

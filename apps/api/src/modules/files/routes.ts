@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { AppEnv } from '../../platform/auth.js';
 import { HttpError, notFound } from '../../platform/errors.js';
 import { streamBytes } from '../../platform/storage.js';
-import { assignmentReader, broadcastReader, groupReader, studentReader, threadReader } from '../access/index.js';
+import { assignmentReader, broadcastReader, groupReader, schoolReader, studentReader, threadReader } from '../access/index.js';
 import { fileBytes, findFile } from './service.js';
 
 /** Картинки и видео показываются на странице, всё остальное только скачивается */
@@ -29,6 +29,7 @@ export const fileRoutes = new Hono<AppEnv>().get('/:id', async (c) => {
   if (file.message) await threadReader(user, file.message.studentId, file.message.parentId);
   else if (file.broadcastId) await broadcastReader(user, file.groupId!, file.broadcastId);
   else if (file.assignmentId) await assignmentReader(user, file.groupId!, file.assignmentId);
+  else if (file.schoolPost) await schoolReader(user, file.schoolPost.schoolId);
   else if (file.groupId) await groupReader(user, file.groupId);
   else await studentReader(user, file.studentId!);
   // Файлы работы до одобрения видят только сам ученик и преподаватели группы

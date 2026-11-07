@@ -7,8 +7,9 @@ import { isQuietNow, unreadMessages } from '../messages/index.js';
 import { pendingRequestsOf, unreadRewards } from '../rewards/index.js';
 import { unseenWorks } from '../works/index.js';
 import { unseenAssignments } from '../assignments/index.js';
+import { unreadSchoolPosts } from '../schoolfeed/index.js';
 
-/** Значки в шапке: сообщения, лента, выданные награды и решения по работам ученика или ожидающие запросы преподавателя. */
+/** Значки в шапке: сообщения, лента, выданные награды и решения по работам ученика, ожидающие запросы преподавателя, лента школы. */
 export async function notifications(user: AuthUser): Promise<Notifications> {
   if (user.teacherId) {
     const threads = await prisma.message.groupBy({
@@ -19,12 +20,13 @@ export async function notifications(user: AuthUser): Promise<Notifications> {
     const links = threads.length
       ? await prisma.parentStudent.findMany({ where: { OR: threads.map((t) => ({ studentId: t.studentId, parentId: t.parentId })) } })
       : [];
-    const [quiet, unread, rewards] = await Promise.all([
+    const [quiet, unread, rewards, school] = await Promise.all([
       isQuietNow(user.teacherId),
       unreadMessages(user.accountId, links),
       prisma.rewardRequest.count({ where: pendingRequestsOf(user.teacherId) }),
+      unreadSchoolPosts(user),
     ]);
-    return { messages: quiet ? 0 : unread, feed: 0, rewards, works: 0, assignments: 0 };
+    return { messages: quiet ? 0 : unread, feed: 0, rewards, works: 0, assignments: 0, school };
   }
   if (user.studentId) {
     const s = await prisma.student.findUniqueOrThrow({ where: { id: user.studentId }, select: { groupId: true, rewardsReadAt: true } });
@@ -34,18 +36,19 @@ export async function notifications(user: AuthUser): Promise<Notifications> {
       unseenWorks(user.studentId),
       unseenAssignments(user.studentId),
     ]);
-    return { messages: 0, feed, rewards, works, assignments };
+    return { messages: 0, feed, rewards, works, assignments, school: 0 };
   }
   if (user.parentId) {
     const links = await prisma.parentStudent.findMany({
       where: { parentId: user.parentId },
       select: { studentId: true, student: { select: { groupId: true } } },
     });
-    const [messages, feed] = await Promise.all([
+    const [messages, feed, school] = await Promise.all([
       unreadMessages(user.accountId, links.map((l) => ({ studentId: l.studentId, parentId: user.parentId! }))),
       unreadPosts(user.accountId, [...new Set(links.map((l) => l.student.groupId))]),
+      unreadSchoolPosts(user),
     ]);
-    return { messages, feed, rewards: 0, works: 0, assignments: 0 };
+    return { messages, feed, rewards: 0, works: 0, assignments: 0, school };
   }
-  return { messages: 0, feed: 0, rewards: 0, works: 0, assignments: 0 };
+  return { messages: 0, feed: 0, rewards: 0, works: 0, assignments: 0, school: 0 };
 }

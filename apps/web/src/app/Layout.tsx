@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ChunkErrorBoundary } from '../ui/ChunkErrorBoundary';
-import { BellIcon, ChatsCircleIcon, GearSixIcon, GiftIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
+import { BellIcon, ChatsCircleIcon, GearSixIcon, GiftIcon, MegaphoneIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
 import { useAuth } from '../features/auth';
 import { useNews } from '../features/news';
 import { CountBadge, useNotifications } from '../features/notifications';
@@ -100,6 +100,17 @@ export function AppLayout() {
                 <BellIcon size={22} aria-hidden />
                 <span className="sr-only">Уведомления</span>
                 <CountBadge count={counts.feed + counts.rewards} label={pluralize(counts.feed + counts.rewards, 'непрочитанное уведомление', 'непрочитанных уведомления', 'непрочитанных уведомлений')} />
+              </NavLink>
+            )}
+            {(user?.role === 'TEACHER' || user?.role === 'PARENT') && (
+              <NavLink
+                to="/school"
+                className={({ isActive }) => `icon-btn relative w-auto gap-1 px-2.5 ${isActive ? 'bg-surface-2 text-ink' : ''}`}
+                title="Новости школы"
+              >
+                <MegaphoneIcon size={22} aria-hidden />
+                <span className="sr-only">Новости школы</span>
+                <CountBadge count={counts.school} label="новых записей" />
               </NavLink>
             )}
             {user?.role === 'TEACHER' && (

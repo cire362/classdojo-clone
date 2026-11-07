@@ -56,6 +56,23 @@ export async function lockSchool(tx: Prisma.TransactionClient, schoolId: string)
   if (!rows.length) throw notFound('Школа не найдена');
 }
 
+/**
+ * Школы, чью ленту видит пользователь: администрация и преподаватель — своя школа, родитель — школы,
+ * где учатся его дети (по действующим группам). Ученик ленту школы не видит: это канал «школа — семья».
+ */
+export async function schoolsOf(user: AuthUser): Promise<string[]> {
+  if (user.role === 'ADMIN' || user.role === 'TEACHER') return user.schoolId ? [user.schoolId] : [];
+  if (!user.parentId) return [];
+  const where = { groups: { some: { archivedAt: null, students: { some: { parents: { some: { parentId: user.parentId } } } } } } };
+  const rows = await prisma.teacher.findMany({ where, select: { schoolId: true }, distinct: ['schoolId'] });
+  return rows.map((r) => r.schoolId);
+}
+
+/** Ленту школы и её файлы видят только её читатели; остальным школа как несуществующая */
+export async function schoolReader(user: AuthUser, schoolId: string) {
+  if (!(await schoolsOf(user)).includes(schoolId)) throw notFound('Не найдено');
+}
+
 /** Преподаватель группы, её ученик или родитель её ученика, иначе 404 */
 export async function groupReader(user: AuthUser, groupId: string) {
   if (user.teacherId) return void (await teacherGroup(user, groupId));
