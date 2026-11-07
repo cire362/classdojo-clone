@@ -51,7 +51,7 @@ it('запись школы видят её преподаватели и сем
   });
   expect(created.status).toBe(201);
   expect(created.body[0]).toMatchObject({ text: 'Собрание в пятницу в 18:00', important: true, author: 'Завуч Северная школа' });
-  expect(created.body[0].reach).toEqual({ read: 0, families: 1 });
+  expect(created.body[0].reach).toEqual({ read: 0, total: 1, audience: 'families' });
   const [pdf, photo] = created.body[0].files;
 
   for (const cookie of [t.cookie, parent]) expect((await call('GET', '/api/notifications', { cookie })).body.school).toBe(1);
@@ -62,7 +62,8 @@ it('запись школы видят её преподаватели и сем
   });
   expect((await call('GET', '/api/notifications', { cookie: parent })).body.school).toBe(0);
   expect((await call('GET', '/api/school-feed', { cookie: parent })).body[0].unread).toBe(false);
-  expect((await call('GET', '/api/admin/school-feed', { cookie: north.director })).body[0].reach).toEqual({ read: 1, families: 1 });
+  const afterRead = (await call('GET', '/api/admin/school-feed', { cookie: north.director })).body[0];
+  expect(afterRead.reach).toEqual({ read: 1, total: 1, audience: 'families' });
   expect((await call('GET', `/api/files/${photo.id}?size=preview`, { cookie: parent })).status).toBe(200);
   expect((await call('GET', `/api/files/${pdf.id}`, { cookie: t.cookie })).status).toBe(200);
 

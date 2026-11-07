@@ -10,7 +10,7 @@ import { parentChildRoutes, parentInviteRoutes } from '../modules/parents/index.
 import { parentProfileRoutes } from '../modules/profile/index.js';
 import { parentReportRoutes } from '../modules/reports/index.js';
 import { parentRewardRoutes } from '../modules/rewards/index.js';
-import { parentSchoolInboxRoutes } from '../modules/schoolinbox/index.js';
+import { readerSchoolInboxRoutes } from '../modules/schoolinbox/index.js';
 
 /** Кабинет родителя: только свои дети (чужие — 404). Школьные данные только для просмотра, домашние баллы ведёт сам родитель */
 export const parentRoutes = new Hono<AppEnv>()
@@ -26,4 +26,4 @@ export const parentRoutes = new Hono<AppEnv>()
   .route('/', parentRewardRoutes)
   .route('/', parentExportRoutes)
   .route('/', parentAssignmentRoutes)
-  .route('/', parentSchoolInboxRoutes);
+  .route('/', readerSchoolInboxRoutes);

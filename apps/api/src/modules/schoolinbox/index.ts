@@ -1,2 +1,2 @@
-export { adminSchoolInboxRoutes, parentSchoolInboxRoutes } from './routes.js';
+export { adminSchoolInboxRoutes, readerSchoolInboxRoutes } from './routes.js';
 export { unreadSchoolReplies, waitingThreads } from './service.js';

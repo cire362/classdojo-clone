@@ -75,7 +75,7 @@ export function StudentsManager() {
                 </Link>
                 {!data.group.archivedAt && <IssueCardsButton groupId={data.group.id} className="btn btn-secondary btn-sm" />}
                 {!data.group.archivedAt && withoutParents < data.students.length && <BroadcastButton groupId={data.group.id} />}
-                {!data.group.archivedAt && withoutParents > 0 && (
+                {!data.group.archivedAt && data.group.parentsEnabled && withoutParents > 0 && (
                   <button className="btn btn-secondary btn-sm" onClick={() => setParentsConfirm(true)}>
                     <UsersIcon size={18} /> Входы родителям
                   </button>

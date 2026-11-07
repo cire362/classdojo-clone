@@ -31,13 +31,16 @@ export async function notifications(user: AuthUser): Promise<Notifications> {
   }
   if (user.studentId) {
     const s = await prisma.student.findUniqueOrThrow({ where: { id: user.studentId }, select: { groupId: true, rewardsReadAt: true } });
-    const [feed, rewards, works, assignments] = await Promise.all([
+    // Лента и ящик учреждения есть только у студентов колледжа и вуза: schoolsOf вернёт для школьника пустой список
+    const [feed, rewards, works, assignments, school, schoolInbox] = await Promise.all([
       unreadPosts(user.accountId, [s.groupId]),
       unreadRewards(user.studentId, s.rewardsReadAt),
       unseenWorks(user.studentId),
       unseenAssignments(user.studentId),
+      unreadSchoolPosts(user),
+      unreadSchoolReplies(user),
     ]);
-    return { messages: 0, feed, rewards, works, assignments, school: 0, schoolInbox: 0 };
+    return { messages: 0, feed, rewards, works, assignments, school, schoolInbox };
   }
   if (user.parentId) {
     const links = await prisma.parentStudent.findMany({

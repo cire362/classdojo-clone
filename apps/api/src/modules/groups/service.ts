@@ -6,7 +6,7 @@ import { groupsOf } from '../access/index.js';
 import { todayAttendance } from '../attendance/index.js';
 import { filesExpireAt } from '../files/index.js';
 import { classGoal } from '../goals/index.js';
-import { deleteOrphanParents } from '../parents/index.js';
+import { deleteOrphanParents, revokeGroupInvites } from '../parents/index.js';
 import { lessonPlan } from '../plan/index.js';
 import { cardSummaries } from '../points/index.js';
 import { createDefaultReasons, manualReasons } from '../reasons/index.js';
@@ -15,7 +15,10 @@ import { groupTeams } from '../teams/index.js';
 import { pendingWorkCount } from '../works/index.js';
 import { pendingAnswerCount } from '../assignments/index.js';
 
-type OwnedGroup = { id: string; name: string; subtractTeacher: boolean; feedComments: boolean; archivedAt: Date | null; isOwner: boolean };
+type OwnedGroup = {
+  id: string; name: string; subtractTeacher: boolean; feedComments: boolean; parentsEnabled: boolean;
+  archivedAt: Date | null; isOwner: boolean;
+};
 
 export async function teacherGroups(teacherId: string): Promise<GroupListItem[]> {
   const groups = await prisma.group.findMany({
@@ -46,7 +49,9 @@ export async function teacherGroups(teacherId: string): Promise<GroupListItem[]>
 
 export async function createGroup(teacherId: string, name: string): Promise<Omit<GroupListItem, 'isOwner' | 'colleagues'>> {
   const group = await prisma.$transaction(async (tx) => {
-    const g = await tx.group.create({ data: { name, teacherId } });
+    // Студенты колледжа и вуза совершеннолетние: родители в их группах по умолчанию выключены
+    const { school } = await tx.teacher.findUniqueOrThrow({ where: { id: teacherId }, select: { school: { select: { kind: true } } } });
+    const g = await tx.group.create({ data: { name, teacherId, parentsEnabled: school.kind === 'SCHOOL' } });
     await createDefaultReasons(tx, g.id);
     await createDefaultRewards(tx, g.id);
     return g;
@@ -79,6 +84,7 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
       name: group.name,
       subtractTeacher: group.subtractTeacher,
       feedComments: group.feedComments,
+      parentsEnabled: group.parentsEnabled,
       archivedAt: group.archivedAt?.toISOString() ?? null,
       isOwner: group.isOwner,
       filesExpireAt: filesExpireAt(group.archivedAt)?.toISOString() ?? null,
@@ -105,9 +111,14 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
   };
 }
 
-export async function updateGroup(groupId: string, data: { name?: string; subtractTeacher?: boolean; feedComments?: boolean }) {
+/** Выключение родителей отзывает действующие приглашения: по ним нельзя было бы войти. Выданные входы остаются */
+export async function updateGroup(
+  groupId: string,
+  data: { name?: string; subtractTeacher?: boolean; feedComments?: boolean; parentsEnabled?: boolean },
+) {
   const g = await prisma.group.update({ where: { id: groupId }, data });
-  return { id: g.id, name: g.name, subtractTeacher: g.subtractTeacher, feedComments: g.feedComments };
+  if (data.parentsEnabled === false) await revokeGroupInvites(groupId);
+  return { id: g.id, name: g.name, subtractTeacher: g.subtractTeacher, feedComments: g.feedComments, parentsEnabled: g.parentsEnabled };
 }
 
 /** Архив: группа скрывается из списка и замораживается (просмотр, статистика и Excel остаются) */

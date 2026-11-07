@@ -26,6 +26,10 @@ export function AppLayout() {
   const { news } = useNews();
   const { counts } = useNotifications();
   const terms = useTerms();
+  // Лента и ящик учреждения: у семей всегда, у студентов — только в колледже и вузе, школьник их не видит
+  const adultStudent = user?.role === 'STUDENT' && terms.kind !== 'SCHOOL';
+  const readsSchool = user?.role === 'TEACHER' || user?.role === 'PARENT' || adultStudent;
+  const writesSchool = user?.role === 'PARENT' || adultStudent;
   const navClass = ({ isActive }: { isActive: boolean }) => `tab ${isActive ? 'active' : ''}`;
   const newCount = news?.newPartIds.length ?? 0;
   const heroLink = (
@@ -73,7 +77,7 @@ export function AppLayout() {
       <header className="no-print sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
           <Link to="/" className="shrink-0" aria-label="Герои класса — главная">
-            <Logo hideNameOnMobile={user?.role === 'TEACHER'} />
+            <Logo hideNameOnMobile={user?.role === 'TEACHER' || adultStudent} />
           </Link>
           {user?.role === 'STUDENT' && (
             <nav className="ml-2 hidden gap-1 sm:flex" aria-label="Разделы">
@@ -103,7 +107,7 @@ export function AppLayout() {
                 <CountBadge count={counts.feed + counts.rewards} label={pluralize(counts.feed + counts.rewards, 'непрочитанное уведомление', 'непрочитанных уведомления', 'непрочитанных уведомлений')} />
               </NavLink>
             )}
-            {(user?.role === 'TEACHER' || user?.role === 'PARENT') && (
+            {readsSchool && (
               <NavLink
                 to="/school"
                 className={({ isActive }) => `icon-btn relative w-auto gap-1 px-2.5 ${isActive ? 'bg-surface-2 text-ink' : ''}`}
@@ -114,7 +118,7 @@ export function AppLayout() {
                 <CountBadge count={counts.school} label="новых записей" />
               </NavLink>
             )}
-            {user?.role === 'PARENT' && (
+            {writesSchool && (
               <NavLink
                 to="/school-messages"
                 className={({ isActive }) => `icon-btn relative w-auto gap-1 px-2.5 ${isActive ? 'bg-surface-2 text-ink' : ''}`}

@@ -117,7 +117,7 @@ const byRole = {
   ],
   STUDENT: [
     loaders.cabinet, loaders.myHero, loaders.studentFeed, loaders.studentCalendar,
-    loaders.shop, loaders.notifications, loaders.studentWorks, loaders.studentAssignments,
+    loaders.shop, loaders.notifications, loaders.studentWorks, loaders.studentAssignments, loaders.schoolNews, loaders.schoolMessages,
   ],
   PARENT: [loaders.parentHome, loaders.schoolNews, loaders.schoolMessages],
 };

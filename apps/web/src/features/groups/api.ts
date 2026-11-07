@@ -8,6 +8,9 @@ export const createGroup = (name: string) => api<GroupListItem>('POST', '/teache
 
 export const renameGroup = (groupId: string, name: string) => api('PATCH', `/teacher/groups/${groupId}`, { name });
 
+export const setParentsEnabled = (groupId: string, parentsEnabled: boolean) =>
+  api('PATCH', `/teacher/groups/${groupId}`, { parentsEnabled });
+
 export const archiveGroup = (groupId: string) => api('POST', `/teacher/groups/${groupId}/archive`);
 
 export const restoreGroup = (groupId: string) => api('POST', `/teacher/groups/${groupId}/restore`);

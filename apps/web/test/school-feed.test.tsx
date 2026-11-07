@@ -39,7 +39,7 @@ it('пустая лента школы объясняет, что здесь п�
   expect(await screen.findByText('Новостей пока нет')).toBeVisible();
 });
 
-const ADMIN_POST: AdminSchoolPost = { ...POST, reach: { read: 3, families: 10 } };
+const ADMIN_POST: AdminSchoolPost = { ...POST, reach: { read: 3, total: 10, audience: 'families' } };
 
 it('директор публикует объявление с файлом и видит, сколько семей прочитали; удаление после подтверждения', async () => {
   api.mockImplementation(async (method) => (method === 'GET' ? [] : method === 'POST' ? [ADMIN_POST] : []) as never);

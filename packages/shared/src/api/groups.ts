@@ -94,6 +94,8 @@ export interface GroupDetails {
     name: string;
     subtractTeacher: boolean;
     feedComments: boolean;
+    /** Входы родителей в группе: в колледже и вузе по умолчанию выключены */
+    parentsEnabled: boolean;
     archivedAt: string | null;
     isOwner: boolean;
     /** Когда удалятся фото и файлы архивной группы; у действующей null */

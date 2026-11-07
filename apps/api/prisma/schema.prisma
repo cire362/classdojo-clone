@@ -70,6 +70,7 @@ model Account {
   schoolPosts   SchoolPost[] @relation("SchoolPostAuthor")
   schoolFeedReads SchoolFeedRead[]
   schoolMessages  SchoolMessage[] @relation("SchoolMessageSender")
+  schoolThreads   SchoolThread[]  @relation("SchoolThreadAuthor")
   reports       ContentReport[]
   moderation    ModerationAction[]
   decidedWorks  StudentWork[] @relation("WorkDecidedBy")
@@ -132,24 +133,25 @@ model SchoolGoal {
   createdAt DateTime @default(now())
 }
 
-/// Переписка семьи со школой: один родитель и одна школа. Отвечает любой сотрудник администрации
+/// Переписка с администрацией учреждения: один вход (родитель или студент) и одно учреждение. Отвечает любой сотрудник
 model SchoolThread {
   id            String    @id @default(cuid())
   schoolId      String
   school        School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  parentId      String
-  parent        Parent    @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  /// Кто пишет: родитель или сам студент
+  accountId     String
+  account       Account   @relation("SchoolThreadAuthor", fields: [accountId], references: [id], onDelete: Cascade)
   /// Родитель написал, а школа ещё не ответила и не отметила вопрос решённым
   waitingSince  DateTime?
   /// Время последнего сообщения: по нему сортируется ящик
   lastMessageAt DateTime  @default(now())
-  /// Когда родитель последний раз открывал переписку
-  parentReadAt  DateTime?
+  /// Когда автор переписки последний раз её открывал
+  readerReadAt  DateTime?
   messages      SchoolMessage[]
 
-  @@unique([schoolId, parentId])
+  @@unique([schoolId, accountId])
   @@index([schoolId, lastMessageAt])
-  @@index([parentId])
+  @@index([accountId])
 }
 
 model SchoolMessage {
@@ -158,7 +160,7 @@ model SchoolMessage {
   thread     SchoolThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   senderId   String?
   sender     Account?     @relation("SchoolMessageSender", fields: [senderId], references: [id], onDelete: SetNull)
-  /// Подпись сотрудника школы, сохранённая при отправке; у родителя пусто
+  /// Подпись сотрудника, сохранённая при отправке; у родителя и студента пусто
   authorName String       @default("")
   fromSchool Boolean
   text       String
@@ -245,6 +247,8 @@ model Group {
   subtractTeacher Boolean   @default(true)
   /// Родители могут комментировать записи ленты
   feedComments    Boolean   @default(true)
+  /// Входы родителей в группе. В колледже и вузе по умолчанию выключены: студенты совершеннолетние
+  parentsEnabled  Boolean   @default(true)
   /// Дата переноса в архив; null — группа активна
   archivedAt      DateTime?
   createdAt       DateTime  @default(now())
@@ -338,7 +342,6 @@ model Parent {
   children    ParentStudent[]
   messages    Message[]
   threadReads ThreadRead[]
-  schoolThreads SchoolThread[]
 }
 
 /// Приглашение родителя: одноразовое, в базе только хеш кода

@@ -44,7 +44,10 @@ export interface Profile {
   /** Одобренные работы ученика, новые сверху */
   works: StudentWork[];
   badges: StudentBadge[];
-  student: { id: string; name: string; login: string; group: { id: string; name: string; archivedAt: string | null } };
+  student: {
+    id: string; name: string; login: string;
+    group: { id: string; name: string; archivedAt: string | null; parentsEnabled: boolean };
+  };
   hero: Hero;
   level: LevelInfo;
   points: { today: PointsSum; week: PointsSum; total: PointsSum };

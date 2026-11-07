@@ -8,6 +8,12 @@ import { issueGroupParents, issueParent, linkParent, resetParentPassword, studen
 
 const ParentLink = z.object({ login: z.string().trim().min(1).max(64) });
 
+/** Новые входы и приглашения родителей — только в действующей группе с включёнными родителями */
+function canAddParents(group: { archivedAt: Date | null; parentsEnabled: boolean }) {
+  if (group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
+  if (!group.parentsEnabled) throw new HttpError(409, 'Родители в этой группе выключены. Включите их в настройках группы');
+}
+
 /** Входы родителей. Роль проверяет сборка routes/teacher.ts */
 export const teacherParentRoutes = new Hono<AppEnv>()
   .get('/students/:id/parents', async (c) => {
@@ -16,13 +22,13 @@ export const teacherParentRoutes = new Hono<AppEnv>()
   })
   .post('/students/:id/parents', async (c) => {
     const student = await teacherStudent(c.get('user'), c.req.param('id'));
-    if (student.group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
+    canAddParents(student.group);
     return c.json(await issueParent({ id: student.id, name: student.name }));
   })
   .post('/students/:id/parents/link', async (c) => {
     const user = c.get('user');
     const student = await teacherStudent(user, c.req.param('id'));
-    if (student.group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
+    canAddParents(student.group);
     const { login } = parse(ParentLink, await c.req.json().catch(() => null));
     await linkParent(user.teacherId!, student.id, login);
     return c.json(await studentParents(student.id));
@@ -44,7 +50,7 @@ export const teacherParentRoutes = new Hono<AppEnv>()
   })
   .post('/students/:id/parent-invites', async (c) => {
     const student = await teacherStudent(c.get('user'), c.req.param('id'));
-    if (student.group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
+    canAddParents(student.group);
     return c.json(await createInvite({ id: student.id, name: student.name }), 201);
   })
   .delete('/students/:id/parent-invites/:inviteId', async (c) => {
@@ -54,9 +60,11 @@ export const teacherParentRoutes = new Hono<AppEnv>()
   })
   .post('/groups/:id/parent-invites', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
+    canAddParents(group);
     return c.json({ invites: await createGroupInvites(group.id) }, 201);
   })
   .post('/groups/:id/parents', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'), { writable: true });
+    canAddParents(group);
     return c.json({ credentials: await issueGroupParents(group.id) });
   });

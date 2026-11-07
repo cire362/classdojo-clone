@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { ArchiveIcon, DownloadSimpleIcon } from '@phosphor-icons/react';
 import { exportUrl } from '../../../lib/files';
 import { pluralize } from '../../../lib/hooks';
-import { Modal } from '../../../ui';
+import { Modal, Switch } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { useGroup } from '../hooks/useGroup';
 import { GroupTeachersSection } from './GroupTeachers';
-import { archiveGroup, deleteGroup, renameGroup } from '../api';
+import { archiveGroup, deleteGroup, renameGroup, setParentsEnabled } from '../api';
 import { useTerms } from '../../auth';
 import { cap } from '@heroes/shared/terms';
 
@@ -22,6 +22,30 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
     <Modal open={open} title="Настройки группы" onClose={onClose}>
       <div className="space-y-8">
         <GroupTeachersSection groupId={data.group.id} isOwner={data.group.isOwner} />
+        {data.group.isOwner && !data.group.archivedAt && (
+          <div className="space-y-3">
+            <h3 className="text-base">Родители</h3>
+            <label className="flex cursor-pointer items-center gap-2">
+              <Switch
+                checked={data.group.parentsEnabled}
+                label="Входы родителей"
+                onChange={async (on) => {
+                  try {
+                    await setParentsEnabled(data.group.id, on);
+                    await reload();
+                  } catch (err) {
+                    toast({ text: (err as Error).message, tone: 'error' });
+                  }
+                }}
+              />
+              <span className="text-sm">Входы родителей</span>
+            </label>
+            <p className="text-sm text-ink-soft">
+              Родители видят успехи, ленту и пишут преподавателям. Для совершеннолетних {t.student.many.gen} их обычно выключают:
+              новые входы и приглашения выдать нельзя, действующие приглашения отзываются, а уже выданные входы остаются.
+            </p>
+          </div>
+        )}
         <div className="space-y-3">
           <h3 className="text-base">Фото и файлы</h3>
           <p className="text-sm text-ink-soft">

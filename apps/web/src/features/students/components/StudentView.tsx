@@ -75,7 +75,11 @@ export function StudentProfileView() {
           </>
         }
       />
-      <ParentAccessCard student={data.student} groupId={data.student.group.id} archived={!!data.student.group.archivedAt} />
+      <ParentAccessCard
+        student={data.student}
+        groupId={data.student.group.id}
+        archived={!!data.student.group.archivedAt || !data.student.group.parentsEnabled}
+      />
       <MoveStudentModal
         student={moving ? { id: data.student.id, name: data.student.name, groupId: data.student.group.id } : null}
         onClose={() => setMoving(false)}

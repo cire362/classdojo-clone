@@ -19,9 +19,10 @@ const limit = bodyLimit({
   },
 });
 
-/** Чтение ленты школы: преподаватели и родители. Вход проверяет app.ts */
+/** Чтение ленты: преподаватели, родители и студенты колледжа и вуза. Школьник ленту школы не видит. Вход проверяет app.ts */
 export const schoolFeedRoutes = new Hono<AppEnv>().get('/', async (c) => {
-  if (c.get('user').role === 'STUDENT') throw new HttpError(403, 'Недостаточно прав');
+  const user = c.get('user');
+  if (user.role === 'STUDENT' && (user.institution ?? 'SCHOOL') === 'SCHOOL') throw new HttpError(403, 'Недостаточно прав');
   return c.json(await readSchoolFeed(c.get('user')));
 });
 

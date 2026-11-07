@@ -12,17 +12,24 @@ import { useTerms } from '../../auth';
 
 const EMPTY = { text: '', important: false, files: [] as File[] };
 
-/** Сколько семей открыли ленту после объявления */
+/** Сколько читателей открыли ленту после объявления: семьи в школе, студенты в колледже и вузе */
 function Reach({ reach }: { reach: NonNullable<AdminSchoolPost['reach']> }) {
-  if (!reach.families) return <p className="text-sm text-ink-soft">Пока нет семей со входом.</p>;
-  const word = pluralize(reach.families, 'семьи', 'семей', 'семей');
-  return <p className="text-sm font-semibold">Прочитали {reach.read} из {reach.families} {word}</p>;
+  const t = useTerms();
+  const students = reach.audience === 'students';
+  if (!reach.total) return <p className="text-sm text-ink-soft">Пока нет {students ? t.student.many.gen : 'семей'} со входом.</p>;
+  const word = students
+    ? pluralize(reach.total, t.student.one.gen, t.student.many.gen, t.student.many.gen)
+    : pluralize(reach.total, 'семьи', 'семей', 'семей');
+  return <p className="text-sm font-semibold">Прочитали {reach.read} из {reach.total} {word}</p>;
 }
 
 /** Лента школы в панели: директор и завуч пишут и удаляют записи, сотрудник только читает */
 export function AdminSchoolFeed({ canWrite }: { canWrite: boolean }) {
   const toast = useToast();
   const t = useTerms();
+  // В школе объявления читают семьи, в колледже и вузе — сами студенты
+  const readersDat = t.kind === 'SCHOOL' ? 'всем семьям' : `всем ${t.student.many.dat}`;
+  const readersAll = t.kind === 'SCHOOL' ? 'всех семей' : `всех ${t.student.many.gen}`;
   const { data, error, reload, setData } = useLoad(() => fetchAdminSchoolFeed(), []);
   const [draft, setDraft] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
@@ -38,7 +45,7 @@ export function AdminSchoolFeed({ canWrite }: { canWrite: boolean }) {
       for (const file of await prepareAttachments(draft.files)) form.append('file', file);
       setData(await createSchoolPost(form));
       setDraft(EMPTY);
-      toast({ text: draft.important ? 'Объявление отправлено всем семьям' : 'Запись опубликована', tone: 'ok' });
+      toast({ text: draft.important ? `Объявление отправлено ${readersDat}` : 'Запись опубликована', tone: 'ok' });
     } catch (err) {
       toast({ text: (err as Error).message, tone: 'error' });
     } finally {
@@ -64,7 +71,10 @@ export function AdminSchoolFeed({ canWrite }: { canWrite: boolean }) {
       <div className="space-y-1">
         <h2 id="school-feed-title" className="text-lg">Лента {t.org.one.gen}</h2>
         <p className="text-sm text-ink-soft">
-          Записи видят преподаватели и семьи {t.student.many.gen} действующих {t.group.many.gen}. Сами {t.student.many.nom} ленту не видят.
+          {t.kind === 'SCHOOL'
+            ? `Записи видят преподаватели и семьи ${t.student.many.gen} действующих ${t.group.many.gen}. `
+              + `Сами ${t.student.many.nom} ленту не видят.`
+            : `Записи видят преподаватели и ${t.student.many.nom} действующих ${t.group.many.gen}, а также родители, если им выдан вход.`}
         </p>
       </div>
       {canWrite && (
@@ -88,8 +98,10 @@ export function AdminSchoolFeed({ canWrite }: { canWrite: boolean }) {
               onChange={(e) => setDraft({ ...draft, important: e.target.checked })}
             />
             <span>
-              <span className="font-semibold">Объявление для всех семей</span>
-              <span className="block text-sm text-ink-soft">Запись выделяется, а вы видите, сколько семей её прочитали.</span>
+              <span className="font-semibold">Объявление для {readersAll}</span>
+              <span className="block text-sm text-ink-soft">
+                Запись выделяется, а вы видите, сколько {t.kind === 'SCHOOL' ? 'семей' : t.student.many.gen} её прочитали.
+              </span>
             </span>
           </label>
           <button className="btn btn-primary" disabled={busy || (!draft.text.trim() && !draft.files.length)}>
@@ -125,7 +137,7 @@ export function AdminSchoolFeed({ canWrite }: { canWrite: boolean }) {
       )}
       <Modal open={!!removing} title="Удалить запись?" onClose={() => { if (!busy) setRemoving(null); }}>
         <div className="space-y-4">
-          <p>Запись и её файлы исчезнут из ленты у всех преподавателей и семей.</p>
+          <p>Запись и её файлы исчезнут из ленты у всех, кто её видит.</p>
           <button className="btn btn-primary" disabled={busy} onClick={remove}>Удалить запись</button>
         </div>
       </Modal>

@@ -1,5 +1,5 @@
 import type { AdminSchoolPost, SchoolPost } from '@heroes/shared/api';
-import type { Prisma } from '../../generated/prisma/client';
+import type { InstitutionKind, Prisma } from '../../generated/prisma/client';
 import type { AuthUser } from '../../platform/auth.js';
 import { prisma } from '../../platform/db.js';
 import { HttpError, notFound } from '../../platform/errors.js';
@@ -67,10 +67,14 @@ export async function unreadSchoolPosts(user: AuthUser): Promise<number> {
   return prisma.schoolPost.count({ where: { OR: schoolIds.map((schoolId) => ({ schoolId, ...after(schoolId) })) } });
 }
 
-/** Семьи школы: входы родителей, чьи дети учатся в действующих группах её преподавателей */
-const familiesOf = (schoolId: string): Prisma.AccountWhereInput => ({
-  parent: { children: { some: { student: { group: { archivedAt: null, teacher: { schoolId } } } } } },
-});
+const inActiveGroup = (schoolId: string) => ({ group: { archivedAt: null, teacher: { schoolId } } });
+
+/**
+ * Читатели объявлений: в школе — входы родителей, чьи дети учатся в действующих группах, в колледже и вузе —
+ * входы самих студентов этих групп
+ */
+const audienceOf = (schoolId: string, kind: InstitutionKind): Prisma.AccountWhereInput =>
+  kind === 'SCHOOL' ? { parent: { children: { some: { student: inActiveGroup(schoolId) } } } } : { student: inActiveGroup(schoolId) };
 
 /** Записи для панели школы; у объявления — сколько семей открыли ленту после его публикации */
 export async function adminSchoolFeed(schoolId: string): Promise<AdminSchoolPost[]> {
@@ -80,13 +84,15 @@ export async function adminSchoolFeed(schoolId: string): Promise<AdminSchoolPost
     take: PAGE,
     include: INCLUDE,
   });
-  const families = posts.some((p) => p.important) ? await prisma.account.count({ where: familiesOf(schoolId) }) : 0;
+  const { kind } = await prisma.school.findUniqueOrThrow({ where: { id: schoolId }, select: { kind: true } });
+  const audience = kind === 'SCHOOL' ? 'families' as const : 'students' as const;
+  const total = posts.some((p) => p.important) ? await prisma.account.count({ where: audienceOf(schoolId, kind) }) : 0;
   return Promise.all(posts.map(async (p) => {
     if (!p.important) return { ...base(p), reach: null };
     const read = await prisma.account.count({
-      where: { ...familiesOf(schoolId), schoolFeedReads: { some: { schoolId, seenAt: { gte: p.createdAt } } } },
+      where: { ...audienceOf(schoolId, kind), schoolFeedReads: { some: { schoolId, seenAt: { gte: p.createdAt } } } },
     });
-    return { ...base(p), reach: { read, families } };
+    return { ...base(p), reach: { read, total, audience } };
   }));
 }
 

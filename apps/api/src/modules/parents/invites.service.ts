@@ -142,3 +142,8 @@ export async function addChildByInvite(parentId: string, code: string): Promise<
   });
   return { studentName: invite.student.name, groupName: invite.student.group.name };
 }
+
+/** Группа выключила родителей: действующие приглашения её учеников больше не работают */
+export async function revokeGroupInvites(groupId: string) {
+  await prisma.parentInvite.deleteMany({ where: { student: { groupId } } });
+}

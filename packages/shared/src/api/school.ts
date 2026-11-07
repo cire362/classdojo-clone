@@ -18,9 +18,12 @@ export interface SchoolPost {
   unread: boolean;
 }
 
-/** Запись в панели школы: у объявления видно, сколько семей его прочитали */
+/**
+ * Запись в панели учреждения: у объявления видно, сколько его читателей открыли ленту после публикации.
+ * Читатели — семьи в школе и студенты в колледже и вузе
+ */
 export interface AdminSchoolPost extends Omit<SchoolPost, 'unread'> {
-  reach: { read: number; families: number } | null;
+  reach: { read: number; total: number; audience: 'families' | 'students' } | null;
 }
 
 /** Переписка родителя с одной школой */

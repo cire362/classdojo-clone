@@ -59,11 +59,19 @@ export async function lockSchool(tx: Prisma.TransactionClient, schoolId: string)
 }
 
 /**
- * Школы, чью ленту видит пользователь: администрация и преподаватель — своя школа, родитель — школы,
- * где учатся его дети (по действующим группам). Ученик ленту школы не видит: это канал «школа — семья».
+ * Учреждения, чью ленту и ящик видит пользователь: администрация и преподаватель — своё, родитель — те,
+ * где учатся его дети (по действующим группам), студент колледжа и вуза — своё. Школьник их не видит:
+ * в школе это канал «школа — семья».
  */
 export async function schoolsOf(user: AuthUser): Promise<string[]> {
   if (user.role === 'ADMIN' || user.role === 'TEACHER') return user.schoolId ? [user.schoolId] : [];
+  // Школьник остаётся вне канала «школа — семья», студент колледжа и вуза читает и пишет сам
+  if (user.studentId) {
+    if (!user.institution || user.institution === 'SCHOOL') return [];
+    const where = { students: { some: { id: user.studentId } }, archivedAt: null };
+    const group = await prisma.group.findFirst({ where, select: { teacher: { select: { schoolId: true } } } });
+    return group ? [group.teacher.schoolId] : [];
+  }
   if (!user.parentId) return [];
   const where = { groups: { some: { archivedAt: null, students: { some: { parents: { some: { parentId: user.parentId } } } } } } };
   const rows = await prisma.teacher.findMany({ where, select: { schoolId: true }, distinct: ['schoolId'] });
@@ -76,12 +84,12 @@ export async function schoolReader(user: AuthUser, schoolId: string) {
 }
 
 /**
- * Переписку семьи со школой видят администрация этой школы и сам родитель, пока его дети в ней учатся.
- * Остальным она как несуществующая
+ * Переписку с администрацией видят администрация этого учреждения и её автор (родитель или студент), пока связан
+ * с учреждением. Остальным она как несуществующая
  */
-export async function schoolThreadReader(user: AuthUser, thread: { schoolId: string; parentId: string }) {
+export async function schoolThreadReader(user: AuthUser, thread: { schoolId: string; accountId: string }) {
   if (user.role === 'ADMIN' && user.schoolId === thread.schoolId) return;
-  if (user.parentId === thread.parentId && (await schoolsOf(user)).includes(thread.schoolId)) return;
+  if (user.accountId === thread.accountId && (await schoolsOf(user)).includes(thread.schoolId)) return;
   throw notFound('Не найдено');
 }
 
