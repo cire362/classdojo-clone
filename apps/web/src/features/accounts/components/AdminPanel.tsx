@@ -3,6 +3,7 @@ import { useLoad } from '../../../lib/hooks';
 import { useNotifications } from '../../notifications';
 import { AdminSchoolFeed } from '../../schoolfeed';
 import { SchoolInbox } from '../../schoolinbox';
+import { SchoolPointsPanel } from '../../schoolpoints';
 import { ErrorBox, Skeleton } from '../../../ui';
 import { fetchSchool } from '../api';
 import { ROLE_NAMES, canManageTeachers } from '../roles';
@@ -13,11 +14,12 @@ import { SchoolTeachers } from './SchoolTeachers';
 import { SchoolTitle } from './SchoolTitle';
 import { TeacherRequests } from './TeacherRequests';
 
-type Tab = 'teachers' | 'inbox' | 'groups' | 'feed' | 'staff' | 'password';
+type Tab = 'teachers' | 'inbox' | 'groups' | 'points' | 'feed' | 'staff' | 'password';
 const TABS: [Tab, string][] = [
   ['teachers', 'Преподаватели'],
   ['inbox', 'Ящик школы'],
   ['groups', 'Группы школы'],
+  ['points', 'Баллы школы'],
   ['feed', 'Лента школы'],
   ['staff', 'Администрация'],
   ['password', 'Мой пароль'],
@@ -77,6 +79,7 @@ export function AdminPanel() {
       )}
       {tab === 'inbox' && <SchoolInbox />}
       {tab === 'groups' && <SchoolGroups canExport={manager} />}
+      {tab === 'points' && <SchoolPointsPanel canEdit={manager} />}
       {tab === 'feed' && <AdminSchoolFeed canWrite={manager} />}
       {tab === 'staff' && <SchoolStaff isDirector={school.role === 'DIRECTOR'} />}
       {tab === 'password' && <div className="max-w-2xl"><PasswordCard endpoint="/admin/me/password" /></div>}

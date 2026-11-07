@@ -1,5 +1,6 @@
 /** Типы ответов API: лента школы */
 import type { FileInfo } from './files.js';
+import type { ClassGoal } from './groups.js';
 import type { ChatMessage } from './messaging.js';
 
 /** Запись ленты школы, как её видят преподаватели и родители */
@@ -42,4 +43,39 @@ export interface InboxThread {
 
 export interface InboxThreadDetail extends InboxThread {
   messages: ChatMessage[];
+}
+
+/** Общая причина школы в панели администрации */
+export interface SchoolReason {
+  id: string;
+  name: string;
+  emoji: string;
+  value: number;
+}
+
+/** Общая цель школы: копят все классы плюсами, начисленными после запуска */
+export type SchoolGoal = ClassGoal;
+
+/** Строка рейтинга классов: только суммы класса, без отдельных детей */
+export interface ClassRatingRow {
+  groupId: string;
+  groupName: string;
+  teacherName: string;
+  students: number;
+  /** Плюсы класса за период и в среднем на ученика: так большой класс не выигрывает числом */
+  earned: number;
+  perStudent: number;
+  place: number;
+  /** Группа смотрящего преподавателя */
+  mine: boolean;
+}
+
+export type RatingPeriod = 'week' | 'month';
+
+export interface SchoolPoints {
+  goal: SchoolGoal | null;
+  period: RatingPeriod;
+  /** Начало периода, ISO */
+  from: string;
+  rating: ClassRatingRow[];
 }

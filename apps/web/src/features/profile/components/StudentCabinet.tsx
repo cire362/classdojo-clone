@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { PaintBrushIcon, SparkleIcon } from '@phosphor-icons/react';
 import { LevelUpOverlay, PartPreview, fetchStudentProfile } from '../../hero';
 import { HomePoints } from '../../home';
+import { StudentSchoolGoal } from '../../schoolpoints';
 import { ProfileView } from './ProfileView';
 import { ErrorBox } from '../../../ui';
 import { ProfileSkeleton } from './ProfileSkeleton';
@@ -55,6 +56,8 @@ export function StudentCabinet() {
           </Link>
         }
       />
+
+      <StudentSchoolGoal />
 
       <HomePoints path="/student/home" />
 

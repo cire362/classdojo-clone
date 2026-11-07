@@ -5,7 +5,7 @@ import { parse } from '../../platform/errors.js';
 import { teacherGroup } from '../access/index.js';
 import { addReason, archiveReason, manualReasons, ownedReason, reorderReasons, updateReason } from './service.js';
 
-const ReasonBody = z.object({
+export const ReasonBody = z.object({
   countsForHelpBadge: z.boolean().optional(),
   name: z.string().trim().min(1).max(60),
   emoji: z.string().trim().min(1).max(16),

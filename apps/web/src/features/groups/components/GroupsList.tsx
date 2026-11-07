@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArchiveIcon, ArrowCounterClockwiseIcon, ArrowRightIcon, PlusIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { useAuth } from '../../auth';
 import { HeroHead } from '../../hero';
+import { TeacherSchoolPoints } from '../../schoolpoints';
 import { ErrorBox, Skeleton } from '../../../ui';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import { createGroup, fetchGroups, restoreGroup } from '../api';
@@ -104,6 +105,8 @@ export function GroupsList() {
           </button>
         </form>
       </div>
+
+      <TeacherSchoolPoints />
 
       {archived.length > 0 && (
         <section className="space-y-3">

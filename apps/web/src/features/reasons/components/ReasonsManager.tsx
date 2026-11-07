@@ -164,6 +164,7 @@ function ReasonRow({
         {r.emoji}
       </span>
       <span className="min-w-0 flex-1 truncate font-medium">{r.name}</span>
+      {r.school && <span className="chip bg-surface-2 text-ink-soft" title="Общая причина школы: её меняет администрация">Школа</span>}
       <span className={`chip ${r.value > 0 ? 'bg-plus-bg text-plus' : 'bg-minus-bg text-minus'}`}>
         {r.value > 0 ? `+${r.value}` : `−${Math.abs(r.value)}`}
       </span>
@@ -176,12 +177,14 @@ function ReasonRow({
           <CaretDownIcon size={18} />
         </button>
       </span>
+      {!r.school && <>
       <button className="icon-btn" aria-label={`Изменить «${r.name}»`} onClick={onEdit}>
         <PencilSimpleIcon size={20} />
       </button>
       <button className="icon-btn hover:text-minus" aria-label={`Удалить «${r.name}»`} onClick={onDelete}>
         <TrashIcon size={20} />
       </button>
+      </>}
       </>}
     </Reorder.Item>
   );

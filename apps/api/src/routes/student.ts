@@ -9,6 +9,7 @@ import { studentProfileRoutes } from '../modules/profile/index.js';
 import { studentNotificationRoutes } from '../modules/notifications/index.js';
 import { studentWorkRoutes } from '../modules/works/index.js';
 import { studentAssignmentRoutes } from '../modules/assignments/index.js';
+import { studentSchoolPointsRoutes } from '../modules/schoolpoints/index.js';
 
 /** Кабинет ученика: всё строго по studentId из сессии, параметров с чужими id нет */
 export const studentRoutes = new Hono<AppEnv>()
@@ -21,4 +22,5 @@ export const studentRoutes = new Hono<AppEnv>()
   .route('/', studentCalendarRoutes)
   .route('/', studentFeedRoutes)
   .route('/', studentWorkRoutes)
-  .route('/', studentAssignmentRoutes);
+  .route('/', studentAssignmentRoutes)
+  .route('/', studentSchoolPointsRoutes);

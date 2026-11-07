@@ -93,6 +93,34 @@ model School {
   posts     SchoolPost[]
   feedReads SchoolFeedRead[]
   threads   SchoolThread[]
+  reasons   SchoolReason[]
+  goal      SchoolGoal?
+}
+
+/// Общая причина школы: задаётся один раз, а в каждой группе школы появляется её копия в BehaviorReason
+model SchoolReason {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name      String
+  emoji     String
+  value     Int
+  /// Удалённая причина архивируется вместе с копиями: история начислений не теряет названий
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  copies    BehaviorReason[]
+
+  @@index([schoolId])
+}
+
+/// Общая цель школы: копят все классы плюсами, начисленными после её запуска
+model SchoolGoal {
+  id        String   @id @default(cuid())
+  schoolId  String   @unique
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title     String
+  target    Int
+  createdAt DateTime @default(now())
 }
 
 /// Переписка семьи со школой: один родитель и одна школа. Отвечает любой сотрудник администрации
@@ -450,10 +478,14 @@ model BehaviorReason {
   createdAt DateTime   @default(now())
 
   countsForHelpBadge Boolean @default(false)
+  /// Копия общей причины школы: в группе её нельзя изменить или удалить, меняется вместе с оригиналом
+  schoolReasonId String?
+  schoolReason   SchoolReason? @relation(fields: [schoolReasonId], references: [id], onDelete: SetNull)
 
   events PointEvent[]
 
   @@index([groupId])
+  @@unique([groupId, schoolReasonId])
 }
 
 model PointEvent {

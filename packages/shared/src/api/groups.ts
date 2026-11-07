@@ -33,6 +33,8 @@ export interface Reason {
   emoji: string;
   value: number;
   countsForHelpBadge?: boolean;
+  /** Общая причина школы: в группе её нельзя изменить или удалить */
+  school?: boolean;
 }
 
 export interface CardSummary {

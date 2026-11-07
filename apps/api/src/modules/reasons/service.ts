@@ -3,6 +3,7 @@ import type { Prisma } from '../../generated/prisma/client';
 import { prisma } from '../../platform/db.js';
 import { HttpError, notFound } from '../../platform/errors.js';
 import { ARCHIVED_MESSAGE, groupsOf } from '../access/index.js';
+import { copySchoolReasons } from './school.service.js';
 
 type Tx = Prisma.TransactionClient | typeof prisma;
 
@@ -21,20 +22,21 @@ export const DEFAULT_REASONS: ReadonlyArray<{ name: string; emoji: string; value
 
 type ReasonData = Omit<Reason, 'id'>;
 
-const reasonView = (r: Reason): Reason => ({
-  id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge,
+const reasonView = (r: Reason & { schoolReasonId?: string | null }): Reason => ({
+  id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge, school: !!r.schoolReasonId,
 });
 
 export const ATTENDANCE_REASON = { name: 'Посещение', emoji: '✅', value: 1 } as const;
 
-/** Создаёт набор причин по умолчанию и системную причину «Посещение» */
-export async function createDefaultReasons(tx: Tx, groupId: string): Promise<void> {
+/** Создаёт набор причин по умолчанию, общие причины школы и системную причину «Посещение» */
+export async function createDefaultReasons(tx: Prisma.TransactionClient, groupId: string): Promise<void> {
   await tx.behaviorReason.createMany({
     data: [
       ...DEFAULT_REASONS.map((r, i) => ({ ...r, groupId, sortOrder: i, countsForHelpBadge: r.name === 'Помог другу' })),
       { ...ATTENDANCE_REASON, groupId, kind: 'ATTENDANCE' as const, sortOrder: 1000 },
     ],
   });
+  await copySchoolReasons(tx, groupId);
 }
 
 export async function attendanceReason(tx: Tx, groupId: string) {
@@ -78,6 +80,7 @@ export async function ownedReason(teacherId: string, reasonId: string) {
   });
   if (!reason) throw notFound('Причина не найдена');
   if (reason.group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
+  if (reason.schoolReasonId) throw new HttpError(409, 'Это общая причина школы: её меняет директор или завуч');
   return reason;
 }
 
