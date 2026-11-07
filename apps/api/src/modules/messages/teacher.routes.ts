@@ -6,8 +6,9 @@ import { quietHours, saveQuietHours } from './quiet.service.js';
 import { messageInput, messageLimit } from './input.js';
 import { QuietBody } from './schemas.js';
 import { broadcastMessage, cancelMessage, sendTeacherMessage, teacherThread, teacherThreads, threadMessages } from './service.js';
+import { teacherStudentThread } from './student.service.js';
 
-/** Переписка с родителями. Роль проверяет сборка routes/teacher.ts */
+/** Переписка с родителями и студентами. Роль проверяет сборка routes/teacher.ts */
 export const teacherMessageRoutes = new Hono<AppEnv>()
   .get('/messages', async (c) => c.json(await teacherThreads(c.get('user').teacherId!, c.get('user').accountId)))
   .get('/students/:id/parents/:parentId/messages', async (c) => {
@@ -25,6 +26,22 @@ export const teacherMessageRoutes = new Hono<AppEnv>()
     const user = c.get('user');
     await teacherThread(user.teacherId!, c.req.param('id'), c.req.param('parentId'));
     return c.json(await cancelMessage(c.req.param('id'), c.req.param('parentId'), c.req.param('messageId'), user.accountId));
+  })
+  // Ветка самого студента (колледж и вуз): без родителя
+  .get('/students/:id/messages', async (c) => {
+    const user = c.get('user');
+    const thread = await teacherStudentThread(user.teacherId!, c.req.param('id'));
+    return c.json({ ...thread, messages: await threadMessages(c.req.param('id'), null, user.accountId, true) });
+  })
+  .post('/students/:id/messages', messageLimit, async (c) => {
+    const user = c.get('user');
+    await teacherStudentThread(user.teacherId!, c.req.param('id'));
+    return c.json(await sendTeacherMessage(c.req.param('id'), null, user.accountId, await messageInput(c)), 201);
+  })
+  .delete('/students/:id/messages/:messageId', async (c) => {
+    const user = c.get('user');
+    await teacherStudentThread(user.teacherId!, c.req.param('id'));
+    return c.json(await cancelMessage(c.req.param('id'), null, c.req.param('messageId'), user.accountId));
   })
   .post('/groups/:id/messages', messageLimit, async (c) => {
     const user = c.get('user');

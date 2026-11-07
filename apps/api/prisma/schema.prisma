@@ -61,6 +61,7 @@ model Account {
   messages    Message[]
   feedReads   FeedRead[]
   threadReads ThreadRead[]
+  studentThreadReads StudentThreadRead[]
   portfolio   PortfolioItem[]
   decisions   RewardRequest[] @relation("DecidedBy")
   awarded  PointEvent[] @relation("AwardedBy")
@@ -314,6 +315,7 @@ model Student {
   parents     ParentStudent[]
   messages    Message[]
   threadReads ThreadRead[]
+  studentThreadReads StudentThreadRead[]
   portfolio   PortfolioItem[]
   works       StudentWork[]
   assignments AssignmentStudent[]
@@ -688,8 +690,9 @@ model Message {
   id          String       @id @default(cuid())
   studentId   String
   student     Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  parentId    String
-  parent      Parent       @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  /// Ветка «родитель + ученик»; пусто — ветка самого студента с преподавателями группы (колледж и вуз)
+  parentId    String?
+  parent      Parent?      @relation(fields: [parentId], references: [id], onDelete: Cascade)
   senderId    String
   sender      Account      @relation(fields: [senderId], references: [id], onDelete: Cascade)
   text        String
@@ -702,6 +705,18 @@ model Message {
   @@index([studentId, parentId, createdAt])
   @@index([parentId])
   @@index([broadcastId])
+}
+
+/// Прочтение ветки студента с преподавателями: у неё нет родителя, поэтому отдельно от ThreadRead
+model StudentThreadRead {
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  readAt    DateTime
+
+  @@id([accountId, studentId])
+  @@index([studentId])
 }
 
 model ThreadRead {

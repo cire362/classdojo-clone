@@ -110,10 +110,11 @@ export interface ParentNotice {
 /** Переписка с родителем в списке у преподавателя */
 export interface ThreadSummary {
   studentId: string;
-  parentId: string;
+  /** null — ветка самого студента (колледж и вуз) */
+  parentId: string | null;
   studentName: string;
   groupName: string;
-  parentLogin: string;
+  parentLogin: string | null;
   lastText: string;
   lastAt: string;
   unread: number;
@@ -122,6 +123,7 @@ export interface ThreadSummary {
 export interface TeacherThread {
   studentName: string;
   group: { id: string; name: string; archivedAt: string | null };
-  parentLogin: string;
+  /** null — ветка самого студента */
+  parentLogin: string | null;
   messages: ChatMessage[];
 }

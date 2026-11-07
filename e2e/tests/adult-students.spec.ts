@@ -1,6 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { loginUi, tempGroup, uniq } from './helpers';
+import { TEACHER, loginUi, tempGroup, uniq } from './helpers';
 
 const ADMIN = { login: process.env.E2E_ADMIN_LOGIN ?? 'admin', password: process.env.E2E_ADMIN_PASSWORD ?? 'admin12345' };
 const axe = async (page: Page) => {
@@ -8,6 +8,14 @@ const axe = async (page: Page) => {
   const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
   expect(result.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
 };
+
+/** Демо-учреждение снова школа после каждого теста, даже если тест прервался по времени: стенд общий для всех тестов */
+test.afterEach(async ({ playwright, baseURL }) => {
+  const api = await playwright.request.newContext({ baseURL, extraHTTPHeaders: { 'x-heroes-client': '1' } });
+  await api.post('/api/auth/login', { data: { login: ADMIN.login, password: ADMIN.password } });
+  await api.patch('/api/admin/school', { data: { kind: 'SCHOOL' } });
+  await api.dispose();
+});
 
 async function setKind(page: Page, kind: string) {
   await page.getByRole('button', { name: 'Изменить название и тип' }).click();
@@ -39,6 +47,46 @@ test('студент вуза без родителей сам пишет в я�
     await page.getByRole('button', { name: /^Ящик вуза/ }).click();
     const row = page.getByRole('list', { name: 'Переписки с семьями' }).getByRole('button').filter({ hasText: question });
     await expect(row).toContainText('Студент: Лиза Ершова');
+  } finally {
+    await context.close();
+    await g.remove();
+    await page.goto('/');
+    await setKind(page, 'Школа');
+  }
+});
+
+test('студент вуза переписывается с преподавателями группы', async ({ page, browser, request }) => {
+  await loginUi(page, ADMIN.login, ADMIN.password);
+  await setKind(page, 'Вуз');
+  const g = await tempGroup(request, uniq('E2E ПИ'), ['Марк Орлов']);
+  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL });
+  try {
+    const question = uniq('E2E когда консультация');
+    const student = await context.newPage();
+    await student.setViewportSize({ width: 375, height: 812 });
+    await loginUi(student, g.credentials[0].login, g.credentials[0].password);
+    await student.getByRole('link', { name: 'Сообщения', exact: true }).click();
+    await expect(student.getByRole('heading', { name: 'Сообщения', level: 1 })).toBeVisible();
+    await student.getByLabel('Сообщение').fill(question);
+    await student.getByRole('button', { name: 'Отправить' }).click();
+    await expect(student.getByText(question)).toBeVisible();
+    await axe(student);
+    expect(await student.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(376);
+
+    const teacher = await browser.newContext({ baseURL: test.info().project.use.baseURL });
+    const tp = await teacher.newPage();
+    await loginUi(tp, TEACHER.login, TEACHER.password);
+    await expect(tp.getByRole('heading', { name: /Здравствуйте/ })).toBeVisible();
+    await tp.goto('/messages');
+    await tp.getByRole('link', { name: /Студент: Марк Орлов/ }).click();
+    await expect(tp.getByText(question)).toBeVisible();
+    await tp.getByLabel('Сообщение').fill('В четверг в 15:00');
+    await tp.getByRole('button', { name: 'Отправить' }).click();
+    await expect(tp.getByText('В четверг в 15:00')).toBeVisible();
+    await teacher.close();
+
+    await student.reload();
+    await expect(student.getByText('В четверг в 15:00')).toBeVisible();
   } finally {
     await context.close();
     await g.remove();

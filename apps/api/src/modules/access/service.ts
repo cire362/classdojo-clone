@@ -111,8 +111,13 @@ export async function studentReader(user: AuthUser, studentId: string) {
 }
 
 /** Участник переписки о ребёнке: преподаватель его группы или этот родитель, пока он привязан к ребёнку */
-export async function threadReader(user: AuthUser, studentId: string, parentId: string) {
+export async function threadReader(user: AuthUser, studentId: string, parentId: string | null) {
   if (user.teacherId) return void (await teacherStudent(user, studentId));
+  // Ветку самого студента видят преподаватели его группы и он сам
+  if (parentId === null) {
+    if (user.studentId !== studentId) throw notFound('Переписка не найдена');
+    return;
+  }
   if (user.parentId !== parentId) throw notFound('Переписка не найдена');
   await parentChild(parentId, studentId);
 }

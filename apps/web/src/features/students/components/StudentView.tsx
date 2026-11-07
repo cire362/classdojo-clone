@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeftIcon, ArrowsLeftRightIcon, KeyIcon, PaintBrushIcon } from '@phosphor-icons/react';
+import { ArrowLeftIcon, ArrowsLeftRightIcon, ChatsCircleIcon, KeyIcon, PaintBrushIcon } from '@phosphor-icons/react';
 import type { Credentials, HistoryEvent } from '../../../lib/api';
 import { IssueCardsButton } from '../../codes';
 import { HeroEditor } from '../../hero';
@@ -75,6 +75,11 @@ export function StudentProfileView() {
           </>
         }
       />
+      {t.kind !== 'SCHOOL' && (
+        <Link to={`/messages/${data.student.id}/student`} className="btn btn-secondary">
+          <ChatsCircleIcon size={20} aria-hidden /> Написать {t.student.one.dat}
+        </Link>
+      )}
       <ParentAccessCard
         student={data.student}
         groupId={data.student.group.id}

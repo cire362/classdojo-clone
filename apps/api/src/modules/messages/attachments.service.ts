@@ -8,7 +8,7 @@ import { addFileRows, fileView, prepareUpload, purgeDeletedFiles, writeUploads, 
 /** Фото и PDF в переписке: родитель присылает справку, преподаватель — памятку или задание */
 export const MAX_ATTACHMENTS = 5;
 
-type NewMessage = { studentId: string; parentId: string; senderId: string; text: string; createdAt?: Date };
+type NewMessage = { studentId: string; parentId: string | null; senderId: string; text: string; createdAt?: Date };
 
 /** Проверка и пересборка файлов идут до транзакции: это долго, а группа блокируется ненадолго */
 async function prepare(text: string, files: File[]) {

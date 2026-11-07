@@ -3,7 +3,7 @@ import type { AuthUser } from '../../platform/auth.js';
 import { prisma } from '../../platform/db.js';
 import { groupsOf } from '../access/index.js';
 import { unreadPosts } from '../feed/index.js';
-import { isQuietNow, unreadMessages } from '../messages/index.js';
+import { isQuietNow, unreadMessages, type ThreadKey } from '../messages/index.js';
 import { pendingRequestsOf, unreadRewards } from '../rewards/index.js';
 import { unseenWorks } from '../works/index.js';
 import { unseenAssignments } from '../assignments/index.js';
@@ -17,10 +17,10 @@ export async function notifications(user: AuthUser): Promise<Notifications> {
       by: ['studentId', 'parentId'],
       where: { student: { group: groupsOf(user.teacherId) } },
     });
-    // Ветки отвязанных родителей не показываются — и не считаются
-    const links = threads.length
-      ? await prisma.parentStudent.findMany({ where: { OR: threads.map((t) => ({ studentId: t.studentId, parentId: t.parentId })) } })
-      : [];
+    // Ветки отвязанных родителей не показываются — и не считаются. Ветки студентов (без родителя) считаются всегда
+    const withParent = threads.flatMap((t) => (t.parentId ? [{ studentId: t.studentId, parentId: t.parentId }] : []));
+    const links: ThreadKey[] = withParent.length ? await prisma.parentStudent.findMany({ where: { OR: withParent } }) : [];
+    links.push(...threads.filter((t) => t.parentId === null));
     const [quiet, unread, rewards, school] = await Promise.all([
       isQuietNow(user.teacherId),
       unreadMessages(user.accountId, links),
@@ -32,15 +32,18 @@ export async function notifications(user: AuthUser): Promise<Notifications> {
   if (user.studentId) {
     const s = await prisma.student.findUniqueOrThrow({ where: { id: user.studentId }, select: { groupId: true, rewardsReadAt: true } });
     // Лента и ящик учреждения есть только у студентов колледжа и вуза: schoolsOf вернёт для школьника пустой список
-    const [feed, rewards, works, assignments, school, schoolInbox] = await Promise.all([
+    // Своя ветка с преподавателями есть только у студентов колледжа и вуза
+    const ownThread = user.institution && user.institution !== 'SCHOOL' ? [{ studentId: user.studentId, parentId: null }] : [];
+    const [feed, rewards, works, assignments, school, schoolInbox, messages] = await Promise.all([
       unreadPosts(user.accountId, [s.groupId]),
       unreadRewards(user.studentId, s.rewardsReadAt),
       unseenWorks(user.studentId),
       unseenAssignments(user.studentId),
       unreadSchoolPosts(user),
       unreadSchoolReplies(user),
+      unreadMessages(user.accountId, ownThread),
     ]);
-    return { messages: 0, feed, rewards, works, assignments, school, schoolInbox };
+    return { messages, feed, rewards, works, assignments, school, schoolInbox };
   }
   if (user.parentId) {
     const links = await prisma.parentStudent.findMany({

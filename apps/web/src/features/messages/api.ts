@@ -15,7 +15,11 @@ export function messageBody({ text, sendAt, files }: Outgoing) {
 
 export const fetchThreads = () => api<ThreadSummary[]>('GET', '/teacher/messages');
 
-const threadPath = (studentId: string, parentId: string) => `/teacher/students/${studentId}/parents/${parentId}/messages`;
+/** Ветка родителя или, если вместо родителя STUDENT_THREAD, ветка самого студента (колледж и вуз) */
+export const STUDENT_THREAD = 'student';
+
+const threadPath = (studentId: string, parentId: string) =>
+  parentId === STUDENT_THREAD ? `/teacher/students/${studentId}/messages` : `/teacher/students/${studentId}/parents/${parentId}/messages`;
 
 export const fetchTeacherThread = (studentId: string, parentId: string) => api<TeacherThread>('GET', threadPath(studentId, parentId));
 
@@ -40,3 +44,7 @@ export const sendChildMessage = (childId: string, message: Outgoing) =>
   api<ChatMessage[]>('POST', childPath(childId), messageBody(message));
 
 export const fetchParentNotice = (childId: string) => api<ParentNotice>('GET', `/parent/children/${childId}/quiet-hours`);
+
+export const fetchOwnMessages = () => api<ChatMessage[]>('GET', '/student/messages');
+
+export const sendOwnMessage = (message: Outgoing) => api<ChatMessage[]>('POST', '/student/messages', messageBody(message));

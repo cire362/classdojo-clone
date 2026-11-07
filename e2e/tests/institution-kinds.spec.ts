@@ -10,6 +10,14 @@ const axe = async (page: Page) => {
   expect(result.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
 };
 
+/** Демо-учреждение снова школа после каждого теста, даже если тест прервался по времени: стенд общий для всех тестов */
+test.afterEach(async ({ playwright, baseURL }) => {
+  const api = await playwright.request.newContext({ baseURL, extraHTTPHeaders: { 'x-heroes-client': '1' } });
+  await api.post('/api/auth/login', { data: { login: ADMIN.login, password: ADMIN.password } });
+  await api.patch('/api/admin/school', { data: { kind: 'SCHOOL' } });
+  await api.dispose();
+});
+
 async function setKind(page: Page, kind: string) {
   await page.getByRole('button', { name: 'Изменить название и тип' }).click();
   await page.getByLabel('Тип учреждения').selectOption({ label: kind });

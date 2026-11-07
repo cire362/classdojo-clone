@@ -23,6 +23,7 @@ import {
   SchoolJoinPage,
   SchoolNewsPage,
   SchoolMessagesPage,
+  StudentChatPage,
   LessonPage,
   JoinClassPage,
   LoginPage,
@@ -131,6 +132,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/" element={<Home />} />
               <Route path="/hero" element={student(<MyHeroPage />)} />
               <Route path="/school" element={<RequireRole role={['TEACHER', 'PARENT', 'STUDENT']}><SchoolNewsPage /></RequireRole>} />
+              <Route path="/chat" element={student(<StudentChatPage />)} />
               <Route path="/school-messages" element={<RequireRole role={['PARENT', 'STUDENT']}><SchoolMessagesPage /></RequireRole>} />
               <Route path="/g/:groupId" element={teacher(<GroupLayout />)}>
                 <Route index element={<LessonPage />} />

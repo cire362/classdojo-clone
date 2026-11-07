@@ -129,6 +129,17 @@ export function AppLayout() {
                 <CountBadge count={counts.schoolInbox} label="новых ответов" />
               </NavLink>
             )}
+            {adultStudent && (
+              <NavLink
+                to="/chat"
+                className={({ isActive }) => `icon-btn relative w-auto gap-1 px-2.5 ${isActive ? 'bg-surface-2 text-ink' : ''}`}
+                title="Сообщения"
+              >
+                <ChatsCircleIcon size={22} aria-hidden />
+                <span className="sr-only">Сообщения</span>
+                <CountBadge count={counts.messages} label="новых сообщений" />
+              </NavLink>
+            )}
             {user?.role === 'TEACHER' && (
               <NavLink
                 to="/messages"
