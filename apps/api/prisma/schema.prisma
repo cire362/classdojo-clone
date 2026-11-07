@@ -96,6 +96,8 @@ model School {
   id        String    @id @default(cuid())
   name      String
   kind      InstitutionKind @default(SCHOOL)
+  /// Герои, питомцы, уровни и магазин наград в новых группах; в вузе по умолчанию выключены
+  heroes    Boolean   @default(true)
   createdAt DateTime  @default(now())
   /// Код подключения преподавателей; null — подключение по коду выключено
   joinCode  String?   @unique
@@ -250,6 +252,8 @@ model Group {
   feedComments    Boolean   @default(true)
   /// Входы родителей в группе. В колледже и вузе по умолчанию выключены: студенты совершеннолетние
   parentsEnabled  Boolean   @default(true)
+  /// Герои, питомцы, уровни и магазин наград. Без них остаются баллы, посещаемость, задания, работы и отчёты
+  heroes          Boolean   @default(true)
   /// Дата переноса в архив; null — группа активна
   archivedAt      DateTime?
   createdAt       DateTime  @default(now())

@@ -16,7 +16,7 @@ import { pendingWorkCount } from '../works/index.js';
 import { pendingAnswerCount } from '../assignments/index.js';
 
 type OwnedGroup = {
-  id: string; name: string; subtractTeacher: boolean; feedComments: boolean; parentsEnabled: boolean;
+  id: string; name: string; subtractTeacher: boolean; feedComments: boolean; parentsEnabled: boolean; heroes: boolean;
   archivedAt: Date | null; isOwner: boolean;
 };
 
@@ -50,8 +50,9 @@ export async function teacherGroups(teacherId: string): Promise<GroupListItem[]>
 export async function createGroup(teacherId: string, name: string): Promise<Omit<GroupListItem, 'isOwner' | 'colleagues'>> {
   const group = await prisma.$transaction(async (tx) => {
     // Студенты колледжа и вуза совершеннолетние: родители в их группах по умолчанию выключены
-    const { school } = await tx.teacher.findUniqueOrThrow({ where: { id: teacherId }, select: { school: { select: { kind: true } } } });
-    const g = await tx.group.create({ data: { name, teacherId, parentsEnabled: school.kind === 'SCHOOL' } });
+    const select = { school: { select: { kind: true, heroes: true } } };
+    const { school } = await tx.teacher.findUniqueOrThrow({ where: { id: teacherId }, select });
+    const g = await tx.group.create({ data: { name, teacherId, parentsEnabled: school.kind === 'SCHOOL', heroes: school.heroes } });
     await createDefaultReasons(tx, g.id);
     await createDefaultRewards(tx, g.id);
     return g;
@@ -85,6 +86,7 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
       subtractTeacher: group.subtractTeacher,
       feedComments: group.feedComments,
       parentsEnabled: group.parentsEnabled,
+      heroes: group.heroes,
       archivedAt: group.archivedAt?.toISOString() ?? null,
       isOwner: group.isOwner,
       filesExpireAt: filesExpireAt(group.archivedAt)?.toISOString() ?? null,
@@ -114,11 +116,14 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
 /** Выключение родителей отзывает действующие приглашения: по ним нельзя было бы войти. Выданные входы остаются */
 export async function updateGroup(
   groupId: string,
-  data: { name?: string; subtractTeacher?: boolean; feedComments?: boolean; parentsEnabled?: boolean },
+  data: { name?: string; subtractTeacher?: boolean; feedComments?: boolean; parentsEnabled?: boolean; heroes?: boolean },
 ) {
   const g = await prisma.group.update({ where: { id: groupId }, data });
   if (data.parentsEnabled === false) await revokeGroupInvites(groupId);
-  return { id: g.id, name: g.name, subtractTeacher: g.subtractTeacher, feedComments: g.feedComments, parentsEnabled: g.parentsEnabled };
+  return {
+    id: g.id, name: g.name, subtractTeacher: g.subtractTeacher, feedComments: g.feedComments,
+    parentsEnabled: g.parentsEnabled, heroes: g.heroes,
+  };
 }
 
 /** Архив: группа скрывается из списка и замораживается (просмотр, статистика и Excel остаются) */

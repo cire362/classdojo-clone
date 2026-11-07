@@ -14,7 +14,7 @@ import { formatDateTime, useLoad } from '../../../lib/hooks';
 import { ProfileSkeleton } from '../../profile';
 import { CredentialsTable } from './CredentialsTable';
 import { addPortfolioItem, deletePointEvent, deletePortfolioItem, fetchStudentProfile, resetStudentPassword, saveStudentHero } from '../api';
-import { useTerms } from '../../auth';
+import { HeroesProvider, useTerms } from '../../auth';
 
 export function StudentProfileView() {
   const t = useTerms();
@@ -39,6 +39,7 @@ export function StudentProfileView() {
     },
   };
   return (
+    <HeroesProvider on={data.student.group.heroes}>
     <div className="space-y-4">
       <Link to={`/g/${data.student.group.id}`} className="btn btn-ghost btn-sm -ml-3">
         <ArrowLeftIcon size={18} /> {data.student.group.name}
@@ -51,9 +52,11 @@ export function StudentProfileView() {
         portfolioEdit={portfolioEdit}
         actions={
           <>
-            <Link to={`/s/${data.student.id}/hero`} className="btn btn-primary">
-              <PaintBrushIcon size={20} weight="bold" /> Собрать героя
-            </Link>
+            {data.student.group.heroes && (
+              <Link to={`/s/${data.student.id}/hero`} className="btn btn-primary">
+                <PaintBrushIcon size={20} weight="bold" /> Собрать героя
+              </Link>
+            )}
             <button
               className="btn btn-secondary"
               onClick={async () => {
@@ -148,6 +151,7 @@ export function StudentProfileView() {
         )}
       </Modal>
     </div>
+    </HeroesProvider>
   );
 }
 

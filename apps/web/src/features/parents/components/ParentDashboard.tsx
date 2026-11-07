@@ -16,7 +16,7 @@ import { Calendar } from '../../calendar';
 import { ParentAssignments } from '../../assignments';
 import { HomePoints } from '../../home';
 import { fetchChildProfile, fetchChildren } from '../api';
-import { useTerms } from '../../auth';
+import { HeroesProvider, useTerms } from '../../auth';
 
 /** Выбранный ребёнок запоминается: его профиль ранний скрипт запрашивает сразу при открытии */
 export const CHILD_KEY = 'heroes:child';
@@ -61,7 +61,7 @@ export function ParentDashboard() {
       </EmptyState>
     );
   }
-  const sections = [
+  const allSections = [
     ['profile', 'Профиль', 0],
     ['week', 'Итог недели', 0],
     ['rewards', 'Награды', 0],
@@ -71,6 +71,8 @@ export function ParentDashboard() {
     ['calendar', 'Календарь', 0],
     ['messages', 'Сообщения', current?.unread.messages ?? 0],
   ] as const;
+  // Без героев в группе ребёнка нет и магазина наград
+  const sections = allSections.filter(([key]) => key !== 'rewards' || current?.heroes !== false);
   return (
     <div className="space-y-6">
       {/* В профиле заголовок первого уровня — имя героя */}
@@ -125,13 +127,15 @@ export function ParentDashboard() {
       {current && section === 'calendar' && <Calendar key={current.id} path={`/parent/children/${current.id}/events`} />}
       {current && section === 'messages' && <ParentMessages key={current.id} child={current} onRead={children.reload} />}
       {current && section === 'week' && <WeeklySummary key={current.id} child={current} />}
-      {current && section === 'rewards' && <ParentRewards key={current.id} childId={current.id} />}
+      {current && current.heroes && section === 'rewards' && <ParentRewards key={current.id} childId={current.id} />}
       {current && section === 'home' && <HomePoints key={current.id} path={`/parent/children/${current.id}/home`} editable />}
       {section === 'profile' &&
         (profile.error ? (
           <ErrorBox message={profile.error} onRetry={profile.reload} />
         ) : profile.data && profile.data.student.id === current?.id ? (
-          <ProfileView profile={profile.data} isOwn={false} />
+          <HeroesProvider on={current.heroes}>
+            <ProfileView profile={profile.data} isOwn={false} />
+          </HeroesProvider>
         ) : (
           <ProfileSkeleton />
         ))}

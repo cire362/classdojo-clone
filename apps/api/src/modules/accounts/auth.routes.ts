@@ -31,7 +31,8 @@ export const authRoutes = new Hono<AppEnv>()
   .get('/me', async (c) => {
     const user = await loadUser(c);
     if (!user) return c.json({ user: null });
-    return c.json({ user: { login: user.login, role: user.role, name: user.name, institution: user.institution } });
+    const heroes = user.heroes === null ? {} : { heroes: user.heroes };
+    return c.json({ user: { login: user.login, role: user.role, name: user.name, institution: user.institution, ...heroes } });
   });
 
 const CodeBody = z.object({ code: z.string().min(1).max(30) });

@@ -9,7 +9,7 @@ import { Badges, BadgeSummary } from './Badges';
 import { PetCompanion } from '../../hero';
 import { EmptyState, ProgressBar } from '../../../ui';
 import { WorkCard } from '../../works';
-import { useTerms } from '../../auth';
+import { useHeroes, useTerms } from '../../auth';
 
 function PointsTile({ label, sum, featured = false }: { label: string; sum: PointsSum; featured?: boolean }) {
   return (
@@ -39,6 +39,7 @@ export function ProfileView({
   portfolioEdit?: PortfolioEdit;
 }) {
   const t = useTerms();
+  const heroes = useHeroes();
   const [tab, setTab] = useState<'history' | 'attendance' | 'portfolio'>('history');
   const { level, points, hero } = profile;
 
@@ -56,25 +57,32 @@ export function ProfileView({
 
   return (
     <div className="space-y-8">
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        <div className="relative overflow-hidden rounded-2xl bg-accent/30 px-6 pt-6">
+      <section className={`grid grid-cols-1 gap-6 ${heroes ? 'md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]' : ''}`}>
+        {heroes && <div className="relative overflow-hidden rounded-2xl bg-accent/30 px-6 pt-6">
           <div
             aria-hidden
             className="absolute inset-0 opacity-25"
             style={{ backgroundImage: 'radial-gradient(var(--ink) 1px, transparent 1px)', backgroundSize: '16px 16px' }}
           />
-          <HeroAvatar parts={hero.parts} level={level.level} title={hero.name || profile.student.name} className="relative mx-auto aspect-[5/6] max-w-[280px]" />
-        </div>
+          <HeroAvatar
+            parts={hero.parts}
+            level={level.level}
+            title={hero.name || profile.student.name}
+            className="relative mx-auto aspect-[5/6] max-w-[280px]"
+          />
+        </div>}
 
         <div className="flex flex-col gap-5">
           <div>
             <p className="text-sm font-medium text-ink-soft">
               {profile.student.name}, {profile.student.group.name}
             </p>
-            <h1 className="mt-1 text-3xl leading-[1.1] sm:text-4xl">{hero.name || (isOwn ? 'Безымянный герой' : profile.student.name)}</h1>
+            <h1 className="mt-1 text-3xl leading-[1.1] sm:text-4xl">
+              {heroes ? hero.name || (isOwn ? 'Безымянный герой' : profile.student.name) : profile.student.name}
+            </h1>
           </div>
 
-          <div className="rounded-2xl border border-line bg-surface p-4">
+          {heroes && <div className="rounded-2xl border border-line bg-surface p-4">
             <div className="flex items-center gap-3">
               <span className="flex size-12 items-center justify-center rounded-full bg-accent font-display text-xl text-on-accent">{level.level}</span>
               <div className="min-w-0 flex-1">
@@ -90,7 +98,7 @@ export function ProfileView({
               <TrophyIcon size={26} className="text-ink-soft" />
             </div>
             <ProgressBar className="mt-4" value={level.progress} label={`Прогресс до ${Math.min(level.level + 1, MAX_LEVEL)} уровня`} />
-          </div>
+          </div>}
 
           <div className="grid grid-cols-3 gap-2 sm:gap-3">
             <PointsTile label="Сегодня" sum={points.today} />

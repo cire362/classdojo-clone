@@ -1,5 +1,6 @@
 import { PawPrintIcon } from '@phosphor-icons/react';
 import { HERO_PARTS_BY_ID, normalizeHero, petStageForLevel, renderPetSvg, type HeroParts } from '@heroes/shared';
+import { useHeroes } from '../../auth';
 
 export function PetAvatar({ petId, level, className = '' }: { petId: string; level: number; className?: string }) {
   // Самостоятельное SVG-превью использует тот же рисунок, что и компаньон рядом с героем.
@@ -7,8 +8,9 @@ export function PetAvatar({ petId, level, className = '' }: { petId: string; lev
 }
 
 export function PetCompanion({ parts, level }: { parts: HeroParts; level: number }) {
+  const heroes = useHeroes();
   const pet = HERO_PARTS_BY_ID.get(normalizeHero(parts).pet);
-  if (!pet || pet.id === 'pet.none') return null;
+  if (!heroes || !pet || pet.id === 'pet.none') return null;
   const stage = petStageForLevel(level);
   return (
     <div role="group" className="flex items-center gap-3" aria-label="Питомец героя">

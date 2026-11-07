@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { CheckIcon, StarIcon } from '@phosphor-icons/react';
+import { useHeroes } from '../../auth';
 import { HeroAvatar, heroTint } from '../../hero';
 import type { LessonStudent } from '../../../lib/api';
 import type { Burst } from '../hooks/useAward';
@@ -21,6 +22,7 @@ export const StudentCard = memo(function StudentCard({
   burst?: Burst;
   onClick: (s: LessonStudent) => void;
 }) {
+  const heroes = useHeroes();
   return (
     <button
       type="button"
@@ -78,7 +80,7 @@ export const StudentCard = memo(function StudentCard({
             <span className="sr-only">всего </span>
             {s.totalEarned}
           </span>
-          <span>ур. {s.level}</span>
+          {heroes && <span>ур. {s.level}</span>}
         </div>
         {s.todayEarned > 0 && <span className="sr-only">, сегодня +{s.todayEarned}</span>}
         {absent && <span className="sr-only">, нет на уроке</span>}

@@ -160,7 +160,7 @@ export async function parentChildren(parentId: string, accountId: string): Promi
       student: {
         include: {
           hero: true,
-          group: { select: { name: true } },
+          group: { select: { name: true, heroes: true } },
           pointEvents: { where: { value: { gt: 0 } }, select: { value: true } },
         },
       },
@@ -175,6 +175,7 @@ export async function parentChildren(parentId: string, accountId: string): Promi
       groupName: s.group.name,
       hero: { name: s.hero?.name ?? '', parts: normalizeHero(s.hero?.parts) },
       level: levelForPoints(s.pointEvents.reduce((sum, e) => sum + e.value, 0)).level,
+      heroes: s.group.heroes,
       unread: {
         messages: await unreadMessages(accountId, [{ studentId: s.id, parentId }]),
         feed: await unreadPosts(accountId, [s.groupId]),

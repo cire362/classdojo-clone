@@ -93,6 +93,12 @@ export async function schoolThreadReader(user: AuthUser, thread: { schoolId: str
   throw notFound('Не найдено');
 }
 
+/** Конструктор героя и магазин наград закрыты, если в группе ученика герои выключены */
+export async function ensureHeroes(studentId: string) {
+  const { group } = await prisma.student.findUniqueOrThrow({ where: { id: studentId }, select: { group: { select: { heroes: true } } } });
+  if (!group.heroes) throw new HttpError(403, 'В вашей группе герои и награды выключены');
+}
+
 /** Преподаватель группы, её ученик или родитель её ученика, иначе 404 */
 export async function groupReader(user: AuthUser, groupId: string) {
   if (user.teacherId) return void (await teacherGroup(user, groupId));

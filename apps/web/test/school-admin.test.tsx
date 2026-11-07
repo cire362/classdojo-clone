@@ -10,7 +10,9 @@ vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../sr
 const api = vi.mocked((await import('../src/lib/api')).api);
 beforeEach(() => { api.mockReset(); });
 
-const SCHOOL: SchoolInfo = { id: 's1', name: 'Моя школа', kind: 'SCHOOL', role: 'DIRECTOR', joinCode: 'ABCD2345', pendingTeachers: 1 };
+const SCHOOL: SchoolInfo = {
+  id: 's1', name: 'Моя школа', kind: 'SCHOOL', heroes: true, role: 'DIRECTOR', joinCode: 'ABCD2345', pendingTeachers: 1,
+};
 const REQUEST: TeacherRequest = { id: 't9', name: 'Анна Петровна', login: 'anna', createdAt: '2026-11-07T08:00:00.000Z' };
 const STAFF: StaffMember[] = [
   { id: 'a1', name: 'Ирина Львовна', login: 'director', role: 'DIRECTOR', isMe: true },

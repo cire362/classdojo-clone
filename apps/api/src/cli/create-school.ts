@@ -31,6 +31,7 @@ try {
     data: {
       name,
       kind,
+      heroes: kind !== 'UNIVERSITY',
       admins: { create: { name: adminName, account: { create: { login, passwordHash: await hashPassword(password), role: 'ADMIN' } } } },
     },
   });

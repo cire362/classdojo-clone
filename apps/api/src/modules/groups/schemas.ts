@@ -6,5 +6,6 @@ export const GroupPatch = z.object({
   subtractTeacher: z.boolean().optional(),
   feedComments: z.boolean().optional(),
   parentsEnabled: z.boolean().optional(),
+  heroes: z.boolean().optional(),
 });
 export const TeacherLogin = z.object({ login: z.string().trim().toLowerCase().min(1).max(64) });

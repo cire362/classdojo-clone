@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ChunkErrorBoundary } from '../ui/ChunkErrorBoundary';
 import { BellIcon, ChatsCircleIcon, EnvelopeSimpleIcon, GearSixIcon, GiftIcon, MegaphoneIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
-import { useAuth, useTerms } from '../features/auth';
+import { useAuth, useHeroes, useTerms } from '../features/auth';
 import { useNews } from '../features/news';
 import { CountBadge, useNotifications } from '../features/notifications';
 import { pluralize } from '../lib/hooks';
@@ -26,6 +26,7 @@ export function AppLayout() {
   const { news } = useNews();
   const { counts } = useNotifications();
   const terms = useTerms();
+  const heroes = useHeroes();
   // Лента и ящик учреждения: у семей всегда, у студентов — только в колледже и вузе, школьник их не видит
   const adultStudent = user?.role === 'STUDENT' && terms.kind !== 'SCHOOL';
   const readsSchool = user?.role === 'TEACHER' || user?.role === 'PARENT' || adultStudent;
@@ -82,10 +83,10 @@ export function AppLayout() {
           {user?.role === 'STUDENT' && (
             <nav className="ml-2 hidden gap-1 sm:flex" aria-label="Разделы">
               <NavLink to="/" end className={navClass}>
-                Мой герой
+                {heroes ? 'Мой герой' : 'Профиль'}
               </NavLink>
-              {heroLink}
-              {shopLink}
+              {heroes && heroLink}
+              {heroes && shopLink}
               {feedLink}
               {worksLink}
               {assignmentsLink}
@@ -184,10 +185,10 @@ export function AppLayout() {
         {user?.role === 'STUDENT' && (
           <nav className="relative mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:hidden" aria-label="Разделы">
             <NavLink to="/" end className={navClass}>
-              Мой герой
+              {heroes ? 'Мой герой' : 'Профиль'}
             </NavLink>
-            {heroLink}
-            {shopLink}
+            {heroes && heroLink}
+            {heroes && shopLink}
             {feedLink}
             {worksLink}
             {assignmentsLink}

@@ -24,7 +24,9 @@ export async function studentProfile(studentId: string): Promise<Profile> {
     where: { id: studentId },
     include: {
       account: { select: { login: true } },
-      group: { select: { id: true, name: true, archivedAt: true, parentsEnabled: true, teacher: { select: { premiumUntil: true } } } },
+      group: {
+        select: { id: true, name: true, archivedAt: true, parentsEnabled: true, heroes: true, teacher: { select: { premiumUntil: true } } },
+      },
       hero: true,
     },
   });
@@ -60,6 +62,7 @@ export async function studentProfile(studentId: string): Promise<Profile> {
         name: student.group.name,
         archivedAt: student.group.archivedAt?.toISOString() ?? null,
         parentsEnabled: student.group.parentsEnabled,
+        heroes: student.group.heroes,
       },
     },
     /** Открыта ли премиум-коллекция деталей (премиум у создателя группы) */

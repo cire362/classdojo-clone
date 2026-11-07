@@ -37,7 +37,8 @@ export async function checkCredentials(login: string, password: string): Promise
 
 export async function accountView(accountId: string): Promise<Me> {
   const user = await prisma.account.findUniqueOrThrow({ where: { id: accountId }, include: ACCOUNT_PROFILE });
-  return { login: user.login, role: user.role, name: accountName(user), institution: accountInstitution(user) };
+  const heroes = user.student ? { heroes: user.student.group.heroes } : {};
+  return { login: user.login, role: user.role, name: accountName(user), institution: accountInstitution(user), ...heroes };
 }
 
 /** Вход без пароля (QR, код, приглашение): прежняя сессия этого браузера закрывается */

@@ -114,6 +114,23 @@ export function useTerms(): Terms {
   return termsFor(override !== undefined ? override : auth?.user?.institution);
 }
 
+/** Герои, питомцы, уровни и магазин в разделе: группа преподавателя, ребёнок родителя */
+const HeroesOverride = createContext<boolean | undefined>(undefined);
+
+export function HeroesProvider({ on, children }: { on: boolean; children: ReactNode }) {
+  return <HeroesOverride.Provider value={on}>{children}</HeroesOverride.Provider>;
+}
+
+/**
+ * Включены ли герои: в разделе группы или ребёнка — по их настройке, у студента — по его группе.
+ * По умолчанию включены: так было до появления настройки
+ */
+export function useHeroes(): boolean {
+  const override = useContext(HeroesOverride);
+  const auth = useContext(AuthContext);
+  return override ?? auth?.user?.heroes ?? true;
+}
+
 /** Вход, если компонент внутри приложения; в тестах отдельных компонентов — null */
 export const useOptionalAuth = (): AuthState | null => useContext(AuthContext);
 

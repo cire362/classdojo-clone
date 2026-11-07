@@ -96,6 +96,8 @@ export interface GroupDetails {
     feedComments: boolean;
     /** Входы родителей в группе: в колледже и вузе по умолчанию выключены */
     parentsEnabled: boolean;
+    /** Герои, питомцы, уровни и магазин наград */
+    heroes: boolean;
     archivedAt: string | null;
     isOwner: boolean;
     /** Когда удалятся фото и файлы архивной группы; у действующей null */

@@ -46,7 +46,7 @@ export interface Profile {
   badges: StudentBadge[];
   student: {
     id: string; name: string; login: string;
-    group: { id: string; name: string; archivedAt: string | null; parentsEnabled: boolean };
+    group: { id: string; name: string; archivedAt: string | null; parentsEnabled: boolean; heroes: boolean };
   };
   hero: Hero;
   level: LevelInfo;
@@ -88,5 +88,7 @@ export interface ParentChild {
   groupName: string;
   hero: Hero;
   level: number;
+  /** Герои и награды в группе ребёнка */
+  heroes: boolean;
   unread: Pick<Notifications, 'messages' | 'feed'>;
 }

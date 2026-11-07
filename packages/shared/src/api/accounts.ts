@@ -10,6 +10,8 @@ export interface Me {
   name: string;
   /** Тип учебного заведения: по нему интерфейс выбирает слова. null — учреждения нет (родитель без детей) */
   institution?: InstitutionKind | null;
+  /** Студент: есть ли в его группе герои и награды. У остальных ролей не задано */
+  heroes?: boolean;
 }
 
 export interface Credentials {
@@ -106,6 +108,8 @@ export interface SchoolInfo {
   id: string;
   name: string;
   kind: InstitutionKind;
+  /** Герои и награды в группах учреждения; у групп можно поменять отдельно */
+  heroes: boolean;
   role: SchoolRole;
   /** Код подключения преподавателей; null — выключен или не виден этой должности */
   joinCode: string | null;

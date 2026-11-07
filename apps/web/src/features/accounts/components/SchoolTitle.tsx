@@ -14,14 +14,18 @@ export function SchoolTitle({ school, onChange }: { school: SchoolInfo; onChange
   const toast = useToast();
   const terms = termsFor(school.kind);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState<{ name: string; kind: InstitutionKind }>({ name: '', kind: school.kind });
+  const [form, setForm] = useState<{ name: string; kind: InstitutionKind; heroes: boolean }>({
+    name: '', kind: school.kind, heroes: school.heroes,
+  });
   const [busy, setBusy] = useState(false);
 
   async function save(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     try {
-      onChange(await updateSchool({ name: form.name.trim(), kind: form.kind }));
+      // Настройка героев переписывает все группы, поэтому отправляется, только если её меняли
+      const heroes = form.heroes === school.heroes ? {} : { heroes: form.heroes };
+      onChange(await updateSchool({ name: form.name.trim(), kind: form.kind, ...heroes }));
       setEditing(false);
     } catch (err) {
       toast({ text: (err as Error).message, tone: 'error' });
@@ -55,6 +59,18 @@ export function SchoolTitle({ school, onChange }: { school: SchoolInfo; onChange
             {INSTITUTION_KINDS.map((kind) => <option key={kind} value={kind}>{TERMS[kind].kindName}</option>)}
           </select>
         </div>
+        <label className="flex basis-full cursor-pointer items-start gap-2">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={form.heroes}
+            onChange={(e) => setForm({ ...form, heroes: e.target.checked })}
+          />
+          <span>
+            <span className="font-semibold">Герои, питомцы, уровни и магазин наград</span>
+            <span className="block text-sm text-ink-soft">Изменение применится ко всем группам, дальше их можно поменять отдельно.</span>
+          </span>
+        </label>
         <button className="btn btn-primary" disabled={busy || !form.name.trim()}>Сохранить</button>
         <button type="button" className="btn btn-ghost" onClick={() => setEditing(false)}>Отмена</button>
       </form>
@@ -70,7 +86,7 @@ export function SchoolTitle({ school, onChange }: { school: SchoolInfo; onChange
             aria-label="Изменить название и тип"
             title="Изменить название и тип"
             onClick={() => {
-              setForm({ name: school.name, kind: school.kind });
+              setForm({ name: school.name, kind: school.kind, heroes: school.heroes });
               setEditing(true);
             }}
           >

@@ -11,7 +11,7 @@ import { groupData, renderInGroup } from './group-harness';
 const auth = vi.hoisted(() => ({ user: { login: 'teacher', role: 'TEACHER', name: 'Анна' } as Me, logout: vi.fn() }));
 vi.mock('../src/features/auth/auth', async () => {
   const { termsFor } = await import('@heroes/shared/terms');
-  return { useAuth: () => auth, useTerms: () => termsFor(auth.user?.institution) };
+  return { useAuth: () => auth, useTerms: () => termsFor(auth.user?.institution), useHeroes: () => auth.user?.heroes ?? true };
 });
 vi.mock('../src/features/news/news', () => ({ useNews: () => ({ news: null }) }));
 vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));

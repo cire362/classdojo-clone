@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react';
 import { HERO_PARTS_BY_ID, normalizeHero, renderHeroSvg, type HeroParts } from '@heroes/shared';
+import { useHeroes } from '../../auth';
 
 /**
  * SVG собирается из собственного каталога деталей (без пользовательского ввода),
@@ -18,11 +19,15 @@ export const HeroAvatar = memo(function HeroAvatar({
   crop?: 'full' | 'head';
   level?: number;
 }) {
+  const heroes = useHeroes();
   const svg = useMemo(() => {
     // Подпись даёт обёртка; у самого svg роль не нужна
     const full = renderHeroSvg(parts, { level }).replace(' role="img"', ' aria-hidden="true" focusable="false"');
     return crop === 'head' ? full.replace('viewBox="0 0 200 240"', 'viewBox="38 8 124 124"') : full;
   }, [parts, crop, level]);
+  // Герои выключены: вместо героя нейтральная плашка, место в раскладке то же. Без значка: иконка, нужная двум
+  // файлам, попала бы в ядро приложения (+3 КБ), а имя и так подписано рядом
+  if (!heroes) return <div className={`hero-avatar rounded-xl bg-surface-2 ${className}`} aria-hidden="true" />;
   // Без подписи герой — просто украшение рядом с именем, экранный диктор его пропускает
   return title ? (
     <div className={`hero-avatar ${className}`} role="img" aria-label={title} dangerouslySetInnerHTML={{ __html: svg }} />

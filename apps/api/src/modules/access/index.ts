@@ -3,6 +3,7 @@ export {
   OWNER_ONLY_MESSAGE,
   assignmentReader,
   broadcastReader,
+  ensureHeroes,
   groupReader,
   groupsOf,
   lockGroup,

@@ -9,18 +9,20 @@ import { ErrorBox } from '../../../ui';
 import { ProfileSkeleton } from './ProfileSkeleton';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import { useNews } from '../../news';
+import { useHeroes } from '../../auth';
 
 
 export function StudentCabinet() {
   const { data, error, reload } = useLoad(() => fetchStudentProfile(), []);
   const { news, markSeen } = useNews();
+  const heroes = useHeroes();
   // Окно остаётся смонтированным после закрытия, чтобы доиграла анимация ухода
   const [levelUpUsed, setLevelUpUsed] = useState(false);
   if (news?.levelUp && !levelUpUsed) setLevelUpUsed(true);
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <ProfileSkeleton />;
 
-  const newIds = news?.newPartIds ?? [];
+  const newIds = heroes ? news?.newPartIds ?? [] : [];
   return (
     <div className="space-y-6">
       {newIds.length > 0 && !news?.levelUp && (
@@ -51,9 +53,11 @@ export function StudentCabinet() {
         profile={data}
         isOwn
         actions={
-          <Link to="/hero" className="btn btn-primary">
-            <PaintBrushIcon size={20} weight="bold" /> Собрать героя
-          </Link>
+          heroes && (
+            <Link to="/hero" className="btn btn-primary">
+              <PaintBrushIcon size={20} weight="bold" /> Собрать героя
+            </Link>
+          )
         }
       />
 
@@ -61,7 +65,7 @@ export function StudentCabinet() {
 
       <HomePoints path="/student/home" />
 
-      {levelUpUsed && (
+      {heroes && levelUpUsed && (
         <Suspense fallback={null}>
           <LevelUpOverlay
             open={!!news?.levelUp}

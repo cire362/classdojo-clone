@@ -16,22 +16,31 @@ import { isActive } from './premium.service.js';
  */
 /** Код подключения и заявки видят только директор и завуч: они их и проверяют */
 export async function schoolInfo(user: AuthUser): Promise<SchoolInfo> {
-  const select = { id: true, name: true, kind: true, joinCode: true } as const;
+  const select = { id: true, name: true, kind: true, heroes: true, joinCode: true } as const;
   const school = await prisma.school.findUniqueOrThrow({ where: { id: user.schoolId! }, select });
   const checks = user.schoolRole !== 'STAFF';
   return {
     id: school.id,
     name: school.name,
     kind: school.kind,
+    heroes: school.heroes,
     role: user.schoolRole!,
     joinCode: checks ? school.joinCode : null,
     pendingTeachers: checks ? await pendingTeacherCount(school.id) : 0,
   };
 }
 
-/** Название и тип учреждения меняет директор; тип меняет слова интерфейса у всех его пользователей */
-export async function updateSchool(user: AuthUser, data: { name?: string; kind?: InstitutionKind }): Promise<SchoolInfo> {
-  await prisma.school.update({ where: { id: user.schoolId! }, data });
+/**
+ * Название, тип и героев учреждения меняет руководитель. Тип меняет слова интерфейса у всех его пользователей,
+ * настройка героев применяется ко всем группам учреждения; дальше группу можно поменять отдельно
+ */
+export async function updateSchool(user: AuthUser, data: { name?: string; kind?: InstitutionKind; heroes?: boolean }): Promise<SchoolInfo> {
+  await prisma.$transaction([
+    prisma.school.update({ where: { id: user.schoolId! }, data }),
+    ...(data.heroes === undefined
+      ? []
+      : [prisma.group.updateMany({ where: { teacher: { schoolId: user.schoolId! } }, data: { heroes: data.heroes } })]),
+  ]);
   return schoolInfo(user);
 }
 

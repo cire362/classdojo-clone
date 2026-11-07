@@ -26,13 +26,15 @@ export interface AuthUser {
   schoolRole: SchoolRole | null;
   /** Тип учебного заведения: от него зависят слова в ответах */
   institution: InstitutionKind | null;
+  /** Студент: есть ли в его группе герои и награды; у остальных ролей null */
+  heroes: boolean | null;
 }
 
 export type AppEnv = { Variables: { user: AuthUser } };
 
 /** Связи аккаунта, по которым строятся роль и отображаемое имя */
 const KIND = { select: { kind: true } } as const;
-const GROUP_KIND = { select: { teacher: { select: { school: KIND } } } } as const;
+const GROUP_KIND = { select: { heroes: true, teacher: { select: { school: KIND } } } } as const;
 
 export const ACCOUNT_PROFILE = {
   admin: { include: { school: KIND } },
@@ -52,7 +54,7 @@ type AccountWithProfile = {
 type WithKind = {
   admin: { school: { kind: InstitutionKind } } | null;
   teacher: { school: { kind: InstitutionKind } } | null;
-  student: { group: { teacher: { school: { kind: InstitutionKind } } } } | null;
+  student: { group: { heroes: boolean; teacher: { school: { kind: InstitutionKind } } } } | null;
   parent: { children: { student: { group: { teacher: { school: { kind: InstitutionKind } } } } }[] } | null;
 };
 
@@ -128,6 +130,7 @@ export async function loadUser(c: Context): Promise<AuthUser | null> {
     schoolId: a.teacher?.schoolId ?? a.admin?.schoolId ?? null,
     schoolRole: a.admin?.role ?? null,
     institution: accountInstitution(a),
+    heroes: a.student?.group.heroes ?? null,
   };
 }
 

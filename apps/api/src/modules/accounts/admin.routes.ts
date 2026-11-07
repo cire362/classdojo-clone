@@ -16,8 +16,9 @@ const SchoolBody = z
   .object({
     name: z.string().trim().min(1, 'Введите название').max(120).optional(),
     kind: z.enum(['SCHOOL', 'COLLEGE', 'UNIVERSITY'], { message: 'Выберите тип учреждения' }).optional(),
+    heroes: z.boolean().optional(),
   })
-  .refine((b) => b.name !== undefined || b.kind !== undefined, 'Укажите название или тип');
+  .refine((b) => b.name !== undefined || b.kind !== undefined || b.heroes !== undefined, 'Укажите, что изменить');
 const PremiumBody = z.object({
   until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((key) => {
     const d = new Date(`${key}T00:00:00Z`);

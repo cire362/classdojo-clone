@@ -16,7 +16,8 @@ export const fetchAdminGroups = () => api<AdminGroup[]>('GET', '/admin/groups');
 
 export const fetchSchool = () => api<SchoolInfo>('GET', '/admin/school');
 
-export const updateSchool = (data: { name: string; kind: InstitutionKind }) => api<SchoolInfo>('PATCH', '/admin/school', data);
+export const updateSchool = (data: { name: string; kind: InstitutionKind; heroes?: boolean }) =>
+  api<SchoolInfo>('PATCH', '/admin/school', data);
 
 export const fetchStaff = () => api<StaffMember[]>('GET', '/admin/staff');
 

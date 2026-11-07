@@ -10,7 +10,7 @@ import { exportUrl, longDate } from '../../../lib/files';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import type { GroupCtx } from '../hooks/useGroup';
 import { fetchGroup, restoreGroup } from '../api';
-import { useTerms } from '../../auth';
+import { HeroesProvider, useTerms } from '../../auth';
 import { cap } from '@heroes/shared/terms';
 
 const TABS = [
@@ -77,7 +77,7 @@ export function GroupShell() {
           aria-label="Разделы группы"
           className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0"
         >
-          {TABS.map(({ to, end, label, icon: Icon }) => (
+          {TABS.filter(({ to }) => to !== 'rewards' || !data || data.group.heroes).map(({ to, end, label, icon: Icon }) => (
             <NavLink key={to} to={to} end={end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
               <Icon size={18} weight="bold" />
               {to === 'students' ? cap(t.student.many.nom) : label}
@@ -109,7 +109,9 @@ export function GroupShell() {
         data && (
           <ChunkErrorBoundary resetKey={location.pathname}>
             <Suspense fallback={<CardGridSkeleton />}>
-              <Outlet context={{ data, setData, reload } satisfies GroupCtx} />
+              <HeroesProvider on={data.group.heroes}>
+                <Outlet context={{ data, setData, reload } satisfies GroupCtx} />
+              </HeroesProvider>
             </Suspense>
           </ChunkErrorBoundary>
         )

@@ -7,7 +7,7 @@ import { Modal, Switch } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { useGroup } from '../hooks/useGroup';
 import { GroupTeachersSection } from './GroupTeachers';
-import { archiveGroup, deleteGroup, renameGroup, setParentsEnabled } from '../api';
+import { archiveGroup, deleteGroup, renameGroup, setGroupHeroes, setParentsEnabled } from '../api';
 import { useTerms } from '../../auth';
 import { cap } from '@heroes/shared/terms';
 
@@ -40,6 +40,25 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
               />
               <span className="text-sm">Входы родителей</span>
             </label>
+            <h3 className="pt-2 text-base">Герои и награды</h3>
+            <label className="flex cursor-pointer items-center gap-2">
+              <Switch
+                checked={data.group.heroes}
+                label="Герои, питомцы, уровни и магазин наград"
+                onChange={async (on) => {
+                  try {
+                    await setGroupHeroes(data.group.id, on);
+                    await reload();
+                  } catch (err) {
+                    toast({ text: (err as Error).message, tone: 'error' });
+                  }
+                }}
+              />
+              <span className="text-sm">Герои, питомцы, уровни и магазин наград</span>
+            </label>
+            <p className="text-sm text-ink-soft">
+              Без них остаются баллы, посещаемость, задания, работы и отчёты. Для студентов вуза их обычно выключают.
+            </p>
             <p className="text-sm text-ink-soft">
               Родители видят успехи, ленту и пишут преподавателям. Для совершеннолетних {t.student.many.gen} их обычно выключают:
               новые входы и приглашения выдать нельзя, действующие приглашения отзываются, а уже выданные входы остаются.

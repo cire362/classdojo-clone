@@ -11,6 +11,8 @@ export const renameGroup = (groupId: string, name: string) => api('PATCH', `/tea
 export const setParentsEnabled = (groupId: string, parentsEnabled: boolean) =>
   api('PATCH', `/teacher/groups/${groupId}`, { parentsEnabled });
 
+export const setGroupHeroes = (groupId: string, heroes: boolean) => api('PATCH', `/teacher/groups/${groupId}`, { heroes });
+
 export const archiveGroup = (groupId: string) => api('POST', `/teacher/groups/${groupId}/archive`);
 
 export const restoreGroup = (groupId: string) => api('POST', `/teacher/groups/${groupId}/restore`);
