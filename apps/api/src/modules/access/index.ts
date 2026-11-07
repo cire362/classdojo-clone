@@ -6,6 +6,7 @@ export {
   groupReader,
   groupsOf,
   lockGroup,
+  lockSchool,
   lockStudent,
   parentChild,
   studentReader,

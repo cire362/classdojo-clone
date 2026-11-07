@@ -95,8 +95,39 @@ export interface AdminGroup {
   colleagues: { id: string; name: string }[];
 }
 
-/** Школа администратора */
+/** Должность в администрации школы */
+export type SchoolRole = 'DIRECTOR' | 'DEPUTY' | 'STAFF';
+
+/** Школа сотрудника администрации и его права в ней */
 export interface SchoolInfo {
   id: string;
   name: string;
+  role: SchoolRole;
+  /** Код подключения преподавателей; null — выключен или не виден этой должности */
+  joinCode: string | null;
+  /** Заявок преподавателей ждут проверки; сотруднику без прав на них — 0 */
+  pendingTeachers: number;
+}
+
+/** Сотрудник администрации школы */
+export interface StaffMember {
+  id: string;
+  name: string;
+  login: string;
+  role: SchoolRole;
+  /** Это сам смотрящий: себя изменить и удалить нельзя */
+  isMe: boolean;
+}
+
+/** Преподаватель подключился по коду школы и ждёт проверки */
+export interface TeacherRequest {
+  id: string;
+  name: string;
+  login: string;
+  createdAt: string;
+}
+
+/** Что видит преподаватель, введя код школы */
+export interface SchoolJoinPreview {
+  schoolName: string;
 }

@@ -6,7 +6,7 @@ const ADMIN = { login: process.env.E2E_ADMIN_LOGIN ?? 'admin', password: process
 
 test('администратор создаёт преподавателя и восстанавливает ему вход', async ({ page, browser }) => {
   await loginUi(page, ADMIN.login, ADMIN.password);
-  await expect(page.getByRole('main').getByText('Администратор школы', { exact: true })).toBeVisible();
+  await expect(page.getByRole('main').getByText('Директор', { exact: true })).toBeVisible();
 
   // Название школы меняется и возвращается: стенд общий для всех тестов
   const title = page.getByRole('heading', { level: 1 });
@@ -62,9 +62,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
   test(`администратор: доступность и телефон (${colorScheme})`, async ({ page }) => {
     await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
     await loginUi(page, ADMIN.login, ADMIN.password);
-    await expect(page.getByRole('main').getByText('Администратор школы', { exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByText('Директор', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    for (const section of ['Преподаватели', 'Группы школы']) {
+    for (const section of ['Преподаватели', 'Группы школы', 'Администрация']) {
       await page.getByRole('button', { name: section, exact: true }).click();
       await expect(page.locator('main li').first()).toBeVisible();
       await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));

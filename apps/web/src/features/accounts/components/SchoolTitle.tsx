@@ -1,15 +1,13 @@
 import { useId, useState, type FormEvent } from 'react';
 import { PencilSimpleIcon } from '@phosphor-icons/react';
-import { useLoad } from '../../../lib/hooks';
-import { Skeleton } from '../../../ui';
+import type { SchoolInfo } from '../../../lib/api';
 import { useToast } from '../../../ui/Toast';
-import { fetchSchool, renameSchool } from '../api';
+import { renameSchool } from '../api';
 
-/** Название школы администратора: всё в кабинете относится только к ней. Название можно поменять */
-export function SchoolTitle() {
+/** Название школы: всё в кабинете относится только к ней. Поменять название может директор */
+export function SchoolTitle({ school, onRenamed }: { school: SchoolInfo; onRenamed: (school: SchoolInfo) => void }) {
   const id = useId();
   const toast = useToast();
-  const { data, setData } = useLoad(() => fetchSchool(), []);
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -18,7 +16,7 @@ export function SchoolTitle() {
     e.preventDefault();
     setBusy(true);
     try {
-      setData(await renameSchool(name.trim()));
+      onRenamed(await renameSchool(name.trim()));
       setEditing(false);
     } catch (err) {
       toast({ text: (err as Error).message, tone: 'error' });
@@ -27,7 +25,6 @@ export function SchoolTitle() {
     }
   }
 
-  if (!data) return <Skeleton className="h-9 w-64" />;
   if (editing) {
     return (
       <form onSubmit={save} className="flex flex-wrap items-end gap-2">
@@ -42,18 +39,20 @@ export function SchoolTitle() {
   }
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <h1 className="min-w-0 break-words text-2xl sm:text-3xl">{data.name}</h1>
-      <button
-        className="icon-btn"
-        aria-label="Переименовать школу"
-        title="Переименовать школу"
-        onClick={() => {
-          setName(data.name);
-          setEditing(true);
-        }}
-      >
-        <PencilSimpleIcon size={20} />
-      </button>
+      <h1 className="min-w-0 break-words text-2xl sm:text-3xl">{school.name}</h1>
+      {school.role === 'DIRECTOR' && (
+        <button
+          className="icon-btn"
+          aria-label="Переименовать школу"
+          title="Переименовать школу"
+          onClick={() => {
+            setName(school.name);
+            setEditing(true);
+          }}
+        >
+          <PencilSimpleIcon size={20} />
+        </button>
+      )}
     </div>
   );
 }

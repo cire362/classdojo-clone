@@ -21,3 +21,6 @@ export function parse<S extends ZodType>(schema: S, data: unknown): output<S> {
   }
   return r.data;
 }
+
+/** Нарушение уникальности в БД: например, логин заняли одновременно с проверкой */
+export const isUniqueViolation = (err: unknown) => typeof err === 'object' && err !== null && 'code' in err && err.code === 'P2002';

@@ -27,7 +27,8 @@ it('администратор видит и меняет только свою 
   const northTeacher = await setupTeacher(['Маша Иванова'], north.school.id);
   const southTeacher = await setupTeacher(['Петя Смирнов'], south.school.id);
 
-  expect((await call('GET', '/api/admin/school', { cookie: north.cookie })).body).toEqual({ id: north.school.id, name: 'Северная школа' });
+  const info = (await call('GET', '/api/admin/school', { cookie: north.cookie })).body;
+  expect(info).toMatchObject({ id: north.school.id, name: 'Северная школа' });
   const teachers = (await call('GET', '/api/admin/teachers', { cookie: north.cookie })).body.teachers;
   expect(teachers.map((t: { id: string }) => t.id)).toEqual([northTeacher.teacher.id]);
   const groups = (await call('GET', '/api/admin/groups', { cookie: north.cookie })).body;
@@ -42,7 +43,7 @@ it('администратор видит и меняет только свою 
   expect((await call('GET', '/api/teacher/groups', { cookie: southTeacher.cookie })).status).toBe(200);
 
   const renamed = await call('PATCH', '/api/admin/school', { cookie: north.cookie, body: { name: '  Гимназия № 1 ' } });
-  expect(renamed.body).toEqual({ id: north.school.id, name: 'Гимназия № 1' });
+  expect(renamed.body).toMatchObject({ id: north.school.id, name: 'Гимназия № 1', role: 'DIRECTOR' });
   expect((await call('GET', '/api/admin/school', { cookie: south.cookie })).body.name).toBe('Южная школа');
   expect((await call('PATCH', '/api/admin/school', { cookie: north.cookie, body: { name: ' ' } })).status).toBe(400);
 });

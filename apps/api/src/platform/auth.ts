@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { Context, MiddlewareHandler } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import type { Role } from '../generated/prisma/client';
+import type { Role, SchoolRole } from '../generated/prisma/client';
 import { prisma } from './db.js';
 import { env } from './env.js';
 import { HttpError } from './errors.js';
@@ -20,6 +20,8 @@ export interface AuthUser {
   parentId: string | null;
   /** Школа преподавателя или администратора; у ученика и родителя её нет */
   schoolId: string | null;
+  /** Должность в администрации школы; только у роли ADMIN */
+  schoolRole: SchoolRole | null;
 }
 
 export type AppEnv = { Variables: { user: AuthUser } };
@@ -99,6 +101,7 @@ export async function loadUser(c: Context): Promise<AuthUser | null> {
     studentId: a.student?.id ?? null,
     parentId: a.parent?.id ?? null,
     schoolId: a.teacher?.schoolId ?? a.admin?.schoolId ?? null,
+    schoolRole: a.admin?.role ?? null,
   };
 }
 
@@ -112,6 +115,18 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
 export function requireRole(role: Role): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     if (c.get('user').role !== role) throw new HttpError(403, 'Недостаточно прав');
+    await next();
+  };
+}
+
+/** Действие администрации школы, доступное только этим должностям. Роль ADMIN проверяется раньше */
+export function requireSchoolRole(...roles: SchoolRole[]): MiddlewareHandler<AppEnv> {
+  return async (c, next) => {
+    const role = c.get('user').schoolRole;
+    if (!role || !roles.includes(role)) {
+      const who = roles.includes('DEPUTY') ? 'директор или завуч' : 'директор';
+      throw new HttpError(403, `Это может сделать только ${who}`);
+    }
     await next();
   };
 }

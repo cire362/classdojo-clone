@@ -5,7 +5,7 @@ import { requireAuth, type AppEnv } from './platform/auth.js';
 import { prisma } from './platform/db.js';
 import { HttpError } from './platform/errors.js';
 import { notifications } from './modules/notifications/index.js';
-import { adminRoutes, authRoutes } from './modules/accounts/index.js';
+import { adminRoutes, authRoutes, schoolJoinRoutes, schoolStaffRoutes } from './modules/accounts/index.js';
 import { codeLoginRoutes } from './modules/codes/index.js';
 import { adminExportRoutes } from './modules/exports/index.js';
 import { fileRoutes } from './modules/files/index.js';
@@ -39,9 +39,11 @@ export function createApp() {
   app.route('/api/auth', authRoutes);
   app.route('/api/auth', codeLoginRoutes);
   app.route('/api/auth', inviteRoutes);
+  app.route('/api/auth', schoolJoinRoutes);
 
   app.use('/api/admin/*', requireAuth);
   app.route('/api/admin', adminRoutes);
+  app.route('/api/admin', schoolStaffRoutes);
   app.route('/api/admin', adminExportRoutes);
 
   app.use('/api/teacher/*', requireAuth);

@@ -47,6 +47,15 @@ export async function lockGroup(tx: Prisma.TransactionClient, groupId: string) {
   if (rows[0].archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
 }
 
+/**
+ * Изменения администрации и заявок школы сериализуются: два директора не понизят друг друга одновременно,
+ * а число ждущих заявок не превысит предел
+ */
+export async function lockSchool(tx: Prisma.TransactionClient, schoolId: string) {
+  const rows = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "School" WHERE id = ${schoolId} FOR UPDATE`;
+  if (!rows.length) throw notFound('Школа не найдена');
+}
+
 /** Преподаватель группы, её ученик или родитель её ученика, иначе 404 */
 export async function groupReader(user: AuthUser, groupId: string) {
   if (user.teacherId) return void (await teacherGroup(user, groupId));

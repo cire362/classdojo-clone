@@ -192,6 +192,7 @@ export function LoginForm() {
             </button>
             <Link to="/join" className="btn btn-ghost w-full">Войти по коду класса</Link>
             <Link to="/invite" className="btn btn-ghost w-full">У меня приглашение для родителей</Link>
+            <Link to="/school-join" className="btn btn-ghost w-full">Я преподаватель, у меня код школы</Link>
           </div>
         </form>
       </div>

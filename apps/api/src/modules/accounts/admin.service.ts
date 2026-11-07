@@ -1,28 +1,39 @@
 import type { AdminGroup, AdminTeachers, SchoolInfo, TeacherCredentials } from '@heroes/shared/api';
+import type { AuthUser } from '../../platform/auth.js';
 import { prisma } from '../../platform/db.js';
 import { addDays, localDayStart } from '../../platform/dates.js';
 import { env } from '../../platform/env.js';
 import { generatePassword, hashPassword } from '../../platform/credentials.js';
-import { HttpError, notFound } from '../../platform/errors.js';
+import { HttpError, isUniqueViolation, notFound } from '../../platform/errors.js';
 import { filesExpireAt } from '../files/index.js';
+import { LOGIN_TAKEN, pendingTeacherCount } from './join.service.js';
 import { isActive } from './premium.service.js';
 
 /**
  * Администратор видит и меняет только свою школу: её преподавателей и группы, созданные ими.
  * Чужой преподаватель или группа отвечают 404, как несуществующие.
  */
-export async function schoolInfo(schoolId: string): Promise<SchoolInfo> {
-  const school = await prisma.school.findUniqueOrThrow({ where: { id: schoolId }, select: { id: true, name: true } });
-  return school;
+/** Код подключения и заявки видят только директор и завуч: они их и проверяют */
+export async function schoolInfo(user: AuthUser): Promise<SchoolInfo> {
+  const school = await prisma.school.findUniqueOrThrow({ where: { id: user.schoolId! }, select: { id: true, name: true, joinCode: true } });
+  const checks = user.schoolRole !== 'STAFF';
+  return {
+    id: school.id,
+    name: school.name,
+    role: user.schoolRole!,
+    joinCode: checks ? school.joinCode : null,
+    pendingTeachers: checks ? await pendingTeacherCount(school.id) : 0,
+  };
 }
 
-export async function renameSchool(schoolId: string, name: string): Promise<SchoolInfo> {
-  return prisma.school.update({ where: { id: schoolId }, data: { name }, select: { id: true, name: true } });
+export async function renameSchool(user: AuthUser, name: string): Promise<SchoolInfo> {
+  await prisma.school.update({ where: { id: user.schoolId! }, data: { name } });
+  return schoolInfo(user);
 }
 
 export async function adminTeachers(schoolId: string): Promise<AdminTeachers> {
   const teachers = await prisma.teacher.findMany({
-    where: { schoolId },
+    where: { schoolId, pendingSince: null },
     orderBy: [{ name: 'asc' }, { id: 'asc' }],
     select: {
       id: true, name: true, premiumUntil: true, account: { select: { login: true } },
@@ -57,16 +68,14 @@ export async function createTeacher(schoolId: string, name: string, login: strin
     return { id: teacher.id, name, login, password };
   } catch (err) {
     // Уникальность проверяет БД, в том числе при двух одновременных запросах.
-    if (typeof err === 'object' && err !== null && 'code' in err && err.code === 'P2002') {
-      throw new HttpError(409, 'Этот логин уже занят. Выберите другой');
-    }
+    if (isUniqueViolation(err)) throw new HttpError(409, LOGIN_TAKEN);
     throw err;
   }
 }
 
 export async function resetTeacherPassword(schoolId: string, teacherId: string): Promise<TeacherCredentials> {
   const teacher = await prisma.teacher.findFirst({
-    where: { id: teacherId, schoolId },
+    where: { id: teacherId, schoolId, pendingSince: null },
     select: { id: true, name: true, accountId: true, account: { select: { login: true } } },
   });
   if (!teacher) throw notFound('Преподаватель не найден');
@@ -84,7 +93,7 @@ export async function resetTeacherPassword(schoolId: string, teacherId: string):
 export async function setTeacherPremium(schoolId: string, teacherId: string, until: string | null) {
   const premiumUntil = until ? new Date(addDays(localDayStart(until), 1).getTime() - 1) : null;
   if (premiumUntil && premiumUntil <= new Date()) throw new HttpError(400, 'Выберите сегодняшнюю или будущую дату');
-  const { count } = await prisma.teacher.updateMany({ where: { id: teacherId, schoolId }, data: { premiumUntil } });
+  const { count } = await prisma.teacher.updateMany({ where: { id: teacherId, schoolId, pendingSince: null }, data: { premiumUntil } });
   if (!count) throw notFound('Преподаватель не найден');
   return { premiumUntil: premiumUntil?.toISOString() ?? null, premiumActive: isActive(premiumUntil), freeForAll: env.premiumForAll };
 }

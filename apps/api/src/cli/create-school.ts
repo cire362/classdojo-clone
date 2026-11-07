@@ -1,9 +1,9 @@
 /**
- * Новая школа со своим администратором:
+ * Новая школа со своим директором:
  *   npm run create-school -w @heroes/api -- --name "Гимназия № 5" --login gym5 --admin "Директор"
  * В docker:
  *   docker compose exec api npm run create-school -- --name "Гимназия № 5" --login gym5 --admin "Директор"
- * Преподавателей школы дальше создаёт её администратор. Данные разных школ друг другу не видны.
+ * Преподавателей и администрацию школы дальше добавляет её директор. Данные разных школ друг другу не видны.
  */
 import { parseArgs } from 'node:util';
 import { prisma } from '../platform/db.js';
