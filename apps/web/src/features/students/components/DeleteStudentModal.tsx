@@ -2,15 +2,17 @@ import type { LessonStudent } from '../../../lib/api';
 import { Modal } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { deleteStudent } from '../api';
+import { useTerms } from '../../auth';
 
 export function DeleteStudentModal({ student, onClose, onDeleted }: {
   student: LessonStudent | null;
   onClose: () => void;
   onDeleted: () => Promise<void>;
 }) {
+  const t = useTerms();
   const toast = useToast();
   return (
-    <Modal open={!!student} title="Удалить ученика?" onClose={onClose}>
+    <Modal open={!!student} title={`Удалить ${t.student.one.acc}?`} onClose={onClose}>
       {student && (
         <div className="space-y-5">
           <p>

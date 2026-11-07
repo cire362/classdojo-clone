@@ -4,6 +4,7 @@ import type { CardSummary, ClassGoal, Reason } from '../../../lib/api';
 import { pluralize } from '../../../lib/hooks';
 import { useToast } from '../../../ui/Toast';
 import { awardPoints, fetchGoal, undoPoints } from '../api';
+import { useTerms } from '../../auth';
 
 export interface Burst {
   key: number;
@@ -14,6 +15,7 @@ export interface Burst {
 
 /** Начисление с отметкой на карточках, поздравлением и отменой из уведомления */
 export function useAward(onAwarded: () => void) {
+  const t = useTerms();
   const { data, setData } = useGroup();
   const toast = useToast();
   const [bursts, setBursts] = useState<Record<string, Burst>>({});
@@ -73,7 +75,7 @@ export function useAward(onAwarded: () => void) {
       };
       const who = ids.length === 1
         ? students.find((s) => s.id === ids[0])?.name.split(' ')[0]
-        : `${ids.length} ${pluralize(ids.length, 'ученик', 'ученика', 'учеников')}`;
+        : `${ids.length} ${pluralize(ids.length, t.student.one.nom, t.student.one.gen, t.student.many.gen)}`;
       toast(
         reason.value > 0
           ? { text: `${who}: +${reason.value}, ${reason.name.toLowerCase()}`, tone: 'ok', action: undo }

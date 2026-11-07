@@ -5,6 +5,8 @@ import type { InstitutionKind, Role, SchoolRole } from '../generated/prisma/clie
 import { prisma } from './db.js';
 import { env } from './env.js';
 import { HttpError } from './errors.js';
+import { withTerms } from './terms.js';
+import { termsFor } from '@heroes/shared/terms';
 
 export const SESSION_COOKIE = 'hk_session';
 
@@ -133,7 +135,7 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
   const user = await loadUser(c);
   if (!user) throw new HttpError(401, 'Нужно войти');
   c.set('user', user);
-  await next();
+  await withTerms(termsFor(user.institution), next);
 };
 
 export function requireRole(role: Role): MiddlewareHandler<AppEnv> {

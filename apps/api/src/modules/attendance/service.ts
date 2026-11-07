@@ -4,6 +4,8 @@ import { addDays, dateKey, dbDate, dbDateKey, localDayStart, startOfDay } from '
 import { HttpError } from '../../platform/errors.js';
 import { lockGroup } from '../access/index.js';
 import { attendanceReason } from '../reasons/index.js';
+import { terms } from '../../platform/terms.js';
+import { cap } from '@heroes/shared/terms';
 
 export const MAX_LESSONS_PER_DAY = 8;
 
@@ -84,7 +86,7 @@ export async function saveAttendance(params: {
   const groupIds = new Set(students.map((s) => s.id));
   const present = new Set(params.presentStudentIds);
   for (const id of present) {
-    if (!groupIds.has(id)) throw new HttpError(404, 'Ученик не найден в группе');
+    if (!groupIds.has(id)) throw new HttpError(404, `${cap(terms().student.one.nom)} не найден в группе`);
   }
 
   // Баллы за урок в прошлом датируются днём урока (полдень), чтобы не попасть в «сегодня»

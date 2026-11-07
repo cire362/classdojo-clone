@@ -6,9 +6,11 @@ import { deleteOrphanParents } from '../parents/index.js';
 import { generatePassword, hashPassword, loginBase, pickLogin } from '../../platform/credentials.js';
 import { HttpError } from '../../platform/errors.js';
 import { previewImport } from './import.js';
+import { terms } from '../../platform/terms.js';
+import { cap } from '@heroes/shared/terms';
 
 const MAX_GROUP_STUDENTS = 200;
-const FULL_GROUP_MESSAGE = `В группе может быть не больше ${MAX_GROUP_STUDENTS} учеников`;
+const fullGroup = () => `В группе может быть не больше ${MAX_GROUP_STUDENTS} ${terms().student.many.gen}`;
 
 async function takenLogins(bases: string[]): Promise<Set<string>> {
   const unique = [...new Set(bases)];
@@ -53,7 +55,7 @@ export async function addStudents(groupId: string, names: string[]): Promise<Cre
   const clean = names.filter(Boolean);
   if (!clean.length) throw new HttpError(400, 'Введите хотя бы одно имя');
   const total = await prisma.student.count({ where: { groupId } });
-  if (total + clean.length > MAX_GROUP_STUDENTS) throw new HttpError(400, FULL_GROUP_MESSAGE);
+  if (total + clean.length > MAX_GROUP_STUDENTS) throw new HttpError(400, fullGroup());
   return createStudents(groupId, clean);
 }
 
@@ -75,9 +77,9 @@ export async function updateStudent(studentId: string, data: { name?: string; no
  * прошлые отметки посещаемости остаются в старой группе
  */
 export async function moveStudent(student: { id: string; groupId: string }, target: { id: string; name: string }) {
-  if (target.id === student.groupId) throw new HttpError(400, 'Ученик уже в этой группе');
+  if (target.id === student.groupId) throw new HttpError(400, `${cap(terms().student.one.nom)} уже в этой группе`);
   const total = await prisma.student.count({ where: { groupId: target.id } });
-  if (total >= MAX_GROUP_STUDENTS) throw new HttpError(400, FULL_GROUP_MESSAGE);
+  if (total >= MAX_GROUP_STUDENTS) throw new HttpError(400, fullGroup());
   // Команды принадлежат группе: в новой ученик начинает без команды
   await prisma.student.update({ where: { id: student.id }, data: { groupId: target.id, teamId: null } });
   return { id: student.id, groupId: target.id, groupName: target.name };

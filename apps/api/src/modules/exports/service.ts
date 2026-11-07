@@ -1,6 +1,8 @@
 import type { Prisma } from '../../generated/prisma/client.js';
 import { dateKey } from '../../platform/dates.js';
+import { cap } from '@heroes/shared/terms';
 import { prisma } from '../../platform/db.js';
+import { terms } from '../../platform/terms.js';
 import type { ZipEntry } from './zip.js';
 
 /**
@@ -71,8 +73,9 @@ export async function groupArchive(groupId: string) {
     else if (f.assignment) entries.named(`Задания/${folder(f.assignment.createdAt, f.assignment.title, 'Задание')}`, f);
     else entries.named('Файлы группы', f);
   }
+  const t = terms();
   for (const f of students) {
-    const dir = `Ученики/${clean(f.student!.name) || 'Ученик'}`;
+    const dir = `${cap(t.student.many.nom)}/${clean(f.student!.name) || cap(t.student.one.nom)}`;
     const kind = f.work?.assignmentId ? 'Задания' : 'Работы';
     entries.named(f.work ? `${dir}/${kind}/${folder(f.work.createdAt, f.work.title, 'Работа')}` : dir, f);
   }
@@ -80,7 +83,8 @@ export async function groupArchive(groupId: string) {
 Фото, видео и файлы группы «${group.name}» на ${dateKey()}.
 Лента — фото и видео записей, в том числе скрытых и запланированных.
 Рассылки, Задания и Файлы группы — вложения рассылок родителям, файлы заданий и файлы для всей группы.
-Ученики — вложения переписки с родителями, работы, ответы на задания и файлы каждого ученика, в том числе непроверенные.
+${cap(t.student.many.nom)} — вложения переписки с родителями, работы, ответы на задания и файлы каждого ${t.student.one.gen}, \
+в том числе непроверенные.
 Метаданные и геопозиция из фото и видео удалены при загрузке.`;
   return { name: group.name, entries: entries.withReadme(readme) };
 }
@@ -106,7 +110,9 @@ export async function childArchive(studentId: string, parentId: string) {
     }),
   ]);
   const entries = new Entries();
-  for (const f of posts) entries.media(`Лента класса/${folder(f.post!.createdAt, f.post!.text, 'Запись')}`, f);
+  const t = terms();
+  const feed = `Лента ${t.group.one.gen}`;
+  for (const f of posts) entries.media(`${feed}/${folder(f.post!.createdAt, f.post!.text, 'Запись')}`, f);
   const broadcasts = await broadcastTitles(broadcastFiles.map((f) => f.broadcastId!));
   const messages = [
     ...attachments.map((f) => ({ f, date: f.message!.createdAt })),
@@ -115,10 +121,10 @@ export async function childArchive(studentId: string, parentId: string) {
   for (const { f, date } of messages) entries.named(`Сообщения/${dateKey(date)}`, f, date);
   for (const f of works) entries.named(`Работы/${folder(f.work!.createdAt, f.work!.title, 'Работа')}`, f);
   const readme = `
-Фото, видео и файлы для родителя ученика ${student.name} на ${dateKey()}.
-Лента класса — фото и видео опубликованных записей группы.
+Фото, видео и файлы для родителя ${t.student.one.gen} ${student.name} на ${dateKey()}.
+${feed} — фото и видео опубликованных записей группы.
 Сообщения — фото и файлы из переписки с преподавателями, по дням.
-Работы — одобренные преподавателем работы ученика.
+Работы — одобренные преподавателем работы ${t.student.one.gen}.
 Метаданные и геопозиция из фото и видео удалены при загрузке.`;
   return { name: student.name, entries: entries.withReadme(readme) };
 }

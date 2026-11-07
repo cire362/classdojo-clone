@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { CheckIcon } from '@phosphor-icons/react';
 import { pluralize } from '../../../lib/hooks';
 import { Modal, Toggle } from '../../../ui';
+import { useTerms } from '../../auth';
+import { cap } from '@heroes/shared/terms';
 
 export interface ImportPreview {
   names: { name: string; alreadyInGroup: boolean }[];
@@ -30,6 +32,7 @@ export function ImportStudentsModal({
   onClose: () => void;
   onConfirm: (names: string[]) => void;
 }) {
+  const t = useTerms();
   const [key, setKey] = useState<ImportPreview | null>(null);
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [swap, setSwap] = useState(false);
@@ -62,7 +65,7 @@ export function ImportStudentsModal({
   }
 
   return (
-    <Modal open={!!preview} title="Ученики из файла" onClose={onClose} size="lg">
+    <Modal open={!!preview} title={`${cap(t.student.many.nom)} из файла`} onClose={onClose} size="lg">
       {preview && (
         <div className="space-y-5">
           <p className="text-ink-soft">

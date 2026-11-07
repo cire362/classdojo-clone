@@ -3,6 +3,7 @@ import { DiceFiveIcon } from '@phosphor-icons/react';
 import { HeroAvatar } from '../../hero';
 import type { LessonStudent } from '../../../lib/api';
 import { Modal } from '../../../ui';
+import { useTerms } from '../../auth';
 
 export function RandomPicker({
   open,
@@ -17,6 +18,7 @@ export function RandomPicker({
   onClose: () => void;
   onAward: (s: LessonStudent) => void;
 }) {
+  const t = useTerms();
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState(false);
   const [run, setRun] = useState(0);
@@ -39,7 +41,7 @@ export function RandomPicker({
 
   const s = students[index];
   return (
-    <Modal open={open} title={onlyPresent ? 'Случайный из присутствующих' : 'Случайный ученик'} onClose={onClose}>
+    <Modal open={open} title={onlyPresent ? 'Случайный из присутствующих' : `Случайный ${t.student.one.nom}`} onClose={onClose}>
       {s && (
         <div className="flex flex-col items-center text-center">
           <div

@@ -5,6 +5,7 @@ import { dateKey, formatDate, useLoad } from '../../../lib/hooks';
 import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { fetchEvents } from '../api';
 import { EventModal } from './EventModal';
+import { useTerms } from '../../auth';
 
 const firstDay = (month: string, shift = 0) => new Date(Number(month.slice(0, 4)), Number(month.slice(5)) - 1 + shift, 1);
 
@@ -17,6 +18,7 @@ function monthTitle(month: string) {
 
 /** События месяца. С editable преподаватель добавляет и меняет их */
 export function Calendar({ path, editable = false }: { path: string; editable?: boolean }) {
+  const t = useTerms();
   const today = dateKey();
   const [month, setMonth] = useState(today.slice(0, 7));
   const { data, error, reload } = useLoad(() => fetchEvents(path, month), [path, month]);
@@ -47,7 +49,7 @@ export function Calendar({ path, editable = false }: { path: string; editable?: 
       {data?.length === 0 && (
         <EmptyState icon={<CalendarBlankIcon size={28} />} title="В этом месяце событий нет">
           {editable
-            ? 'Добавьте контрольные, экскурсии и собрания: их увидят ученики и родители.'
+            ? `Добавьте контрольные, экскурсии и собрания: их увидят ${t.student.many.nom} и родители.`
             : 'Когда преподаватель добавит событие, оно появится здесь.'}
         </EmptyState>
       )}

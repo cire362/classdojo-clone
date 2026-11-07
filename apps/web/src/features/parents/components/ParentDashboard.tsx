@@ -16,6 +16,7 @@ import { Calendar } from '../../calendar';
 import { ParentAssignments } from '../../assignments';
 import { HomePoints } from '../../home';
 import { fetchChildProfile, fetchChildren } from '../api';
+import { useTerms } from '../../auth';
 
 /** Выбранный ребёнок запоминается: его профиль ранний скрипт запрашивает сразу при открытии */
 export const CHILD_KEY = 'heroes:child';
@@ -30,6 +31,7 @@ function storedChild(): string | null {
 
 /** Кабинет родителя: школьные данные своих детей только для просмотра, домашние баллы родитель ведёт сам */
 export function ParentDashboard() {
+  const t = useTerms();
   const children = useLoad(() => fetchChildren(), []);
   const [selected, setSelected] = useState<string | null>(storedChild);
   const [section, setSection] = useState<'profile' | 'week' | 'rewards' | 'home' | 'assignments' | 'feed' | 'calendar' | 'messages'>(
@@ -55,7 +57,7 @@ export function ParentDashboard() {
   if (children.data && !list.length) {
     return (
       <EmptyState icon={<UsersIcon size={28} />} title="Пока здесь никого нет">
-        Преподаватель ещё не привязал к этому входу ни одного ученика.
+        Преподаватель ещё не привязал к этому входу ни одного {t.student.one.gen}.
       </EmptyState>
     );
   }
@@ -65,7 +67,7 @@ export function ParentDashboard() {
     ['rewards', 'Награды', 0],
     ['home', 'Дома', 0],
     ['assignments', 'Задания', 0],
-    ['feed', 'Лента класса', current?.unread.feed ?? 0],
+    ['feed', `Лента ${t.group.one.gen}`, current?.unread.feed ?? 0],
     ['calendar', 'Календарь', 0],
     ['messages', 'Сообщения', current?.unread.messages ?? 0],
   ] as const;

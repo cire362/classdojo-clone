@@ -4,9 +4,11 @@ import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import { useNotifications } from '../../notifications';
 import { fetchPendingRequests } from '../api';
+import { useTerms } from '../../auth';
 
 /** Общая очередь: переходим в нужную группу, чтобы выдать награду или отказать. */
 export function RewardRequestsList() {
+  const t = useTerms();
   const { counts, refresh } = useNotifications();
   // Каждый успешный опрос счётчиков обновляет и распределение по группам, даже если сумма та же.
   const { data, error, loading, reload } = useLoad(() => fetchPendingRequests(), [counts]);
@@ -30,7 +32,8 @@ export function RewardRequestsList() {
           </p>
           {data.groups.length === 0 ? (
             <EmptyState icon={<GiftIcon size={28} aria-hidden />} title="Ожидающих запросов нет">
-              Когда ученик попросит награду, здесь появится его группа. Запросы групп в архиве доступны после восстановления группы.
+              Когда {t.student.one.nom} попросит награду, здесь появится его группа.
+              Запросы групп в архиве доступны после восстановления группы.
             </EmptyState>
           ) : (
             <ul className="card divide-y divide-line overflow-hidden">

@@ -6,7 +6,7 @@ export const MAX_STAGE_MINUTES = 30;
 export const STAGES = [
   { title: 'Подумай', hint: 'Каждый думает молча и сам' },
   { title: 'Обсуди', hint: 'Обсудите ответ в паре' },
-  { title: 'Поделись', hint: 'Расскажите о выводах классу' },
+  { title: 'Поделись', hint: 'Расскажите о выводах всем' },
 ] as const;
 
 export const LAST_STAGE = STAGES.length - 1;

@@ -1,8 +1,10 @@
 import { pluralize } from '../../../lib/hooks';
 import { usePresence } from '../../../lib/presence';
+import { useTerms } from '../../auth';
 
 /** Панель выбора нескольких учеников */
 export function SelectBar({ active, count, onAward }: { active: boolean; count: number; onAward: (label: string) => void }) {
+  const t = useTerms();
   const bar = usePresence(active, 200);
   if (!bar.mounted) return null;
   return (
@@ -18,7 +20,7 @@ export function SelectBar({ active, count, onAward }: { active: boolean; count: 
         <button
           className="btn btn-primary"
           disabled={!count}
-          onClick={() => onAward(`${count} ${pluralize(count, 'ученик', 'ученика', 'учеников')}`)}
+          onClick={() => onAward(`${count} ${pluralize(count, t.student.one.nom, t.student.one.gen, t.student.many.gen)}`)}
         >
           Начислить
         </button>

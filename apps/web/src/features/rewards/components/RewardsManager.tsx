@@ -7,12 +7,15 @@ import { formatDateTime, pluralize, useLoad } from '../../../lib/hooks';
 import { useGroup } from '../../groups';
 import { useNotifications } from '../../notifications';
 import { addReward, decideRequest, fetchGroupRewards, removeReward } from '../api';
+import { useTerms } from '../../auth';
+import { cap } from '@heroes/shared/terms';
 
 const EMOJI = ['🎁', '🪑', '🎵', '🧑‍🏫', '⏰', '🎮', '🍬', '📖', '🎨', '⚽', '🌟', '🏅'];
 const STATUS = { PENDING: 'ждёт ответа', APPROVED: 'выдано', REJECTED: 'отказано' } as const;
 
 /** Магазин наград группы: запросы учеников и список наград */
 export function RewardsManager() {
+  const t = useTerms();
   const { data: group, reload: reloadGroup } = useGroup();
   const toast = useToast();
   const { refresh } = useNotifications();
@@ -41,7 +44,8 @@ export function RewardsManager() {
       setData({ ...data!, requests });
       void reloadGroup();
       void refresh();
-      toast({ text: approve ? `${r.student?.name}: «${r.title}» выдано` : 'Отказано, баллы вернулись ученику', tone: approve ? 'ok' : 'neutral' });
+      const text = approve ? `${r.student?.name}: «${r.title}» выдано` : `Отказано, баллы вернулись ${t.student.one.dat}`;
+      toast({ text, tone: approve ? 'ok' : 'neutral' });
     });
 
   const add = (e: FormEvent) => {
@@ -67,10 +71,10 @@ export function RewardsManager() {
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
       <section className="min-w-0 space-y-4">
-        <PageTitle>Запросы учеников</PageTitle>
+        <PageTitle>Запросы {t.student.many.gen}</PageTitle>
         {pending.length === 0 ? (
           <EmptyState icon={<GiftIcon size={28} />} title="Новых запросов нет">
-            Ученики выбирают награды в своём кабинете и тратят на них баллы. Здесь вы подтверждаете выдачу.
+            {cap(t.student.many.nom)} выбирают награды в своём кабинете и тратят на них баллы. Здесь вы подтверждаете выдачу.
           </EmptyState>
         ) : (
           <ul className="card divide-y divide-line overflow-hidden">
@@ -181,7 +185,7 @@ export function RewardsManager() {
           </form>
         )}
         <p className="text-sm text-ink-soft">
-          Ученик тратит баллы, уровень героя от этого не падает. При отказе баллы возвращаются.
+          {cap(t.student.one.nom)} тратит баллы, уровень героя от этого не падает. При отказе баллы возвращаются.
         </p>
       </section>
     </div>

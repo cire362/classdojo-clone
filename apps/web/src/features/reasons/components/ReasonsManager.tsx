@@ -14,6 +14,7 @@ const EMOJI = ['💪', '💡', '🤝', '🧩', '✨', '⭐', '🏆', '📚', '�
 type Draft = { name: string; emoji: string; value: number; countsForHelpBadge: boolean };
 
 export function ReasonsManager() {
+  const t = useTerms();
   const { data, reload } = useGroup();
   const toast = useToast();
   const [editing, setEditing] = useState<Reason | 'new' | null>(null);
@@ -56,7 +57,7 @@ export function ReasonsManager() {
     try {
       await deleteReason(r.id);
       await reload();
-      toast({ text: `«${r.name}» удалена. В истории учеников она останется`, tone: 'neutral' });
+      toast({ text: `«${r.name}» удалена. В истории ${t.student.many.gen} она останется`, tone: 'neutral' });
     } catch (e) {
       toast({ text: (e as Error).message, tone: 'error' });
     }

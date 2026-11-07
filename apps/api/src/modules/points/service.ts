@@ -3,6 +3,8 @@ import { levelForPoints } from '@heroes/shared';
 import { prisma } from '../../platform/db.js';
 import { startOfDay } from '../../platform/dates.js';
 import { HttpError } from '../../platform/errors.js';
+import { terms } from '../../platform/terms.js';
+import { cap } from '@heroes/shared/terms';
 
 /** Сумма заработанных (только положительных) баллов по ученикам */
 export async function earnedByStudent(studentIds: string[], since?: Date): Promise<Map<string, number>> {
@@ -63,7 +65,7 @@ export async function awardPoints(params: {
   awardedById: string;
 }) {
   const studentIds = [...new Set(params.studentIds)];
-  if (!studentIds.length) throw new HttpError(400, 'Не выбраны ученики');
+  if (!studentIds.length) throw new HttpError(400, `Не выбраны ${terms().student.many.nom}`);
 
   const reason = await prisma.behaviorReason.findFirst({
     where: { id: params.reasonId, groupId: params.groupId, kind: 'MANUAL', archived: false },
@@ -71,7 +73,7 @@ export async function awardPoints(params: {
   if (!reason) throw new HttpError(404, 'Причина не найдена');
 
   const count = await prisma.student.count({ where: { id: { in: studentIds }, groupId: params.groupId } });
-  if (count !== studentIds.length) throw new HttpError(404, 'Ученик не найден в группе');
+  if (count !== studentIds.length) throw new HttpError(404, `${cap(terms().student.one.nom)} не найден в группе`);
 
   const events = await prisma.$transaction(async (tx) => {
     await lockGroup(tx, params.groupId);

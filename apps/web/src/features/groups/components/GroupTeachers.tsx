@@ -5,12 +5,14 @@ import { useLoad } from '../../../lib/hooks';
 import { useToast } from '../../../ui/Toast';
 import { Skeleton } from '../../../ui';
 import { addGroupTeacher, fetchGroupTeachers, removeGroupTeacher } from '../api';
+import { useTerms } from '../../auth';
 
 /**
  * Преподаватели группы. Создатель добавляет коллег по логину и убирает их;
  * соавтор ведёт уроки наравне с создателем и может сам выйти из группы.
  */
 export function GroupTeachersSection({ groupId, isOwner }: { groupId: string; isOwner: boolean }) {
+  const t = useTerms();
   const toast = useToast();
   const navigate = useNavigate();
   const { data, setData, error } = useLoad(() => fetchGroupTeachers(groupId), [groupId]);
@@ -106,7 +108,8 @@ export function GroupTeachersSection({ groupId, isOwner }: { groupId: string; is
             </button>
           </div>
           <p className="text-sm text-ink-soft">
-            Коллега сможет вести уроки, отмечать посещаемость, добавлять учеников и выдавать входы родителям. Удалять и архивировать
+            Коллега сможет вести уроки, отмечать посещаемость, добавлять {t.student.many.acc} и выдавать входы родителям.
+            Удалять и архивировать
             группу можете только вы.
           </p>
         </form>

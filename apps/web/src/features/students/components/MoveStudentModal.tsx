@@ -6,6 +6,7 @@ import { pluralize } from '../../../lib/hooks';
 import { HeroHead } from '../../hero';
 import { Modal, Skeleton } from '../../../ui';
 import { moveStudent } from '../api';
+import { useTerms } from '../../auth';
 
 export interface MoveTarget {
   id: string;
@@ -23,6 +24,7 @@ export function MoveStudentModal({
   onClose: () => void;
   onMoved: (group: { id: string; name: string }) => void;
 }) {
+  const t = useTerms();
   const [groups, setGroups] = useState<GroupListItem[] | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +80,7 @@ export function MoveStudentModal({
               <Link to="/" className="font-semibold underline" onClick={onClose}>
                 Создайте группу
               </Link>
-              , и сюда можно будет перевести ученика.
+              , и сюда можно будет перевести {t.student.one.acc}.
             </p>
           )}
 
@@ -102,7 +104,7 @@ export function MoveStudentModal({
                   <span className="min-w-0 flex-1">
                     <span className="block font-display">{g.name}</span>
                     <span className="block text-sm text-ink-soft">
-                      {g.studentsCount} {pluralize(g.studentsCount, 'ученик', 'ученика', 'учеников')}
+                      {g.studentsCount} {pluralize(g.studentsCount, t.student.one.nom, t.student.one.gen, t.student.many.gen)}
                     </span>
                   </span>
                   <span className="flex -space-x-2" aria-hidden>

@@ -2,15 +2,17 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeftIcon, PrinterIcon } from '@phosphor-icons/react';
 import type { LoginCard } from '../../../lib/api';
 import { QrImage } from './QrImage';
+import { useTerms } from '../../auth';
 
 /** Токены показываются только сразу после выпуска, поэтому лист строится из переданного списка */
 export function LoginCardsSheet({ cards }: { cards: LoginCard[] }) {
+  const t = useTerms();
   const { groupId } = useParams();
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <div className="no-print mb-6 space-y-4">
         <Link to={`/g/${groupId}/students`} className="btn btn-ghost btn-sm -ml-3">
-          <ArrowLeftIcon size={18} /> К ученикам
+          <ArrowLeftIcon size={18} /> К {t.student.many.dat}
         </Link>
         <h1 className="text-2xl sm:text-3xl">QR-карточки для входа</h1>
         <div className="flex flex-wrap items-center gap-3">

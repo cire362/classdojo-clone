@@ -7,6 +7,8 @@ import { useToast } from '../../../ui/Toast';
 import { useGroup } from '../../groups';
 import { decideWork, deleteWork, fetchGroupWorks } from '../api';
 import { WorkCard } from './WorkCard';
+import { useTerms } from '../../auth';
+import { cap } from '@heroes/shared/terms';
 
 const student = (w: GroupWork) => <p className="text-sm font-semibold text-ink-soft">{w.student.name}</p>;
 
@@ -15,6 +17,7 @@ const student = (w: GroupWork) => <p className="text-sm font-semibold text-ink-s
  * а работу с неподходящим содержимым — удалить вместе с файлами.
  */
 export function GroupWorks() {
+  const t = useTerms();
   const id = useId();
   const toast = useToast();
   const { data: group, setData: setGroup } = useGroup();
@@ -41,7 +44,7 @@ export function GroupWorks() {
   const decide = (w: GroupWork, status: 'APPROVED' | 'RETURNED') =>
     act(
       () => decideWork(groupId, w.id, status, (comments[w.id] ?? w.comment).trim()),
-      status === 'APPROVED' ? 'Работа опубликована: её видят родители' : 'Работа возвращена ученику',
+      status === 'APPROVED' ? 'Работа опубликована: её видят родители' : `Работа возвращена ${t.student.one.dat}`,
     );
 
   if (error) return <ErrorBox message={error} onRetry={reload} />;
@@ -52,13 +55,14 @@ export function GroupWorks() {
         <h2 id={`${id}-pending`} className="text-lg">На проверке: {data.pending.length}</h2>
         {data.pending.length === 0 && (
           <EmptyState icon={<NotebookIcon size={28} />} title="Новых работ нет">
-            Ученики сдают работы в своём кабинете, во вкладке «Мои работы». До публикации их видите только вы и сам ученик.
+            {cap(t.student.many.nom)} сдают работы в своём кабинете, во вкладке «Мои работы». До публикации их видите только вы
+            и сам {t.student.one.nom}.
           </EmptyState>
         )}
         <ul className="space-y-3">
           {data.pending.map((w) => (
             <WorkCard key={w.id} work={w} heading={student(w)} showStatus={false}>
-              <label className="label" htmlFor={`${id}-${w.id}`}>Комментарий ученику</label>
+              <label className="label" htmlFor={`${id}-${w.id}`}>Комментарий {t.student.one.dat}</label>
               <textarea
                 id={`${id}-${w.id}`}
                 className="input min-h-16 resize-y"

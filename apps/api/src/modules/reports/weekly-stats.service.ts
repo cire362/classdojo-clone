@@ -2,6 +2,8 @@ import type { WeeklyStats } from '@heroes/shared/api';
 import { prisma } from '../../platform/db.js';
 import { addDays, dateKey, dbDate, localDayStart, startOfWeek } from '../../platform/dates.js';
 import { HttpError, notFound } from '../../platform/errors.js';
+import { terms } from '../../platform/terms.js';
+import { cap } from '@heroes/shared/terms';
 
 export function trendPeriod(from?: string, to?: string, now = new Date()) {
   from ??= dateKey(new Date(now.getFullYear(), now.getMonth(), 1));
@@ -22,12 +24,14 @@ export async function weeklyStats(
   query: { from?: string; to?: string; studentId?: string; teamId?: string },
 ): Promise<WeeklyStats> {
   const { from, to } = trendPeriod(query.from, query.to);
-  if (query.studentId !== undefined && query.teamId !== undefined) throw new HttpError(400, 'Выберите ученика или команду');
+  if (query.studentId !== undefined && query.teamId !== undefined) {
+    throw new HttpError(400, `Выберите ${terms().student.one.acc} или команду`);
+  }
   return prisma.$transaction(async (tx) => {
     let scope: { kind: 'group' | 'student' | 'team'; id: string; name: string };
     if (query.studentId !== undefined) {
       const student = await tx.student.findFirst({ where: { id: query.studentId, groupId }, select: { id: true, name: true } });
-      if (!student) throw notFound('Ученик не найден в группе');
+      if (!student) throw notFound(`${cap(terms().student.one.nom)} не найден в группе`);
       scope = { kind: 'student', ...student };
     } else if (query.teamId !== undefined) {
       const team = await tx.team.findFirst({ where: { id: query.teamId, groupId }, select: { id: true, name: true } });

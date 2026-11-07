@@ -42,7 +42,7 @@ test('администратор создаёт преподавателя и в
     await expect(issued).toBeVisible();
     const replacement = await issued.locator('dd').nth(1).innerText();
     await teacher.reload();
-    await expect(teacher.getByRole('heading', { name: 'Вход в класс' })).toBeVisible();
+    await expect(teacher.getByRole('heading', { name: 'Вход', exact: true })).toBeVisible();
     await loginUi(teacher, login, replacement);
     await expect(teacher.getByRole('heading', { name: /Здравствуйте/ })).toBeVisible();
     await page.getByRole('button', { name: 'Данные сохранены, закрыть' }).click();

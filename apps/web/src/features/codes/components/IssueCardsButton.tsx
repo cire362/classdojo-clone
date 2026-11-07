@@ -4,9 +4,11 @@ import { IdentificationCardIcon } from '@phosphor-icons/react';
 import { Modal } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { issueLoginCards } from '../api';
+import { useTerms } from '../../auth';
 
 /** Выпуск QR-карточек: новые заменяют старые, поэтому это же и сброс потерянной карточки */
 export function IssueCardsButton({ groupId, studentId, className }: { groupId: string; studentId?: string; className: string }) {
+  const t = useTerms();
   const toast = useToast();
   const navigate = useNavigate();
   const [confirm, setConfirm] = useState(false);
@@ -31,7 +33,7 @@ export function IssueCardsButton({ groupId, studentId, className }: { groupId: s
       <Modal open={confirm} title={studentId ? 'Выпустить QR-карточку?' : 'Выпустить QR-карточки?'} onClose={() => setConfirm(false)}>
         <div className="space-y-5">
           <p>
-            С карточкой ученик входит без логина и пароля: достаточно навести камеру. Она работает 90 дней.
+            С карточкой {t.student.one.nom} входит без логина и пароля: достаточно навести камеру. Она работает 90 дней.
             {studentId
               ? ' Если карточка уже выдавалась, старая перестанет работать.'
               : ' Выданные раньше карточки всей группы перестанут работать.'}

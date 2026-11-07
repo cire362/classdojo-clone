@@ -7,6 +7,8 @@ import { dateKey, formatDate, useLoad } from '../../../lib/hooks';
 import { useGroup } from '../../groups';
 import { WeeklyPoints } from './WeeklyPoints';
 import { fetchStats } from '../api';
+import { useTerms } from '../../auth';
+import { cap } from '@heroes/shared/terms';
 
 function presets() {
   const now = new Date();
@@ -26,6 +28,7 @@ function presets() {
 type SortKey = 'name' | 'earned' | 'net' | 'attendance';
 
 export function StatsBoard() {
+  const t = useTerms();
   const { data: group } = useGroup();
   const options = useMemo(presets, []);
   const [range, setRange] = useState({ from: options[1].from, to: options[1].to });
@@ -97,14 +100,14 @@ export function StatsBoard() {
         <>
           {group.students.length === 0 ? (
             <EmptyState icon={<CalendarCheckIcon size={28} />} title="Пока нечего считать">
-              Добавьте учеников и проведите первый урок.
+              Добавьте {t.student.many.acc} и проведите первый урок.
             </EmptyState>
           ) : (
             <div className={`card overflow-x-auto transition-opacity ${loading ? 'opacity-60' : ''}`}>
               <table className="w-full min-w-[640px] text-left text-[15px]">
                 <thead className="border-b border-line text-sm text-ink-soft">
                   <tr>
-                    {th('name', 'Ученик', 'sticky left-0 bg-surface')}
+                    {th('name', cap(t.student.one.nom), 'sticky left-0 bg-surface')}
                     {th('earned', 'Плюсы', 'text-right')}
                     <th className="px-3 py-3 text-right font-semibold">Минусы</th>
                     {th('net', 'Итого', 'text-right')}

@@ -7,6 +7,7 @@ import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { deletePost, fetchPosts } from '../api';
 import { PostCard } from './PostCard';
 import { PostForm } from './PostForm';
+import { useTerms } from '../../auth';
 
 /**
  * Лента класса. С postTo — форма для преподавателя (адрес публикации). moderation — скрытие записей
@@ -22,6 +23,7 @@ export function Feed({ path, postTo, noPhotoNames, readOnlyNote, commentsNote, m
   refreshKey?: number;
   onLoaded?: () => void;
 }) {
+  const t = useTerms();
   const toast = useToast();
   const { refresh } = useNotifications();
   const { data, setData, error, reload } = useLoad(async () => {
@@ -46,7 +48,7 @@ export function Feed({ path, postTo, noPhotoNames, readOnlyNote, commentsNote, m
 
   return (
     <div className="max-w-2xl space-y-4">
-      <h2 className="sr-only">Лента класса</h2>
+      <h2 className="sr-only">Лента {t.group.one.gen}</h2>
       {postTo && (
         <PostForm postTo={postTo} noPhotoNames={noPhotoNames} onPosted={(post) => setData((current) => [post, ...(current ?? [])])} />
       )}
@@ -56,7 +58,7 @@ export function Feed({ path, postTo, noPhotoNames, readOnlyNote, commentsNote, m
       {data?.length === 0 && (
         <EmptyState icon={<MegaphoneIcon size={28} />} title="Пока без объявлений">
           {postTo
-            ? 'Здесь появятся ваши объявления для учеников и родителей.'
+            ? `Здесь появятся ваши объявления для ${t.student.many.gen} и родителей.`
             : 'Когда преподаватель напишет объявление, оно появится здесь.'}
         </EmptyState>
       )}

@@ -4,11 +4,13 @@ import { useLoad } from '../../../lib/hooks';
 import { Skeleton, Switch } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { fetchQuietHours, saveQuietHours } from '../api';
+import { useTerms } from '../../auth';
 
 const DEFAULT_HOURS = { from: '21:00', to: '08:00' };
 
 /** Тихие часы: значка новых сообщений нет, а родитель видит, когда ждать ответа */
 export function QuietHoursCard() {
+  const t = useTerms();
   const toast = useToast();
   const { data, error } = useLoad(fetchQuietHours, []);
   const [on, setOn] = useState(false);
@@ -41,7 +43,7 @@ export function QuietHoursCard() {
       </h2>
       <p className="text-sm text-ink-soft">
         В это время на значке сообщений не появляются новые, а родители видят, когда вы ответите. Сами сообщения никуда не деваются:
-        прочитать их можно в любой момент. Время указывается по часовому поясу школы.
+        прочитать их можно в любой момент. Время указывается по часовому поясу {t.org.one.gen}.
       </p>
       {error && <p role="alert" className="text-sm text-minus">{error}</p>}
       {!data && !error && <Skeleton className="h-16" />}

@@ -6,7 +6,10 @@ import type { Me, Notifications, StudentNotifications } from '../src/lib/api';
 import { renderApp } from './render';
 
 const auth = vi.hoisted(() => ({ user: { login: 'masha.i', role: 'STUDENT', name: 'Маша' } as Me | null }));
-vi.mock('../src/features/auth/auth', () => ({ useAuth: () => auth }));
+vi.mock('../src/features/auth/auth', async () => {
+  const { termsFor } = await import('@heroes/shared/terms');
+  return { useAuth: () => auth, useTerms: () => termsFor(auth.user?.institution) };
+});
 vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
 const { api } = await import('../src/lib/api');
 

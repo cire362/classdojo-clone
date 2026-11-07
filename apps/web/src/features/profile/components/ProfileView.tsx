@@ -9,6 +9,7 @@ import { Badges, BadgeSummary } from './Badges';
 import { PetCompanion } from '../../hero';
 import { EmptyState, ProgressBar } from '../../../ui';
 import { WorkCard } from '../../works';
+import { useTerms } from '../../auth';
 
 function PointsTile({ label, sum, featured = false }: { label: string; sum: PointsSum; featured?: boolean }) {
   return (
@@ -37,6 +38,7 @@ export function ProfileView({
   /** Только для преподавателя: добавление и удаление записей портфолио */
   portfolioEdit?: PortfolioEdit;
 }) {
+  const t = useTerms();
   const [tab, setTab] = useState<'history' | 'attendance' | 'portfolio'>('history');
   const { level, points, hero } = profile;
 
@@ -124,7 +126,7 @@ export function ProfileView({
           <section aria-label="Работы" className="space-y-4">
             <h3 className="font-sans text-lg font-semibold">Работы</h3>
             {profile.works.length === 0 ? (
-              <p className="text-sm text-ink-soft">Здесь появятся работы ученика, когда преподаватель их опубликует.</p>
+              <p className="text-sm text-ink-soft">Здесь появятся работы {t.student.one.gen}, когда преподаватель их опубликует.</p>
             ) : (
               <ul className="space-y-3">
                 {profile.works.map((w) => <WorkCard key={w.id} work={w} showStatus={false} level={4} />)}

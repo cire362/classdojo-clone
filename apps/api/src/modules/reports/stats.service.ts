@@ -3,6 +3,8 @@ import { levelForPoints } from '@heroes/shared';
 import type { Stats } from '@heroes/shared/api';
 import { prisma } from '../../platform/db.js';
 import { addDays, dbDate, dbDateKey, localDayStart } from '../../platform/dates.js';
+import { terms } from '../../platform/terms.js';
+import { cap } from '@heroes/shared/terms';
 
 export async function groupStats(groupId: string, from: string, to: string): Promise<Stats> {
   const start = localDayStart(from);
@@ -115,7 +117,7 @@ export async function statsWorkbook(groupId: string, groupName: string, from: st
     { key: 'rate', width: 14 },
   ];
   const head = summary.getRow(3);
-  head.values = ['Ученик', 'Логин', 'Плюсы', 'Минусы', 'Итого', 'Уровень', 'Был на уроках', 'Посещаемость'];
+  head.values = [cap(terms().student.one.nom), 'Логин', 'Плюсы', 'Минусы', 'Итого', 'Уровень', 'Был на уроках', 'Посещаемость'];
   styleHeader(head);
   for (const s of stats.students) {
     const row = summary.addRow({
@@ -140,7 +142,7 @@ export async function statsWorkbook(groupId: string, groupName: string, from: st
   for (const s of stats.sessions) perDay.set(s.date, (perDay.get(s.date) ?? 0) + 1);
   const sessionLabel = (s: { date: string; lesson: number }) =>
     (perDay.get(s.date) ?? 0) > 1 || s.lesson > 1 ? `${fmtDate(s.date)}, ${s.lesson}-й урок` : fmtDate(s.date);
-  attHead.values = ['Ученик', ...stats.sessions.map(sessionLabel), 'Итого'];
+  attHead.values = [cap(terms().student.one.nom), ...stats.sessions.map(sessionLabel), 'Итого'];
   styleHeader(attHead);
   for (const s of stats.students) {
     const marks = stats.sessions.map((ses) => (ses.present.includes(s.id) ? '✓' : '✗'));
@@ -161,7 +163,7 @@ export async function statsWorkbook(groupId: string, groupName: string, from: st
   const hist = wb.addWorksheet('История', { views: [{ state: 'frozen', ySplit: 1 }] });
   hist.columns = [{ width: 18 }, { width: 28 }, { width: 32 }, { width: 10 }];
   const histHead = hist.getRow(1);
-  histHead.values = ['Дата и время', 'Ученик', 'Причина', 'Баллы'];
+  histHead.values = ['Дата и время', cap(terms().student.one.nom), 'Причина', 'Баллы'];
   styleHeader(histHead);
   for (const e of events) {
     // Excel не знает о часовых поясах — записываем «настенное» локальное время

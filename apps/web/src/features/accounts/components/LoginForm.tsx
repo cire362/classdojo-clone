@@ -149,7 +149,7 @@ export function LoginForm() {
     <main className="grid min-h-[100dvh] lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <div className="flex items-center px-4 py-10 sm:px-10">
         <form onSubmit={submit} className="mx-auto w-full max-w-sm" noValidate>
-          <h1 className="text-3xl leading-[1.1] sm:text-4xl">Вход в класс</h1>
+          <h1 className="text-3xl leading-[1.1] sm:text-4xl">Вход</h1>
           <p className="mt-3 text-ink-soft">Логин и пароль выдаёт преподаватель.</p>
           <div className="mt-8 space-y-5">
             <div>
@@ -190,7 +190,7 @@ export function LoginForm() {
             <button className="btn btn-primary btn-lg w-full" disabled={busy || !form.login || !form.password}>
               {busy ? 'Входим…' : 'Войти'}
             </button>
-            <Link to="/join" className="btn btn-ghost w-full">Войти по коду класса</Link>
+            <Link to="/join" className="btn btn-ghost w-full">Войти по коду с экрана</Link>
             <Link to="/invite" className="btn btn-ghost w-full">У меня приглашение для родителей</Link>
             <Link to="/school-join" className="btn btn-ghost w-full">Я преподаватель, у меня код подключения</Link>
           </div>

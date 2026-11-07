@@ -19,7 +19,7 @@ test('магазин наград и командный режим', async ({ pa
       await expect(student.getByText('можно потратить')).toBeVisible();
       const seat = student.locator('li', { hasText: 'Выбрать место на уроке' });
       await seat.getByRole('button', { name: 'Попросить' }).click();
-      await expect(student.getByText('ждёт ответа учителя')).toBeVisible();
+      await expect(student.getByText('ждёт ответа преподавателя')).toBeVisible();
       await expect(student.locator('.font-display', { hasText: /^1$/ })).toBeVisible();
     });
 

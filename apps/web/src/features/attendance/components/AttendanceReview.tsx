@@ -4,9 +4,11 @@ import { pluralize } from '../../../lib/hooks';
 import { Switch, Toggle } from '../../../ui';
 import type { AttendanceFlow } from '../hooks/useAttendance';
 import { dayLabel } from '../labels';
+import { useTerms } from '../../auth';
 
 /** Сверка списка с числом людей на фото */
 export function AttendanceReview({ flow }: { flow: AttendanceFlow }) {
+  const t = useTerms();
   const { data, preview, detection, present, setPresent, subtract, saving, saveStatus, date, isToday, multi, lessonLabel, changeSubtract, save, cancelReview } = flow;
   const total = data.students.length;
   const expected = detection ? Math.max(0, detection.count - (subtract ? 1 : 0)) : null;
@@ -47,7 +49,7 @@ export function AttendanceReview({ flow }: { flow: AttendanceFlow }) {
               На фото {detection.count} {pluralize(detection.count, 'человек', 'человека', 'человек')}
             </p>
             <p className="text-ink-soft">
-              {subtract ? 'Без преподавателя ' : 'Из них учеников '}
+              {subtract ? 'Без преподавателя ' : `Из них ${t.student.many.gen} `}
               {expected}, в группе {total}
             </p>
           </div>
@@ -77,7 +79,8 @@ export function AttendanceReview({ flow }: { flow: AttendanceFlow }) {
         {mismatch && (
           <p role="status" className="flex items-start gap-2 rounded-xl bg-accent/25 px-4 py-3 text-sm font-medium">
             <WarningIcon size={20} className="mt-px shrink-0" />
-            На фото {expected} {pluralize(expected!, 'ученик', 'ученика', 'учеников')}, а отмечено {present.size}. Проверьте
+            На фото {expected} {pluralize(expected!, t.student.one.nom, t.student.one.gen, t.student.many.gen)},
+            а отмечено {present.size}. Проверьте
             список, сохранить можно и так.
           </p>
         )}

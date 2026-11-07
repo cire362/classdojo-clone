@@ -16,9 +16,11 @@ import { InviteModal } from './InviteModal';
 import { useToast } from '../../../ui/Toast';
 import { Modal, Skeleton } from '../../../ui';
 import { createInvite, fetchInvites, fetchStudentParents, issueParent, linkParent, resetParentPassword, revokeInvite, unlinkParent } from '../api';
+import { useTerms } from '../../auth';
 
 /** Входы родителей в карточке ученика: выдать, привязать общий вход брата или сестры, сбросить пароль, отвязать */
 export function ParentAccessCard({ student, groupId, archived }: { student: { id: string; name: string }; groupId: string; archived: boolean }) {
+  const t = useTerms();
   const toast = useToast();
   const navigate = useNavigate();
   const { data, setData, error, reload } = useLoad(() => fetchStudentParents(student.id), [student.id]);
@@ -175,7 +177,8 @@ export function ParentAccessCard({ student, groupId, archived }: { student: { id
       <Modal open={linking} title="Общий вход с братом или сестрой" onClose={() => setLinking(false)}>
         <form className="space-y-4" onSubmit={link}>
           <p className="text-sm text-ink-soft">
-            Если брат или сестра ученика тоже у вас учится и родителям уже выдан вход, введите его логин: с ним родители увидят обоих детей.
+            Если брат или сестра {t.student.one.gen} тоже у вас учится и родителям уже выдан вход, введите его логин:
+            с ним родители увидят обоих детей.
           </p>
           <div>
             <label className="label" htmlFor="parent-login">

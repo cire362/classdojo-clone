@@ -2,6 +2,8 @@ import type { AuthUser } from '../../platform/auth.js';
 import type { Prisma } from '../../generated/prisma/client';
 import { prisma } from '../../platform/db.js';
 import { HttpError, notFound } from '../../platform/errors.js';
+import { terms } from '../../platform/terms.js';
+import { cap } from '@heroes/shared/terms';
 
 /**
  * Проверки владения. Чужие группы и ученики выглядят для преподавателя как
@@ -36,7 +38,7 @@ export async function teacherStudent(user: AuthUser, studentId: string) {
     where: { id: studentId, group: groupsOf(user.teacherId) },
     include: { account: { select: { login: true } }, group: true },
   });
-  if (!student) throw notFound('Ученик не найден');
+  if (!student) throw notFound(`${cap(terms().student.one.nom)} не найден`);
   return student;
 }
 
@@ -97,7 +99,7 @@ export async function groupReader(user: AuthUser, groupId: string) {
 export async function studentReader(user: AuthUser, studentId: string) {
   if (user.teacherId) return void (await teacherStudent(user, studentId));
   if (user.parentId) return void (await parentChild(user.parentId, studentId));
-  if (user.studentId !== studentId) throw notFound('Ученик не найден');
+  if (user.studentId !== studentId) throw notFound(`${cap(terms().student.one.nom)} не найден`);
 }
 
 /** Участник переписки о ребёнке: преподаватель его группы или этот родитель, пока он привязан к ребёнку */
@@ -138,6 +140,6 @@ export async function lockStudent(tx: Prisma.TransactionClient, studentId: strin
 /** Ребёнок родителя или 404: родитель не может открыть чужого ученика */
 export async function parentChild(parentId: string, studentId: string): Promise<string> {
   const link = await prisma.parentStudent.findUnique({ where: { parentId_studentId: { parentId, studentId } } });
-  if (!link) throw notFound('Ученик не найден');
+  if (!link) throw notFound(`${cap(terms().student.one.nom)} не найден`);
   return studentId;
 }

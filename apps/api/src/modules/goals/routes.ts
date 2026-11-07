@@ -6,7 +6,7 @@ import { teacherGroup } from '../access/index.js';
 import { classGoal, removeClassGoal, saveClassGoal } from './service.js';
 
 const ClassGoalBody = z.object({
-  title: z.string().trim().min(1, 'Напишите цель класса').max(100),
+  title: z.string().trim().min(1, 'Напишите цель').max(100),
   target: z.number().int().min(1, 'Нужно хотя бы 1 балл').max(1_000_000),
 });
 

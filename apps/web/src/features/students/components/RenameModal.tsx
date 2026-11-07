@@ -2,9 +2,12 @@ import { useState } from 'react';
 import type { LessonStudent } from '../../../lib/api';
 import { Modal, Toggle } from '../../../ui';
 import { updateStudent } from '../api';
+import { useTerms } from '../../auth';
+import { cap } from '@heroes/shared/terms';
 
 /** Имя ученика и отметка, что его фото нельзя публиковать */
 export function RenameModal({ student, onClose, onSaved }: { student: LessonStudent | null; onClose: () => void; onSaved: () => void }) {
+  const t = useTerms();
   const [name, setName] = useState('');
   const [noPhotos, setNoPhotos] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +19,7 @@ export function RenameModal({ student, onClose, onSaved }: { student: LessonStud
     setError(null);
   }
   return (
-    <Modal open={!!student} title="Ученик" onClose={onClose}>
+    <Modal open={!!student} title={cap(t.student.one.nom)} onClose={onClose}>
       <form
         className="space-y-4"
         onSubmit={async (e) => {

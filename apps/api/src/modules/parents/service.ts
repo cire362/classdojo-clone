@@ -6,6 +6,7 @@ import { HttpError, notFound } from '../../platform/errors.js';
 import { groupsOf } from '../access/index.js';
 import { unreadPosts } from '../feed/index.js';
 import { unreadMessages } from '../messages/index.js';
+import { terms } from '../../platform/terms.js';
 
 /**
  * Родители. Аккаунты создаёт преподаватель (регистрации нет), как и для учеников.
@@ -13,7 +14,8 @@ import { unreadMessages } from '../messages/index.js';
  */
 export const MAX_STUDENT_PARENTS = 4;
 export const MAX_PARENT_CHILDREN = 10;
-export const TOO_MANY_PARENTS = `У ученика может быть не больше ${MAX_STUDENT_PARENTS} родительских входов`;
+export const tooManyParents = () =>
+  `У ${terms().student.one.gen} может быть не больше ${MAX_STUDENT_PARENTS} родительских входов`;
 export const TOO_MANY_CHILDREN = `К одному родителю можно привязать не больше ${MAX_PARENT_CHILDREN} детей`;
 
 /** «Маша Иванова» → parent.masha.i (при совпадении parent.masha.i2 …) */
@@ -61,7 +63,7 @@ async function createParents(students: { id: string; name: string }[]): Promise<
 /** Вход родителя для одного ученика: не больше четырёх на ученика */
 export async function issueParent(student: { id: string; name: string }): Promise<ParentCredentials> {
   if ((await prisma.parentStudent.count({ where: { studentId: student.id } })) >= MAX_STUDENT_PARENTS) {
-    throw new HttpError(400, TOO_MANY_PARENTS);
+    throw new HttpError(400, tooManyParents());
   }
   const [credentials] = await createParents([student]);
   return credentials;
@@ -118,7 +120,7 @@ async function teacherParent(teacherId: string, where: { id: string } | { login:
 export async function linkParent(teacherId: string, studentId: string, login: string) {
   const parent = await teacherParent(teacherId, { login: login.trim().toLowerCase() });
   const exists = await prisma.parentStudent.findUnique({ where: { parentId_studentId: { parentId: parent.id, studentId } } });
-  if (exists) throw new HttpError(409, 'Этот родитель уже привязан к ученику');
+  if (exists) throw new HttpError(409, `Этот родитель уже привязан к ${terms().student.one.dat}`);
   const count = await prisma.parentStudent.count({ where: { parentId: parent.id } });
   if (count >= MAX_PARENT_CHILDREN) throw new HttpError(400, TOO_MANY_CHILDREN);
   await prisma.parentStudent.create({ data: { parentId: parent.id, studentId } });
@@ -128,7 +130,7 @@ export async function linkParent(teacherId: string, studentId: string, login: st
 export async function unlinkParent(teacherId: string, studentId: string, parentId: string) {
   await teacherParent(teacherId, { id: parentId });
   const { count } = await prisma.parentStudent.deleteMany({ where: { parentId, studentId } });
-  if (!count) throw notFound('Родитель не привязан к ученику');
+  if (!count) throw notFound(`Родитель не привязан к ${terms().student.one.dat}`);
   const left = await prisma.parentStudent.count({ where: { parentId } });
   if (!left) await deleteOrphanParents();
 }

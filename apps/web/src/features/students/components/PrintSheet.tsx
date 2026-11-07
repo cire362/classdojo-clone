@@ -8,6 +8,7 @@ import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { useLoad } from '../../../lib/hooks';
 import { resetGroupPasswords } from '../api';
 import { ParentInvitesSheet } from './ParentInvitesSheet';
+import { useTerms } from '../../auth';
 
 /** Лист для печати: карточки «имя, логин, пароль» под разрезание; для родителей — свой лист */
 export function PrintSheet() {
@@ -23,13 +24,14 @@ export function PrintSheet() {
  * поэтому лист строится из переданного списка и без него не открывается.
  */
 function ParentsSheet({ rows }: { rows: ParentCredentials[] }) {
+  const t = useTerms();
   const { groupId } = useParams();
   const site = window.location.origin;
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <div className="no-print mb-6 space-y-4">
         <Link to={`/g/${groupId}/students`} className="btn btn-ghost btn-sm -ml-3">
-          <ArrowLeftIcon size={18} /> К ученикам
+          <ArrowLeftIcon size={18} /> К {t.student.many.dat}
         </Link>
         <h1 className="text-2xl sm:text-3xl">Лист для родителей</h1>
         <div className="flex flex-wrap items-center gap-3">
@@ -42,7 +44,7 @@ function ParentsSheet({ rows }: { rows: ParentCredentials[] }) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 print:grid-cols-2">
         {rows.map((r) => (
           <div key={r.parentId + r.studentId} className="print-card rounded-2xl border border-dashed border-line bg-surface p-4">
-            <div className="text-sm text-ink-soft">Родителям ученика</div>
+            <div className="text-sm text-ink-soft">Родителям {t.student.one.gen}</div>
             <div className="font-display text-lg">{r.studentName}</div>
             <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[15px]">
               <dt className="text-ink-soft">Сайт</dt>
@@ -61,6 +63,7 @@ function ParentsSheet({ rows }: { rows: ParentCredentials[] }) {
 }
 
 function StudentsSheet() {
+  const t = useTerms();
   const { groupId } = useParams();
   const location = useLocation();
   const passed = (location.state as { credentials?: Credentials[] } | null)?.credentials ?? null;
@@ -90,7 +93,7 @@ function StudentsSheet() {
     <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <div className="no-print mb-6 space-y-4">
         <Link to={`/g/${groupId}/students`} className="btn btn-ghost btn-sm -ml-3">
-          <ArrowLeftIcon size={18} /> К ученикам
+          <ArrowLeftIcon size={18} /> К {t.student.many.dat}
         </Link>
         <h1 className="text-2xl sm:text-3xl">Лист с логинами{data ? `: ${data.group.name}` : ''}</h1>
         {error && <ErrorBox message={error} onRetry={reload} />}
@@ -136,7 +139,10 @@ function StudentsSheet() {
 
       <Modal open={confirm} title="Выдать новые пароли?" onClose={() => setConfirm(false)}>
         <div className="space-y-5">
-          <p>Старые пароли и QR-карточки всех учеников группы перестанут работать, ученики выйдут из аккаунтов на всех устройствах.</p>
+          <p>
+            Старые пароли и QR-карточки всех {t.student.many.gen} группы перестанут работать, {t.student.many.nom} выйдут из
+            аккаунтов на всех устройствах.
+          </p>
           <div className="flex gap-2">
             <button className="btn btn-primary" disabled={busy} onClick={resetAll}>
               {busy ? 'Создаём…' : 'Да, выдать новые'}

@@ -4,6 +4,7 @@ import { pluralize } from '../../../lib/hooks';
 import { Modal } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { createGroupInvites, issueGroupParents } from '../api';
+import { useTerms } from '../../auth';
 
 /** Входы родителям всей группы: создаём и открываем лист для печати */
 export function ParentsIssueModal({ open, groupId, withoutParents, onClose, onIssued }: {
@@ -13,6 +14,7 @@ export function ParentsIssueModal({ open, groupId, withoutParents, onClose, onIs
   onClose: () => void;
   onIssued: () => Promise<void>;
 }) {
+  const t = useTerms();
   const toast = useToast();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
@@ -36,7 +38,8 @@ export function ParentsIssueModal({ open, groupId, withoutParents, onClose, onIs
     <Modal open={open} title="Входы для родителей" onClose={onClose}>
       <div className="space-y-5">
         <p>
-          Создадим вход родителям {withoutParents} {pluralize(withoutParents, 'ученика', 'учеников', 'учеников')}, у кого его ещё нет,
+          Создадим вход родителям {withoutParents} {pluralize(withoutParents, t.student.one.gen, t.student.many.gen, t.student.many.gen)},
+          {' '}у кого его ещё нет,
           и откроем лист для печати — удобно раздать на родительском собрании.
         </p>
         <p className="text-sm text-ink-soft">

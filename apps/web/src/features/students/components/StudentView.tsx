@@ -14,8 +14,10 @@ import { formatDateTime, useLoad } from '../../../lib/hooks';
 import { ProfileSkeleton } from '../../profile';
 import { CredentialsTable } from './CredentialsTable';
 import { addPortfolioItem, deletePointEvent, deletePortfolioItem, fetchStudentProfile, resetStudentPassword, saveStudentHero } from '../api';
+import { useTerms } from '../../auth';
 
 export function StudentProfileView() {
+  const t = useTerms();
   const { studentId } = useParams();
   const toast = useToast();
   const [issued, setIssued] = useState<Credentials | null>(null);
@@ -99,7 +101,7 @@ export function StudentProfileView() {
               </span>
             </div>
             <p className="text-sm text-ink-soft">
-              Запись исчезнет из истории ученика и статистики, баллы пересчитаются.
+              Запись исчезнет из истории {t.student.one.gen} и статистики, баллы пересчитаются.
             </p>
             <div className="flex gap-2">
               <button
@@ -141,6 +143,7 @@ export function StudentProfileView() {
 }
 
 export function StudentHeroEditor() {
+  const t = useTerms();
   const { studentId } = useParams();
   const { data, setData, error, reload } = useLoad(() => fetchStudentProfile(studentId!), [studentId]);
   if (error) return <ErrorBox message={error} onRetry={reload} />;
@@ -151,8 +154,8 @@ export function StudentHeroEditor() {
         <Link to={`/s/${data.student.id}`} className="btn btn-ghost btn-sm -ml-3">
           <ArrowLeftIcon size={18} /> {data.student.name}
         </Link>
-        <h1 className="text-2xl sm:text-3xl">Герой ученика</h1>
-        <p className="text-ink-soft">Доступны детали до {data.level.level} уровня, как и у самого ученика.</p>
+        <h1 className="text-2xl sm:text-3xl">Герой {t.student.one.gen}</h1>
+        <p className="text-ink-soft">Доступны детали до {data.level.level} уровня, как и у самого {t.student.one.gen}.</p>
       </div>
       <HeroEditor
         key={data.student.id}

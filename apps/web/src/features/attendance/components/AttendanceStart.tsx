@@ -4,9 +4,11 @@ import { dateKey, formatDate } from '../../../lib/hooks';
 import { ErrorBox, Modal, ProgressBar, Skeleton } from '../../../ui';
 import type { AttendanceFlow } from '../hooks/useAttendance';
 import { dayLabel, shiftDays, uploadText } from '../labels';
+import { useTerms } from '../../auth';
 
 /** Выбор дня и урока, фото группы и отправка на подсчёт */
 export function AttendanceStart({ flow }: { flow: AttendanceFlow }) {
+  const t = useTerms();
   const {
     data, phase, preview, error, date, setDate, setLesson, confirmDelete, setConfirmDelete, photoRef, abortRef, upload, statusRef,
     cameraInput, galleryInput, day, lessons, currentLesson, nextLesson, multi, lessonLabel, removeLesson, startReview, sendPhoto, onFile,
@@ -104,7 +106,7 @@ export function AttendanceStart({ flow }: { flow: AttendanceFlow }) {
           <div className="space-y-5">
             <p>
               Отметка за {dayLabel(date)}
-              {lessonLabel} и баллы «Посещение» за этот урок будут удалены у всех учеников.
+              {lessonLabel} и баллы «Посещение» за этот урок будут удалены у всех {t.student.many.gen}.
             </p>
             <div className="flex gap-2">
               <button className="btn btn-danger" onClick={removeLesson}>
@@ -120,7 +122,7 @@ export function AttendanceStart({ flow }: { flow: AttendanceFlow }) {
         {error && (
           <div className="space-y-2">
             <ErrorBox message={error} onRetry={photoRef.current ? () => void sendPhoto() : undefined} />
-            <p className="text-sm text-ink-soft">Если связь не появится, можно отметить учеников вручную: «Без фото».</p>
+            <p className="text-sm text-ink-soft">Если связь не появится, можно отметить {t.student.many.acc} вручную: «Без фото».</p>
           </div>
         )}
         {phase === 'detecting' ? (

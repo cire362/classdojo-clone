@@ -10,7 +10,7 @@ const CLASS_CODE_MINUTES = 45;
 const CODE_LENGTH = 6;
 /** Без похожих друг на друга I, L, O, 0 и 1: код переписывают с экрана */
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const BAD_CODE = 'Код не подошёл. Попроси учителя показать его ещё раз';
+const BAD_CODE = 'Код не подошёл. Попроси преподавателя показать его ещё раз';
 
 /** «Маша Иванова» → «Маша И.»: список виден всем, кто знает код */
 const shortName = (name: string) => {

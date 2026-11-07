@@ -6,16 +6,19 @@ import { AttachmentPicker } from '../../../ui/Attachments';
 import { useToast } from '../../../ui/Toast';
 import { useGroup } from '../../groups';
 import { createAssignment, type AssignmentDraft } from '../api';
+import { useTerms } from '../../auth';
+import { cap, type Terms } from '@heroes/shared/terms';
 
 const EMPTY: AssignmentDraft = { title: '', description: '', dueOn: '', points: 0, target: 'all', teamId: '', studentIds: [], files: [] };
-const TARGETS = [
+const targets = (t: Terms) => [
   ['all', 'Всей группе'],
   ['team', 'Команде'],
-  ['students', 'Выбранным ученикам'],
+  ['students', `Выбранным ${t.student.many.dat}`],
 ] as const;
 
 /** Новое задание: кому, что сделать, к какому дню и сколько баллов за принятый ответ */
 export function AssignmentForm({ onCreated }: { onCreated: (list: TeacherAssignment[]) => void }) {
+  const t = useTerms();
   const id = useId();
   const toast = useToast();
   const { data } = useGroup();
@@ -93,7 +96,7 @@ export function AssignmentForm({ onCreated }: { onCreated: (list: TeacherAssignm
       <fieldset className="space-y-2">
         <legend className="label">Кому</legend>
         <div className="flex flex-wrap gap-2">
-          {TARGETS.filter(([value]) => value !== 'team' || data.teams.length > 0).map(([value, label]) => (
+          {targets(t).filter(([value]) => value !== 'team' || data.teams.length > 0).map(([value, label]) => (
             <label
               key={value}
               className={`chip cursor-pointer px-3 py-2 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-accent/60 ${
@@ -120,7 +123,7 @@ export function AssignmentForm({ onCreated }: { onCreated: (list: TeacherAssignm
           </select>
         )}
         {draft.target === 'students' && (
-          <ul className="grid gap-1 sm:grid-cols-2" aria-label="Ученики">
+          <ul className="grid gap-1 sm:grid-cols-2" aria-label={cap(t.student.many.nom)}>
             {data.students.map((s) => (
               <li key={s.id}>
                 <label className="flex cursor-pointer items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-surface-2">

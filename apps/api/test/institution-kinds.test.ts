@@ -63,3 +63,30 @@ it('код подключения показывает тип, ответ в я�
   const reply = (await call('POST', `/api/admin/inbox/${row.id}`, { cookie: college.director, body: { text: 'Ответ' } })).body;
   expect(reply.messages[1].author).toBe('Ирина Львовна, администрация колледжа');
 });
+
+it('в вузе ответы API, Excel и архив говорят «студент», а в школе — «ученик»', async () => {
+  const { default: ExcelJS } = await import('exceljs');
+  const { unzipSync, strFromU8 } = await import('fflate');
+  const uni = await setupInstitution('UNIVERSITY', 'Политех');
+  const t = await setupTeacher(['Маша Иванова'], uni.school.id);
+  const school = await setupTeacher(['Петя Смирнов']);
+  const reason = (await call('GET', `/api/teacher/groups/${t.group.id}/reasons`, { cookie: t.cookie })).body[0].id;
+  const foreign = { reasonId: reason, studentIds: [school.students[0].id] };
+  const res = await call('POST', `/api/teacher/groups/${t.group.id}/points`, { cookie: t.cookie, body: foreign });
+  expect(res).toMatchObject({ status: 404, body: { error: 'Студент не найден в группе' } });
+  expect((await call('GET', `/api/teacher/students/${school.students[0].id}/profile`, { cookie: school.cookie })).status).toBe(200);
+  const schoolError = await call('GET', `/api/teacher/students/${t.students[0].id}/profile`, { cookie: school.cookie });
+  expect(schoolError.body.error).toBe('Ученик не найден');
+
+  const xlsx = await call('GET', `/api/teacher/groups/${t.group.id}/stats.xlsx`, { cookie: t.cookie });
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(xlsx.body as ArrayBuffer);
+  const headers = wb.worksheets.flatMap((ws) => [1, 2, 3, 4].flatMap((n) => ws.getRow(n).values as unknown[]));
+  expect(headers).toContain('Студент');
+  expect(headers).not.toContain('Ученик');
+
+  const zip = await call('GET', `/api/teacher/groups/${t.group.id}/export`, { cookie: t.cookie });
+  const files = Object.entries(unzipSync(new Uint8Array(zip.body as ArrayBuffer)));
+  const readme = strFromU8(files.find(([name]) => name.endsWith('.txt'))![1]);
+  expect(readme).toContain('Студенты — вложения переписки');
+});

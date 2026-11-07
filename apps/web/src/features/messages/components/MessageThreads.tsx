@@ -5,9 +5,11 @@ import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { formatDateTime, useLoad } from '../../../lib/hooks';
 import { CountBadge, useNotifications } from '../../notifications';
 import { cancelMessage, fetchTeacherThread, fetchThreads, sendTeacherMessage } from '../api';
+import { useTerms } from '../../auth';
 
 /** Переписки с родителями по всем группам преподавателя */
 export function MessageThreads() {
+  const t = useTerms();
   const { data, error, reload } = useLoad(() => fetchThreads(), []);
   return (
     <div className="max-w-2xl space-y-4">
@@ -17,7 +19,7 @@ export function MessageThreads() {
       {!data && !error && <Skeleton className="h-40" />}
       {data?.length === 0 && (
         <EmptyState icon={<ChatsCircleIcon size={28} />} title="Сообщений пока нет">
-          Родители пишут из своего кабинета. Написать родителю первым можно из карточки ученика, в разделе «Родители».
+          Родители пишут из своего кабинета. Написать родителю первым можно из карточки {t.student.one.gen}, в разделе «Родители».
         </EmptyState>
       )}
       {data && data.length > 0 && (

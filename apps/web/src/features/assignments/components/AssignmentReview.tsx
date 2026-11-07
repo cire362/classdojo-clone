@@ -9,9 +9,11 @@ import { useGroup } from '../../groups';
 import { WorkCard } from '../../works';
 import { decideAnswer, deleteAssignment, fetchAssignment } from '../api';
 import { AssignmentBody, AssignmentMeta } from './AssignmentInfo';
+import { useTerms } from '../../auth';
 
 /** Задание и ответы получивших его учеников: принять ответ (с баллами задания) или вернуть с комментарием */
 export function AssignmentReview({ assignmentId }: { assignmentId: string }) {
+  const t = useTerms();
   const id = useId();
   const toast = useToast();
   const navigate = useNavigate();
@@ -77,7 +79,7 @@ export function AssignmentReview({ assignmentId }: { assignmentId: string }) {
               >
                 {!archived && (
                   <>
-                    <label className="label" htmlFor={`${id}-${answer.work.id}`}>Комментарий ученику</label>
+                    <label className="label" htmlFor={`${id}-${answer.work.id}`}>Комментарий {t.student.one.dat}</label>
                     <textarea
                       id={`${id}-${answer.work.id}`}
                       className="input min-h-16 resize-y"

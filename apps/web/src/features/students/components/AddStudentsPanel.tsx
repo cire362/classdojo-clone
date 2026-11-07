@@ -3,6 +3,7 @@ import { FileArrowUpIcon, UserPlusIcon } from '@phosphor-icons/react';
 import { useToast } from '../../../ui/Toast';
 import { previewImport } from '../api';
 import type { ImportPreview } from './ImportStudentsModal';
+import { useTerms } from '../../auth';
 
 /** Добавление учеников списком или файлом из журнала */
 export function AddStudentsPanel({ groupId, busy, onAdd, onPreview }: {
@@ -11,6 +12,7 @@ export function AddStudentsPanel({ groupId, busy, onAdd, onPreview }: {
   onAdd: (names: string[]) => Promise<boolean>;
   onPreview: (preview: ImportPreview) => void;
 }) {
+  const t = useTerms();
   const toast = useToast();
   const [names, setNames] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
@@ -41,7 +43,7 @@ export function AddStudentsPanel({ groupId, busy, onAdd, onPreview }: {
   return (
     <section className="h-fit rounded-2xl border border-dashed border-line p-5 lg:sticky lg:top-24">
       <h2 className="flex items-center gap-2 text-lg">
-        <UserPlusIcon size={22} /> Добавить учеников
+        <UserPlusIcon size={22} /> Добавить {t.student.many.acc}
       </h2>
       <label className="label mt-4" htmlFor="names">
         Имена, по одному на строку
@@ -62,7 +64,7 @@ export function AddStudentsPanel({ groupId, busy, onAdd, onPreview }: {
           ref={fileInput}
           type="file"
           accept=".xlsx,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-          aria-label="Файл со списком учеников"
+          aria-label={`Файл со списком ${t.student.many.gen}`}
           tabIndex={-1}
           className="sr-only"
           onChange={(e) => onImportFile(e.target.files?.[0])}

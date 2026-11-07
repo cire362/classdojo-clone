@@ -8,8 +8,11 @@ import { useToast } from '../../../ui/Toast';
 import { useGroup } from '../hooks/useGroup';
 import { GroupTeachersSection } from './GroupTeachers';
 import { archiveGroup, deleteGroup, renameGroup } from '../api';
+import { useTerms } from '../../auth';
+import { cap } from '@heroes/shared/terms';
 
 export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useTerms();
   const { data, reload } = useGroup();
   const navigate = useNavigate();
   const toast = useToast();
@@ -22,7 +25,7 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
         <div className="space-y-3">
           <h3 className="text-base">Фото и файлы</h3>
           <p className="text-sm text-ink-soft">
-            Фото и видео ленты, вложения переписки с родителями и файлы учеников одним архивом ZIP, по папкам.
+            Фото и видео ленты, вложения переписки с родителями и файлы {t.student.many.gen} одним архивом ZIP, по папкам.
           </p>
           <a className="btn btn-secondary" href={exportUrl(`/teacher/groups/${data.group.id}`)} download>
             <DownloadSimpleIcon size={20} aria-hidden /> Скачать архив
@@ -56,7 +59,8 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
                 <h3 className="text-base">Архив</h3>
                 <p className="text-sm text-ink-soft">
                   Для групп, которые закончили занятия. Группа уйдёт из списка на главной, баллы и посещаемость заморозятся, а
-                  статистика, профили и Excel останутся. Ученики по-прежнему смогут входить. Вернуть группу можно в любой момент.
+                  статистика, профили и Excel останутся. {cap(t.student.many.nom)} по-прежнему смогут входить.
+                  Вернуть группу можно в любой момент.
                 </p>
                 <p className="text-sm text-ink-soft">
                   Фото и файлы архивной группы хранятся {data.group.filesKeptDays}{' '}
@@ -76,7 +80,7 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
             <div className="space-y-3 rounded-2xl border border-minus/30 p-4">
               <h3 className="text-base text-minus">Удаление группы</h3>
               <p className="text-sm text-ink-soft">
-                Удалятся все ученики группы, их аккаунты, баллы и посещаемость. Введите название группы, чтобы подтвердить.
+                Удалятся все {t.student.many.nom} группы, их аккаунты, баллы и посещаемость. Введите название группы, чтобы подтвердить.
               </p>
               <input className="input" aria-label="Название группы для подтверждения" value={confirmDelete} onChange={(e) => setConfirmDelete(e.target.value)} />
               <button

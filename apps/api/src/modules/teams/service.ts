@@ -1,6 +1,8 @@
 import type { Team } from '@heroes/shared/api';
 import { prisma } from '../../platform/db.js';
 import { HttpError, notFound } from '../../platform/errors.js';
+import { terms } from '../../platform/terms.js';
+import { cap } from '@heroes/shared/terms';
 
 /** Цвета команд — из палитры героев, чтобы команды отличались и в тёмной теме */
 export const TEAM_COLORS = ['#e63946', '#2f6fde', '#2a9d55', '#f77f00', '#7b4fd6', '#14a3a3'] as const;
@@ -40,7 +42,7 @@ export async function assignTeams(groupId: string, assignments: Record<string, s
     prisma.student.findMany({ where: { groupId, id: { in: Object.keys(assignments) } }, select: { id: true } }),
     groupTeams(groupId),
   ]);
-  if (students.length !== Object.keys(assignments).length) throw notFound('Ученик не найден');
+  if (students.length !== Object.keys(assignments).length) throw notFound(`${cap(terms().student.one.nom)} не найден`);
   const teamIds = new Set(teams.map((t) => t.id));
   if (Object.values(assignments).some((t) => t !== null && !teamIds.has(t))) throw notFound('Команда не найдена');
   await prisma.$transaction(

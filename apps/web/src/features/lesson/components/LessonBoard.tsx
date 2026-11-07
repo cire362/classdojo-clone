@@ -23,8 +23,11 @@ import { SelectBar } from './SelectBar';
 import { StudentCard } from './StudentCard';
 import { TeamSections } from './TeamSections';
 import { ThinkPairShare } from './ThinkPairShare';
+import { useTerms } from '../../auth';
+import { cap } from '@heroes/shared/terms';
 
 export function LessonBoard() {
+  const t = useTerms();
   const { data, setData, reload } = useGroup();
   const [query, setQuery] = useState('');
   const [selectMode, setSelectMode] = useState(false);
@@ -103,11 +106,11 @@ export function LessonBoard() {
       <>
         {goalPanel}
         {tools}
-        <h2 className="sr-only">Ученики</h2>
-        <EmptyState icon={<UserPlusIcon size={28} />} title="В группе пока нет учеников">
-          <p>Добавьте учеников списком, и у каждого появится свой герой.</p>
+        <h2 className="sr-only">{cap(t.student.many.nom)}</h2>
+        <EmptyState icon={<UserPlusIcon size={28} />} title={`В группе пока нет ${t.student.many.gen}`}>
+          <p>Добавьте {t.student.many.acc} списком, и у каждого появится свой герой.</p>
           <Link to="students" className="btn btn-primary mt-4">
-            Добавить учеников
+            Добавить {t.student.many.acc}
           </Link>
         </EmptyState>
       </>
@@ -142,7 +145,9 @@ export function LessonBoard() {
     />
   ) : (
     visibleStudents.length > 0 ? <div className={gridClass}>{visibleStudents.map(card)}</div> : (
-      <p className="rounded-2xl bg-surface-2 p-5 text-ink-soft">Ученики не найдены. Попробуйте другое имя, фамилию или логин.</p>
+      <p className="rounded-2xl bg-surface-2 p-5 text-ink-soft">
+        {cap(t.student.many.nom)} не найдены. Попробуйте другое имя, фамилию или логин.
+      </p>
     )
   );
 
@@ -174,7 +179,11 @@ export function LessonBoard() {
         />
       )}
 
-      {searching && !selectMode && <p className="text-sm text-ink-soft">«Всей группе» начисляет баллы всем ученикам. Для найденных используйте «Несколько».</p>}
+      {searching && !selectMode && (
+        <p className="text-sm text-ink-soft">
+          «Всей группе» начисляет баллы всем {t.student.many.dat}. Для найденных используйте «Несколько».
+        </p>
+      )}
       {grid}
 
       <SelectBar active={selectMode} count={selected.size} onAward={(label) => setTarget({ ids: [...selected], label })} />
@@ -186,7 +195,7 @@ export function LessonBoard() {
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-4xl">{data.group.name}</h1>
             <div className="flex gap-2 opacity-60 transition hover:opacity-100">
-              <button className="icon-btn" onClick={() => setRandomOpen(true)} aria-label="Случайный ученик">
+              <button className="icon-btn" onClick={() => setRandomOpen(true)} aria-label={`Случайный ${t.student.one.nom}`}>
                 <DiceFiveIcon size={26} />
               </button>
               <button className="icon-btn" onClick={() => setProjector(false)} aria-label="Выйти из режима проектора">

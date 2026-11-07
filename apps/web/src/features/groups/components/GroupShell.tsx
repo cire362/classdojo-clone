@@ -10,11 +10,13 @@ import { exportUrl, longDate } from '../../../lib/files';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import type { GroupCtx } from '../hooks/useGroup';
 import { fetchGroup, restoreGroup } from '../api';
+import { useTerms } from '../../auth';
+import { cap } from '@heroes/shared/terms';
 
 const TABS = [
   { to: '', end: true, label: 'Урок', icon: SparkleIcon },
   { to: 'attendance', label: 'Отметка', icon: CameraIcon },
-  { to: 'students', label: 'Ученики', icon: UsersThreeIcon },
+  { to: 'students', label: '', icon: UsersThreeIcon },
   { to: 'reasons', label: 'Причины', icon: ListChecksIcon },
   { to: 'stats', label: 'Статистика', icon: ChartBarIcon },
   { to: 'rewards', label: 'Награды', icon: GiftIcon },
@@ -25,6 +27,7 @@ const TABS = [
 ];
 
 export function GroupShell() {
+  const t = useTerms();
   const { groupId } = useParams();
   const location = useLocation();
   const { data, setData, error, loading, reload } = useLoad(() => fetchGroup(groupId!), [groupId]);
@@ -75,9 +78,9 @@ export function GroupShell() {
           className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0"
         >
           {TABS.map(({ to, end, label, icon: Icon }) => (
-            <NavLink key={label} to={to} end={end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
+            <NavLink key={to} to={to} end={end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
               <Icon size={18} weight="bold" />
-              {label}
+              {to === 'students' ? cap(t.student.many.nom) : label}
               {to === 'rewards' && data && data.pendingRewards > 0 && (
                 <span className="chip min-w-6 justify-center bg-accent px-1.5 text-xs text-on-accent">
                   {data.pendingRewards}

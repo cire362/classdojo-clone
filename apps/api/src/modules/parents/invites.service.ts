@@ -6,7 +6,7 @@ import { hashPassword } from '../../platform/credentials.js';
 import { prisma } from '../../platform/db.js';
 import { HttpError, notFound } from '../../platform/errors.js';
 import { lockStudent } from '../access/index.js';
-import { MAX_PARENT_CHILDREN, MAX_STUDENT_PARENTS, TOO_MANY_CHILDREN, TOO_MANY_PARENTS, freeParentLogins } from './service.js';
+import { MAX_PARENT_CHILDREN, MAX_STUDENT_PARENTS, TOO_MANY_CHILDREN, tooManyParents, freeParentLogins } from './service.js';
 
 const INVITE_DAYS = 14;
 const CODE_LENGTH = 10;
@@ -39,7 +39,7 @@ export async function createInvite(student: { id: string; name: string }): Promi
     await lockStudent(tx, student.id);
     const parents = await tx.parentStudent.count({ where: { studentId: student.id } });
     const invites = await tx.parentInvite.count({ where: { studentId: student.id, expiresAt: { gt: new Date() } } });
-    if (parents + invites >= MAX_STUDENT_PARENTS) throw new HttpError(400, TOO_MANY_PARENTS);
+    if (parents + invites >= MAX_STUDENT_PARENTS) throw new HttpError(400, tooManyParents());
     return tx.parentInvite.create({ data: { studentId: student.id, codeHash: sha256(code), expiresAt: expiry() } });
   });
   return { id: invite.id, studentId: student.id, studentName: student.name, code, expiresAt: invite.expiresAt.toISOString() };
@@ -107,7 +107,7 @@ export async function acceptInvite(code: string, password: string) {
     const parent = await prisma.$transaction(async (tx) => {
       await spendInvite(tx, invite);
       if ((await tx.parentStudent.count({ where: { studentId: invite.studentId } })) >= MAX_STUDENT_PARENTS) {
-        throw new HttpError(400, TOO_MANY_PARENTS);
+        throw new HttpError(400, tooManyParents());
       }
       return tx.parent.create({
         data: {
@@ -136,7 +136,7 @@ export async function addChildByInvite(parentId: string, code: string): Promise<
     if (await tx.parentStudent.findUnique({ where: link })) throw new HttpError(409, 'Этот ребёнок уже привязан к вашему входу');
     if ((await tx.parentStudent.count({ where: { parentId } })) >= MAX_PARENT_CHILDREN) throw new HttpError(400, TOO_MANY_CHILDREN);
     if ((await tx.parentStudent.count({ where: { studentId: invite.studentId } })) >= MAX_STUDENT_PARENTS) {
-      throw new HttpError(400, TOO_MANY_PARENTS);
+      throw new HttpError(400, tooManyParents());
     }
     await tx.parentStudent.create({ data: { parentId, studentId: invite.studentId } });
   });

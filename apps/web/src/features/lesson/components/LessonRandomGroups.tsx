@@ -4,6 +4,7 @@ import { ShuffleIcon, UsersThreeIcon, XIcon } from '@phosphor-icons/react';
 import { randomLessonGroups } from '../random-groups';
 import { pluralize } from '../../../lib/hooks';
 import { Switch } from '../../../ui';
+import { useTerms } from '../../auth';
 
 interface Participant { id: string; name: string }
 export function LessonRandomGroups({ students, presentIds, projector, target }: {
@@ -12,6 +13,9 @@ export function LessonRandomGroups({ students, presentIds, projector, target }: 
   projector: boolean;
   target: HTMLElement | null;
 }) {
+  const t = useTerms();
+  const tooFew = `Для распределения нужны хотя бы два ${t.student.one.gen}.`;
+  const whole = t.groupFeminine ? 'вся группа' : 'весь класс';
   const [open, setOpen] = useState(false);
   const [projectorHidden, setProjectorHidden] = useState(false);
   const [mode, setMode] = useState<'pairs' | 'groups'>('pairs');
@@ -62,9 +66,13 @@ export function LessonRandomGroups({ students, presentIds, projector, target }: 
       </div>
       <div className="mt-4 space-y-2">
         {present !== null && <label className="inline-flex cursor-pointer items-center gap-2"><Switch checked={onlyPresent} label="Только присутствующие" onChange={(checked) => { setOnlyPresent(checked); setResult(null); }} /><span className="text-sm">Только присутствующие</span></label>}
-        <p className="text-sm text-ink-soft">Участников: {participants.length}. {present === null ? 'Посещаемость за сегодня не отмечена — используется весь класс.' : onlyPresent ? 'По последней отметке посещаемости за сегодня.' : 'Все ученики группы.'}</p>
+        <p className="text-sm text-ink-soft">
+          Участников: {participants.length}. {present === null
+          ? `Посещаемость за сегодня не отмечена — используется ${whole}.`
+          : onlyPresent ? 'По последней отметке посещаемости за сегодня.' : `Все ${t.student.many.nom} группы.`}
+        </p>
       </div>
-      {participants.length < 2 ? <p role="status" className="mt-4 rounded-xl bg-surface-2 p-4 text-sm">Для распределения нужны хотя бы два ученика.{present && onlyPresent ? ' Можно включить всю группу.' : ''}</p> : !valid ? <p role="alert" className="mt-4 text-sm text-minus">{oddMaxTwo ? 'При нечётном составе максимум по двое оставит одиночку. Выберите «По парам» с одной тройкой или размер группы от 3.' : 'Укажите целое число от 2 до 10.'}</p> : result && !fresh ? <p role="status" className="mt-4 rounded-xl bg-surface-2 p-4 text-sm">Состав участников изменился. Сформируйте распределение заново.</p> : fresh ? <>
+      {participants.length < 2 ? <p role="status" className="mt-4 rounded-xl bg-surface-2 p-4 text-sm">{tooFew}{present && onlyPresent ? ' Можно включить всю группу.' : ''}</p> : !valid ? <p role="alert" className="mt-4 text-sm text-minus">{oddMaxTwo ? 'При нечётном составе максимум по двое оставит одиночку. Выберите «По парам» с одной тройкой или размер группы от 3.' : 'Укажите целое число от 2 до 10.'}</p> : result && !fresh ? <p role="status" className="mt-4 rounded-xl bg-surface-2 p-4 text-sm">Состав участников изменился. Сформируйте распределение заново.</p> : fresh ? <>
         <p role="status" className="mt-4 text-sm text-ink-soft">Сформировано: {result.groups.length} {pluralize(result.groups.length, 'группа', 'группы', 'групп')}.{mode === 'pairs' && participants.length % 2 ? ' Одна тройка, чтобы никто не остался один.' : ' Размеры отличаются не больше чем на одного ученика.'}</p>
         <ol className={`mt-4 grid gap-3 ${projector ? 'sm:grid-cols-2 xl:grid-cols-3' : 'sm:grid-cols-2 lg:grid-cols-3'}`} aria-label="Случайное распределение">
           {result.groups.map((group, index) => <li key={index} className="min-w-0 rounded-xl bg-surface-2 p-4">

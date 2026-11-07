@@ -7,6 +7,7 @@ import { videoPoster } from '../../../lib/video';
 import { useToast } from '../../../ui/Toast';
 import { createPost, type PostFiles } from '../api';
 import { MediaPicker, type PickedMedia } from './MediaPicker';
+import { useTerms } from '../../auth';
 
 const MAX = 2000;
 /** Как на сервере: больше не нужно для экрана и проектора */
@@ -18,6 +19,7 @@ export function PostForm({ postTo, noPhotoNames = [], onPosted }: {
   noPhotoNames?: string[];
   onPosted: (post: FeedPost) => void;
 }) {
+  const t = useTerms();
   const toast = useToast();
   const [text, setText] = useState('');
   const [media, setMedia] = useState<PickedMedia[]>([]);
@@ -51,7 +53,7 @@ export function PostForm({ postTo, noPhotoNames = [], onPosted }: {
   return (
     <form onSubmit={publish} className="card space-y-3 p-4">
       <label className="label" htmlFor="post-text">
-        Объявление для учеников и родителей
+        Объявление для {t.student.many.gen} и родителей
       </label>
       <textarea
         id="post-text"

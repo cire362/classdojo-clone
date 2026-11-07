@@ -78,8 +78,8 @@ export function JoinClass() {
         </>
       ) : (
         <form onSubmit={submit} className="mx-auto max-w-sm space-y-5" noValidate>
-          <h1 className="text-3xl">Код класса</h1>
-          <p className="text-ink-soft">Учитель покажет код на экране.</p>
+          <h1 className="text-3xl">Код для входа</h1>
+          <p className="text-ink-soft">Преподаватель покажет код на экране.</p>
           <div>
             <label className="label" htmlFor="class-code">Код</label>
             <input

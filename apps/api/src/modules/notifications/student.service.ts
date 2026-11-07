@@ -4,6 +4,7 @@ import { HttpError } from '../../platform/errors.js';
 import { lockStudent } from '../access/index.js';
 import { markFeedRead } from '../feed/index.js';
 import { markRewardNotificationsRead } from '../rewards/index.js';
+import { terms } from '../../platform/terms.js';
 
 const PAGE = 30;
 type Kind = 'feed' | 'reward';
@@ -65,7 +66,7 @@ export async function studentNotifications(
     ...posts.map((p) => ({
       id: `feed:${p.id}`,
       kind: 'feed' as const,
-      title: 'Запись в ленте класса',
+      title: `Запись в ленте ${terms().group.one.gen}`,
       text: p.text,
       author: p.author.name,
       cost: null as number | null,

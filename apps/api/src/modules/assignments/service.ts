@@ -7,6 +7,8 @@ import { lockGroup } from '../access/index.js';
 import { addFileRows, fileView, prepareUpload, purgeDeletedFiles, writeUploads, type Upload } from '../files/index.js';
 import { findWorks } from '../works/index.js';
 import type { AssignmentInput } from './schemas.js';
+import { terms } from '../../platform/terms.js';
+import { cap } from '@heroes/shared/terms';
 
 /**
  * Задания группе от её преподавателей: текст, фото или PDF, срок и баллы за принятый ответ. Кому выдано,
@@ -46,8 +48,10 @@ async function receivers(groupId: string, input: AssignmentInput) {
   }
   if (input.target === 'students') where.id = { in: input.studentIds };
   const students = await prisma.student.findMany({ where, select: { id: true } });
-  if (input.target === 'students' && students.length !== new Set(input.studentIds).size) throw notFound('Ученик не найден в группе');
-  if (!students.length) throw new HttpError(400, 'Некому выдать задание: в выбранной части группы нет учеников');
+  if (input.target === 'students' && students.length !== new Set(input.studentIds).size) {
+    throw notFound(`${cap(terms().student.one.nom)} не найден в группе`);
+  }
+  if (!students.length) throw new HttpError(400, `Некому выдать задание: в выбранной части группы нет ${terms().student.many.gen}`);
   return students.map((s) => s.id);
 }
 

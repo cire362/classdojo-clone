@@ -34,6 +34,8 @@ test('тип учреждения меняет слова у администр�
     const teacher = await context.newPage();
     await teacher.setViewportSize({ width: 375, height: 812 });
     await loginUi(teacher, TEACHER.login, TEACHER.password);
+    await expect(teacher.getByText(/\d+ студент/).first()).toBeVisible();
+    await expect(teacher.getByText(/\d+ учени/)).toHaveCount(0);
     await teacher.getByRole('link', { name: /Новости вуза/ }).click();
     await expect(teacher.getByRole('heading', { name: 'Новости вуза', level: 1 })).toBeVisible();
     await axe(teacher);

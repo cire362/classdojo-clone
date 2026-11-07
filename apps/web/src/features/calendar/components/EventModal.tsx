@@ -3,6 +3,7 @@ import type { ClassEvent } from '../../../lib/api';
 import { Modal } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { createEvent, deleteEvent, updateEvent } from '../api';
+import { useTerms } from '../../auth';
 
 const REMINDERS: [string, string][] = [
   ['', 'Без напоминания'],
@@ -20,6 +21,7 @@ export function EventModal({ path, event, date, onClose, onSaved }: {
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTerms();
   const toast = useToast();
   const [form, setForm] = useState({
     title: event?.title ?? '',
@@ -92,7 +94,9 @@ export function EventModal({ path, event, date, onClose, onSaved }: {
           <select id="event-remind" className="input" value={form.remind} onChange={(e) => set({ remind: e.target.value })}>
             {REMINDERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
-          <p className="mt-1 text-sm text-ink-soft">Появится в ленте класса в 8:00, ученики и родители увидят значок.</p>
+          <p className="mt-1 text-sm text-ink-soft">
+            Появится в ленте {t.group.one.gen} в 8:00, {t.student.many.nom} и родители увидят значок.
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button className="btn btn-primary" disabled={busy || !form.title.trim() || !form.date}>Сохранить</button>

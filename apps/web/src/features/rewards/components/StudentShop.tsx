@@ -5,15 +5,17 @@ import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { formatDateTime, pluralize, useLoad } from '../../../lib/hooks';
 import { useNotifications } from '../../notifications';
 import { cancelRequest, fetchShop, requestReward } from '../api';
+import { useTerms } from '../../auth';
 
 const STATUS = {
-  PENDING: { text: 'ждёт ответа учителя', cls: 'bg-accent/25 text-ink' },
+  PENDING: { text: 'ждёт ответа преподавателя', cls: 'bg-accent/25 text-ink' },
   APPROVED: { text: 'получено', cls: 'bg-plus-bg text-plus' },
   REJECTED: { text: 'отказано, баллы вернулись', cls: 'bg-surface-2 text-ink-soft' },
 } as const;
 
 /** Магазин наград ученика: тратит баллы на награды класса */
 export function StudentShop() {
+  const t = useTerms();
   const toast = useToast();
   const { refresh } = useNotifications();
   const { data, setData, error, reload } = useLoad(async () => {
@@ -38,7 +40,7 @@ export function StudentShop() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl">Награды</h1>
-          <p className="mt-2 text-ink-soft">Трать баллы на награды класса. Уровень героя от этого не уменьшится.</p>
+          <p className="mt-2 text-ink-soft">Трать баллы на награды {t.group.one.gen}. Уровень героя от этого не уменьшится.</p>
         </div>
         <div className="card flex items-center gap-2 px-5 py-3">
           <StarIcon size={24} weight="fill" className="text-accent" aria-hidden />
@@ -49,7 +51,7 @@ export function StudentShop() {
 
       {data.rewards.length === 0 ? (
         <EmptyState icon={<GiftIcon size={28} />} title="Наград пока нет">
-          Когда учитель добавит награды, они появятся здесь.
+          Когда преподаватель добавит награды, они появятся здесь.
         </EmptyState>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -70,7 +72,7 @@ export function StudentShop() {
                 <button
                   className="btn btn-primary btn-sm mt-auto"
                   disabled={data.archived || short > 0}
-                  onClick={() => act(() => requestReward(r.id), 'Запрос отправлен учителю')}
+                  onClick={() => act(() => requestReward(r.id), 'Запрос отправлен преподавателю')}
                 >
                   {short > 0 ? `Не хватает ${short}` : 'Попросить'}
                 </button>

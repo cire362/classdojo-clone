@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArchiveIcon, ArrowCounterClockwiseIcon, ArrowRightIcon, PlusIcon, UsersThreeIcon } from '@phosphor-icons/react';
-import { useAuth } from '../../auth';
+import { useAuth, useTerms } from '../../auth';
 import { HeroHead } from '../../hero';
 import { TeacherSchoolPoints } from '../../schoolpoints';
 import { ErrorBox, Skeleton } from '../../../ui';
@@ -9,6 +9,7 @@ import { pluralize, useLoad } from '../../../lib/hooks';
 import { createGroup, fetchGroups, restoreGroup } from '../api';
 
 export function GroupsList() {
+  const t = useTerms();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data, error, loading, reload } = useLoad(() => fetchGroups(), []);
@@ -69,7 +70,7 @@ export function GroupsList() {
               <span className="mt-4 flex items-center justify-between text-ink-soft">
                 <span className="inline-flex items-center gap-2 text-sm font-medium">
                   <UsersThreeIcon size={18} />
-                  {g.studentsCount} {pluralize(g.studentsCount, 'ученик', 'ученика', 'учеников')}
+                  {g.studentsCount} {pluralize(g.studentsCount, t.student.one.nom, t.student.one.gen, t.student.many.gen)}
                 </span>
                 <span className="flex size-10 items-center justify-center rounded-full bg-accent text-on-accent transition group-hover:translate-x-0.5">
                   <ArrowRightIcon size={20} weight="bold" />
@@ -79,7 +80,7 @@ export function GroupsList() {
           ))}
           {data && active.length === 0 && (
             <p className="text-ink-soft sm:col-span-2">
-              {archived.length ? 'Действующих групп нет.' : 'Групп пока нет.'} Создайте группу, затем добавьте учеников.
+              {archived.length ? 'Действующих групп нет.' : 'Групп пока нет.'} Создайте группу, затем добавьте {t.student.many.acc}.
             </p>
           )}
         </div>
@@ -120,7 +121,8 @@ export function GroupsList() {
                   <Link to={`/g/${g.id}/stats`} className="min-w-0 flex-1">
                     <span className="block font-display">{g.name}</span>
                     <span className="block text-sm text-ink-soft">
-                      {g.studentsCount} {pluralize(g.studentsCount, 'ученик', 'ученика', 'учеников')}, в архиве с{' '}
+                      {g.studentsCount} {pluralize(g.studentsCount, t.student.one.nom, t.student.one.gen, t.student.many.gen)},
+                      {' '}в архиве с{' '}
                       {new Date(g.archivedAt!).toLocaleDateString('ru-RU')}
                     </span>
                   </Link>

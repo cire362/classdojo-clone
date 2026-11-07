@@ -44,7 +44,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Код класса', exact: true }).click();
       const panel = page.getByRole('region', { name: 'Код класса', exact: true });
       await panel.getByRole('button', { name: 'Включить код класса', exact: true }).click();
-      await expect(panel.getByRole('img', { name: /QR-код для входа в класс/ })).toBeVisible();
+      await expect(panel.getByRole('img', { name: /QR-код для входа, код/ })).toBeVisible();
       const code = (await panel.locator('.font-mono').innerText()).trim();
       await panel.screenshot({ path: test.info().outputPath(`class-code-${colorScheme}.png`) });
 
@@ -59,7 +59,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       const tablet = await pupil.newPage();
       await tablet.setViewportSize({ width: 375, height: 812 });
       await tablet.goto('/login');
-      await tablet.getByRole('link', { name: 'Войти по коду класса' }).click();
+      await tablet.getByRole('link', { name: 'Войти по коду с экрана' }).click();
       await tablet.getByLabel('Код', { exact: true }).fill('WRONG2');
       await tablet.getByRole('button', { name: 'Дальше', exact: true }).click();
       await expect(tablet.getByRole('alert')).toContainText('Код не подошёл');

@@ -8,9 +8,12 @@ import { useGroup } from '../../groups';
 import { fetchGroupAssignments } from '../api';
 import { AssignmentMeta } from './AssignmentInfo';
 import { AssignmentForm } from './AssignmentForm';
+import { useTerms } from '../../auth';
+import { cap } from '@heroes/shared/terms';
 
 /** Задания группы: новые сверху, у каждого — сколько ответов сдали и сколько ждут проверки */
 export function GroupAssignments() {
+  const t = useTerms();
   const { data: group } = useGroup();
   const archived = !!group.group.archivedAt;
   const { data, setData, error, reload } = useLoad(() => fetchGroupAssignments(group.group.id), [group.group.id]);
@@ -35,7 +38,8 @@ export function GroupAssignments() {
       {!data && !error && <Skeleton className="h-32" />}
       {data?.length === 0 && (
         <EmptyState icon={<ClipboardTextIcon size={28} />} title="Заданий пока нет">
-          Выдайте задание всей группе, команде или нескольким ученикам. Ученики сдадут ответ текстом, фото, файлом или рисунком.
+          Выдайте задание всей группе, команде или нескольким {t.student.many.dat}. {cap(t.student.many.nom)} сдадут ответ текстом, фото,
+          файлом или рисунком.
         </EmptyState>
       )}
       {data && data.length > 0 && (

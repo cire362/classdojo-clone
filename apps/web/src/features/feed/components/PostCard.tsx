@@ -9,6 +9,7 @@ import { ReportModal, reportContent, setHidden } from '../../moderation';
 import { addComment, deleteComment, setPinned, setReaction } from '../api';
 import { PostComments } from './PostComments';
 import { PostMedia } from './PostMedia';
+import { useTerms } from '../../auth';
 
 const REACTIONS: Record<ReactionKind, { label: string; icon: typeof HeartIcon }> = {
   like: { label: 'Нравится', icon: ThumbsUpIcon },
@@ -29,6 +30,7 @@ export function PostCard({ post, path, commentsNote, moderation, onChange, onDel
   onDelete: (post: FeedPost) => void;
   onRemove: (post: FeedPost) => void;
 }) {
+  const t = useTerms();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [reporting, setReporting] = useState<{ commentId?: string } | null>(null);
@@ -88,7 +90,7 @@ export function PostCard({ post, path, commentsNote, moderation, onChange, onDel
               <ClockIcon size={14} aria-hidden /> Выйдет в это время
             </span>
           )}
-          {post.hidden && <span className="chip ml-2 bg-minus-bg text-xs text-minus">Скрыта от учеников и родителей</span>}
+          {post.hidden && <span className="chip ml-2 bg-minus-bg text-xs text-minus">Скрыта от {t.student.many.gen} и родителей</span>}
           {post.reports > 0 && (
             <span className="chip ml-2 bg-minus-bg text-xs text-minus">
               <FlagIcon size={14} aria-hidden /> Жалобы: {post.reports}

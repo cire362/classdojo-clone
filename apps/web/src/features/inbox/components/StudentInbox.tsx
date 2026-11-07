@@ -6,8 +6,10 @@ import { useToast } from '../../../ui/Toast';
 import { formatDateTime, pluralize, useLoad } from '../../../lib/hooks';
 import { useNotifications } from '../../notifications';
 import { fetchNotifications, markNotificationsRead } from '../api';
+import { useTerms } from '../../auth';
 
 export function StudentInbox() {
+  const t = useTerms();
   const { counts, refresh } = useNotifications();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
@@ -59,7 +61,7 @@ export function StudentInbox() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl">Уведомления</h1>
-          <p className="mt-2 text-ink-soft">Новости класса и выданные награды.</p>
+          <p className="mt-2 text-ink-soft">Новости {t.group.one.gen} и выданные награды.</p>
         </div>
         <button className="btn btn-secondary btn-sm" disabled={busy || loading} onClick={() => void reload()}>
           <ArrowClockwiseIcon size={18} aria-hidden /> Обновить
@@ -75,8 +77,8 @@ export function StudentInbox() {
           </button>
         </div>
         {data.items.length === 0 ? <EmptyState icon={<BellIcon size={28} />} title="Пока тихо">
-          Когда преподаватель выдаст награду или напишет в ленту класса, уведомление появится здесь.
-        </EmptyState> : <ul className="divide-y divide-line" aria-label="Уведомления ученика">
+          Когда преподаватель выдаст награду или напишет в ленту {t.group.one.gen}, уведомление появится здесь.
+        </EmptyState> : <ul className="divide-y divide-line" aria-label={`Уведомления ${t.student.one.gen}`}>
           {data.items.map((item) => {
             const Icon = item.kind === 'reward' ? GiftIcon : MegaphoneIcon;
             return <li key={item.id} className="flex gap-3 py-5 sm:gap-4">
@@ -88,7 +90,9 @@ export function StudentInbox() {
                 </div>
                 <p className="mt-1 line-clamp-3 whitespace-pre-line break-words">{item.text}</p>
                 <p className="mt-2 text-xs leading-relaxed text-ink-soft"><time dateTime={item.createdAt}>{formatDateTime(item.createdAt)}</time>{item.author && ` · ${item.author}`}{item.cost !== null && ` · ${item.cost} ${pluralize(item.cost, 'балл', 'балла', 'баллов')}`}</p>
-                <Link className="btn btn-ghost btn-sm -ml-3 mt-2" to={item.href}>{item.kind === 'reward' ? 'К наградам' : 'В ленту класса'}</Link>
+                <Link className="btn btn-ghost btn-sm -ml-3 mt-2" to={item.href}>
+                  {item.kind === 'reward' ? 'К наградам' : `В ленту ${t.group.one.gen}`}
+                </Link>
               </div>
             </li>;
           })}

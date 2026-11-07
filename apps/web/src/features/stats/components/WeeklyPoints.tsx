@@ -3,6 +3,8 @@ import type { GroupDetails, WeeklyStats } from '../../../lib/api';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import { ErrorBox, Skeleton } from '../../../ui';
 import { fetchWeeklyStats } from '../api';
+import { useTerms } from '../../auth';
+import { cap } from '@heroes/shared/terms';
 
 type Metric = 'earned' | 'lost' | 'net';
 const METRICS: [Metric, string][] = [['earned', 'Плюсы'], ['lost', 'Минусы'], ['net', 'Итого']];
@@ -24,6 +26,7 @@ export function weeklyScale(values: number[]) {
 }
 
 export function WeeklyPoints({ group, from, to }: { group: GroupDetails; from: string; to: string }) {
+  const t = useTerms();
   const [selection, setSelection] = useState('group');
   const [metric, setMetric] = useState<Metric>('earned');
   const [selectedWeek, setSelectedWeek] = useState('');
@@ -52,13 +55,18 @@ export function WeeklyPoints({ group, from, to }: { group: GroupDetails; from: s
         <select className="input max-w-full sm:w-72" value={selection} onChange={(e) => setSelection(e.target.value)}>
           <option value="group">Вся группа</option>
           {group.teams.length > 0 && <optgroup label="Команды">{group.teams.map((t) => <option key={t.id} value={`team:${t.id}`}>{t.name}</option>)}</optgroup>}
-          <optgroup label="Ученики">{group.students.map((s) => <option key={s.id} value={`student:${s.id}`}>{s.name}</option>)}</optgroup>
+          <optgroup label={cap(t.student.many.nom)}>
+            {group.students.map((s) => <option key={s.id} value={`student:${s.id}`}>{s.name}</option>)}
+          </optgroup>
         </select>
       </label>
     </div>
     <div role="group" aria-label="Баллы на графике" className="flex gap-1">{METRICS.map(([key, label]) => <button key={key} className={`tab ${metric === key ? 'active' : 'bg-surface-2'}`} aria-pressed={metric === key} onClick={() => setMetric(key)}>{label}</button>)}</div>
     {error && !loading ? <ErrorBox message={error} onRetry={reload} /> : loading || !report || !active ? <Skeleton className="h-80" /> : <>
-      <p className="break-words text-sm text-ink-soft">{report.scope.name} · {report.members} {pluralize(report.members, 'ученик', 'ученика', 'учеников')} · за период: <b className="text-ink tabular-nums">{signed(total)}</b></p>
+      <p className="break-words text-sm text-ink-soft">
+        {report.scope.name} · {report.members} {pluralize(report.members, t.student.one.nom, t.student.one.gen, t.student.many.gen)}
+        {' · за период: '}<b className="text-ink tabular-nums">{signed(total)}</b>
+      </p>
       {!report.points.events && <p className="text-ink-soft">За этот период начислений и списаний нет. На графике — нулевые недели.</p>}
       <p id={`${id}-help`} className="sr-only">Выберите неделю. Стрелки влево и вправо переключают недели; Home и End переходят к первой и последней.</p>
       <div className="flex min-w-0 gap-2">

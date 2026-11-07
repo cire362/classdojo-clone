@@ -7,10 +7,13 @@ import { ErrorBox, Skeleton } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { createClassCode, fetchClassCode, removeClassCode } from '../api';
 import { QrImage } from './QrImage';
+import { useTerms } from '../../auth';
+import { cap } from '@heroes/shared/terms';
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
 function CodeBody({ groupId, projector }: { groupId: string; projector: boolean }) {
+  const t = useTerms();
   const toast = useToast();
   const { data: code, setData, error, loading, reload } = useLoad(() => fetchClassCode(groupId), [groupId]);
   const [busy, setBusy] = useState(false);
@@ -43,9 +46,10 @@ function CodeBody({ groupId, projector }: { groupId: string; projector: boolean 
     return (
       <div className="mt-4 space-y-3">
         <p className="text-sm text-ink-soft">
-          Ученики открывают ссылку или наводят камеру на QR-код и выбирают своё имя. Код работает 45 минут, отключить его можно раньше.
+          {cap(t.student.many.nom)} открывают ссылку или наводят камеру на QR-код и выбирают своё имя.
+          Код работает 45 минут, отключить его можно раньше.
         </p>
-        <button className="btn btn-primary" disabled={busy} onClick={open}>Включить код класса</button>
+        <button className="btn btn-primary" disabled={busy} onClick={open}>Включить код {t.group.one.gen}</button>
       </div>
     );
   }
@@ -53,7 +57,7 @@ function CodeBody({ groupId, projector }: { groupId: string; projector: boolean 
     <div className={`mt-4 flex flex-wrap items-center gap-6 ${projector ? 'justify-center text-center' : ''}`}>
       <QrImage
         value={`${window.location.origin}/join#${code.code}`}
-        label={`QR-код для входа в класс, код ${code.code}`}
+        label={`QR-код для входа, код ${code.code}`}
         className={`rounded-xl ${projector ? 'w-72' : 'w-44'}`}
       />
       <div className="min-w-0 space-y-3">
@@ -66,7 +70,7 @@ function CodeBody({ groupId, projector }: { groupId: string; projector: boolean 
         </div>
         {!projector && (
           <p className="max-w-md text-sm text-ink-soft">
-            Пока код работает, войти под любым именем из группы может каждый, кто его знает. Показывайте его только в классе.
+            Пока код работает, войти под любым именем из группы может каждый, кто его знает. Показывайте его только на занятии.
           </p>
         )}
       </div>
@@ -76,6 +80,7 @@ function CodeBody({ groupId, projector }: { groupId: string; projector: boolean 
 
 /** Общий код на уроке: как и остальные инструменты, в проекторе панель переносится на экран */
 export function ClassCodePanel({ groupId, projector, target }: { groupId: string; projector: boolean; target: HTMLElement | null }) {
+  const t = useTerms();
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
   const focusToggle = useRef(false);
@@ -85,20 +90,20 @@ export function ClassCodePanel({ groupId, projector, target }: { groupId: string
   }, [open]);
 
   const panel = (
-    <section aria-label="Код класса" className={projector ? 'mb-6' : open ? 'w-full' : ''}>
+    <section aria-label={`Код ${t.group.one.gen}`} className={projector ? 'mb-6' : open ? 'w-full' : ''}>
       {!open ? (
         <button ref={toggle} className="btn btn-secondary btn-sm" aria-expanded={false} onClick={() => setOpen(true)}>
-          <QrCodeIcon size={20} aria-hidden /> Код класса
+          <QrCodeIcon size={20} aria-hidden /> Код {t.group.one.gen}
         </button>
       ) : (
         <div className="rounded-2xl border border-line bg-surface p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 font-sans text-base font-semibold">
-              <QrCodeIcon size={22} aria-hidden /> Код класса
+              <QrCodeIcon size={22} aria-hidden /> Код {t.group.one.gen}
             </h2>
             <button
               className="icon-btn -mr-2 -mt-2"
-              aria-label="Скрыть код класса"
+              aria-label={`Скрыть код ${t.group.one.gen}`}
               onClick={() => {
                 focusToggle.current = true;
                 setOpen(false);

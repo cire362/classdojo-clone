@@ -32,7 +32,7 @@ it('показывает сумму, прогресс и подсказку, ч�
   reply(BOARD);
   renderApp(<HomePoints path={PATH} editable />);
   expect(await screen.findByRole('heading', { name: 'Домашние баллы: 7' })).toBeVisible();
-  expect(screen.getByText(/На школьные баллы, уровень героя и магазин они не влияют/)).toBeVisible();
+  expect(screen.getByText(/На баллы школы, уровень героя и магазин они не влияют/)).toBeVisible();
   expect(screen.getByRole('progressbar', { name: 'Убрать комнату' })).toHaveAttribute('aria-valuetext', '2 из 10');
   // Перебор не показывается: 6 из 5 выглядело бы ошибкой
   expect(screen.getByRole('progressbar', { name: 'Прочитать книгу' })).toHaveAttribute('aria-valuetext', '5 из 5');

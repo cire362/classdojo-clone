@@ -6,6 +6,7 @@ import { formatDateTime, pluralize, useLoad } from '../../../lib/hooks';
 import { ErrorBox, Modal } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { fetchModeration, setHidden } from '../api';
+import { useTerms } from '../../auth';
 
 const ACTIONS: Record<ModerationActionKind, string> = {
   report: 'Жалоба',
@@ -22,6 +23,7 @@ const TARGETS = { post: 'запись', comment: 'комментарий' } as c
  * поправили в другом месте; onDecided сообщает ленте, что её пора перечитать.
  */
 export function ModerationPanel({ groupId, version, onDecided }: { groupId: string; version: number; onDecided: () => void }) {
+  const t = useTerms();
   const id = useId();
   const toast = useToast();
   const { data, setData, error, reload } = useLoad(() => fetchModeration(groupId), [groupId, version]);
@@ -33,7 +35,7 @@ export function ModerationPanel({ groupId, version, onDecided }: { groupId: stri
     try {
       setData(await setHidden(groupId, item.target, item.id, hidden));
       onDecided();
-      toast({ text: hidden ? 'Скрыто от учеников и родителей' : 'Оставлено в ленте', tone: 'ok' });
+      toast({ text: hidden ? `Скрыто от ${t.student.many.gen} и родителей` : 'Оставлено в ленте', tone: 'ok' });
     } catch (err) {
       toast({ text: (err as Error).message, tone: 'error' });
     } finally {

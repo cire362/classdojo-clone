@@ -96,3 +96,12 @@ it('в вузе рейтинг и цель говорят о группах и �
   expect(within(places).getByText('Ваша группа')).toBeVisible();
   expect(places).toHaveTextContent('25 студентов');
 });
+
+it('экраны преподавателя в вузе говорят о студентах и группах', async () => {
+  const { TermsProvider } = await import('../src/features/auth');
+  const { GroupAssignments } = await import('../src/features/assignments/components/GroupAssignments');
+  const { groupData, renderInGroup } = await import('./group-harness');
+  api.mockResolvedValue([] as never);
+  renderInGroup(<TermsProvider kind="UNIVERSITY"><GroupAssignments /></TermsProvider>, groupData(), 'assignments');
+  expect(await screen.findByText(/нескольким студентам\. Студенты сдадут ответ/)).toBeVisible();
+});

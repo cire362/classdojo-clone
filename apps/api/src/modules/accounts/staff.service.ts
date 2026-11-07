@@ -47,7 +47,7 @@ export async function createStaff(user: AuthUser, input: { name: string; login: 
   try {
     const admin = await asDirector(user, null, async (tx) => {
       if ((await tx.admin.count({ where: { schoolId: user.schoolId! } })) >= MAX_STAFF) {
-        throw new HttpError(400, `В администрации школы может быть не больше ${MAX_STAFF} человек`);
+        throw new HttpError(400, `В администрации может быть не больше ${MAX_STAFF} человек`);
       }
       return tx.admin.create({
         data: {

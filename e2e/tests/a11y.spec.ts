@@ -21,7 +21,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     const page = await ctx.newPage();
     try {
       await page.goto('/login');
-      await expect(page.getByRole('heading', { name: 'Вход в класс' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Вход', exact: true })).toBeVisible();
       await expectNoViolations(page, 'вход');
 
       await loginUi(page, TEACHER.login, TEACHER.password);

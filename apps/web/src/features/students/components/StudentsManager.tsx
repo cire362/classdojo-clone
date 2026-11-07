@@ -19,8 +19,11 @@ import { ParentsIssueModal } from './ParentsIssueModal';
 import { RenameModal } from './RenameModal';
 import { StudentRoster } from './StudentRoster';
 import { StudentSearch } from './StudentSearch';
+import { useTerms } from '../../auth';
+import { cap } from '@heroes/shared/terms';
 
 export function StudentsManager() {
+  const t = useTerms();
   const { data, reload } = useGroup();
   const toast = useToast();
   const navigate = useNavigate();
@@ -81,14 +84,16 @@ export function StudentsManager() {
             )
           }
         >
-          {data.students.length} {pluralize(data.students.length, 'ученик', 'ученика', 'учеников')}
+          {data.students.length} {pluralize(data.students.length, t.student.one.nom, t.student.one.gen, t.student.many.gen)}
         </PageTitle>
 
         {data.students.length > 0 && <StudentSearch value={query} onChange={setQuery} found={visibleStudents.length} total={data.students.length} />}
         {data.students.length === 0 ? (
-          <p className="text-ink-soft">Добавьте учеников справа. Логины и пароли создадутся автоматически.</p>
+          <p className="text-ink-soft">Добавьте {t.student.many.acc} справа. Логины и пароли создадутся автоматически.</p>
         ) : visibleStudents.length === 0 ? (
-          <p className="rounded-2xl bg-surface-2 p-5 text-ink-soft">Ученики не найдены. Попробуйте другое имя, фамилию или логин.</p>
+          <p className="rounded-2xl bg-surface-2 p-5 text-ink-soft">
+            {cap(t.student.many.nom)} не найдены. Попробуйте другое имя, фамилию или логин.
+          </p>
         ) : (
           <StudentRoster students={visibleStudents} onRename={setEditing} onMove={setMoving} onResetPassword={resetPassword} onDelete={setDeleting} />
         )}
@@ -100,7 +105,8 @@ export function StudentsManager() {
 
       {data.group.archivedAt ? (
         <p className="h-fit rounded-2xl bg-surface-2 p-5 text-sm text-ink-soft">
-          Группа в архиве, добавлять учеников нельзя. Перевести ученика в действующую группу можно кнопкой со стрелками.
+          Группа в архиве, добавлять {t.student.many.acc} нельзя. Перевести {t.student.one.acc} в действующую группу можно
+          кнопкой со стрелками.
         </p>
       ) : (
         <AddStudentsPanel groupId={data.group.id} busy={busy} onAdd={add} onPreview={setImportPreview} />

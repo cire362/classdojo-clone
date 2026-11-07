@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { HttpError } from '../../platform/errors.js';
+import { terms } from '../../platform/terms.js';
 
 /**
  * Разбор списка учеников из Excel (.xlsx) или CSV. Ничего не создаёт: возвращает
@@ -149,7 +150,9 @@ export async function previewImport(file: File): Promise<ImportPreview> {
     seen.add(key);
     names.push(n);
   }
-  if (!names.length) throw new HttpError(422, 'Не нашли в файле имён учеников. Нужна колонка «ФИО» или «Фамилия» и «Имя»');
+  if (!names.length) {
+    throw new HttpError(422, `Не нашли в файле имён ${terms().student.many.gen}. Нужна колонка «ФИО» или «Фамилия» и «Имя»`);
+  }
   if (names.length > MAX_NAMES) throw new HttpError(422, `В файле больше ${MAX_NAMES} имён`);
   return { names, skipped, source: column ? `${source}, ${column}` : source };
 }

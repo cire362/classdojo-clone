@@ -14,7 +14,7 @@ export const AssignmentBody = z
     studentIds: z.array(z.string().min(1)).max(200).default([]),
   })
   .refine((a) => a.target !== 'team' || a.teamId, { message: 'Выберите команду', path: ['teamId'] })
-  .refine((a) => a.target !== 'students' || a.studentIds.length, { message: 'Выберите учеников', path: ['studentIds'] });
+  .refine((a) => a.target !== 'students' || a.studentIds.length, { message: 'Выберите, кому выдать задание', path: ['studentIds'] });
 
 export type AssignmentInput = z.infer<typeof AssignmentBody>;
 

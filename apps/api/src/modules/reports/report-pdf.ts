@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import PDFDocument from 'pdfkit';
 import { openSync, type Font } from 'fontkit';
 import type { StudentReport } from './student-report.service.js';
+import { terms } from '../../platform/terms.js';
 
 const regular = fileURLToPath(new URL('../../../assets/fonts/Lato-Regular.ttf', import.meta.url));
 const bold = fileURLToPath(new URL('../../../assets/fonts/Lato-Bold.ttf', import.meta.url));
@@ -20,7 +21,7 @@ export function reportPdf(report: StudentReport): Promise<Buffer> {
       bufferPages: true,
       autoFirstPage: false,
       info: {
-        Title: `Отчёт по ученику: ${report.studentName}`,
+        Title: `Отчёт по ${terms().student.one.dat}: ${report.studentName}`,
         Author: report.teacherName,
         Creator: 'Герои класса',
         CreationDate: new Date(report.generatedAt),
@@ -62,7 +63,7 @@ export function reportPdf(report: StudentReport): Promise<Buffer> {
         doc.addPage({ size: 'A4', margins: { top: margin, left: margin, right: margin, bottom: 56 } });
         y = margin;
         if (!first) {
-          const label = `Отчёт по ученику: ${report.studentName}`;
+          const label = `Отчёт по ${terms().student.one.dat}: ${report.studentName}`;
           text(label, margin, y, width, 10, 'bold');
           y += measure(label, width, 10, 'bold') + 8;
           doc.strokeColor(LINE).lineWidth(0.5).moveTo(margin, y).lineTo(margin + width, y).stroke();
@@ -106,7 +107,7 @@ export function reportPdf(report: StudentReport): Promise<Buffer> {
       };
 
       page(true);
-      text('Отчёт по ученику', margin, y, width, 22, 'bold'); y += 38;
+      text(`Отчёт по ${terms().student.one.dat}`, margin, y, width, 22, 'bold'); y += 38;
       text(report.studentName, margin, y, width, 17, 'bold'); y += measure(report.studentName, width, 17, 'bold') + 12;
       paragraph(`Группа: ${report.groupName}`);
       paragraph(`Период: ${fmt(report.from)} - ${fmt(report.to)}. Даты по Москве.`);

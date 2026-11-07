@@ -7,6 +7,7 @@ import { addPoints, deletePoint, fetchHome } from '../api';
 import { useSave } from '../hooks/useSave';
 import { GoalModal } from './GoalModal';
 import { PointModal } from './PointModal';
+import { useTerms } from '../../auth';
 
 /** В кабинете ученика блок идёт после профиля и не должен его вытеснять */
 const STUDENT_HISTORY = 5;
@@ -15,6 +16,7 @@ const isDone = (goal: HomeGoal) => goal.progress >= goal.target;
 
 /** Домашние цели и начисления. С editable родитель их ведёт, ученику они только видны, а пустой блок скрыт */
 export function HomePoints({ path, editable = false }: { path: string; editable?: boolean }) {
+  const t = useTerms();
   const { data, error, reload } = useLoad(() => fetchHome(path), [path]);
   const [modal, setModal] = useState<HomeGoal | 'goal' | 'point' | null>(null);
   const { busy, run } = useSave(reload);
@@ -45,8 +47,8 @@ export function HomePoints({ path, editable = false }: { path: string; editable?
           <h2 className="text-lg">Домашние баллы: {data.total}</h2>
           <p className="text-sm text-ink-soft">
             {editable
-              ? 'Их видит только семья. На школьные баллы, уровень героя и магазин они не влияют.'
-              : 'Их начисляют родители. На школьные баллы, уровень героя и магазин они не влияют.'}
+              ? `Их видит только семья. На баллы ${t.org.one.gen}, уровень героя и магазин они не влияют.`
+              : `Их начисляют родители. На баллы ${t.org.one.gen}, уровень героя и магазин они не влияют.`}
           </p>
         </div>
         {editable && <button className="btn btn-primary btn-sm" onClick={() => setModal('point')}>Начислить</button>}

@@ -4,6 +4,7 @@ import type { PortfolioItem } from '../../../lib/api';
 import { formatDate } from '../../../lib/hooks';
 import { useToast } from '../../../ui/Toast';
 import { EmptyState } from '../../../ui';
+import { useTerms } from '../../auth';
 
 export interface PortfolioEdit {
   add: (item: { title: string; description: string; emoji: string }) => Promise<void>;
@@ -14,6 +15,7 @@ const EMOJI = ['🏆', '🥇', '🥈', '🥉', '🎓', '📚', '🔬', '🎨', '
 
 /** Портфолио ученика: достижения, которые записывает преподаватель. edit — только у преподавателя */
 export function Portfolio({ items, edit }: { items: PortfolioItem[]; edit?: PortfolioEdit }) {
+  const t = useTerms();
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', emoji: EMOJI[0] });
@@ -84,7 +86,9 @@ export function Portfolio({ items, edit }: { items: PortfolioItem[]; edit?: Port
         ))}
       {items.length === 0 ? (
         <EmptyState icon={<TrophyIcon size={28} />} title="Записей преподавателя пока нет">
-          {edit ? 'Олимпиады, проекты, выступления — всё, чем ученик может гордиться.' : 'Здесь появятся достижения, которые отметит преподаватель.'}
+          {edit
+            ? `Олимпиады, проекты, выступления — всё, чем ${t.student.one.nom} может гордиться.`
+            : 'Здесь появятся достижения, которые отметит преподаватель.'}
         </EmptyState>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">

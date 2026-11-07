@@ -97,7 +97,7 @@ test('директор добавляет сотрудника: тот види�
     await page.getByRole('button', { name: 'Удалить вход' }).click();
     await expect(page.getByText(login)).toHaveCount(0);
     await clerk.reload();
-    await expect(clerk.getByRole('heading', { name: 'Вход в класс' })).toBeVisible();
+    await expect(clerk.getByRole('heading', { name: 'Вход', exact: true })).toBeVisible();
   } finally {
     await clerkContext.close();
   }
