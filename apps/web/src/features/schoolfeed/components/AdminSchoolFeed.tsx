@@ -8,12 +8,13 @@ import { AttachmentPicker } from '../../../ui/Attachments';
 import { useToast } from '../../../ui/Toast';
 import { createSchoolPost, deleteSchoolPost, fetchAdminSchoolFeed } from '../api';
 import { SchoolPostCard } from './SchoolPostCard';
+import { useTerms } from '../../auth';
 
 const EMPTY = { text: '', important: false, files: [] as File[] };
 
 /** Сколько семей открыли ленту после объявления */
 function Reach({ reach }: { reach: NonNullable<AdminSchoolPost['reach']> }) {
-  if (!reach.families) return <p className="text-sm text-ink-soft">В школе пока нет семей со входом.</p>;
+  if (!reach.families) return <p className="text-sm text-ink-soft">Пока нет семей со входом.</p>;
   const word = pluralize(reach.families, 'семьи', 'семей', 'семей');
   return <p className="text-sm font-semibold">Прочитали {reach.read} из {reach.families} {word}</p>;
 }
@@ -21,6 +22,7 @@ function Reach({ reach }: { reach: NonNullable<AdminSchoolPost['reach']> }) {
 /** Лента школы в панели: директор и завуч пишут и удаляют записи, сотрудник только читает */
 export function AdminSchoolFeed({ canWrite }: { canWrite: boolean }) {
   const toast = useToast();
+  const t = useTerms();
   const { data, error, reload, setData } = useLoad(() => fetchAdminSchoolFeed(), []);
   const [draft, setDraft] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
@@ -60,9 +62,9 @@ export function AdminSchoolFeed({ canWrite }: { canWrite: boolean }) {
   return (
     <section className="max-w-2xl space-y-5" aria-labelledby="school-feed-title">
       <div className="space-y-1">
-        <h2 id="school-feed-title" className="text-lg">Лента школы</h2>
+        <h2 id="school-feed-title" className="text-lg">Лента {t.org.one.gen}</h2>
         <p className="text-sm text-ink-soft">
-          Записи видят преподаватели школы и семьи учеников действующих групп. Ученики ленту школы не видят.
+          Записи видят преподаватели и семьи {t.student.many.gen} действующих {t.group.many.gen}. Сами {t.student.many.nom} ленту не видят.
         </p>
       </div>
       {canWrite && (
@@ -99,7 +101,7 @@ export function AdminSchoolFeed({ canWrite }: { canWrite: boolean }) {
       {!data && !error && <Skeleton className="h-48" />}
       {data && data.length === 0 && <p className="text-ink-soft">Записей пока нет.</p>}
       {data && data.length > 0 && (
-        <ul className="space-y-4" aria-label="Записи школы">
+        <ul className="space-y-4" aria-label={`Записи ${t.org.one.gen}`}>
           {data.map((post) => (
             <li key={post.id}>
               <SchoolPostCard post={post}>

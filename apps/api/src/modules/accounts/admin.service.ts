@@ -1,4 +1,5 @@
 import type { AdminGroup, AdminTeachers, SchoolInfo, TeacherCredentials } from '@heroes/shared/api';
+import type { InstitutionKind } from '../../generated/prisma/client';
 import type { AuthUser } from '../../platform/auth.js';
 import { prisma } from '../../platform/db.js';
 import { addDays, localDayStart } from '../../platform/dates.js';
@@ -15,19 +16,22 @@ import { isActive } from './premium.service.js';
  */
 /** Код подключения и заявки видят только директор и завуч: они их и проверяют */
 export async function schoolInfo(user: AuthUser): Promise<SchoolInfo> {
-  const school = await prisma.school.findUniqueOrThrow({ where: { id: user.schoolId! }, select: { id: true, name: true, joinCode: true } });
+  const select = { id: true, name: true, kind: true, joinCode: true } as const;
+  const school = await prisma.school.findUniqueOrThrow({ where: { id: user.schoolId! }, select });
   const checks = user.schoolRole !== 'STAFF';
   return {
     id: school.id,
     name: school.name,
+    kind: school.kind,
     role: user.schoolRole!,
     joinCode: checks ? school.joinCode : null,
     pendingTeachers: checks ? await pendingTeacherCount(school.id) : 0,
   };
 }
 
-export async function renameSchool(user: AuthUser, name: string): Promise<SchoolInfo> {
-  await prisma.school.update({ where: { id: user.schoolId! }, data: { name } });
+/** Название и тип учреждения меняет директор; тип меняет слова интерфейса у всех его пользователей */
+export async function updateSchool(user: AuthUser, data: { name?: string; kind?: InstitutionKind }): Promise<SchoolInfo> {
+  await prisma.school.update({ where: { id: user.schoolId! }, data });
   return schoolInfo(user);
 }
 

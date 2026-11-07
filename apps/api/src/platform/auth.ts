@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { Context, MiddlewareHandler } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import type { Role, SchoolRole } from '../generated/prisma/client';
+import type { InstitutionKind, Role, SchoolRole } from '../generated/prisma/client';
 import { prisma } from './db.js';
 import { env } from './env.js';
 import { HttpError } from './errors.js';
@@ -22,16 +22,21 @@ export interface AuthUser {
   schoolId: string | null;
   /** Должность в администрации школы; только у роли ADMIN */
   schoolRole: SchoolRole | null;
+  /** Тип учебного заведения: от него зависят слова в ответах */
+  institution: InstitutionKind | null;
 }
 
 export type AppEnv = { Variables: { user: AuthUser } };
 
 /** Связи аккаунта, по которым строятся роль и отображаемое имя */
+const KIND = { select: { kind: true } } as const;
+const GROUP_KIND = { select: { teacher: { select: { school: KIND } } } } as const;
+
 export const ACCOUNT_PROFILE = {
-  admin: true,
-  teacher: true,
-  student: true,
-  parent: { include: { children: { include: { student: { select: { name: true } } } } } },
+  admin: { include: { school: KIND } },
+  teacher: { include: { school: KIND } },
+  student: { include: { group: GROUP_KIND } },
+  parent: { include: { children: { include: { student: { select: { name: true, group: GROUP_KIND } } } } } },
 } as const;
 
 type AccountWithProfile = {
@@ -41,6 +46,24 @@ type AccountWithProfile = {
   student: { name: string } | null;
   parent: { children: { student: { name: string } }[] } | null;
 };
+
+type WithKind = {
+  admin: { school: { kind: InstitutionKind } } | null;
+  teacher: { school: { kind: InstitutionKind } } | null;
+  student: { group: { teacher: { school: { kind: InstitutionKind } } } } | null;
+  parent: { children: { student: { group: { teacher: { school: { kind: InstitutionKind } } } } }[] } | null;
+};
+
+/**
+ * Тип учебного заведения для слов интерфейса. У родителя — учреждение первого ребёнка: дети в учреждениях
+ * разного типа — редкость, и слова одного из них понятны и для другого
+ */
+export function accountInstitution(a: WithKind): InstitutionKind | null {
+  if (a.admin) return a.admin.school.kind;
+  if (a.teacher) return a.teacher.school.kind;
+  if (a.student) return a.student.group.teacher.school.kind;
+  return a.parent?.children[0]?.student.group.teacher.school.kind ?? null;
+}
 
 /** Имя в шапке: у родителя — имена его детей */
 export function accountName(a: AccountWithProfile): string {
@@ -102,6 +125,7 @@ export async function loadUser(c: Context): Promise<AuthUser | null> {
     parentId: a.parent?.id ?? null,
     schoolId: a.teacher?.schoolId ?? a.admin?.schoolId ?? null,
     schoolRole: a.admin?.role ?? null,
+    institution: accountInstitution(a),
   };
 }
 
@@ -124,7 +148,7 @@ export function requireSchoolRole(...roles: SchoolRole[]): MiddlewareHandler<App
   return async (c, next) => {
     const role = c.get('user').schoolRole;
     if (!role || !roles.includes(role)) {
-      const who = roles.includes('DEPUTY') ? 'директор или завуч' : 'директор';
+      const who = roles.includes('DEPUTY') ? 'руководитель или его заместитель' : 'руководитель';
       throw new HttpError(403, `Это может сделать только ${who}`);
     }
     await next();

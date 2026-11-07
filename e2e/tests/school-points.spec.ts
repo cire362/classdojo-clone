@@ -16,9 +16,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
     await loginUi(page, ADMIN.login, ADMIN.password);
     await page.getByRole('button', { name: 'Баллы школы', exact: true }).click();
-    const goalButton = page.getByRole('button', { name: /Задать цель школы|Изменить/ }).first();
+    const goalButton = page.getByRole('button', { name: /^(Задать цель школы|Изменить)$/ }).first();
     await goalButton.click();
-    await page.getByLabel('Что сделаем всей школой?').fill('Школьный пикник');
+    await page.getByLabel('Что сделаем все вместе?').fill('Школьный пикник');
     await page.getByLabel('Сколько баллов собрать всем классам?').fill('1000');
     await page.getByRole('dialog').getByRole('button', { name: 'Сохранить' }).click();
     await expect(page.getByRole('heading', { name: 'Цель школы: Школьный пикник' })).toBeVisible();

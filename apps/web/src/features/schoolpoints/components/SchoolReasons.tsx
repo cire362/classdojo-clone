@@ -5,6 +5,8 @@ import { useLoad } from '../../../lib/hooks';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { addSchoolReason, deleteSchoolReason, fetchSchoolReasons, updateSchoolReason } from '../api';
+import { cap } from '@heroes/shared/terms';
+import { useTerms } from '../../auth';
 
 const VALUES = [5, 4, 3, 2, 1, -1, -2, -3, -4, -5];
 const EMPTY = { name: '', emoji: '⭐', value: 1 };
@@ -16,6 +18,7 @@ const signed = (v: number) => (v > 0 ? `+${v}` : `−${Math.abs(v)}`);
  */
 export function SchoolReasons({ canEdit }: { canEdit: boolean }) {
   const toast = useToast();
+  const t = useTerms();
   const { data, error, reload, setData } = useLoad(() => fetchSchoolReasons(), []);
   const [editing, setEditing] = useState<SchoolReason | 'new' | null>(null);
   const [form, setForm] = useState(EMPTY);
@@ -41,7 +44,7 @@ export function SchoolReasons({ canEdit }: { canEdit: boolean }) {
     e.preventDefault();
     const data = { ...form, name: form.name.trim(), emoji: form.emoji.trim() };
     const request = editing === 'new' ? () => addSchoolReason(data) : () => updateSchoolReason((editing as SchoolReason).id, data);
-    void run(request, 'Причина сохранена во всех классах');
+    void run(request, `Причина сохранена во всех ${t.group.many.prep}`);
   }
 
   return (
@@ -54,12 +57,15 @@ export function SchoolReasons({ canEdit }: { canEdit: boolean }) {
           </button>
         )}
       </div>
-      <p className="text-sm text-ink-soft">Появляются в каждом классе школы с отметкой «Школа». Изменить их может только администрация.</p>
+      <p className="text-sm text-ink-soft">
+        Появляются в {t.groupFeminine ? 'каждой' : 'каждом'} {t.group.one.prep} с отметкой «{cap(t.org.one.nom)}».
+        Изменить их может только администрация.
+      </p>
       {error && <ErrorBox message={error} onRetry={reload} />}
       {!data && !error && <Skeleton className="h-24" />}
       {data && data.length === 0 && <p className="text-ink-soft">Общих причин пока нет.</p>}
       {data && data.length > 0 && (
-        <ul className="card divide-y divide-line overflow-hidden" aria-label="Общие причины школы">
+        <ul className="card divide-y divide-line overflow-hidden" aria-label={`Общие причины ${t.org.one.gen}`}>
           {data.map((r) => (
             <li key={r.id} className="flex items-center gap-3 p-3">
               <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-2xl" aria-hidden>
@@ -76,7 +82,7 @@ export function SchoolReasons({ canEdit }: { canEdit: boolean }) {
                     className="icon-btn hover:text-minus"
                     aria-label={`Удалить «${r.name}»`}
                     disabled={busy}
-                    onClick={() => run(() => deleteSchoolReason(r.id), 'Причина убрана из всех классов')}
+                    onClick={() => run(() => deleteSchoolReason(r.id), `Причина убрана из всех ${t.group.many.gen}`)}
                   >
                     <TrashIcon size={20} />
                   </button>

@@ -48,7 +48,7 @@ it('директор ставит цель школы и добавляет об
   });
   renderApp(<SchoolPointsPanel canEdit />);
   fireEvent.click(await screen.findByRole('button', { name: /Задать цель школы/ }));
-  fireEvent.change(screen.getByLabelText('Что сделаем всей школой?'), { target: { value: ' Пикник ' } });
+  fireEvent.change(screen.getByLabelText('Что сделаем все вместе?'), { target: { value: ' Пикник ' } });
   fireEvent.change(screen.getByLabelText('Сколько баллов собрать всем классам?'), { target: { value: '500' } });
   await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Сохранить' })));
   expect(api).toHaveBeenCalledWith('PUT', '/admin/school-goal', { title: 'Пикник', target: 500, restart: false });
@@ -83,4 +83,16 @@ it('в списке причин класса общая причина школ
   expect(screen.getByRole('button', { name: 'Изменить «Отличная работа»' })).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Изменить «Дежурство»' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Удалить «Дежурство»' })).not.toBeInTheDocument();
+});
+
+it('в вузе рейтинг и цель говорят о группах и студентах', async () => {
+  const { TermsProvider } = await import('../src/features/auth');
+  api.mockResolvedValue(POINTS as never);
+  renderApp(<TermsProvider kind="UNIVERSITY"><TeacherSchoolPoints /></TermsProvider>);
+  expect(await screen.findByText('Все группы собрали 250 из 1000 баллов')).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Цель вуза: Школьный пикник' })).toBeVisible();
+  const places = screen.getByRole('list', { name: 'Места групп' });
+  expect(places).toHaveTextContent('3 на студента');
+  expect(within(places).getByText('Ваша группа')).toBeVisible();
+  expect(places).toHaveTextContent('25 студентов');
 });

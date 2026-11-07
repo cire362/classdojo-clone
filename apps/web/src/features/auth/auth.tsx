@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { termsFor, type InstitutionKind, type Terms } from '@heroes/shared/terms';
 import { ApiError, api, type Me } from '../../lib/api';
 
 interface AuthState {
@@ -95,6 +96,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return <AuthContext.Provider value={{ user, loading, offline, login, signedIn, logout, refresh }}>{children}</AuthContext.Provider>;
 }
+
+/** Тип учреждения, который показывает раздел, например панель администрации сразу после смены типа */
+const KindOverride = createContext<InstitutionKind | null | undefined>(undefined);
+
+export function TermsProvider({ kind, children }: { kind: InstitutionKind | null; children: ReactNode }) {
+  return <KindOverride.Provider value={kind}>{children}</KindOverride.Provider>;
+}
+
+/**
+ * Слова интерфейса по типу учреждения: класс или группа, ученик или студент, школа, колледж или вуз.
+ * Без входа и вне приложения (тесты отдельных компонентов) — школьные слова
+ */
+export function useTerms(): Terms {
+  const override = useContext(KindOverride);
+  const auth = useContext(AuthContext);
+  return termsFor(override !== undefined ? override : auth?.user?.institution);
+}
+
+/** Вход, если компонент внутри приложения; в тестах отдельных компонентов — null */
+export const useOptionalAuth = (): AuthState | null => useContext(AuthContext);
 
 export function useAuth(): AuthState {
   const ctx = useContext(AuthContext);

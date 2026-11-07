@@ -1,4 +1,5 @@
 /** Типы ответов API: учётные записи, выданные входы и панель администратора */
+import type { InstitutionKind } from '../terms.js';
 import type { Hero } from './profile.js';
 
 export type Role = 'TEACHER' | 'STUDENT' | 'PARENT' | 'ADMIN';
@@ -7,6 +8,8 @@ export interface Me {
   login: string;
   role: Role;
   name: string;
+  /** Тип учебного заведения: по нему интерфейс выбирает слова. null — учреждения нет (родитель без детей) */
+  institution?: InstitutionKind | null;
 }
 
 export interface Credentials {
@@ -102,6 +105,7 @@ export type SchoolRole = 'DIRECTOR' | 'DEPUTY' | 'STAFF';
 export interface SchoolInfo {
   id: string;
   name: string;
+  kind: InstitutionKind;
   role: SchoolRole;
   /** Код подключения преподавателей; null — выключен или не виден этой должности */
   joinCode: string | null;
@@ -130,4 +134,5 @@ export interface TeacherRequest {
 /** Что видит преподаватель, введя код школы */
 export interface SchoolJoinPreview {
   schoolName: string;
+  kind: InstitutionKind;
 }

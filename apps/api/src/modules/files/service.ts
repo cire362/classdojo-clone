@@ -108,7 +108,7 @@ export async function addSchoolFileRows(
     _sum: { size: true },
   });
   const adding = uploads.reduce((sum, u) => sum + u.bytes.length, 0);
-  if ((_sum.size ?? 0) + adding > env.groupFilesQuota) throw new HttpError(409, 'Место для файлов школы закончилось');
+  if ((_sum.size ?? 0) + adding > env.groupFilesQuota) throw new HttpError(409, 'Место для файлов учреждения закончилось');
   const rows = [];
   for (const [position, u] of uploads.entries()) {
     rows.push(await tx.storedFile.create({

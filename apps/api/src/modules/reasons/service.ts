@@ -80,7 +80,7 @@ export async function ownedReason(teacherId: string, reasonId: string) {
   });
   if (!reason) throw notFound('Причина не найдена');
   if (reason.group.archivedAt) throw new HttpError(409, ARCHIVED_MESSAGE);
-  if (reason.schoolReasonId) throw new HttpError(409, 'Это общая причина школы: её меняет директор или завуч');
+  if (reason.schoolReasonId) throw new HttpError(409, 'Это общая причина учреждения: её меняет администрация');
   return reason;
 }
 

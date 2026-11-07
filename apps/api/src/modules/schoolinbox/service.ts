@@ -1,6 +1,7 @@
 import type { ChatMessage, InboxThread, InboxThreadDetail, ParentSchoolThread } from '@heroes/shared/api';
 import type { Prisma } from '../../generated/prisma/client';
 import type { AuthUser } from '../../platform/auth.js';
+import { termsFor } from '@heroes/shared/terms';
 import { prisma } from '../../platform/db.js';
 import { HttpError, notFound } from '../../platform/errors.js';
 import { lockSchool, schoolsOf } from '../access/index.js';
@@ -20,27 +21,31 @@ const THREADS = 100;
 const MESSAGE_INCLUDE = { files: { orderBy: { position: 'asc' } } } as const satisfies Prisma.SchoolMessageInclude;
 type LoadedMessage = Prisma.SchoolMessageGetPayload<{ include: typeof MESSAGE_INCLUDE }>;
 
-function messageView(m: LoadedMessage, accountId: string): ChatMessage {
+function messageView(m: LoadedMessage, accountId: string, staffLabel: string): ChatMessage {
   return {
     id: m.id,
     text: m.text,
     files: m.files.map(fileView),
     createdAt: m.createdAt.toISOString(),
     mine: m.senderId === accountId,
-    author: m.fromSchool ? `${m.authorName || 'Сотрудник'}, администрация школы` : 'Родитель',
+    author: m.fromSchool ? `${m.authorName || 'Сотрудник'}, ${staffLabel}` : 'Родитель',
     fromParent: !m.fromSchool,
     scheduled: false,
   };
 }
 
+/** Подпись ответа школы: «администрация школы», «администрация колледжа», «администрация вуза» */
 async function threadMessages(threadId: string, accountId: string) {
+  const select = { school: { select: { kind: true } } };
+  const { school } = await prisma.schoolThread.findUniqueOrThrow({ where: { id: threadId }, select });
+  const staffLabel = `администрация ${termsFor(school.kind).org.one.gen}`;
   const rows = await prisma.schoolMessage.findMany({
     where: { threadId },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: MESSAGES,
     include: MESSAGE_INCLUDE,
   });
-  return rows.reverse().map((m) => messageView(m, accountId));
+  return rows.reverse().map((m) => messageView(m, accountId, staffLabel));
 }
 
 /** Сообщение с файлами сохраняется целиком или никак */
@@ -66,7 +71,7 @@ async function addMessage(
     if (!data.fromSchool && thread.waitingSince) {
       const since = { threadId: thread.id, fromSchool: false, createdAt: { gte: thread.waitingSince } };
       const waiting = await tx.schoolMessage.count({ where: since });
-      if (waiting >= MAX_UNANSWERED) throw new HttpError(409, 'Дождитесь ответа школы на предыдущие сообщения');
+      if (waiting >= MAX_UNANSWERED) throw new HttpError(409, 'Дождитесь ответа администрации на предыдущие сообщения');
     }
     const message = await tx.schoolMessage.create({
       data: {

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { SchoolJoinPreview } from '../../../lib/api';
 import { joinSchool, previewSchoolJoin } from '../api';
 import { AccountFields } from './AccountFields';
+import { termsFor } from '@heroes/shared/terms';
 
 const MIN_PASSWORD = 8;
 
@@ -60,7 +61,8 @@ export function TeacherJoin() {
       <main className="mx-auto max-w-sm space-y-5 px-4 py-16">
         <h1 className="text-3xl">Заявка отправлена</h1>
         <p>
-          Администрация школы «{school.schoolName}» проверит заявку. После подтверждения войдите с логином{' '}
+          Администрация {termsFor(school.kind).org.one.gen} «{school.schoolName}» проверит заявку.
+          После подтверждения войдите с логином{' '}
           <b className="break-all font-mono">{form.login.trim().toLowerCase()}</b> и своим паролем.
         </p>
         <Link to="/login" className="btn btn-primary btn-lg w-full">Ко входу</Link>
@@ -72,10 +74,10 @@ export function TeacherJoin() {
     return (
       <main className="mx-auto max-w-sm px-4 py-16">
         <form onSubmit={(e) => { e.preventDefault(); void check(code); }} className="space-y-5" noValidate>
-          <h1 className="text-3xl">Подключение к школе</h1>
-          <p className="text-ink-soft">Для преподавателей. Код школы выдаёт директор или завуч.</p>
+          <h1 className="text-3xl">Подключение к учебному заведению</h1>
+          <p className="text-ink-soft">Для преподавателей. Код подключения выдаёт администрация.</p>
           <div className="space-y-2">
-            <label className="label" htmlFor="school-code">Код школы</label>
+            <label className="label" htmlFor="school-code">Код подключения</label>
             <input
               id="school-code"
               className="input font-mono uppercase tracking-[0.1em]"
@@ -101,11 +103,11 @@ export function TeacherJoin() {
       <form onSubmit={submit} className="space-y-5" noValidate>
         <div>
           <h1 className="break-words text-3xl">{school.schoolName}</h1>
-          <p className="mt-2 text-ink-soft">Создайте вход преподавателя. Войти можно будет после проверки администрацией школы.</p>
+          <p className="mt-2 text-ink-soft">Создайте вход преподавателя. Войти можно будет после проверки администрацией.</p>
         </div>
         <AccountFields
           idPrefix="join"
-          nameLabel="Как вас называть ученикам и родителям"
+          nameLabel={`Как вас называть ${termsFor(school.kind).student.many.dat}`}
           loginHint="От 3 символов: латинские буквы, цифры, точка или дефис."
           value={form}
           onChange={setForm}

@@ -7,6 +7,7 @@ import { useToast } from '../../../ui/Toast';
 import { Thread } from '../../messages';
 import { useNotifications } from '../../notifications';
 import { fetchInbox, fetchInboxThread, markHandled, replyFromSchool } from '../api';
+import { useTerms } from '../../auth';
 
 /** Открытая переписка: ответ уходит от имени сотрудника, «Решено» снимает ожидание без письма */
 function InboxConversation({ id, onBack }: { id: string; onBack: () => void }) {
@@ -66,7 +67,7 @@ function Row({ thread, onOpen }: { thread: InboxThread; onOpen: () => void }) {
       <span className="min-w-0 flex-1 basis-60">
         <span className="block break-words font-semibold">{thread.family}</span>
         <span className="block truncate text-sm text-ink-soft">
-          {thread.lastFromSchool ? 'Школа: ' : ''}
+          {thread.lastFromSchool ? 'Администрация: ' : ''}
           {thread.lastText}
         </span>
       </span>
@@ -82,14 +83,17 @@ function Row({ thread, onOpen }: { thread: InboxThread; onOpen: () => void }) {
 export function SchoolInbox() {
   const { data, error, reload } = useLoad(() => fetchInbox(), []);
   const [open, setOpen] = useState<string | null>(null);
+  const t = useTerms();
   if (open) return <InboxConversation id={open} onBack={() => { setOpen(null); void reload(); }} />;
   const waiting = data?.filter((t) => t.waiting).length ?? 0;
   return (
     <section className="max-w-3xl space-y-4" aria-labelledby="inbox-title">
       <div className="space-y-1">
-        <h2 id="inbox-title" className="text-lg">Ящик школы {data && <span className="text-ink-soft">(ждут ответа: {waiting})</span>}</h2>
+        <h2 id="inbox-title" className="text-lg">
+          Ящик {t.org.one.gen} {data && <span className="text-ink-soft">(ждут ответа: {waiting})</span>}
+        </h2>
         <p className="text-sm text-ink-soft">
-          Семьи пишут сюда со страницы «Письмо в школу». Ответить может любой сотрудник администрации.
+          Семьи пишут сюда со страницы «Письмо в {t.org.one.acc}». Ответить может любой сотрудник администрации.
         </p>
       </div>
       {error && <ErrorBox message={error} onRetry={reload} />}

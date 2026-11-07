@@ -2,6 +2,7 @@ import {
   api, type AdminGroup, type AdminTeachers, type SchoolInfo, type SchoolJoinPreview, type SchoolRole, type StaffMember,
   type TeacherCredentials, type TeacherRequest,
 } from '../../lib/api';
+import type { InstitutionKind } from '@heroes/shared/terms';
 
 export const fetchTeachers = () => api<AdminTeachers>('GET', '/admin/teachers');
 
@@ -15,7 +16,7 @@ export const fetchAdminGroups = () => api<AdminGroup[]>('GET', '/admin/groups');
 
 export const fetchSchool = () => api<SchoolInfo>('GET', '/admin/school');
 
-export const renameSchool = (name: string) => api<SchoolInfo>('PATCH', '/admin/school', { name });
+export const updateSchool = (data: { name: string; kind: InstitutionKind }) => api<SchoolInfo>('PATCH', '/admin/school', data);
 
 export const fetchStaff = () => api<StaffMember[]>('GET', '/admin/staff');
 

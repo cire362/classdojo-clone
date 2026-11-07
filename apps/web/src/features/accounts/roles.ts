@@ -1,12 +1,12 @@
+import type { Terms } from '@heroes/shared/terms';
 import type { SchoolRole } from '../../lib/api';
 
-export const ROLE_NAMES: Record<SchoolRole, string> = { DIRECTOR: 'Директор', DEPUTY: 'Завуч', STAFF: 'Сотрудник' };
+/** Что может каждая должность. Названия должностей — из словаря: директор и завуч в школе, ректор и проректор в вузе */
+export const roleHints = (t: Terms): Record<SchoolRole, string> => ({
+  DIRECTOR: `Всё в ${t.org.one.prep}, включая администрацию и название`,
+  DEPUTY: `Преподаватели, заявки на подключение, файлы ${t.group.many.gen}`,
+  STAFF: `Ящик ${t.org.one.gen}: ответы семьям; остальное только просмотр`,
+});
 
-export const ROLE_HINTS: Record<SchoolRole, string> = {
-  DIRECTOR: 'Всё в школе, включая администрацию и название',
-  DEPUTY: 'Преподаватели, заявки на подключение, файлы групп',
-  STAFF: 'Ящик школы: ответы семьям; остальное только просмотр',
-};
-
-/** Директор и завуч ведут преподавателей, заявки и выгрузку файлов */
+/** Руководитель и заместитель ведут преподавателей, заявки и выгрузку файлов */
 export const canManageTeachers = (role: SchoolRole) => role !== 'STAFF';

@@ -3,6 +3,7 @@ import type { Context } from 'hono';
 import { z } from 'zod';
 import {
   ACCOUNT_PROFILE,
+  accountInstitution,
   accountName,
   checkLoginRate,
   createSession,
@@ -36,7 +37,7 @@ export async function checkCredentials(login: string, password: string): Promise
 
 export async function accountView(accountId: string): Promise<Me> {
   const user = await prisma.account.findUniqueOrThrow({ where: { id: accountId }, include: ACCOUNT_PROFILE });
-  return { login: user.login, role: user.role, name: accountName(user) };
+  return { login: user.login, role: user.role, name: accountName(user), institution: accountInstitution(user) };
 }
 
 /** Вход без пароля (QR, код, приглашение): прежняя сессия этого браузера закрывается */

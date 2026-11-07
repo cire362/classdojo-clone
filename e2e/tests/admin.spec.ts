@@ -11,12 +11,12 @@ test('администратор создаёт преподавателя и в
   // Название школы меняется и возвращается: стенд общий для всех тестов
   const title = page.getByRole('heading', { level: 1 });
   const original = await title.innerText();
-  await page.getByRole('button', { name: 'Переименовать школу' }).click();
-  await page.getByLabel('Название школы').fill('E2E Гимназия');
+  await page.getByRole('button', { name: 'Изменить название и тип' }).click();
+  await page.getByLabel('Название', { exact: true }).fill('E2E Гимназия');
   await page.getByRole('button', { name: 'Сохранить' }).click();
   await expect(title).toHaveText('E2E Гимназия');
-  await page.getByRole('button', { name: 'Переименовать школу' }).click();
-  await page.getByLabel('Название школы').fill(original);
+  await page.getByRole('button', { name: 'Изменить название и тип' }).click();
+  await page.getByLabel('Название', { exact: true }).fill(original);
   await page.getByRole('button', { name: 'Сохранить' }).click();
   await expect(title).toHaveText(original);
 
@@ -51,7 +51,7 @@ test('администратор создаёт преподавателя и в
     await page.fill('#premium-until', until);
     await page.getByRole('button', { name: 'Сохранить срок' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Группы школы', exact: true }).click();
+    await page.getByRole('button', { name: 'Классы школы', exact: true }).click();
     await expect(page.getByText('Анна Сергеевна', { exact: true }).first()).toBeVisible();
   } finally {
     await teacher.context().close();
@@ -64,7 +64,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     await loginUi(page, ADMIN.login, ADMIN.password);
     await expect(page.getByRole('main').getByText('Директор', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    for (const section of ['Преподаватели', 'Группы школы', 'Администрация']) {
+    for (const section of ['Преподаватели', 'Классы школы', 'Администрация']) {
       await page.getByRole('button', { name: section, exact: true }).click();
       await expect(page.locator('main li').first()).toBeVisible();
       await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));

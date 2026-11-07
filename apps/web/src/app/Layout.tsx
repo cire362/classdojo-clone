@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ChunkErrorBoundary } from '../ui/ChunkErrorBoundary';
 import { BellIcon, ChatsCircleIcon, EnvelopeSimpleIcon, GearSixIcon, GiftIcon, MegaphoneIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
-import { useAuth } from '../features/auth';
+import { useAuth, useTerms } from '../features/auth';
 import { useNews } from '../features/news';
 import { CountBadge, useNotifications } from '../features/notifications';
 import { pluralize } from '../lib/hooks';
@@ -25,6 +25,7 @@ export function AppLayout() {
   const location = useLocation();
   const { news } = useNews();
   const { counts } = useNotifications();
+  const terms = useTerms();
   const navClass = ({ isActive }: { isActive: boolean }) => `tab ${isActive ? 'active' : ''}`;
   const newCount = news?.newPartIds.length ?? 0;
   const heroLink = (
@@ -106,10 +107,10 @@ export function AppLayout() {
               <NavLink
                 to="/school"
                 className={({ isActive }) => `icon-btn relative w-auto gap-1 px-2.5 ${isActive ? 'bg-surface-2 text-ink' : ''}`}
-                title="Новости школы"
+                title={`Новости ${terms.org.one.gen}`}
               >
                 <MegaphoneIcon size={22} aria-hidden />
-                <span className="sr-only">Новости школы</span>
+                <span className="sr-only">Новости {terms.org.one.gen}</span>
                 <CountBadge count={counts.school} label="новых записей" />
               </NavLink>
             )}
@@ -117,10 +118,10 @@ export function AppLayout() {
               <NavLink
                 to="/school-messages"
                 className={({ isActive }) => `icon-btn relative w-auto gap-1 px-2.5 ${isActive ? 'bg-surface-2 text-ink' : ''}`}
-                title="Письмо в школу"
+                title={`Письмо в ${terms.org.one.acc}`}
               >
                 <EnvelopeSimpleIcon size={22} aria-hidden />
-                <span className="sr-only">Письмо в школу</span>
+                <span className="sr-only">Письмо в {terms.org.one.acc}</span>
                 <CountBadge count={counts.schoolInbox} label="новых ответов" />
               </NavLink>
             )}

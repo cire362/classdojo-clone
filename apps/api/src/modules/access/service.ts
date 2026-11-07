@@ -53,7 +53,7 @@ export async function lockGroup(tx: Prisma.TransactionClient, groupId: string) {
  */
 export async function lockSchool(tx: Prisma.TransactionClient, schoolId: string) {
   const rows = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM "School" WHERE id = ${schoolId} FOR UPDATE`;
-  if (!rows.length) throw notFound('Школа не найдена');
+  if (!rows.length) throw notFound('Учреждение не найдено');
 }
 
 /**

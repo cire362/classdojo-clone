@@ -41,7 +41,7 @@ it('сотрудник только смотрит; завуч ведёт пре
   }
   expect((await call('GET', '/api/admin/school', { cookie: clerk.cookie })).body).toMatchObject({ role: 'STAFF', joinCode: null });
   const denied = await call('POST', '/api/admin/teachers', { cookie: clerk.cookie, body: newTeacher() });
-  expect(denied).toMatchObject({ status: 403, body: { error: 'Это может сделать только директор или завуч' } });
+  expect(denied).toMatchObject({ status: 403, body: { error: 'Это может сделать только руководитель или его заместитель' } });
   expect((await call('POST', `/api/admin/teachers/${t.teacher.id}/reset-password`, { cookie: clerk.cookie })).status).toBe(403);
   expect((await call('GET', `/api/admin/groups/${t.group.id}/export`, { cookie: clerk.cookie })).status).toBe(403);
   expect((await call('POST', '/api/admin/join-code', { cookie: clerk.cookie })).status).toBe(403);
@@ -52,7 +52,7 @@ it('сотрудник только смотрит; завуч ведёт пре
   expect((await call('PATCH', '/api/admin/school', { cookie: deputy.cookie, body: { name: 'Завуч' } })).status).toBe(403);
   const staffBody = { name: 'Секретарь', login: `s.${uid()}`, role: 'STAFF' };
   const byDeputy = await call('POST', '/api/admin/staff', { cookie: deputy.cookie, body: staffBody });
-  expect(byDeputy.body.error).toBe('Это может сделать только директор');
+  expect(byDeputy.body.error).toBe('Это может сделать только руководитель');
   expect((await call('PATCH', '/api/admin/school', { cookie: s.director.cookie, body: { name: 'Гимназия' } })).body.name).toBe('Гимназия');
 });
 
@@ -70,7 +70,8 @@ it('директор добавляет сотрудников, меняет д�
     ['DIRECTOR Северная школа', 'DIRECTOR', true],
     ['Ольга', 'DEPUTY', false],
   ]);
-  const roleOf = (id: string, cookie = s.director.cookie) => call('PUT', `/api/admin/staff/${id}/role`, { cookie, body: { role: 'STAFF' } });
+  const roleOf = (id: string, cookie = s.director.cookie) =>
+    call('PUT', `/api/admin/staff/${id}/role`, { cookie, body: { role: 'STAFF' } });
   expect((await roleOf(created.body.id)).body[1].role).toBe('STAFF');
   // Права меняются сразу, без нового входа
   expect((await call('POST', '/api/admin/join-code', { cookie: olga })).status).toBe(403);
@@ -108,7 +109,8 @@ it('преподаватель подключается по коду школы
   expect((await call('GET', '/api/admin/school', { cookie: s.director.cookie })).body).toMatchObject({ joinCode, pendingTeachers: 0 });
 
   const typed = `${joinCode.slice(0, 4).toLowerCase()}-${joinCode.slice(4)}`;
-  expect((await call('POST', '/api/auth/school-join/preview', { body: { code: typed } })).body).toEqual({ schoolName: 'Северная школа' });
+  const preview = (await call('POST', '/api/auth/school-join/preview', { body: { code: typed } })).body;
+  expect(preview).toEqual({ schoolName: 'Северная школа', kind: 'SCHOOL' });
   const body = joinBody(typed);
   expect((await call('POST', '/api/auth/school-join', { body })).status).toBe(201);
   expect((await call('POST', '/api/auth/school-join', { body: { ...body, login: body.login.toUpperCase() } })).status).toBe(409);

@@ -6,7 +6,9 @@ import { SchoolInbox } from '../../schoolinbox';
 import { SchoolPointsPanel } from '../../schoolpoints';
 import { ErrorBox, Skeleton } from '../../../ui';
 import { fetchSchool } from '../api';
-import { ROLE_NAMES, canManageTeachers } from '../roles';
+import { cap, termsFor, type Terms } from '@heroes/shared/terms';
+import { TermsProvider, useOptionalAuth } from '../../auth';
+import { canManageTeachers } from '../roles';
 import { PasswordCard } from './PasswordCard';
 import { SchoolGroups } from './SchoolGroups';
 import { SchoolStaff } from './SchoolStaff';
@@ -15,12 +17,12 @@ import { SchoolTitle } from './SchoolTitle';
 import { TeacherRequests } from './TeacherRequests';
 
 type Tab = 'teachers' | 'inbox' | 'groups' | 'points' | 'feed' | 'staff' | 'password';
-const TABS: [Tab, string][] = [
+const tabs = (t: Terms): [Tab, string][] => [
   ['teachers', 'Преподаватели'],
-  ['inbox', 'Ящик школы'],
-  ['groups', 'Группы школы'],
-  ['points', 'Баллы школы'],
-  ['feed', 'Лента школы'],
+  ['inbox', `Ящик ${t.org.one.gen}`],
+  ['groups', `${cap(t.group.many.nom)} ${t.org.one.gen}`],
+  ['points', `Баллы ${t.org.one.gen}`],
+  ['feed', `Лента ${t.org.one.gen}`],
   ['staff', 'Администрация'],
   ['password', 'Мой пароль'],
 ];
@@ -36,24 +38,34 @@ function TabBadge({ count, label }: { count: number; label: string }) {
 }
 
 /**
- * Администрация школы: преподаватели, группы и состав администрации своей школы. Других школ она не видит.
- * Что можно менять, зависит от должности: директор — всё, завуч — преподавателей, сотрудник только смотрит
+ * Администрация учреждения: преподаватели, группы и состав администрации своего учреждения. Других она не видит.
+ * Что можно менять, зависит от должности: руководитель — всё, заместитель — преподавателей, сотрудник только смотрит.
+ * Слова раздела берутся из словаря типа учреждения и меняются сразу после смены типа
  */
 export function AdminPanel() {
   const [tab, setTab] = useState<Tab>('teachers');
   const { data: school, setData, error, reload } = useLoad(() => fetchSchool(), []);
   const { counts } = useNotifications();
+  const auth = useOptionalAuth();
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!school) return <Skeleton className="h-64" />;
   const manager = canManageTeachers(school.role);
+  const terms = termsFor(school.kind);
   return (
+    <TermsProvider kind={school.kind}>
     <div className="space-y-6">
       <div>
-        <p className="mb-2 text-sm font-semibold text-ink-soft">{ROLE_NAMES[school.role]}</p>
-        <SchoolTitle school={school} onRenamed={setData} />
+        <p className="mb-2 text-sm font-semibold text-ink-soft">{terms.roles[school.role]}</p>
+        <SchoolTitle
+          school={school}
+          onChange={(next) => {
+            setData(next);
+            if (next.kind !== school.kind) void auth?.refresh();
+          }}
+        />
       </div>
-      <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0" aria-label="Разделы школы">
-        {TABS.map(([key, label]) => (
+      <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0" aria-label="Разделы">
+        {tabs(terms).map(([key, label]) => (
           <button
             key={key}
             className={`tab ${tab === key ? 'active' : ''}`}
@@ -84,5 +96,6 @@ export function AdminPanel() {
       {tab === 'staff' && <SchoolStaff isDirector={school.role === 'DIRECTOR'} />}
       {tab === 'password' && <div className="max-w-2xl"><PasswordCard endpoint="/admin/me/password" /></div>}
     </div>
+    </TermsProvider>
   );
 }

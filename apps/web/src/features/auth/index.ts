@@ -1,1 +1,1 @@
-export { AuthProvider, storedRole, useAuth } from './auth';
+export { AuthProvider, TermsProvider, storedRole, useAuth, useOptionalAuth, useTerms } from './auth';

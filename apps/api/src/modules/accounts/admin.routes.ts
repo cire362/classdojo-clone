@@ -4,7 +4,7 @@ import { requireRole, requireSchoolRole, type AppEnv } from '../../platform/auth
 import { LOGIN_PATTERN } from '../../platform/credentials.js';
 import { parse } from '../../platform/errors.js';
 import {
-  adminGroups, adminTeachers, createTeacher, renameSchool, resetTeacherPassword, schoolInfo, setTeacherPremium,
+  adminGroups, adminTeachers, createTeacher, resetTeacherPassword, schoolInfo, setTeacherPremium, updateSchool,
 } from './admin.service.js';
 import { changeOwnPassword } from './service.js';
 
@@ -12,7 +12,12 @@ export const TeacherBody = z.object({
   name: z.string().trim().min(1, 'Введите имя преподавателя').max(80),
   login: z.string().trim().toLowerCase().regex(LOGIN_PATTERN, 'Логин: 3–64 символа, латиница, цифры, точка или дефис'),
 });
-const SchoolBody = z.object({ name: z.string().trim().min(1, 'Введите название школы').max(120) });
+const SchoolBody = z
+  .object({
+    name: z.string().trim().min(1, 'Введите название').max(120).optional(),
+    kind: z.enum(['SCHOOL', 'COLLEGE', 'UNIVERSITY'], { message: 'Выберите тип учреждения' }).optional(),
+  })
+  .refine((b) => b.name !== undefined || b.kind !== undefined, 'Укажите название или тип');
 const PremiumBody = z.object({
   until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((key) => {
     const d = new Date(`${key}T00:00:00Z`);
@@ -24,7 +29,7 @@ const MANAGERS = requireSchoolRole('DIRECTOR', 'DEPUTY');
 
 /**
  * Администрация школы: всё в пределах своей школы, остальным ролям маршруты закрыты.
- * Смотреть может любой сотрудник, менять преподавателей — директор и завуч, название школы — только директор
+ * Смотреть может любой сотрудник, менять преподавателей — директор и завуч, название и тип учреждения — только директор
  */
 export const adminRoutes = new Hono<AppEnv>()
   .use(requireRole('ADMIN'))
@@ -34,8 +39,7 @@ export const adminRoutes = new Hono<AppEnv>()
   })
   .get('/school', async (c) => c.json(await schoolInfo(c.get('user'))))
   .patch('/school', requireSchoolRole('DIRECTOR'), async (c) => {
-    const { name } = parse(SchoolBody, await c.req.json().catch(() => null));
-    return c.json(await renameSchool(c.get('user'), name));
+    return c.json(await updateSchool(c.get('user'), parse(SchoolBody, await c.req.json().catch(() => null))));
   })
   .get('/teachers', async (c) => c.json(await adminTeachers(c.get('user').schoolId!)))
   .post('/teachers', MANAGERS, async (c) => {

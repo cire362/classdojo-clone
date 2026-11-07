@@ -15,7 +15,7 @@ const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 /** Ждущих заявок в одной школе не больше: код мог утечь, и заявки не должны копиться без конца */
 export const MAX_PENDING_TEACHERS = 30;
 export const LOGIN_TAKEN = 'Этот логин уже занят. Выберите другой';
-const BAD_CODE = 'Код школы не подошёл. Проверьте его или попросите новый у администрации школы';
+const BAD_CODE = 'Код не подошёл. Проверьте его или попросите новый у администрации учебного заведения';
 
 export const normalizeCode = (code: string) => code.toUpperCase().replace(/[^A-Z0-9]/g, '');
 const newCode = () => Array.from({ length: CODE_LENGTH }, () => ALPHABET[randomInt(ALPHABET.length)]).join('');
@@ -46,7 +46,8 @@ async function schoolByCode(code: string) {
 }
 
 export async function previewJoin(code: string): Promise<SchoolJoinPreview> {
-  return { schoolName: (await schoolByCode(code)).name };
+  const school = await schoolByCode(code);
+  return { schoolName: school.name, kind: school.kind };
 }
 
 export async function joinSchool(input: { code: string; name: string; login: string; password: string }): Promise<SchoolJoinPreview> {
@@ -56,7 +57,7 @@ export async function joinSchool(input: { code: string; name: string; login: str
     await prisma.$transaction(async (tx) => {
       await lockSchool(tx, school.id);
       if ((await tx.teacher.count({ where: { schoolId: school.id, pendingSince: { not: null } } })) >= MAX_PENDING_TEACHERS) {
-        throw new HttpError(409, 'В школе слишком много непроверенных заявок. Попросите администрацию сначала их разобрать');
+        throw new HttpError(409, 'Слишком много непроверенных заявок. Попросите администрацию сначала их разобрать');
       }
       await tx.teacher.create({
         data: {
@@ -71,7 +72,7 @@ export async function joinSchool(input: { code: string; name: string; login: str
     if (isUniqueViolation(err)) throw new HttpError(409, LOGIN_TAKEN);
     throw err;
   }
-  return { schoolName: school.name };
+  return { schoolName: school.name, kind: school.kind };
 }
 
 export async function teacherRequests(schoolId: string): Promise<TeacherRequest[]> {

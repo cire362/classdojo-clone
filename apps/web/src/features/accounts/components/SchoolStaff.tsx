@@ -5,16 +5,20 @@ import { useLoad } from '../../../lib/hooks';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { createStaff, fetchStaff, removeStaff, resetStaffPassword, setStaffRole } from '../api';
-import { ROLE_HINTS, ROLE_NAMES } from '../roles';
+import { useTerms } from '../../auth';
+import { roleHints } from '../roles';
 import { AccountFields } from './AccountFields';
 import { IssuedCredentials } from './IssuedCredentials';
 
 const ROLES: SchoolRole[] = ['DIRECTOR', 'DEPUTY', 'STAFF'];
 const EMPTY = { name: '', login: '', role: 'DEPUTY' as SchoolRole };
 
-/** Администрация школы. Видят все её сотрудники, меняет только директор, и только других: себя изменить нельзя */
+/** Администрация учреждения. Видят все её сотрудники, меняет только руководитель, и только других: себя изменить нельзя */
 export function SchoolStaff({ isDirector }: { isDirector: boolean }) {
   const toast = useToast();
+  const terms = useTerms();
+  const ROLE_NAMES = terms.roles;
+  const ROLE_HINTS = roleHints(terms);
   const { data, error, reload, setData } = useLoad(() => fetchStaff(), []);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState(EMPTY);

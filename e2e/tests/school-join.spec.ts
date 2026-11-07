@@ -15,9 +15,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
     await loginUi(page, ADMIN.login, ADMIN.password);
     const join = page.getByRole('region', { name: 'Подключение преподавателей' });
-    await expect(join.getByRole('button', { name: /^(Новый код|Включить код школы)$/ })).toBeVisible();
-    const hadCode = await join.getByText('Код школы', { exact: true }).isVisible();
-    await join.getByRole('button', { name: hadCode ? 'Новый код' : 'Включить код школы' }).click();
+    await expect(join.getByRole('button', { name: /^(Новый код|Включить код подключения)$/ })).toBeVisible();
+    const hadCode = await join.getByText('Код подключения к школе', { exact: true }).isVisible();
+    await join.getByRole('button', { name: hadCode ? 'Новый код' : 'Включить код подключения' }).click();
     const code = (await join.locator('.font-mono.text-2xl').innerText()).trim();
     expect(code).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
     await axe(page);
@@ -27,12 +27,12 @@ for (const colorScheme of ['light', 'dark'] as const) {
     try {
       await teacher.setViewportSize({ width: 375, height: 812 });
       await teacher.goto('/login');
-      await teacher.getByRole('link', { name: 'Я преподаватель, у меня код школы' }).click();
-      await teacher.getByLabel('Код школы').fill(code.toLowerCase());
+      await teacher.getByRole('link', { name: 'Я преподаватель, у меня код подключения' }).click();
+      await teacher.getByLabel('Код подключения').fill(code.toLowerCase());
       await teacher.getByRole('button', { name: 'Дальше' }).click();
       const login = `e2e.join.${Date.now().toString(36)}`;
       const name = `E2E Заявка ${colorScheme}`;
-      await teacher.getByLabel('Как вас называть ученикам и родителям').fill(name);
+      await teacher.getByLabel('Как вас называть ученикам').fill(name);
       await teacher.getByLabel('Логин').fill(login);
       await teacher.getByLabel('Пароль', { exact: true }).fill('join-pass-123');
       await teacher.getByLabel('Пароль ещё раз').fill('join-pass-123');

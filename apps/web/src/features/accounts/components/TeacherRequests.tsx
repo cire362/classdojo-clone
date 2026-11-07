@@ -5,6 +5,7 @@ import { useLoad } from '../../../lib/hooks';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { approveTeacher, disableJoinCode, fetchTeacherRequests, rejectTeacher, renewJoinCode } from '../api';
+import { useTerms } from '../../auth';
 
 const joinLink = (code: string) => `${window.location.origin}/school-join#${code}`;
 const shown = (code: string) => `${code.slice(0, 4)}-${code.slice(4)}`;
@@ -20,6 +21,7 @@ export function TeacherRequests({ joinCode, onChange }: {
   onChange: (code: string | null, pending: number) => void;
 }) {
   const toast = useToast();
+  const t = useTerms();
   const { data, error, reload, setData } = useLoad(() => fetchTeacherRequests(), []);
   const [busy, setBusy] = useState(false);
   const [rejecting, setRejecting] = useState<TeacherRequest | null>(null);
@@ -57,13 +59,13 @@ export function TeacherRequests({ joinCode, onChange }: {
       <div className="space-y-1">
         <h2 id="join-title" className="text-lg">Подключение преподавателей</h2>
         <p className="text-sm text-ink-soft">
-          Преподаватель вводит код школы на странице входа и сам создаёт логин и пароль. Войти он сможет после вашей проверки.
+          Преподаватель вводит код подключения на странице входа и сам создаёт логин и пароль. Войти он сможет после вашей проверки.
         </p>
       </div>
       {joinCode ? (
         <div className="space-y-3">
           <p>
-            <span className="block text-sm text-ink-soft">Код школы</span>
+            <span className="block text-sm text-ink-soft">Код подключения к {t.org.one.dat}</span>
             <span className="font-mono text-2xl font-semibold tracking-[0.15em]">{shown(joinCode)}</span>
           </p>
           <p className="break-all text-sm text-ink-soft">{joinLink(joinCode)}</p>
@@ -81,7 +83,7 @@ export function TeacherRequests({ joinCode, onChange }: {
         </div>
       ) : (
         <button className="btn btn-primary" disabled={busy} onClick={renew}>
-          Включить код школы
+          Включить код подключения
         </button>
       )}
 

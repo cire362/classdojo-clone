@@ -6,6 +6,8 @@ import { useToast } from '../../../ui/Toast';
 import { Modal, PageTitle } from '../../../ui';
 import { useGroup } from '../../groups';
 import { createReason, deleteReason, saveReasonOrder, updateReason } from '../api';
+import { cap } from '@heroes/shared/terms';
+import { useTerms } from '../../auth';
 
 const EMOJI = ['💪', '💡', '🤝', '🧩', '✨', '⭐', '🏆', '📚', '🎯', '🚀', '🎨', '🙋', '⏰', '💤', '📕', '📢', '📱', '🙊'];
 
@@ -141,6 +143,7 @@ function ReasonRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const schoolLabel = cap(useTerms().org.one.nom);
   const controls = useDragControls();
   return (
     <Reorder.Item
@@ -164,7 +167,7 @@ function ReasonRow({
         {r.emoji}
       </span>
       <span className="min-w-0 flex-1 truncate font-medium">{r.name}</span>
-      {r.school && <span className="chip bg-surface-2 text-ink-soft" title="Общая причина школы: её меняет администрация">Школа</span>}
+      {r.school && <span className="chip bg-surface-2 text-ink-soft" title="Общая причина: её меняет администрация">{schoolLabel}</span>}
       <span className={`chip ${r.value > 0 ? 'bg-plus-bg text-plus' : 'bg-minus-bg text-minus'}`}>
         {r.value > 0 ? `+${r.value}` : `−${Math.abs(r.value)}`}
       </span>
