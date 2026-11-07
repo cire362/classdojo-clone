@@ -26,7 +26,7 @@ test('лента класса и переписка родителя с преп
       await expect(parent.getByRole('button', { name: /Лента класса.*новых/ })).toHaveCount(0);
 
       await parent.getByRole('button', { name: /Сообщения/ }).click();
-      await parent.fill('#message-text', 'Ева будет на уроке, спасибо!');
+      await parent.getByLabel('Сообщение', { exact: true }).fill('Ева будет на уроке, спасибо!');
       await parent.getByRole('button', { name: 'Отправить' }).click();
       await expect(parent.getByText('Ева будет на уроке, спасибо!')).toBeVisible();
     });
@@ -37,7 +37,7 @@ test('лента класса и переписка родителя с преп
       await page.getByRole('link', { name: /Сообщения/ }).click();
       await page.getByRole('link', { name: /Родители: Ева Лебедева/ }).click();
       await expect(page.getByText('Ева будет на уроке, спасибо!')).toBeVisible();
-      await page.fill('#message-text', 'Ждём!');
+      await page.getByLabel('Сообщение', { exact: true }).fill('Ждём!');
       await page.getByRole('button', { name: 'Отправить' }).click();
       await expect(page.getByText('Ждём!')).toBeVisible();
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { ClockIcon, PaperPlaneRightIcon } from '@phosphor-icons/react';
 import type { ChatMessage } from '../../../lib/api';
 import { formatDateTime } from '../../../lib/hooks';
@@ -23,6 +23,8 @@ export function Thread({ messages, send, cancel, emptyText }: {
   const [later, setLater] = useState(false);
   const [sendAt, setSendAt] = useState('');
   const box = useRef<HTMLOListElement>(null);
+  // Своё поле у каждой переписки: на странице их может быть несколько
+  const fieldId = useId();
   useEffect(() => setList(messages), [messages]);
   // Прокручиваем к последнему сообщению только сам список, не страницу
   useEffect(() => {
@@ -83,11 +85,11 @@ export function Thread({ messages, send, cancel, emptyText }: {
       </ol>
       <form onSubmit={submit} className="space-y-2 border-t border-line p-3">
         <div className="flex items-end gap-2">
-          <label className="sr-only" htmlFor="message-text">
+          <label className="sr-only" htmlFor={fieldId}>
             Сообщение
           </label>
           <textarea
-            id="message-text"
+            id={fieldId}
             className="input min-h-12 flex-1 resize-y"
             rows={1}
             maxLength={2000}

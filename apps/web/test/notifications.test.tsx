@@ -84,22 +84,22 @@ function Counters() {
 it('поздний ответ старого запроса не возвращает уже прочитанные счётчики', async () => {
   let resolveOld!: (value: Notifications) => void;
   vi.mocked(api).mockImplementationOnce(() => new Promise((resolve) => { resolveOld = resolve; }))
-    .mockResolvedValue({ messages: 0, feed: 0, rewards: 0, works: 0, assignments: 0, school: 0 });
+    .mockResolvedValue({ messages: 0, feed: 0, rewards: 0, works: 0, assignments: 0, school: 0, schoolInbox: 0 });
   const { user } = renderApp(<NotificationsProvider><Counters /></NotificationsProvider>);
   await user.click(screen.getByRole('button'));
-  await act(async () => resolveOld({ messages: 0, feed: 4, rewards: 2, works: 0, assignments: 0, school: 0 }));
+  await act(async () => resolveOld({ messages: 0, feed: 4, rewards: 2, works: 0, assignments: 0, school: 0, schoolInbox: 0 }));
   expect(screen.getByRole('button')).toHaveTextContent('0');
 });
 
 it('смена входа не показывает счётчики прежнего ученика', async () => {
   let resolveOld!: (value: Notifications) => void;
   vi.mocked(api).mockImplementationOnce(() => new Promise((resolve) => { resolveOld = resolve; }))
-    .mockResolvedValue({ messages: 0, feed: 1, rewards: 0, works: 0, assignments: 0, school: 0 });
+    .mockResolvedValue({ messages: 0, feed: 1, rewards: 0, works: 0, assignments: 0, school: 0, schoolInbox: 0 });
   const view = renderApp(<NotificationsProvider><Counters /></NotificationsProvider>);
   auth.user = { login: 'petya.s', role: 'STUDENT', name: 'Петя' };
   view.rerender(<NotificationsProvider><Counters /></NotificationsProvider>);
   await waitFor(() => expect(screen.getByRole('button')).toHaveTextContent('1'));
-  await act(async () => resolveOld({ messages: 0, feed: 7, rewards: 5, works: 0, assignments: 0, school: 0 }));
+  await act(async () => resolveOld({ messages: 0, feed: 7, rewards: 5, works: 0, assignments: 0, school: 0, schoolInbox: 0 }));
   expect(screen.getByRole('button')).toHaveTextContent('1');
 });
 

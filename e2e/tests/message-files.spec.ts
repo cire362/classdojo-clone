@@ -28,7 +28,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await home.getByRole('button', { name: /Сообщения/ }).click();
       await home.locator('input[type=file]').setInputFiles([PHOTO, PDF]);
       await expect(home.getByRole('list', { name: 'Выбранные файлы' }).getByRole('listitem')).toHaveCount(2);
-      await home.fill('#message-text', 'Справка и фото с олимпиады');
+      await home.getByLabel('Сообщение', { exact: true }).fill('Справка и фото с олимпиады');
       await axe(home);
       await home.getByRole('button', { name: 'Отправить', exact: true }).click();
       const mine = home.getByRole('listitem').filter({ hasText: 'Справка и фото с олимпиады' });

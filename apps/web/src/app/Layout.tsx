@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ChunkErrorBoundary } from '../ui/ChunkErrorBoundary';
-import { BellIcon, ChatsCircleIcon, GearSixIcon, GiftIcon, MegaphoneIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
+import { BellIcon, ChatsCircleIcon, EnvelopeSimpleIcon, GearSixIcon, GiftIcon, MegaphoneIcon, SignOutIcon, StarIcon } from '@phosphor-icons/react';
 import { useAuth } from '../features/auth';
 import { useNews } from '../features/news';
 import { CountBadge, useNotifications } from '../features/notifications';
@@ -111,6 +111,17 @@ export function AppLayout() {
                 <MegaphoneIcon size={22} aria-hidden />
                 <span className="sr-only">Новости школы</span>
                 <CountBadge count={counts.school} label="новых записей" />
+              </NavLink>
+            )}
+            {user?.role === 'PARENT' && (
+              <NavLink
+                to="/school-messages"
+                className={({ isActive }) => `icon-btn relative w-auto gap-1 px-2.5 ${isActive ? 'bg-surface-2 text-ink' : ''}`}
+                title="Письмо в школу"
+              >
+                <EnvelopeSimpleIcon size={22} aria-hidden />
+                <span className="sr-only">Письмо в школу</span>
+                <CountBadge count={counts.schoolInbox} label="новых ответов" />
               </NavLink>
             )}
             {user?.role === 'TEACHER' && (

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useLoad } from '../../../lib/hooks';
+import { useNotifications } from '../../notifications';
 import { AdminSchoolFeed } from '../../schoolfeed';
+import { SchoolInbox } from '../../schoolinbox';
 import { ErrorBox, Skeleton } from '../../../ui';
 import { fetchSchool } from '../api';
 import { ROLE_NAMES, canManageTeachers } from '../roles';
@@ -11,14 +13,25 @@ import { SchoolTeachers } from './SchoolTeachers';
 import { SchoolTitle } from './SchoolTitle';
 import { TeacherRequests } from './TeacherRequests';
 
-type Tab = 'teachers' | 'groups' | 'feed' | 'staff' | 'password';
+type Tab = 'teachers' | 'inbox' | 'groups' | 'feed' | 'staff' | 'password';
 const TABS: [Tab, string][] = [
   ['teachers', 'Преподаватели'],
+  ['inbox', 'Ящик школы'],
   ['groups', 'Группы школы'],
   ['feed', 'Лента школы'],
   ['staff', 'Администрация'],
   ['password', 'Мой пароль'],
 ];
+
+function TabBadge({ count, label }: { count: number; label: string }) {
+  if (!count) return null;
+  return (
+    <span className="chip ml-2 min-w-6 justify-center bg-accent px-1.5 text-xs text-on-accent">
+      {count}
+      <span className="sr-only"> {label}</span>
+    </span>
+  );
+}
 
 /**
  * Администрация школы: преподаватели, группы и состав администрации своей школы. Других школ она не видит.
@@ -27,6 +40,7 @@ const TABS: [Tab, string][] = [
 export function AdminPanel() {
   const [tab, setTab] = useState<Tab>('teachers');
   const { data: school, setData, error, reload } = useLoad(() => fetchSchool(), []);
+  const { counts } = useNotifications();
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!school) return <Skeleton className="h-64" />;
   const manager = canManageTeachers(school.role);
@@ -45,12 +59,8 @@ export function AdminPanel() {
             onClick={() => setTab(key)}
           >
             {label}
-            {key === 'teachers' && school.pendingTeachers > 0 && (
-              <span className="chip ml-2 min-w-6 justify-center bg-accent px-1.5 text-xs text-on-accent">
-                {school.pendingTeachers}
-                <span className="sr-only"> ждут проверки</span>
-              </span>
-            )}
+            {key === 'teachers' && <TabBadge count={school.pendingTeachers} label="ждут проверки" />}
+            {key === 'inbox' && <TabBadge count={counts.schoolInbox} label="ждут ответа" />}
           </button>
         ))}
       </nav>
@@ -65,6 +75,7 @@ export function AdminPanel() {
           <SchoolTeachers key={school.pendingTeachers} canManage={manager} />
         </div>
       )}
+      {tab === 'inbox' && <SchoolInbox />}
       {tab === 'groups' && <SchoolGroups canExport={manager} />}
       {tab === 'feed' && <AdminSchoolFeed canWrite={manager} />}
       {tab === 'staff' && <SchoolStaff isDirector={school.role === 'DIRECTOR'} />}

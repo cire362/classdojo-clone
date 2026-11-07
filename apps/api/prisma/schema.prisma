@@ -61,6 +61,7 @@ model Account {
   uploadedFiles StoredFile[]
   schoolPosts   SchoolPost[] @relation("SchoolPostAuthor")
   schoolFeedReads SchoolFeedRead[]
+  schoolMessages  SchoolMessage[] @relation("SchoolMessageSender")
   reports       ContentReport[]
   moderation    ModerationAction[]
   decidedWorks  StudentWork[] @relation("WorkDecidedBy")
@@ -91,6 +92,43 @@ model School {
   teachers  Teacher[]
   posts     SchoolPost[]
   feedReads SchoolFeedRead[]
+  threads   SchoolThread[]
+}
+
+/// Переписка семьи со школой: один родитель и одна школа. Отвечает любой сотрудник администрации
+model SchoolThread {
+  id            String    @id @default(cuid())
+  schoolId      String
+  school        School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  parentId      String
+  parent        Parent    @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  /// Родитель написал, а школа ещё не ответила и не отметила вопрос решённым
+  waitingSince  DateTime?
+  /// Время последнего сообщения: по нему сортируется ящик
+  lastMessageAt DateTime  @default(now())
+  /// Когда родитель последний раз открывал переписку
+  parentReadAt  DateTime?
+  messages      SchoolMessage[]
+
+  @@unique([schoolId, parentId])
+  @@index([schoolId, lastMessageAt])
+  @@index([parentId])
+}
+
+model SchoolMessage {
+  id         String       @id @default(cuid())
+  threadId   String
+  thread     SchoolThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  senderId   String?
+  sender     Account?     @relation("SchoolMessageSender", fields: [senderId], references: [id], onDelete: SetNull)
+  /// Подпись сотрудника школы, сохранённая при отправке; у родителя пусто
+  authorName String       @default("")
+  fromSchool Boolean
+  text       String
+  createdAt  DateTime     @default(now())
+  files      StoredFile[]
+
+  @@index([threadId, createdAt])
 }
 
 /// Запись ленты школы от директора или завуча. Видят администрация, преподаватели школы и родители её учеников
@@ -263,6 +301,7 @@ model Parent {
   children    ParentStudent[]
   messages    Message[]
   threadReads ThreadRead[]
+  schoolThreads SchoolThread[]
 }
 
 /// Приглашение родителя: одноразовое, в базе только хеш кода
@@ -353,6 +392,9 @@ model StoredFile {
   /// Файл записи ленты школы: видят все, кто видит саму ленту
   schoolPostId String?
   schoolPost   SchoolPost? @relation(fields: [schoolPostId], references: [id], onDelete: Cascade)
+  /// Вложение переписки со школой: видят этот родитель и администрация школы
+  schoolMessageId String?
+  schoolMessage   SchoolMessage? @relation(fields: [schoolMessageId], references: [id], onDelete: Cascade)
 
   @@index([postId])
   @@index([messageId])
@@ -360,6 +402,7 @@ model StoredFile {
   @@index([workId])
   @@index([assignmentId])
   @@index([schoolPostId])
+  @@index([schoolMessageId])
   @@index([groupId])
   @@index([studentId])
   @@index([uploadedById])

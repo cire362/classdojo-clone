@@ -92,6 +92,32 @@ export async function addFileRows(
   return rows;
 }
 
+/**
+ * Файлы школы — ленты и переписки с семьями — не принадлежат группе, поэтому у них своя квота того же размера.
+ * Школа уже заблокирована вызывающим, как группа в addFileRows.
+ */
+export async function addSchoolFileRows(
+  tx: Prisma.TransactionClient,
+  schoolId: string,
+  place: { schoolPostId: string } | { schoolMessageId: string },
+  uploaderId: string,
+  uploads: Upload[],
+) {
+  const { _sum } = await tx.storedFile.aggregate({
+    where: { OR: [{ schoolPost: { schoolId } }, { schoolMessage: { thread: { schoolId } } }] },
+    _sum: { size: true },
+  });
+  const adding = uploads.reduce((sum, u) => sum + u.bytes.length, 0);
+  if ((_sum.size ?? 0) + adding > env.groupFilesQuota) throw new HttpError(409, 'Место для файлов школы закончилось');
+  const rows = [];
+  for (const [position, u] of uploads.entries()) {
+    rows.push(await tx.storedFile.create({
+      data: { ...place, position, uploadedById: uploaderId, name: u.name, mime: u.mime, size: u.bytes.length },
+    }));
+  }
+  return rows;
+}
+
 /** Байты после транзакции. При сбое вызывающий удаляет строки, а очередь сотрёт уже записанное */
 export async function writeUploads(rows: { id: string }[], uploads: Upload[]) {
   for (const [i, { id }] of rows.entries()) {
@@ -123,6 +149,7 @@ export async function findFile(id: string) {
       post: { select: { hiddenAt: true } },
       work: { select: { status: true } },
       schoolPost: { select: { schoolId: true } },
+      schoolMessage: { select: { thread: { select: { schoolId: true, parentId: true } } } },
     },
   });
   if (!file) throw notFound('Файл не найден');

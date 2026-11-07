@@ -63,7 +63,8 @@ it('возврат с комментарием: новое решение счи
   const masha = await t.studentCookie(0);
   const [{ id }] = (await submit(masha, { title: 'Рассказ', text: 'Однажды...' })).body;
   await decide(t, id, 'RETURNED', 'Допиши концовку');
-  expect((await call('GET', '/api/notifications', { cookie: masha })).body).toEqual({ messages: 0, feed: 0, rewards: 0, works: 1, assignments: 0, school: 0 });
+  const decided = { messages: 0, feed: 0, rewards: 0, works: 1, assignments: 0, school: 0, schoolInbox: 0 };
+  expect((await call('GET', '/api/notifications', { cookie: masha })).body).toEqual(decided);
   expect((await call('GET', '/api/student/works', { cookie: masha })).body).toMatchObject([
     { status: 'RETURNED', comment: 'Допиши концовку', unseen: true },
   ]);

@@ -2,10 +2,9 @@ import type { AdminSchoolPost, SchoolPost } from '@heroes/shared/api';
 import type { Prisma } from '../../generated/prisma/client';
 import type { AuthUser } from '../../platform/auth.js';
 import { prisma } from '../../platform/db.js';
-import { env } from '../../platform/env.js';
 import { HttpError, notFound } from '../../platform/errors.js';
 import { lockSchool, schoolsOf } from '../access/index.js';
-import { fileView, prepareUpload, purgeDeletedFiles, writeUploads, type Upload } from '../files/index.js';
+import { addSchoolFileRows, fileView, prepareUpload, purgeDeletedFiles, writeUploads, type Upload } from '../files/index.js';
 
 /**
  * Лента школы: записи директора и завуча для преподавателей школы и семей её учеников. Реакций и комментариев
@@ -100,19 +99,10 @@ export async function createSchoolPost(user: AuthUser, input: { text: string; im
   for (const file of files) uploads.push(await prepareUpload(file));
   const { post, rows } = await prisma.$transaction(async (tx) => {
     await lockSchool(tx, schoolId);
-    const { _sum } = await tx.storedFile.aggregate({ where: { schoolPost: { schoolId } }, _sum: { size: true } });
-    const adding = uploads.reduce((sum, u) => sum + u.bytes.length, 0);
-    if ((_sum.size ?? 0) + adding > env.groupFilesQuota) throw new HttpError(409, 'Место для файлов ленты школы закончилось');
     const post = await tx.schoolPost.create({
       data: { schoolId, authorId: user.accountId, authorName: user.name, text: input.text, important: input.important },
     });
-    const rows = [];
-    for (const [position, u] of uploads.entries()) {
-      rows.push(await tx.storedFile.create({
-        data: { schoolPostId: post.id, position, uploadedById: user.accountId, name: u.name, mime: u.mime, size: u.bytes.length },
-      }));
-    }
-    return { post, rows };
+    return { post, rows: await addSchoolFileRows(tx, schoolId, { schoolPostId: post.id }, user.accountId, uploads) };
   });
   try {
     await writeUploads(rows, uploads);

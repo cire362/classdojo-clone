@@ -35,7 +35,7 @@ it('единая коллекция: своя выданная награда и
   expect(result.body.items.find((n: { kind: string }) => n.kind === 'feed')).toMatchObject({ text: 'Завтра экскурсия', unread: true, href: '/feed' });
   expect(result.body.unreadCount).toBe(2);
   expect((await inbox(cookie)).body.unreadCount).toBe(2);
-  expect(await counts(cookie)).toEqual({ messages: 0, feed: 1, rewards: 1, works: 0, assignments: 0, school: 0 });
+  expect(await counts(cookie)).toEqual({ messages: 0, feed: 1, rewards: 1, works: 0, assignments: 0, school: 0, schoolInbox: 0 });
   expect((await call('POST', `/api/teacher/reward-requests/${approved.id}/approve`, { cookie: t.cookie })).status).toBe(404);
   expect((await inbox(cookie)).body.items).toHaveLength(2);
 });
@@ -53,7 +53,7 @@ it('прочтение всей коллекции сохраняется меж
   await read(cookie, current);
   await read(cookie, old);
   const anotherSession = await t.studentCookie(0);
-  expect(await counts(anotherSession)).toEqual({ messages: 0, feed: 0, rewards: 0, works: 0, assignments: 0, school: 0 });
+  expect(await counts(anotherSession)).toEqual({ messages: 0, feed: 0, rewards: 0, works: 0, assignments: 0, school: 0, schoolInbox: 0 });
   expect((await inbox(anotherSession)).body.items.every((n: { unread: boolean }) => !n.unread)).toBe(true);
   expect((await prisma.feedRead.findUniqueOrThrow({ where: { accountId_groupId: { accountId: (await prisma.student.findUniqueOrThrow({ where: { id: t.students[0].id } })).accountId, groupId: t.group.id } } })).readAt.toISOString()).toBe(current.through);
 });
@@ -67,7 +67,7 @@ it('события после снимка не теряются при «про
   await post(t, 'После просмотра');
   await reward(t);
   expect((await read(cookie, snapshot)).status).toBe(200);
-  expect(await counts(cookie)).toEqual({ messages: 0, feed: 1, rewards: 1, works: 0, assignments: 0, school: 0 });
+  expect(await counts(cookie)).toEqual({ messages: 0, feed: 1, rewards: 1, works: 0, assignments: 0, school: 0, schoolInbox: 0 });
   expect((await inbox(cookie)).body.items.filter((n: { unread: boolean }) => n.unread)).toHaveLength(2);
 });
 
@@ -77,10 +77,10 @@ it('просмотр магазина читает награды; просмо�
   await reward(t);
   await post(t);
   await call('GET', '/api/student/feed', { cookie });
-  expect(await counts(cookie)).toEqual({ messages: 0, feed: 0, rewards: 1, works: 0, assignments: 0, school: 0 });
+  expect(await counts(cookie)).toEqual({ messages: 0, feed: 0, rewards: 1, works: 0, assignments: 0, school: 0, schoolInbox: 0 });
   await post(t, 'Ещё новость');
   await call('GET', '/api/student/shop', { cookie });
-  expect(await counts(cookie)).toEqual({ messages: 0, feed: 1, rewards: 0, works: 0, assignments: 0, school: 0 });
+  expect(await counts(cookie)).toEqual({ messages: 0, feed: 1, rewards: 0, works: 0, assignments: 0, school: 0, schoolInbox: 0 });
 });
 
 it('перевод меняет объявления, сохраняет личные награды и не даёт старому снимку прочитать новую группу', async () => {

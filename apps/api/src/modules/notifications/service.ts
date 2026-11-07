@@ -8,6 +8,7 @@ import { pendingRequestsOf, unreadRewards } from '../rewards/index.js';
 import { unseenWorks } from '../works/index.js';
 import { unseenAssignments } from '../assignments/index.js';
 import { unreadSchoolPosts } from '../schoolfeed/index.js';
+import { unreadSchoolReplies, waitingThreads } from '../schoolinbox/index.js';
 
 /** Значки в шапке: сообщения, лента, выданные награды и решения по работам ученика, ожидающие запросы преподавателя, лента школы. */
 export async function notifications(user: AuthUser): Promise<Notifications> {
@@ -26,7 +27,7 @@ export async function notifications(user: AuthUser): Promise<Notifications> {
       prisma.rewardRequest.count({ where: pendingRequestsOf(user.teacherId) }),
       unreadSchoolPosts(user),
     ]);
-    return { messages: quiet ? 0 : unread, feed: 0, rewards, works: 0, assignments: 0, school };
+    return { messages: quiet ? 0 : unread, feed: 0, rewards, works: 0, assignments: 0, school, schoolInbox: 0 };
   }
   if (user.studentId) {
     const s = await prisma.student.findUniqueOrThrow({ where: { id: user.studentId }, select: { groupId: true, rewardsReadAt: true } });
@@ -36,19 +37,23 @@ export async function notifications(user: AuthUser): Promise<Notifications> {
       unseenWorks(user.studentId),
       unseenAssignments(user.studentId),
     ]);
-    return { messages: 0, feed, rewards, works, assignments, school: 0 };
+    return { messages: 0, feed, rewards, works, assignments, school: 0, schoolInbox: 0 };
   }
   if (user.parentId) {
     const links = await prisma.parentStudent.findMany({
       where: { parentId: user.parentId },
       select: { studentId: true, student: { select: { groupId: true } } },
     });
-    const [messages, feed, school] = await Promise.all([
+    const [messages, feed, school, schoolInbox] = await Promise.all([
       unreadMessages(user.accountId, links.map((l) => ({ studentId: l.studentId, parentId: user.parentId! }))),
       unreadPosts(user.accountId, [...new Set(links.map((l) => l.student.groupId))]),
       unreadSchoolPosts(user),
+      unreadSchoolReplies(user),
     ]);
-    return { messages, feed, rewards: 0, works: 0, assignments: 0, school };
+    return { messages, feed, rewards: 0, works: 0, assignments: 0, school, schoolInbox };
   }
-  return { messages: 0, feed: 0, rewards: 0, works: 0, assignments: 0, school: 0 };
+  const none = { messages: 0, feed: 0, rewards: 0, works: 0, assignments: 0, school: 0 };
+  // Администрации школы — переписки, ждущие ответа
+  if (user.role === 'ADMIN') return { ...none, schoolInbox: await waitingThreads(user.schoolId!) };
+  return { ...none, schoolInbox: 0 };
 }

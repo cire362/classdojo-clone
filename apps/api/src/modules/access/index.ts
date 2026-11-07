@@ -10,6 +10,7 @@ export {
   lockStudent,
   parentChild,
   schoolReader,
+  schoolThreadReader,
   schoolsOf,
   studentReader,
   teacherGroup,

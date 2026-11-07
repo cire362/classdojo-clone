@@ -12,6 +12,8 @@ export interface Notifications {
   assignments: number;
   /** Новые записи ленты школы: у преподавателя и родителя */
   school: number;
+  /** Ящик школы: у родителя — новые ответы школы, у администрации — переписки, ждущие ответа */
+  schoolInbox: number;
 }
 
 export interface StudentNotification {

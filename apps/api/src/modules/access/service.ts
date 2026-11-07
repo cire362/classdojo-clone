@@ -73,6 +73,16 @@ export async function schoolReader(user: AuthUser, schoolId: string) {
   if (!(await schoolsOf(user)).includes(schoolId)) throw notFound('Не найдено');
 }
 
+/**
+ * Переписку семьи со школой видят администрация этой школы и сам родитель, пока его дети в ней учатся.
+ * Остальным она как несуществующая
+ */
+export async function schoolThreadReader(user: AuthUser, thread: { schoolId: string; parentId: string }) {
+  if (user.role === 'ADMIN' && user.schoolId === thread.schoolId) return;
+  if (user.parentId === thread.parentId && (await schoolsOf(user)).includes(thread.schoolId)) return;
+  throw notFound('Не найдено');
+}
+
 /** Преподаватель группы, её ученик или родитель её ученика, иначе 404 */
 export async function groupReader(user: AuthUser, groupId: string) {
   if (user.teacherId) return void (await teacherGroup(user, groupId));

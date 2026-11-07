@@ -26,6 +26,7 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   invite: remember(() => import('../pages/Invite')),
   schoolJoin: remember(() => import('../pages/SchoolJoin')),
   schoolNews: remember(() => import('../pages/SchoolNews')),
+  schoolMessages: remember(() => import('../pages/SchoolMessages')),
   groups: remember(() => import('../pages/teacher/Groups')),
   groupLayout: remember(() => import('../pages/teacher/GroupLayout')),
   lesson: remember(() => import('../pages/teacher/Lesson')),
@@ -77,6 +78,7 @@ export const JoinClassPage = page(loaders.codeLogin, 'JoinClassPage');
 export const InvitePage = page(loaders.invite, 'InvitePage');
 export const SchoolJoinPage = page(loaders.schoolJoin, 'SchoolJoinPage');
 export const SchoolNewsPage = page(loaders.schoolNews, 'SchoolNewsPage');
+export const SchoolMessagesPage = page(loaders.schoolMessages, 'SchoolMessagesPage');
 export const GroupsPage = page(loaders.groups, 'GroupsPage');
 export const GroupLayout = page(loaders.groupLayout, 'GroupLayout');
 export const LessonPage = page(loaders.lesson, 'LessonPage');
@@ -117,7 +119,7 @@ const byRole = {
     loaders.cabinet, loaders.myHero, loaders.studentFeed, loaders.studentCalendar,
     loaders.shop, loaders.notifications, loaders.studentWorks, loaders.studentAssignments,
   ],
-  PARENT: [loaders.parentHome, loaders.schoolNews],
+  PARENT: [loaders.parentHome, loaders.schoolNews, loaders.schoolMessages],
 };
 
 const prefetched = new Set<string>();

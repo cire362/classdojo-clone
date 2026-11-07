@@ -28,7 +28,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
       await page.goto(`/messages/${g.credentials[0].id}/${parent.parentId}`);
       await expect(page.getByText('В субботу субботник')).toBeVisible();
-      await page.fill('#message-text', 'Завтра контрольная');
+      await page.getByLabel('Сообщение', { exact: true }).fill('Завтра контрольная');
       await page.getByLabel('Отправить позже').check();
       const tomorrow = new Date(Date.now() + 24 * 3600 * 1000);
       const stamp = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}T09:30`;

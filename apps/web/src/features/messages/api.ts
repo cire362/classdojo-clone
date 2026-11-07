@@ -4,7 +4,7 @@ import { api, type ChatMessage, type ParentNotice, type QuietHours, type Teacher
 export type Outgoing = { text: string; sendAt?: string; files: File[] };
 
 /** Без файлов сообщение уходит JSON, с файлами — одним запросом multipart: сервер сохранит его целиком или никак */
-function messageBody({ text, sendAt, files }: Outgoing) {
+export function messageBody({ text, sendAt, files }: Outgoing) {
   if (!files.length) return { text, sendAt };
   const data = new FormData();
   data.append('text', text);
