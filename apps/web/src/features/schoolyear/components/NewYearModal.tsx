@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { SchoolYearPreview } from '../../../lib/api';
 import { longDate } from '../../../lib/files';
 import { pluralize, useLoad } from '../../../lib/hooks';
@@ -15,18 +15,17 @@ export function NewYearModal({ onClose, onDone }: { onClose: () => void; onDone:
   const t = useTerms();
   const toast = useToast();
   const { data, error, reload } = useLoad(() => fetchSchoolYear(), []);
-  const [graduate, setGraduate] = useState<Set<string>>(() => new Set());
+  // Пока руководитель ничего не менял, выпускные — те, что предложил сервер
+  const [picked, setPicked] = useState<Set<string> | null>(null);
   const [rename, setRename] = useState(true);
   const [confirmAgain, setConfirmAgain] = useState(false);
   const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    if (data) setGraduate(new Set(data.groups.filter((g) => g.graduate).map((g) => g.id)));
-  }, [data]);
+  const graduate = picked ?? new Set(data?.groups.filter((g) => g.graduate).map((g) => g.id) ?? []);
   const word = t.course.toLocaleLowerCase('ru');
 
   function toggle(id: string) {
-    setGraduate((prev) => {
-      const next = new Set(prev);
+    setPicked(() => {
+      const next = new Set(graduate);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
