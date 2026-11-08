@@ -19,6 +19,7 @@ import { adminSchoolPointsRoutes } from './modules/schoolpoints/index.js';
 import { adminReasonRoutes } from './modules/reasons/index.js';
 import { adminDepartmentRoutes } from './modules/departments/index.js';
 import { adminSubjectRoutes } from './modules/subjects/index.js';
+import { adminDashboardRoutes } from './modules/dashboard/index.js';
 import { teacherRoutes } from './routes/teacher.js';
 
 export const CLIENT_HEADER = 'x-heroes-client';
@@ -57,6 +58,7 @@ export function createApp() {
   app.route('/api/admin', adminReasonRoutes);
   app.route('/api/admin', adminDepartmentRoutes);
   app.route('/api/admin', adminSubjectRoutes);
+  app.route('/api/admin', adminDashboardRoutes);
 
   app.use('/api/teacher/*', requireAuth);
   app.route('/api/teacher', teacherRoutes);

@@ -17,10 +17,12 @@ import { SchoolTeachers } from './SchoolTeachers';
 import { SchoolTitle } from './SchoolTitle';
 import { TeacherRequests } from './TeacherRequests';
 import { AdminSubjects } from '../../subjects';
+import { LeaderDashboard } from '../../dashboard';
 
-type Tab = 'teachers' | 'inbox' | 'groups' | 'departments' | 'subjects' | 'points' | 'feed' | 'staff' | 'password';
+type Tab = 'teachers' | 'overview' | 'inbox' | 'groups' | 'departments' | 'subjects' | 'points' | 'feed' | 'staff' | 'password';
 const tabs = (t: Terms): [Tab, string][] => [
   ['teachers', 'Преподаватели'],
+  ['overview', 'Обзор'],
   ['inbox', `Ящик ${t.org.one.gen}`],
   ['groups', `${cap(t.group.many.nom)} ${t.org.one.gen}`],
   ...(t.kind === 'SCHOOL' ? [] : [['departments', cap(t.department.many.nom)] as [Tab, string]]),
@@ -101,6 +103,7 @@ export function AdminPanel() {
       {tab === 'groups' && <SchoolGroups canExport={groupEditor} departmentId={school.department?.id ?? null} />}
       {tab === 'departments' && <Departments canEdit={manager} />}
       {tab === 'subjects' && <AdminSubjects canEdit={manager} />}
+      {tab === 'overview' && <LeaderDashboard />}
       {tab === 'points' && <SchoolPointsPanel canEdit={manager} />}
       {tab === 'feed' && <AdminSchoolFeed canWrite={manager} />}
       {tab === 'staff' && <SchoolStaff isDirector={school.role === 'DIRECTOR'} />}

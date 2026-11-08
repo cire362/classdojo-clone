@@ -13,3 +13,4 @@ export type * from './works.js';
 export type * from './assignments.js';
 export type * from './school.js';
 export type * from './streams.js';
+export type * from './dashboard.js';
