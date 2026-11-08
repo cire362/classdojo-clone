@@ -21,7 +21,7 @@ routes/          сборки ролей: teacher.ts, student.ts, parent.ts
 app.ts           сборка приложения
 ```
 
-Домены: `access`, `accounts`, `codes`, `groups`, `students`, `parents`, `reasons`, `points`, `attendance`, `rewards`, `teams`, `goals`, `plan`, `calendar`, `home`, `files`, `exports`, `feed`, `moderation`, `messages`, `notifications`, `hero`, `badges`, `portfolio`, `works`, `assignments`, `profile`, `reports`, `schoolfeed`, `schoolinbox`, `schoolpoints`, `departments`, `subjects`, `streams`, `dashboard`, `schoolyear`.
+Домены: `access`, `accounts`, `codes`, `groups`, `students`, `parents`, `reasons`, `points`, `attendance`, `rewards`, `teams`, `goals`, `plan`, `calendar`, `home`, `files`, `exports`, `feed`, `moderation`, `messages`, `notifications`, `hero`, `badges`, `portfolio`, `works`, `assignments`, `profile`, `reports`, `schoolfeed`, `schoolinbox`, `schoolpoints`, `departments`, `subjects`, `streams`, `dashboard`, `schoolyear`, `schoolimport`.
 
 - `routes/*.ts` только собирают кабинет роли: роль проверяется один раз, модули подключаются через `.route()`. Запросов и правил там нет.
 - `routes` не обращается к Prisma напрямую: запросы и правила живут в `service`.

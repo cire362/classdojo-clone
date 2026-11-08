@@ -15,3 +15,4 @@ export type * from './school.js';
 export type * from './streams.js';
 export type * from './dashboard.js';
 export type * from './schoolyear.js';
+export type * from './schoolimport.js';

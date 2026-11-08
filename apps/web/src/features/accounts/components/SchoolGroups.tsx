@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarPlusIcon, DownloadSimpleIcon, PencilSimpleIcon, UsersThreeIcon } from '@phosphor-icons/react';
+import { CalendarPlusIcon, DownloadSimpleIcon, PencilSimpleIcon, UploadSimpleIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import type { AdminGroup } from '../../../lib/api';
 import { exportUrl, longDate } from '../../../lib/files';
 import { pluralize, useLoad } from '../../../lib/hooks';
@@ -9,6 +9,7 @@ import { cap } from '@heroes/shared/terms';
 import { useTerms } from '../../auth';
 import { departmentOptions, fetchDepartments } from '../../departments';
 import { NewYearModal } from '../../schoolyear';
+import { ImportSchoolModal } from '../../schoolimport';
 import { GroupMetaModal } from './GroupMetaModal';
 
 const searchText = (g: AdminGroup) =>
@@ -23,7 +24,7 @@ const searchText = (g: AdminGroup) =>
 export function SchoolGroups({ canExport, departmentId, canStartYear = false }: {
   canExport: boolean;
   departmentId: string | null;
-  /** Руководитель и заместитель всего учреждения переводят группы на новый учебный год */
+  /** Руководитель и заместитель всего учреждения импортируют учреждение и переводят группы на новый учебный год */
   canStartYear?: boolean;
 }) {
   const { data, error, reload, setData } = useLoad(() => fetchAdminGroups(), []);
@@ -33,6 +34,7 @@ export function SchoolGroups({ canExport, departmentId, canStartYear = false }: 
   const [filter, setFilter] = useState('');
   const [editing, setEditing] = useState<AdminGroup | null>(null);
   const [newYear, setNewYear] = useState(false);
+  const [importing, setImporting] = useState(false);
   const search = query.trim().toLocaleLowerCase('ru');
   const courseWord = t.course.toLocaleLowerCase('ru');
   const all = departmentOptions(departments.data ?? []);
@@ -49,11 +51,25 @@ export function SchoolGroups({ canExport, departmentId, canStartYear = false }: 
           {cap(t.group.many.nom)} {t.org.one.gen} {data && <span className="text-ink-soft">({data.length})</span>}
         </h2>
         {canStartYear && (
-          <button className="btn btn-secondary" onClick={() => setNewYear(true)}>
-            <CalendarPlusIcon size={20} /> Новый учебный год
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button className="btn btn-secondary" onClick={() => setImporting(true)}>
+              <UploadSimpleIcon size={20} /> Импорт из файла
+            </button>
+            <button className="btn btn-secondary" onClick={() => setNewYear(true)}>
+              <CalendarPlusIcon size={20} /> Новый учебный год
+            </button>
+          </div>
         )}
       </div>
+      {importing && (
+        <ImportSchoolModal
+          onClose={() => setImporting(false)}
+          onDone={() => {
+            setImporting(false);
+            void reload();
+          }}
+        />
+      )}
       {newYear && (
         <NewYearModal
           onClose={() => setNewYear(false)}

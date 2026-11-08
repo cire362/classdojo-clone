@@ -9,7 +9,7 @@ import { previewImport } from './import.js';
 import { terms } from '../../platform/terms.js';
 import { cap } from '@heroes/shared/terms';
 
-const MAX_GROUP_STUDENTS = 200;
+export const MAX_GROUP_STUDENTS = 200;
 const fullGroup = () => `В группе может быть не больше ${MAX_GROUP_STUDENTS} ${terms().student.many.gen}`;
 
 async function takenLogins(bases: string[]): Promise<Set<string>> {

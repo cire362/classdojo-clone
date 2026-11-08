@@ -115,7 +115,8 @@ export interface ImportPreview {
   source: string;
 }
 
-export async function previewImport(file: File): Promise<ImportPreview> {
+/** Строки таблицы из Excel (.xlsx) или CSV в любой из привычных кодировок */
+export async function readTable(file: File): Promise<{ rows: Row[]; source: string }> {
   if (file.size > MAX_IMPORT_BYTES) throw new HttpError(413, 'Файл слишком большой (больше 2 МБ)');
   const name = file.name.toLowerCase();
   const buf = new Uint8Array(await file.arrayBuffer());
@@ -134,7 +135,11 @@ export async function previewImport(file: File): Promise<ImportPreview> {
     rows = parseCsv(decodeText(buf));
     source = 'CSV';
   }
+  return { rows, source };
+}
 
+export async function previewImport(file: File): Promise<ImportPreview> {
+  const { rows, source } = await readTable(file);
   const { names: raw, column } = extractNames(rows);
   const seen = new Set<string>();
   const names: string[] = [];
