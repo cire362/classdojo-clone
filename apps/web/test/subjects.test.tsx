@@ -86,7 +86,7 @@ it('сводка по дисциплинам: уроки, посещаемост
     </TermsProvider>,
   );
   expect(await screen.findByRole('heading', { name: 'По дисциплинам' })).toBeVisible();
-  const [, physics, none] = screen.getAllByRole('row');
+  const [, physics, none] = await screen.findAllByRole('row');
   expect(physics).toHaveTextContent('Физика375%+12−2');
   expect(none).toHaveTextContent('Без дисциплины0—+1−0');
   expect(api).toHaveBeenCalledWith('GET', '/teacher/groups/g1/subjects/summary?from=2026-11-02&to=2026-11-08');

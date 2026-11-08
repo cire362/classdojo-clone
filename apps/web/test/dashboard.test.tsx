@@ -24,9 +24,9 @@ it('панель руководителя колледжа: показатели
   api.mockImplementation(async (_m, path) => report(new URLSearchParams(path.split('?')[1]).get('by') as Dashboard['by']) as never);
   renderApp(<TermsProvider kind="COLLEGE"><LeaderDashboard /></TermsProvider>);
   expect(await screen.findByRole('heading', { name: 'Обзор колледжа' })).toBeVisible();
+  const table = await screen.findByRole('region', { name: 'Таблица обзора' });
   expect(screen.getByText('Вовлечённость', { selector: 'dt' }).nextSibling).toHaveTextContent('60%');
   expect(screen.getByText('Минусы', { selector: 'dt' }).nextSibling).toHaveTextContent('−10');
-  const table = screen.getByRole('region', { name: 'Таблица обзора' });
   const rows = within(table).getAllByRole('row');
   expect(rows[2]).toHaveTextContent('ИС-2212075%4—+40−5');
   expect(rows[3]).toHaveTextContent('Всего24060%485%+80−10');
