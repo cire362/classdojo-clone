@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DownloadSimpleIcon, PencilSimpleIcon, UsersThreeIcon } from '@phosphor-icons/react';
+import { CalendarPlusIcon, DownloadSimpleIcon, PencilSimpleIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import type { AdminGroup } from '../../../lib/api';
 import { exportUrl, longDate } from '../../../lib/files';
 import { pluralize, useLoad } from '../../../lib/hooks';
@@ -8,6 +8,7 @@ import { fetchAdminGroups } from '../api';
 import { cap } from '@heroes/shared/terms';
 import { useTerms } from '../../auth';
 import { departmentOptions, fetchDepartments } from '../../departments';
+import { NewYearModal } from '../../schoolyear';
 import { GroupMetaModal } from './GroupMetaModal';
 
 const searchText = (g: AdminGroup) =>
@@ -19,13 +20,19 @@ const searchText = (g: AdminGroup) =>
  * Группы учреждения или подразделения смотрящего. Файлы группы скачивают и подразделение, курс и специальность
  * задают директор и заместитель (сотрудник подразделения — для своих групп)
  */
-export function SchoolGroups({ canExport, departmentId }: { canExport: boolean; departmentId: string | null }) {
+export function SchoolGroups({ canExport, departmentId, canStartYear = false }: {
+  canExport: boolean;
+  departmentId: string | null;
+  /** Руководитель и заместитель всего учреждения переводят группы на новый учебный год */
+  canStartYear?: boolean;
+}) {
   const { data, error, reload, setData } = useLoad(() => fetchAdminGroups(), []);
   const t = useTerms();
   const departments = useLoad(() => (t.kind === 'SCHOOL' ? Promise.resolve([]) : fetchDepartments()), [t.kind]);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('');
   const [editing, setEditing] = useState<AdminGroup | null>(null);
+  const [newYear, setNewYear] = useState(false);
   const search = query.trim().toLocaleLowerCase('ru');
   const courseWord = t.course.toLocaleLowerCase('ru');
   const all = departmentOptions(departments.data ?? []);
@@ -37,9 +44,25 @@ export function SchoolGroups({ canExport, departmentId }: { canExport: boolean; 
   const visible = data?.filter((g) => searchText(g).includes(search) && (!filter || g.department?.id === filter)) ?? [];
   return (
     <section className="space-y-4" aria-labelledby="school-groups-title">
-      <h2 id="school-groups-title" className="text-lg">
-        {cap(t.group.many.nom)} {t.org.one.gen} {data && <span className="text-ink-soft">({data.length})</span>}
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="school-groups-title" className="text-lg">
+          {cap(t.group.many.nom)} {t.org.one.gen} {data && <span className="text-ink-soft">({data.length})</span>}
+        </h2>
+        {canStartYear && (
+          <button className="btn btn-secondary" onClick={() => setNewYear(true)}>
+            <CalendarPlusIcon size={20} /> Новый учебный год
+          </button>
+        )}
+      </div>
+      {newYear && (
+        <NewYearModal
+          onClose={() => setNewYear(false)}
+          onDone={() => {
+            setNewYear(false);
+            void reload();
+          }}
+        />
+      )}
       <div className="flex flex-wrap gap-3">
         <label className="block min-w-0 max-w-md flex-1 basis-60">
           <span className="label">Поиск группы или преподавателя</span>

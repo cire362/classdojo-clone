@@ -100,7 +100,9 @@ export function AdminPanel() {
         </div>
       )}
       {tab === 'inbox' && <SchoolInbox />}
-      {tab === 'groups' && <SchoolGroups canExport={groupEditor} departmentId={school.department?.id ?? null} />}
+      {tab === 'groups' && (
+        <SchoolGroups canExport={groupEditor} departmentId={school.department?.id ?? null} canStartYear={manager} />
+      )}
       {tab === 'departments' && <Departments canEdit={manager} />}
       {tab === 'subjects' && <AdminSubjects canEdit={manager} />}
       {tab === 'overview' && <LeaderDashboard />}

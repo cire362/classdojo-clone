@@ -110,6 +110,8 @@ model School {
   goal      SchoolGoal?
   departments Department[]
   subjects    Subject[]
+  /// Когда последний раз переводили группы на новый учебный год
+  yearStartedAt DateTime?
 }
 
 /// Дисциплина (предмет) учреждения: общий каталог, из которого группы выбирают свои
