@@ -21,6 +21,7 @@ function remember<M>(load: () => Promise<M>): () => Promise<M> {
 
 const loaders: Record<PageKey, () => Promise<any>> = {
   admin: remember(() => import('../pages/admin/Admin')),
+  network: remember(() => import('../pages/network/Network')),
   login: remember(() => import('../pages/Login')),
   codeLogin: remember(() => import('../pages/CodeLogin')),
   invite: remember(() => import('../pages/Invite')),
@@ -74,6 +75,7 @@ function page<M, K extends keyof M>(load: () => Promise<M>, name: K) {
 }
 
 export const AdminPage = page(loaders.admin, 'AdminPage');
+export const NetworkPage = page(loaders.network, 'NetworkPage');
 export const LoginPage = page(loaders.login, 'LoginPage');
 export const QrLoginPage = page(loaders.codeLogin, 'QrLoginPage');
 export const JoinClassPage = page(loaders.codeLogin, 'JoinClassPage');
@@ -114,6 +116,7 @@ export const StudentAssignmentsPage = page(loaders.studentAssignments, 'StudentA
 
 const byRole = {
   ADMIN: [loaders.admin],
+  NETWORK: [loaders.network],
   TEACHER: [
     loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons,
     loaders.attendance, loaders.stats, loaders.studentView, loaders.settings, loaders.groupFeed, loaders.groupCalendar,

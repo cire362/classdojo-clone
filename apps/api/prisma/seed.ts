@@ -84,9 +84,25 @@ async function ensureDemoAdmin() {
   console.log(`Seed: администратор ${login} / ${password}`);
 }
 
+/** Демо-сеть из первой школы установки: вход руководителя сети для проверки его панели */
+async function ensureDemoNetwork() {
+  const login = process.env.SEED_NETWORK_LOGIN ?? 'network';
+  const password = process.env.SEED_NETWORK_PASSWORD ?? 'network12345';
+  if (await prisma.account.findUnique({ where: { login } })) return;
+  await prisma.network.create({ data: {
+    name: 'Демо-сеть учреждений',
+    schools: { connect: [{ id: 'school-default' }] },
+    admins: {
+      create: { name: 'Руководитель сети', account: { create: { login, role: 'NETWORK', passwordHash: await hashPassword(password) } } },
+    },
+  } });
+  console.log(`Seed: руководитель сети ${login} / ${password}`);
+}
+
 async function main() {
   await syncHeroParts();
   await ensureDemoAdmin();
+  await ensureDemoNetwork();
 
   if (await prisma.account.findUnique({ where: { login: TEACHER_LOGIN } })) {
     console.log(`Seed: преподаватель «${TEACHER_LOGIN}» уже есть — пропускаю.`);

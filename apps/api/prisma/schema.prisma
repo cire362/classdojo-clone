@@ -19,6 +19,8 @@ enum Role {
   TEACHER
   STUDENT
   PARENT
+  /// Руководитель сети учреждений: округ, сеть школ, вуз с филиалами
+  NETWORK
 }
 
 /// Тип учебного заведения: от него зависят слова интерфейса (класс или группа, ученик или студент) и названия должностей
@@ -57,6 +59,7 @@ model Account {
   teacher  Teacher?
   student  Student?
   parent   Parent?
+  networkAdmin NetworkAdmin?
   sessions Session[]
   messages    Message[]
   feedReads   FeedRead[]
@@ -112,6 +115,9 @@ model School {
   subjects    Subject[]
   /// Когда последний раз переводили группы на новый учебный год
   yearStartedAt DateTime?
+  /// Сеть, в которую входит учреждение; её руководитель видит сводку по всем учреждениям сети
+  networkId String?
+  network   Network? @relation(fields: [networkId], references: [id], onDelete: SetNull)
 }
 
 /// Дисциплина (предмет) учреждения: общий каталог, из которого группы выбирают свои
@@ -1033,4 +1039,26 @@ model ClassGoal {
   createdAt   DateTime @default(now())
   points      PointEvent[]
   sessions    AttendanceSession[]
+}
+
+/// Сеть учреждений: округ или сеть школ, объединение колледжей, вуз с филиалами
+model Network {
+  id        String         @id @default(cuid())
+  name      String
+  createdAt DateTime       @default(now())
+  schools   School[]
+  admins    NetworkAdmin[]
+}
+
+/// Руководитель сети: видит сводные показатели учреждений сети, но не их учеников и переписку
+model NetworkAdmin {
+  id        String   @id @default(cuid())
+  accountId String   @unique
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  name      String
+  networkId String
+  network   Network  @relation(fields: [networkId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([networkId])
 }

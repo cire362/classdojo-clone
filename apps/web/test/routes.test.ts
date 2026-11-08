@@ -9,7 +9,7 @@ describe('код страниц по адресу', () => {
   });
 
   it('главная без роли — страницы всех ролей; остальные адреса от роли не зависят', () => {
-    expect(pagesFor('/', null)).toEqual(['groups', 'cabinet', 'parentHome', 'admin']);
+    expect(pagesFor('/', null)).toEqual(['groups', 'cabinet', 'parentHome', 'admin', 'network']);
     expect(pagesFor('/g/abc/stats', 'TEACHER')).toEqual(['groupLayout', 'stats']);
     expect(pagesFor('/unknown')).toEqual([]);
     expect(pagesFor('/q')).toEqual(['codeLogin']);

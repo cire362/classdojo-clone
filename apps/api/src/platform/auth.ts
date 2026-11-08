@@ -30,6 +30,8 @@ export interface AuthUser {
   institution: InstitutionKind | null;
   /** Студент: есть ли в его группе герои и награды; у остальных ролей null */
   heroes: boolean | null;
+  /** Сеть учреждений руководителя сети; у остальных ролей null */
+  networkId: string | null;
 }
 
 export type AppEnv = { Variables: { user: AuthUser } };
@@ -43,6 +45,7 @@ export const ACCOUNT_PROFILE = {
   teacher: { include: { school: KIND } },
   student: { include: { group: GROUP_KIND } },
   parent: { include: { children: { include: { student: { select: { name: true, group: GROUP_KIND } } } } } },
+  networkAdmin: true,
 } as const;
 
 type AccountWithProfile = {
@@ -51,6 +54,7 @@ type AccountWithProfile = {
   teacher: { name: string } | null;
   student: { name: string } | null;
   parent: { children: { student: { name: string } }[] } | null;
+  networkAdmin?: { name: string } | null;
 };
 
 type WithKind = {
@@ -74,6 +78,7 @@ export function accountInstitution(a: WithKind): InstitutionKind | null {
 /** Имя в шапке: у родителя — имена его детей */
 export function accountName(a: AccountWithProfile): string {
   if (a.admin) return a.admin.name;
+  if (a.networkAdmin) return a.networkAdmin.name;
   if (a.teacher) return a.teacher.name;
   if (a.student) return a.student.name;
   if (a.parent) {
@@ -134,6 +139,7 @@ export async function loadUser(c: Context): Promise<AuthUser | null> {
     departmentId: a.admin?.departmentId ?? null,
     institution: accountInstitution(a),
     heroes: a.student?.group.heroes ?? null,
+    networkId: a.networkAdmin?.networkId ?? null,
   };
 }
 

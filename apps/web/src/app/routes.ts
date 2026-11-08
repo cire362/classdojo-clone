@@ -5,6 +5,7 @@
  */
 export const PAGE_MODULES = {
   admin: 'pages/admin/Admin.tsx',
+  network: 'pages/network/Network.tsx',
   login: 'pages/Login.tsx',
   codeLogin: 'pages/CodeLogin.tsx',
   invite: 'pages/Invite.tsx',
@@ -51,7 +52,7 @@ const ROUTE_PAGES: [RegExp, PageKey[]][] = [
   [/^\/school$/, ['schoolNews']],
   [/^\/school-messages$/, ['schoolMessages']],
   [/^\/chat$/, ['studentChat']],
-  [/^\/$/, ['groups', 'cabinet', 'parentHome', 'admin']],
+  [/^\/$/, ['groups', 'cabinet', 'parentHome', 'admin', 'network']],
   [/^\/hero$/, ['myHero']],
   [/^\/settings$/, ['settings']],
   [/^\/s\//, ['studentView']],
@@ -78,7 +79,9 @@ const ROUTE_PAGES: [RegExp, PageKey[]][] = [
 ];
 
 /** Главная у каждой роли своя; если роль известна (запомнена после входа), грузим только её страницу */
-const HOME_BY_ROLE: Record<string, PageKey> = { ADMIN: 'admin', TEACHER: 'groups', STUDENT: 'cabinet', PARENT: 'parentHome' };
+const HOME_BY_ROLE: Record<string, PageKey> = {
+  ADMIN: 'admin', TEACHER: 'groups', STUDENT: 'cabinet', PARENT: 'parentHome', NETWORK: 'network',
+};
 
 export function pagesFor(pathname: string, role?: string | null): PageKey[] {
   if (pathname === '/' && role && HOME_BY_ROLE[role]) return [HOME_BY_ROLE[role]];

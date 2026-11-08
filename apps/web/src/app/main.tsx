@@ -15,6 +15,7 @@ import { ErrorBox } from '../ui';
 
 import {
   AdminPage,
+  NetworkPage,
   AttendancePage,
   CabinetPage,
   GroupLayout,
@@ -92,6 +93,7 @@ function Home() {
   if (!user && offline) return <Offline />;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'ADMIN') return <AdminPage />;
+  if (user.role === 'NETWORK') return <NetworkPage />;
   if (user.role === 'TEACHER') return <GroupsPage />;
   return user.role === 'PARENT' ? <ParentHomePage /> : <CabinetPage />;
 }

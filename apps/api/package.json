@@ -14,7 +14,8 @@
     "prisma:generate": "prisma generate",
     "set-premium": "tsx src/cli/set-premium.ts",
     "create-admin": "tsx src/cli/create-admin.ts",
-    "create-school": "tsx src/cli/create-school.ts"
+    "create-school": "tsx src/cli/create-school.ts",
+    "create-network": "tsx src/cli/create-network.ts"
   },
   "dependencies": {
     "@heroes/shared": "0.1.0",

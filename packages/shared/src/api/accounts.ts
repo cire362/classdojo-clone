@@ -2,7 +2,7 @@
 import type { InstitutionKind } from '../terms.js';
 import type { Hero } from './profile.js';
 
-export type Role = 'TEACHER' | 'STUDENT' | 'PARENT' | 'ADMIN';
+export type Role = 'TEACHER' | 'STUDENT' | 'PARENT' | 'ADMIN' | 'NETWORK';
 
 export interface Me {
   login: string;
