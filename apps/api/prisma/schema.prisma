@@ -122,6 +122,7 @@ model Subject {
   groups    GroupSubject[]
   points    PointEvent[]
   sessions  AttendanceSession[]
+  streams   Stream[]
 
   @@unique([schoolId, name])
 }
@@ -139,6 +140,30 @@ model GroupSubject {
 
   @@unique([groupId, subjectId])
   @@index([teacherId])
+}
+
+/// Поток преподавателя: занятие (лекция) сразу для нескольких групп
+model Stream {
+  id        String        @id @default(cuid())
+  teacherId String
+  teacher   Teacher       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  name      String
+  subjectId String?
+  subject   Subject?      @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  createdAt DateTime      @default(now())
+  groups    StreamGroup[]
+
+  @@index([teacherId])
+}
+
+model StreamGroup {
+  streamId String
+  stream   Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  groupId  String
+  group    Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([streamId, groupId])
+  @@index([groupId])
 }
 
 /// Подразделение колледжа или вуза: отделение, факультет, институт или кафедра внутри факультета (не глубже)
@@ -289,6 +314,7 @@ model Teacher {
   coGroups GroupTeacher[]
   posts    Post[]
   subjects GroupSubject[]
+  streams  Stream[]
 
   @@index([schoolId])
 }
@@ -314,6 +340,7 @@ model Group {
   /// Специальность или направление подготовки
   specialty       String    @default("")
   subjects        GroupSubject[]
+  streams         StreamGroup[]
   /// Дата переноса в архив; null — группа активна
   archivedAt      DateTime?
   createdAt       DateTime  @default(now())

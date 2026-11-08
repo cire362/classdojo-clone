@@ -30,6 +30,7 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   studentChat: remember(() => import('../pages/student/Chat')),
   groups: remember(() => import('../pages/teacher/Groups')),
   groupLayout: remember(() => import('../pages/teacher/GroupLayout')),
+  stream: remember(() => import('../pages/teacher/Stream')),
   lesson: remember(() => import('../pages/teacher/Lesson')),
   students: remember(() => import('../pages/teacher/Students')),
   print: remember(() => import('../pages/teacher/Print')),
@@ -83,6 +84,7 @@ export const SchoolMessagesPage = page(loaders.schoolMessages, 'SchoolMessagesPa
 export const StudentChatPage = page(loaders.studentChat, 'StudentChatPage');
 export const GroupsPage = page(loaders.groups, 'GroupsPage');
 export const GroupLayout = page(loaders.groupLayout, 'GroupLayout');
+export const StreamPage = page(loaders.stream, 'StreamPage');
 export const LessonPage = page(loaders.lesson, 'LessonPage');
 export const StudentsPage = page(loaders.students, 'StudentsPage');
 export const PrintPage = page(loaders.print, 'PrintPage');
@@ -116,6 +118,7 @@ const byRole = {
     loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons,
     loaders.attendance, loaders.stats, loaders.studentView, loaders.settings, loaders.groupFeed, loaders.groupCalendar,
     loaders.messages, loaders.rewards, loaders.rewardRequests, loaders.groupWorks, loaders.groupAssignments, loaders.schoolNews,
+    loaders.stream,
   ],
   STUDENT: [
     loaders.cabinet, loaders.myHero, loaders.studentFeed, loaders.studentCalendar,

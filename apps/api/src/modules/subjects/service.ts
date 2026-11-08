@@ -132,3 +132,18 @@ export async function subjectSummary(groupId: string, from: string, to: string):
   const other = row(null);
   return other.lessons || other.earned || other.lost ? [...rows, other] : rows;
 }
+
+/** Дисциплина своего учреждения или пусто */
+export async function checkSchoolSubject(schoolId: string | null, subjectId: string | null) {
+  if (!subjectId) return null;
+  const subject = await prisma.subject.findFirst({ where: { id: subjectId, schoolId: schoolId ?? '' }, select: { id: true } });
+  if (!subject) throw notFound('Дисциплина не найдена');
+  return subject.id;
+}
+
+/** Группы, где ведётся дисциплина: поток пишет её только туда, иначе баллы выпали бы из сводки группы */
+export async function groupsWithSubject(subjectId: string | null, groupIds: string[]) {
+  if (!subjectId) return new Set<string>();
+  const rows = await prisma.groupSubject.findMany({ where: { subjectId, groupId: { in: groupIds } }, select: { groupId: true } });
+  return new Set(rows.map((r) => r.groupId));
+}

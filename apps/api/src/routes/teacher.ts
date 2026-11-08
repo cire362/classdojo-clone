@@ -26,6 +26,7 @@ import { teacherWorkRoutes } from '../modules/works/index.js';
 import { teacherAssignmentRoutes } from '../modules/assignments/index.js';
 import { teacherSchoolPointsRoutes } from '../modules/schoolpoints/index.js';
 import { teacherSubjectRoutes } from '../modules/subjects/index.js';
+import { streamRoutes } from '../modules/streams/index.js';
 
 /** Кабинет преподавателя: роль проверяется здесь один раз, доступ к группе и ученику — в модулях */
 export const teacherRoutes = new Hono<AppEnv>()
@@ -55,4 +56,5 @@ export const teacherRoutes = new Hono<AppEnv>()
   .route('/', teacherWorkRoutes)
   .route('/', teacherAssignmentRoutes)
   .route('/', teacherSchoolPointsRoutes)
-  .route('/', teacherSubjectRoutes);
+  .route('/', teacherSubjectRoutes)
+  .route('/', streamRoutes);

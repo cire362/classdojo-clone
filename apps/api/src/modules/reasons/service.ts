@@ -92,3 +92,24 @@ export async function updateReason(reasonId: string, data: ReasonData): Promise<
 export async function archiveReason(reasonId: string) {
   await prisma.behaviorReason.update({ where: { id: reasonId }, data: { archived: true } });
 }
+
+/** Действующая ручная причина одной из групп: по ней начисляет поток */
+export async function manualReason(reasonId: string, groupIds: string[]) {
+  const reason = await prisma.behaviorReason.findFirst({
+    where: { id: reasonId, groupId: { in: groupIds }, kind: 'MANUAL', archived: false },
+  });
+  if (!reason) throw notFound('Причина не найдена');
+  return reason;
+}
+
+/** Такая же причина в другой группе (по названию и значению); если её нет, создаётся копия */
+export async function matchingReason(
+  groupId: string,
+  source: { groupId: string; id: string; name: string; emoji: string; value: number; countsForHelpBadge: boolean },
+) {
+  if (source.groupId === groupId) return source.id;
+  const found = await prisma.behaviorReason.findFirst({ where: { ...activeManual(groupId), name: source.name, value: source.value } });
+  if (found) return found.id;
+  const { emoji, name, value, countsForHelpBadge } = source;
+  return (await addReason(groupId, { emoji, name, value, countsForHelpBadge })).id;
+}

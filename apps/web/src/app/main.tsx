@@ -50,6 +50,7 @@ import {
   StatsPage,
   StudentHeroPage,
   StudentViewPage,
+  StreamPage,
   StudentsPage,
   prefetchPages,
   preloadRoute,
@@ -147,6 +148,7 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="assignments" element={<GroupAssignmentsPage />} />
                 <Route path="assignments/:assignmentId" element={<GroupAssignmentsPage />} />
               </Route>
+              <Route path="/streams/:streamId" element={teacher(<StreamPage />)} />
               <Route path="/settings" element={teacher(<SettingsPage />)} />
               <Route path="/messages" element={teacher(<MessagesPage />)} />
               <Route path="/reward-requests" element={teacher(<RewardRequestsPage />)} />

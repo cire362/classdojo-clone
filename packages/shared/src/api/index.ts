@@ -12,3 +12,4 @@ export type * from './moderation.js';
 export type * from './works.js';
 export type * from './assignments.js';
 export type * from './school.js';
+export type * from './streams.js';

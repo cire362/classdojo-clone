@@ -1,2 +1,2 @@
 export { adminSubjectRoutes, teacherSubjectRoutes } from './routes.js';
-export { checkGroupSubject, groupSubjects } from './service.js';
+export { checkGroupSubject, checkSchoolSubject, groupSubjects, groupsWithSubject } from './service.js';
