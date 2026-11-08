@@ -12,7 +12,6 @@
     "db:seed": "tsx prisma/seed.ts",
     "create-teacher": "tsx src/cli/create-teacher.ts",
     "prisma:generate": "prisma generate",
-    "set-premium": "tsx src/cli/set-premium.ts",
     "create-admin": "tsx src/cli/create-admin.ts",
     "create-school": "tsx src/cli/create-school.ts",
     "create-network": "tsx src/cli/create-network.ts"

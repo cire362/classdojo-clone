@@ -9,7 +9,7 @@ const { api } = await import('../src/lib/api');
 
 beforeEach(() => {
   vi.mocked(api).mockImplementation(async (_m: string, path: string) => {
-    if (path === '/hero-parts') return HERO_PARTS.map((p) => ({ id: p.id, requiredLevel: p.requiredLevel, isPremium: !!p.premium }));
+    if (path === '/hero-parts') return HERO_PARTS.map((p) => ({ id: p.id, requiredLevel: p.requiredLevel }));
     throw new Error(`unexpected ${path}`);
   });
 });
@@ -28,17 +28,9 @@ describe('конструктор героя', () => {
     expect(screen.getByRole('button', { name: 'Сохранено' })).toBeDisabled();
   });
 
-  it('премиум-деталь без премиума закрыта, с премиумом выбирается', async () => {
+  it('деталь тематической коллекции открыта по уровню, как обычная', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
-    const view = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={1} onSave={onSave} />);
-    await view.user.click(tab('Эмблема'));
-    const crystal = await screen.findByRole('button', { name: /^Алмаз.*Космос.*недоступна без премиума/ });
-    await view.user.click(crystal);
-    expect(await screen.findByText(/откроется, когда преподаватель подключит премиум/)).toBeInTheDocument();
-    expect(crystal).toHaveAttribute('aria-pressed', 'false');
-    view.unmount();
-
-    const { user } = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={1} premium onSave={onSave} />);
+    const { user } = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={1} onSave={onSave} />);
     await user.click(tab('Эмблема'));
     await user.click(await screen.findByRole('button', { name: /^Алмаз.*коллекция «Космос»$/ }));
     await user.click(screen.getByRole('button', { name: 'Сохранить героя' }));
@@ -67,7 +59,7 @@ describe('конструктор героя', () => {
 
   it('фильтр показывает выбранную коллекцию без изменения героя, выборы разных наборов сохраняются вместе', async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
-    const { user } = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={5} premium onSave={onSave} />);
+    const { user } = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={5} onSave={onSave} />);
     await user.selectOptions(screen.getByLabelText('Коллекция'), 'spring');
     expect(tab('Костюм')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Сохранено' })).toBeDisabled();
@@ -80,7 +72,7 @@ describe('конструктор героя', () => {
   });
 
   it('уровень ограничивает новые детали; пустой раздел позволяет показать всё, быстрый питомец снимает фильтр', async () => {
-    const { user } = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={1} premium onSave={vi.fn()} />);
+    const { user } = renderApp(<HeroEditor initial={{ name: '', parts: DEFAULT_HERO }} level={1} onSave={vi.fn()} />);
     await user.selectOptions(screen.getByLabelText('Коллекция'), 'winter');
     await user.click(screen.getByRole('button', { name: /^Полярный.*откроется на 2 уровне/ }));
     expect(await screen.findByText('Откроется на 2 уровне')).toBeVisible();

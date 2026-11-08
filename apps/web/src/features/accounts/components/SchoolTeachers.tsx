@@ -4,25 +4,23 @@ import type { AdminTeacher, TeacherCredentials } from '../../../lib/api';
 import { useLoad } from '../../../lib/hooks';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
-import { createTeacher, fetchTeachers, resetTeacherPassword, setTeacherPremium } from '../api';
+import { createTeacher, fetchTeachers, resetTeacherPassword } from '../api';
 import { IssuedCredentials } from './IssuedCredentials';
 import { AccountFields } from './AccountFields';
 import { TeacherAccessModal } from './TeacherAccessModal';
 
-/** Преподаватели школы. Добавлять, выдавать пароль и премиум могут директор и завуч, сотрудник только смотрит */
+/** Преподаватели школы. Добавлять, выдавать пароль и управлять доступом могут директор и завуч, сотрудник только смотрит */
 export function SchoolTeachers({ canManage }: { canManage: boolean }) {
   const { data, error, reload } = useLoad(() => fetchTeachers(), []);
   const toast = useToast();
   const [query, setQuery] = useState('');
   const [creating, setCreating] = useState(false);
   const [reset, setReset] = useState<AdminTeacher | null>(null);
-  const [plan, setPlan] = useState<AdminTeacher | null>(null);
   const [access, setAccess] = useState<AdminTeacher | null>(null);
   const [issued, setIssued] = useState<TeacherCredentials | null>(null);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({ name: '', login: '' });
   const [formError, setFormError] = useState('');
-  const [until, setUntil] = useState('');
 
   async function create(e: FormEvent) {
     e.preventDefault();
@@ -54,25 +52,7 @@ export function SchoolTeachers({ canManage }: { canManage: boolean }) {
     }
   }
 
-  function openPlan(t: AdminTeacher) {
-    setPlan(t);
-    setUntil(t.premiumUntil ? new Date(t.premiumUntil).toLocaleDateString('en-CA', { timeZone: 'Europe/Moscow' }) : '');
-  }
 
-  async function savePlan(date: string | null) {
-    if (!plan) return;
-    setBusy(true);
-    try {
-      await setTeacherPremium(plan.id, date);
-      setPlan(null);
-      void reload();
-      toast({ text: 'Срок премиума сохранён', tone: 'ok' });
-    } catch (err) {
-      toast({ text: (err as Error).message, tone: 'error' });
-    } finally {
-      setBusy(false);
-    }
-  }
 
   const search = query.trim().toLocaleLowerCase('ru');
   const visible = data?.teachers.filter((t) => `${t.name} ${t.login}`.toLocaleLowerCase('ru').includes(search)) ?? [];
@@ -98,9 +78,6 @@ export function SchoolTeachers({ canManage }: { canManage: boolean }) {
         <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-3.5 text-ink-soft" size={20} aria-hidden />
         <input type="search" className="input pl-11" placeholder="Имя или логин" value={query} onChange={(e) => setQuery(e.target.value)} />
       </label>
-      {data?.freeForAll && (
-        <p className="text-sm text-ink-soft">Премиум сейчас бесплатен для всех. Индивидуальные сроки можно настроить заранее.</p>
-      )}
       {error && <ErrorBox message={error} onRetry={reload} />}
       {!data && !error && <Skeleton className="h-64" />}
       {data && (
@@ -117,9 +94,6 @@ export function SchoolTeachers({ canManage }: { canManage: boolean }) {
               </div>
               {canManage && (
                 <div className="flex flex-wrap gap-2">
-                  <button className="btn btn-secondary btn-sm" onClick={() => openPlan(t)} aria-label={`Премиум: ${t.name}`}>
-                    {data.freeForAll ? 'Премиум бесплатно' : t.premiumActive ? 'Премиум подключён' : 'Подключить премиум'}
-                  </button>
                   <button className="btn btn-secondary btn-sm" onClick={() => setReset(t)} aria-label={`Новый пароль: ${t.name}`}>
                     <KeyIcon size={18} /> Новый пароль
                   </button>
@@ -160,26 +134,6 @@ export function SchoolTeachers({ canManage }: { canManage: boolean }) {
         />
       )}
       <IssuedCredentials issued={issued} title="Передайте данные преподавателю" onClose={() => setIssued(null)} />
-      <Modal open={!!plan} title="Срок премиума" onClose={() => { if (!busy) setPlan(null); }}>
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); void savePlan(until); }}>
-          <p className="font-semibold">{plan?.name}</p>
-          {data?.freeForAll && (
-            <p className="text-sm text-ink-soft">
-              Сейчас все возможности бесплатны. Этот срок будет учитываться, когда общий бесплатный доступ закончится.
-            </p>
-          )}
-          <div>
-            <label className="label" htmlFor="premium-until">Действует до</label>
-            <input id="premium-until" className="input" type="date" required value={until} onChange={(e) => setUntil(e.target.value)} />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button className="btn btn-primary" disabled={busy || !until}>Сохранить срок</button>
-            {plan?.premiumUntil && (
-              <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => savePlan(null)}>Убрать срок</button>
-            )}
-          </div>
-        </form>
-      </Modal>
     </section>
   );
 }

@@ -4,7 +4,7 @@ import { requireRole, requireSchoolRole, type AppEnv } from '../../platform/auth
 import { LOGIN_PATTERN } from '../../platform/credentials.js';
 import { parse } from '../../platform/errors.js';
 import {
-  adminTeachers, createTeacher, resetTeacherPassword, schoolInfo, setTeacherPremium, updateSchool,
+  adminTeachers, createTeacher, resetTeacherPassword, schoolInfo, updateSchool,
 } from './admin.service.js';
 import { adminGroups, updateAdminGroup } from './school-groups.service.js';
 import { deleteTeacher, setTeacherDisabled, transferTeacherGroups } from './teacher-admin.service.js';
@@ -21,12 +21,6 @@ const SchoolBody = z
     heroes: z.boolean().optional(),
   })
   .refine((b) => b.name !== undefined || b.kind !== undefined || b.heroes !== undefined, 'Укажите, что изменить');
-const PremiumBody = z.object({
-  until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((key) => {
-    const d = new Date(`${key}T00:00:00Z`);
-    return Number.isFinite(d.getTime()) && d.toISOString().slice(0, 10) === key;
-  }, 'Укажите существующую дату').nullable(),
-});
 
 const MANAGERS = requireSchoolRole('DIRECTOR', 'DEPUTY');
 const DisabledBody = z.object({ disabled: z.boolean() });
@@ -58,10 +52,6 @@ export const adminRoutes = new Hono<AppEnv>()
   })
   .post('/teachers/:id/reset-password', MANAGERS, async (c) => {
     return c.json(await resetTeacherPassword(c.get('user').schoolId!, c.req.param('id')));
-  })
-  .put('/teachers/:id/premium', MANAGERS, async (c) => {
-    const { until } = parse(PremiumBody, await c.req.json().catch(() => null));
-    return c.json(await setTeacherPremium(c.get('user').schoolId!, c.req.param('id'), until));
   })
   .put('/teachers/:id/disabled', MANAGERS, async (c) => {
     const { disabled } = parse(DisabledBody, await c.req.json().catch(() => null));

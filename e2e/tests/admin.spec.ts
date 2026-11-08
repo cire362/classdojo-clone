@@ -46,11 +46,6 @@ test('администратор создаёт преподавателя и в
     await loginUi(teacher, login, replacement);
     await expect(teacher.getByRole('heading', { name: /Здравствуйте/ })).toBeVisible();
     await page.getByRole('button', { name: 'Данные сохранены, закрыть' }).click();
-    await page.getByRole('button', { name: `Премиум: ${name}` }).click();
-    const until = `${new Date().getFullYear() + 1}-06-30`;
-    await page.fill('#premium-until', until);
-    await page.getByRole('button', { name: 'Сохранить срок' }).click();
-    await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('button', { name: 'Классы школы', exact: true }).click();
     await expect(page.getByText('Анна Сергеевна', { exact: true }).first()).toBeVisible();
   } finally {

@@ -1,13 +1,10 @@
 import { useState, type FormEvent } from 'react';
-import { SparkleIcon, UserIcon } from '@phosphor-icons/react';
-import { useAuth, useTerms } from '../../auth';
+import { UserIcon } from '@phosphor-icons/react';
+import { useAuth } from '../../auth';
 import { QuietHoursCard } from '../../messages';
 import { PasswordCard } from './PasswordCard';
 import { useToast } from '../../../ui/Toast';
-import { Skeleton } from '../../../ui';
-import { useLoad } from '../../../lib/hooks';
-import { fetchPlan, renameTeacher } from '../api';
-import { cap } from '@heroes/shared/terms';
+import { renameTeacher } from '../api';
 
 export function TeacherSettings() {
   const { user, refresh } = useAuth();
@@ -56,43 +53,6 @@ export function TeacherSettings() {
 
       <PasswordCard endpoint="/teacher/me/password" />
 
-      <PremiumCard />
     </div>
-  );
-}
-
-/** Премиум: пока без оплаты на сайте — подключает администратор */
-function PremiumCard() {
-  const t = useTerms();
-  const { data } = useLoad(() => fetchPlan(), []);
-  return (
-    <section className="card space-y-4 p-5" aria-labelledby="premium-title">
-      <h2 id="premium-title" className="flex items-center gap-2 text-lg">
-        <SparkleIcon size={22} weight="fill" /> Премиум
-      </h2>
-      {!data ? (
-        <Skeleton className="h-16" />
-      ) : data.freeForAll ? (
-        <p>
-          Сейчас премиум бесплатен для всех: {t.student.many.dat} ваших групп открыты все тематические коллекции героев.
-          Детали доступны по уровню.
-        </p>
-      ) : data.active ? (
-        <p>
-          Подключён до <b>{new Date(data.until!).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</b>.
-          {' '}{cap(t.student.many.dat)} ваших
-          групп открыты все тематические коллекции героев. Детали доступны по уровню.
-        </p>
-      ) : (
-        <p>
-          {data.until ? 'Срок премиума закончился.' : 'Сейчас у вас бесплатный тариф: все функции для уроков работают без ограничений.'}
-        </p>
-      )}
-      <ul className="list-disc space-y-1 pl-5 text-sm text-ink-soft">
-        <li>Тематические коллекции деталей героя: «Космос», «Весна», «Лето», «Осень» и «Зима».</li>
-        <li>Действует для {t.student.many.gen} групп, которые вы создали; детали открываются по уровню, как обычные.</li>
-      </ul>
-      {data && !data.active && <p className="text-sm text-ink-soft">Оплата на сайте появится позже. Чтобы подключить премиум сейчас, обратитесь к администратору.</p>}
-    </section>
   );
 }

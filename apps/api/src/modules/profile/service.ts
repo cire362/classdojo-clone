@@ -4,7 +4,6 @@ import { prisma } from '../../platform/db.js';
 import { portfolioItems } from '../portfolio/index.js';
 import { approvedWorks } from '../works/index.js';
 import { studentBadges } from '../badges/index.js';
-import { isActive } from '../accounts/index.js';
 import { dbDateKey, startOfDay, startOfWeek } from '../../platform/dates.js';
 
 async function sums(studentId: string, since?: Date) {
@@ -25,7 +24,7 @@ export async function studentProfile(studentId: string): Promise<Profile> {
     include: {
       account: { select: { login: true } },
       group: {
-        select: { id: true, name: true, archivedAt: true, parentsEnabled: true, heroes: true, teacher: { select: { premiumUntil: true } } },
+        select: { id: true, name: true, archivedAt: true, parentsEnabled: true, heroes: true },
       },
       hero: true,
     },
@@ -66,7 +65,6 @@ export async function studentProfile(studentId: string): Promise<Profile> {
       },
     },
     /** Открыта ли премиум-коллекция деталей (премиум у создателя группы) */
-    premium: isActive(student.group.teacher.premiumUntil),
     hero: { name: student.hero?.name ?? '', parts: normalizeHero(student.hero?.parts) },
     level: levelForPoints(total.earned),
     points: { today, week, total },

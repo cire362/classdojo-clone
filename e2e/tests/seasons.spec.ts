@@ -45,7 +45,6 @@ for (const colorScheme of ['light', 'dark'] as const) {
       const student = group.credentials[0];
       await loginUi(page, student.login, student.password);
       await expect(page.getByRole('link', { name: 'Собрать героя' })).toBeVisible();
-      expect((await (await page.request.get('/api/student/profile')).json()).premium).toBe(true);
       await page.goto('/hero');
       const collection = page.getByLabel('Коллекция', { exact: true });
       const tabs = page.getByRole('navigation', { name: 'Детали героя' });

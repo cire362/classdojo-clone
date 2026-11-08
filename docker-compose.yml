@@ -50,8 +50,6 @@ services:
       SEED_TEACHER_PASSWORD: teacher123
       SEED_STUDENT_PASSWORD: hero12345
       SEED_PARENT_PASSWORD: parent12345
-      # Пока оплаты нет, премиум-коллекция открыта всем; false — только по сроку у преподавателя
-      PREMIUM_FOR_ALL: "true"
     # Загруженные файлы. Наружу отдаёт только API с проверкой прав: nginx этого тома не видит
     volumes:
       - files:/data/files

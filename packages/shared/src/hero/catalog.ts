@@ -42,9 +42,9 @@ export interface HeroPartDef {
   hidesMouth?: boolean;
   /** Деталь маски рисуется поверх причёски (корона, нимб) */
   overHair?: boolean;
-  /** Премиум-коллекция: доступна ученикам, если у создателя их группы подключён премиум (и по уровню) */
-  premium?: boolean;
-  /** Название набора для фильтра в конструкторе; на доступ влияет premium и уровень. */
+  /** Деталь тематической коллекции: открывается по уровню, как обычная, но не выпадает новичку случайно */
+  themed?: boolean;
+  /** Название набора для фильтра в конструкторе; на доступ влияет только уровень. */
   collection?: HeroCollectionId;
 }
 
@@ -264,7 +264,7 @@ const parts: HeroPartDef[] = [
     layer: 'suit',
     name: 'Астронавт',
     requiredLevel: 2,
-    premium: true,
+    themed: true,
     front:
       `<path d="M80 103 Q100 116 120 103" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>` +
       `<path d="M80 103 Q100 116 120 103" fill="none" stroke="{outline}" stroke-width="2" stroke-linecap="round"/>` +
@@ -350,7 +350,7 @@ const parts: HeroPartDef[] = [
     layer: 'cape',
     name: 'Комета',
     requiredLevel: 3,
-    premium: true,
+    themed: true,
     back:
       `<path d="M76 103 L124 103 L160 222 Q100 238 40 222 Z" fill="#2a2470" ${O}/>` +
       `<path d="M86 110 L114 110 L140 214 Q100 224 60 214 Z" fill="{accent}" opacity="0.3"/>` +
@@ -597,7 +597,7 @@ const parts: HeroPartDef[] = [
     layer: 'emblem',
     name: 'Алмаз',
     requiredLevel: 1,
-    premium: true,
+    themed: true,
     front:
       BADGE +
       `<path d="M93 119 L97 114 L103 114 L107 119 L100 131 Z" ${EM}/>` +
@@ -713,7 +713,7 @@ const parts: HeroPartDef[] = [
     layer: 'aura',
     name: 'Галактика',
     requiredLevel: 4,
-    premium: true,
+    themed: true,
     back:
       `<circle cx="100" cy="116" r="98" fill="#2a2470" opacity="0.85"/>` +
       `<ellipse cx="100" cy="116" rx="96" ry="34" fill="#7b4fd6" opacity="0.45" transform="rotate(-20 100 116)"/>` +
@@ -742,8 +742,8 @@ const parts: HeroPartDef[] = [
   { id: 'color.obsidian', layer: 'color', name: 'Обсидиан', requiredLevel: 9, color: '#34344a' },
   { id: 'color.ruby', layer: 'color', name: 'Рубин', requiredLevel: 8, color: '#b3123c' },
   { id: 'color.emerald', layer: 'color', name: 'Изумруд', requiredLevel: 9, color: '#0b7a55' },
-  { id: 'color.cosmic', layer: 'color', name: 'Космос', requiredLevel: 1, color: '#3b2a8f', premium: true },
-  { id: 'color.coral', layer: 'color', name: 'Коралл', requiredLevel: 1, color: '#ff6f61', premium: true },
+  { id: 'color.cosmic', layer: 'color', name: 'Космос', requiredLevel: 1, color: '#3b2a8f', themed: true },
+  { id: 'color.coral', layer: 'color', name: 'Коралл', requiredLevel: 1, color: '#ff6f61', themed: true },
 
   // ───────── Тон кожи ─────────
   { id: 'skin.1', layer: 'skin', name: 'Светлый', requiredLevel: 1, color: '#ffe0c4' },
@@ -763,11 +763,11 @@ const parts: HeroPartDef[] = [
   { id: 'hairColor.gray', layer: 'hairColor', name: 'Седой', requiredLevel: 1, color: '#c9c9d1' },
   { id: 'hairColor.blue', layer: 'hairColor', name: 'Синий', requiredLevel: 1, color: '#3d7be0' },
   { id: 'hairColor.pink', layer: 'hairColor', name: 'Розовый', requiredLevel: 1, color: '#f07ab4' },
-  { id: 'hairColor.violet', layer: 'hairColor', name: 'Фиалковый', requiredLevel: 1, color: '#8a63e8', premium: true },
+  { id: 'hairColor.violet', layer: 'hairColor', name: 'Фиалковый', requiredLevel: 1, color: '#8a63e8', themed: true },
 ];
 
 export const HERO_PARTS: ReadonlyArray<HeroPartDef> = [
-  ...parts.map((p) => p.premium ? { ...p, collection: 'cosmos' as const } : p),
+  ...parts.map((p) => p.themed ? { ...p, collection: 'cosmos' as const } : p),
   ...SEASONAL_PARTS,
 ];
 
@@ -800,12 +800,12 @@ export function randomHero(rand: () => number = Math.random): HeroParts {
     if (slot === 'pet') continue;
     // Для случайного героя берём только естественные тона кожи (skin.1–skin.6)
     const base = HERO_PARTS.filter(
-      (p) => p.layer === layer && p.requiredLevel <= 1 && !p.premium && !(layer === 'skin' && Number(p.id.slice(5)) > 6),
+      (p) => p.layer === layer && p.requiredLevel <= 1 && !p.themed && !(layer === 'skin' && Number(p.id.slice(5)) > 6),
     );
     result[slot] = base[Math.floor(rand() * base.length)].id;
   }
   if (result.accentColor === result.suitColor) {
-    const colors = HERO_PARTS.filter((p) => p.layer === 'color' && p.requiredLevel <= 1 && !p.premium && p.id !== result.suitColor);
+    const colors = HERO_PARTS.filter((p) => p.layer === 'color' && p.requiredLevel <= 1 && !p.themed && p.id !== result.suitColor);
     result.accentColor = colors[Math.floor(rand() * colors.length)].id;
   }
   return result;

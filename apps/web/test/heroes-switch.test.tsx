@@ -15,7 +15,7 @@ beforeEach(() => { api.mockReset(); });
 
 const sum = { earned: 5, lost: 0, net: 5 };
 const PROFILE: Profile = {
-  premium: true, works: [], badges: [], portfolio: [],
+  works: [], badges: [], portfolio: [],
   student: {
     id: 's1', name: 'Маша Иванова', login: 'masha.i',
     group: { id: 'g1', name: 'ИВТ-21', archivedAt: null, parentsEnabled: false, heroes: false },

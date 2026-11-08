@@ -57,7 +57,7 @@ it('декан видит подпись своего подразделения
   };
   api.mockImplementation(async (_m, path) => {
     if (path === '/admin/school') return school as never;
-    if (path === '/admin/teachers') return { freeForAll: true, teachers: [] } as never;
+    if (path === '/admin/teachers') return { teachers: [] } as never;
     return [] as never;
   });
   renderApp(<AdminPanel />);

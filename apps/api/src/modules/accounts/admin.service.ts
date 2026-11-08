@@ -7,7 +7,6 @@ import { env } from '../../platform/env.js';
 import { generatePassword, hashPassword } from '../../platform/credentials.js';
 import { HttpError, isUniqueViolation, notFound } from '../../platform/errors.js';
 import { LOGIN_TAKEN, pendingTeacherCount } from './join.service.js';
-import { isActive } from './premium.service.js';
 
 /**
  * Администратор видит и меняет только свою школу: её преподавателей и группы, созданные ими.
@@ -53,20 +52,17 @@ export async function adminTeachers(schoolId: string): Promise<AdminTeachers> {
     where: { schoolId, pendingSince: null },
     orderBy: [{ name: 'asc' }, { id: 'asc' }],
     select: {
-      id: true, name: true, premiumUntil: true, disabledAt: true, account: { select: { login: true } },
+      id: true, name: true, disabledAt: true, account: { select: { login: true } },
       _count: { select: { groups: true, coGroups: true } },
     },
   });
   return {
-    freeForAll: env.premiumForAll,
     teachers: teachers.map((t) => ({
       id: t.id,
       name: t.name,
       login: t.account.login,
       ownedGroups: t._count.groups,
       sharedGroups: t._count.coGroups,
-      premiumUntil: t.premiumUntil?.toISOString() ?? null,
-      premiumActive: isActive(t.premiumUntil),
       disabled: !!t.disabledAt,
     })),
   };
@@ -108,10 +104,3 @@ export async function resetTeacherPassword(schoolId: string, teacherId: string):
 }
 
 /** Доступ до конца выбранного дня в часовом поясе школы */
-export async function setTeacherPremium(schoolId: string, teacherId: string, until: string | null) {
-  const premiumUntil = until ? new Date(addDays(localDayStart(until), 1).getTime() - 1) : null;
-  if (premiumUntil && premiumUntil <= new Date()) throw new HttpError(400, 'Выберите сегодняшнюю или будущую дату');
-  const { count } = await prisma.teacher.updateMany({ where: { id: teacherId, schoolId, pendingSince: null }, data: { premiumUntil } });
-  if (!count) throw notFound('Преподаватель не найден');
-  return { premiumUntil: premiumUntil?.toISOString() ?? null, premiumActive: isActive(premiumUntil), freeForAll: env.premiumForAll };
-}

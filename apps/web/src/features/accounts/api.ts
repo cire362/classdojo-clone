@@ -10,7 +10,6 @@ export const createTeacher = (form: { name: string; login: string }) => api<Teac
 
 export const resetTeacherPassword = (teacherId: string) => api<TeacherCredentials>('POST', `/admin/teachers/${teacherId}/reset-password`);
 
-export const setTeacherPremium = (teacherId: string, until: string | null) => api('PUT', `/admin/teachers/${teacherId}/premium`, { until });
 
 export const fetchAdminGroups = () => api<AdminGroup[]>('GET', '/admin/groups');
 
@@ -51,7 +50,6 @@ export const changePassword = (endpoint: string, currentPassword: string, newPas
 
 export const renameTeacher = (name: string) => api('PATCH', '/teacher/me', { name });
 
-export const fetchPlan = () => api<{ active: boolean; until: string | null; freeForAll: boolean }>('GET', '/teacher/plan');
 
 export const updateAdminGroup = (groupId: string, data: { departmentId: string | null; course: number | null; specialty: string }) =>
   api<AdminGroup[]>('PATCH', `/admin/groups/${groupId}`, data);

@@ -3,7 +3,6 @@ import { api, type Hero, type Profile } from '../../lib/api';
 export interface PartAccess {
   id: string;
   requiredLevel: number;
-  isPremium: boolean;
 }
 
 export const fetchPartAccess = () => api<PartAccess[]>('GET', '/hero-parts');

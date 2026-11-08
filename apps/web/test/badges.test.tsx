@@ -34,7 +34,7 @@ it('пустая коллекция приглашает открыть усло
 
 it('из профиля открывается портфолио с автоматическими значками и отдельными достижениями учителя', async () => {
   const sum = { earned: 0, lost: 0, net: 0 };
-  const profile: Profile = { premium: true, works: [], badges: badges(), portfolio: [{ id: 'p1', title: 'Призёр олимпиады', emoji: '🏆', description: '', author: 'Учитель', createdAt: '2026-10-29T10:00:00Z' }], student: { id: 's1', name: 'Маша Иванова', login: 'masha.i', group: { id: 'g1', name: '5 «А»', archivedAt: null, parentsEnabled: true, heroes: true } }, hero: { name: '', parts: DEFAULT_HERO }, level: levelForPoints(0), points: { today: sum, week: sum, total: sum }, history: [], attendance: { attended: 0, total: 0, records: [] } };
+  const profile: Profile = { works: [], badges: badges(), portfolio: [{ id: 'p1', title: 'Призёр олимпиады', emoji: '🏆', description: '', author: 'Учитель', createdAt: '2026-10-29T10:00:00Z' }], student: { id: 's1', name: 'Маша Иванова', login: 'masha.i', group: { id: 'g1', name: '5 «А»', archivedAt: null, parentsEnabled: true, heroes: true } }, hero: { name: '', parts: DEFAULT_HERO }, level: levelForPoints(0), points: { today: sum, week: sum, total: sum }, history: [], attendance: { attended: 0, total: 0, records: [] } };
   const { user } = renderApp(<ProfileView profile={profile} isOwn />);
   await user.click(screen.getByRole('button', { name: 'Все значки' }));
   expect(screen.getByRole('tab', { name: /Портфолио/ })).toHaveAttribute('aria-selected', 'true');

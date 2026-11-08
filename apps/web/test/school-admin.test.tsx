@@ -30,7 +30,7 @@ function backend(school: SchoolInfo, overrides: Record<string, unknown> = {}) {
     if (key === 'GET /admin/school') return school as never;
     if (key === 'PATCH /admin/school') return { ...school, ...(body as object) } as never;
     if (key === 'GET /admin/teacher-requests') return [REQUEST] as never;
-    if (key === 'GET /admin/teachers') return { freeForAll: true, teachers: [] } as never;
+    if (key === 'GET /admin/teachers') return { teachers: [] } as never;
     if (key === 'GET /admin/groups') return [GROUP] as never;
     if (key === 'GET /admin/staff') return STAFF as never;
     if (key === 'GET /admin/departments') return [] as never;

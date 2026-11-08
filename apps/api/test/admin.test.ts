@@ -25,7 +25,6 @@ describe('администратор школы', () => {
       expect((await call('GET', '/api/admin/groups', { cookie })).status).toBe(403);
       expect((await call('POST', `/api/admin/teachers/${t.teacher.id}/reset-password`, { cookie })).status).toBe(403);
       expect((await call('POST', '/api/admin/teachers', { cookie, body: { name: 'Нельзя', login: 'forbidden' } })).status).toBe(403);
-      expect((await call('PUT', `/api/admin/teachers/${t.teacher.id}/premium`, { cookie, body: { until: null } })).status).toBe(403);
     }
     expect((await call('GET', '/api/teacher/groups', { cookie: admin.cookie })).status).toBe(403);
     expect((await call('POST', '/api/admin/teachers', { cookie: admin.cookie, body: { name: 'x', login: 'xxx' }, noClientHeader: true })).status).toBe(403);
@@ -75,16 +74,6 @@ describe('администратор школы', () => {
     });
   });
 
-  it('управляет сроком премиума и проверяет календарную дату', async () => {
-    const admin = await setupAdmin();
-    const t = await setupTeacher();
-    const path = `/api/admin/teachers/${t.teacher.id}/premium`;
-    const year = new Date().getFullYear() + 1;
-    expect((await call('PUT', path, { cookie: admin.cookie, body: { until: `${year}-06-30` } })).body).toMatchObject({ premiumActive: true, freeForAll: false, premiumUntil: `${year}-06-30T20:59:59.999Z` });
-    expect((await call('PUT', path, { cookie: admin.cookie, body: { until: `${year}-02-30` } })).status).toBe(400);
-    expect((await call('PUT', path, { cookie: admin.cookie, body: { until: '2000-01-01' } })).status).toBe(400);
-    expect((await call('PUT', path, { cookie: admin.cookie, body: { until: null } })).body.premiumActive).toBe(false);
-  });
 
   it('меняет свой пароль: нужен текущий, другие устройства выходят, текущая сессия живёт', async () => {
     const admin = await setupAdmin();

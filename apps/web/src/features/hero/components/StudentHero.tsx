@@ -31,7 +31,6 @@ export function StudentHero() {
         key={data.student.id}
         initial={data.hero}
         level={data.level.level}
-        premium={data.premium}
         newIds={newIds ?? undefined}
         onSave={async (name, parts) => {
           const hero = await saveStudentHero(name, parts);

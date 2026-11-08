@@ -310,8 +310,6 @@ model Teacher {
   /// По умолчанию — первая школа установки: так учётки из старых команд и тестов попадают в неё
   schoolId  String   @default("school-default")
   school    School   @relation(fields: [schoolId], references: [id])
-  /// Премиум до этой даты (включает администратор: npm run set-premium). Платежей пока нет
-  premiumUntil DateTime?
   /// Тихие часы в минутах от полуночи; null — выключены
   quietFrom Int?
   quietTo   Int?
@@ -575,7 +573,6 @@ model HeroPart {
   requiredLevel Int
   sortOrder     Int     @default(0)
   /// Задел под платные детали
-  isPremium     Boolean @default(false)
   active        Boolean @default(true)
 }
 

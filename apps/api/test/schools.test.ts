@@ -36,7 +36,6 @@ it('администратор видит и меняет только свою 
 
   const foreign = southTeacher.teacher.id;
   expect((await call('POST', `/api/admin/teachers/${foreign}/reset-password`, { cookie: north.cookie })).status).toBe(404);
-  expect((await call('PUT', `/api/admin/teachers/${foreign}/premium`, { cookie: north.cookie, body: { until: null } })).status).toBe(404);
   expect((await call('GET', `/api/admin/groups/${southTeacher.group.id}/export`, { cookie: north.cookie })).status).toBe(404);
   expect((await call('GET', `/api/admin/groups/${northTeacher.group.id}/export`, { cookie: north.cookie })).status).toBe(200);
   // Пароль чужого преподавателя не сменился: его вход работает

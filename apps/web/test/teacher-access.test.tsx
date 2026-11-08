@@ -11,12 +11,11 @@ beforeEach(() => {
 });
 
 const teacher = (id: string, name: string, extra: Partial<AdminTeacher> = {}): AdminTeacher => ({
-  id, name, login: id, ownedGroups: 0, sharedGroups: 0, premiumUntil: null, premiumActive: false, disabled: false, ...extra,
+  id, name, login: id, ownedGroups: 0, sharedGroups: 0, disabled: false, ...extra,
 });
 
 it('директор отключает вход, передаёт группы коллеге и только потом может удалить преподавателя', async () => {
   let list: AdminTeachers = {
-    freeForAll: true,
     teachers: [
       teacher('anna', 'Анна Сергеевна', { ownedGroups: 2 }), teacher('igor', 'Игорь Павлович'), teacher('olga', 'Ольга', { disabled: true }),
     ],

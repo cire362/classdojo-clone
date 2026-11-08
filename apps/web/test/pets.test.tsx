@@ -8,7 +8,7 @@ import { renderApp } from './render';
 
 vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
 const { api } = await import('../src/lib/api');
-beforeEach(() => vi.mocked(api).mockResolvedValue(HERO_PARTS.map((p) => ({ id: p.id, requiredLevel: p.requiredLevel, isPremium: !!p.premium }))));
+beforeEach(() => vi.mocked(api).mockResolvedValue(HERO_PARTS.map((p) => ({ id: p.id, requiredLevel: p.requiredLevel }))));
 
 it('быстрый переход открывает питомцев, выбор сохраняется вместе с героем, питомца можно убрать', async () => {
   const save = vi.fn().mockResolvedValue(undefined);

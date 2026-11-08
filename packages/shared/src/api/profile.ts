@@ -39,7 +39,6 @@ export interface PortfolioItem {
 
 export interface Profile {
   /** Открыта ли премиум-коллекция деталей героя */
-  premium: boolean;
   portfolio: PortfolioItem[];
   /** Одобренные работы ученика, новые сверху */
   works: StudentWork[];

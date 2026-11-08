@@ -29,12 +29,10 @@ export function HeroEditor({
   onSave,
   ownerLabel,
   newIds,
-  premium = false,
 }: {
   initial: { name: string; parts: HeroParts };
   level: number;
   /** Открыта ли премиум-коллекция (премиум у создателя группы) */
-  premium?: boolean;
   onSave: (name: string, parts: HeroParts) => Promise<void>;
   ownerLabel?: string;
   /** Детали, открывшиеся с прошлого визита: помечаются «новое» */
@@ -59,10 +57,8 @@ export function HeroEditor({
   const access = useLoad(() => fetchPartAccess(), []);
   const accessById = useMemo(() => new Map(access.data?.map((p) => [p.id, p])), [access.data]);
 
-  const isPremiumPart = (p: HeroPartDef) => accessById.get(p.id)?.isPremium ?? !!p.premium;
-  /** Замок: номер уровня, на котором деталь откроется, или 'premium' — нужна премиум-коллекция */
-  const lockOf = (p: HeroPartDef): number | 'premium' | null => {
-    if (isPremiumPart(p) && !premium) return 'premium';
+  /** Замок: номер уровня, на котором деталь откроется */
+  const lockOf = (p: HeroPartDef): number | null => {
     const required = accessById.get(p.id)?.requiredLevel ?? p.requiredLevel;
     return required > level ? required : null;
   };
@@ -77,7 +73,7 @@ export function HeroEditor({
   function pick(p: HeroPartDef) {
     const lock = lockOf(p);
     if (lock !== null) {
-      toast({ text: lock === 'premium' ? 'Деталь из премиум-коллекции: откроется, когда преподаватель подключит премиум' : `Откроется на ${lock} уровне`, tone: 'neutral' });
+      toast({ text: `Откроется на ${lock} уровне`, tone: 'neutral' });
       return;
     }
     setParts({ ...parts, [slot]: p.id });
@@ -190,7 +186,6 @@ export function HeroEditor({
         >
           {options.map((p) => {
             const lock = lockOf(p);
-            const premiumPart = isPremiumPart(p);
             const collectionName = HERO_COLLECTIONS.find((c) => c.id === p.collection)?.name;
             const active = parts[slot] === p.id;
             const isNew = !!newIds?.has(p.id);
@@ -217,7 +212,7 @@ export function HeroEditor({
                 <span className={`text-xs font-medium leading-tight ${lock ? 'text-ink-soft' : ''}`}>
                   {p.name}
                   {collectionName && <span className="sr-only">, коллекция «{collectionName}»</span>}
-                  {lock !== null && <span className="sr-only">{lock === 'premium' ? ', недоступна без премиума' : `, откроется на ${lock} уровне`}</span>}
+                  {lock !== null && <span className="sr-only">, откроется на {lock} уровне</span>}
                   {isNew && <span className="sr-only">, новое</span>}
                 </span>
                 {isNew && (
@@ -228,12 +223,12 @@ export function HeroEditor({
                 {lock !== null && (
                   <span aria-hidden className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-full bg-ink px-1.5 py-0.5 text-[11px] font-bold text-bg">
                     <LockSimpleIcon size={11} weight="bold" />
-                    {lock === 'premium' ? '' : lock}
+                    {lock}
                   </span>
                 )}
-                {premiumPart && (
+                {collectionName && (
                   <span aria-hidden className="absolute bottom-[1.9rem] right-1.5 inline-flex items-center gap-0.5 rounded-full bg-[#2a2470] px-1.5 py-0.5 text-[11px] font-bold text-white">
-                    <SparkleIcon size={11} weight="fill" /> {collectionName ?? 'премиум'}
+                    <SparkleIcon size={11} weight="fill" /> {collectionName}
                   </span>
                 )}
               </button>
@@ -242,7 +237,7 @@ export function HeroEditor({
         </div>
         <p className="text-sm text-ink-soft">
           Детали с замком открываются на новых уровнях. Уровень растёт от заработанных баллов.
-          {premium ? ' Коллекции «Космос», «Весна», «Лето», «Осень» и «Зима» доступны по уровню.' : ' Тематические коллекции открываются, если преподаватель подключит премиум.'}
+          {' '}Коллекции «Космос», «Весна», «Лето», «Осень» и «Зима» тоже открываются по уровню.
         </p>
       </div>
     </div>

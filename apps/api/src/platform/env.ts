@@ -23,6 +23,4 @@ export const env = {
   /** Сколько дней хранятся фото и файлы группы после переноса в архив; потом удаляются, сама группа остаётся */
   archivedFilesDays: num('ARCHIVED_FILES_DAYS', 365),
   loginRateLimit: num('LOGIN_RATE_LIMIT', 10),
-  /** Пока оплаты нет, премиум бесплатен для всех. PREMIUM_FOR_ALL=false включает обычные правила (срок у преподавателя) */
-  premiumForAll: process.env.PREMIUM_FOR_ALL !== 'false',
 };

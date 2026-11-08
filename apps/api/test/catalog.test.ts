@@ -41,11 +41,11 @@ describe('каталог деталей героя', () => {
     expect(HERO_PARTS.find((p) => p.id === r.aura)!.requiredLevel).toBe(1);
   });
 
-  it('каждый сезон имеет шесть совместимых деталей, а прежний премиум относится к Космосу', () => {
+  it('каждый сезон имеет шесть совместимых деталей, а прежние особые детали относятся к Космосу', () => {
     const ids = new Set(HERO_COLLECTIONS.map((c) => c.id));
     for (const p of HERO_PARTS) {
-      if (p.premium) expect(ids.has(p.collection!)).toBe(true);
-      if (p.collection) expect(p.premium).toBe(true);
+      if (p.themed) expect(ids.has(p.collection!)).toBe(true);
+      if (p.collection) expect(p.themed).toBe(true);
     }
     for (const season of ['spring', 'summer', 'autumn', 'winter']) {
       const items = HERO_PARTS.filter((p) => p.collection === season);
@@ -55,7 +55,7 @@ describe('каталог деталей героя', () => {
     }
     expect(HERO_PARTS.find((p) => p.id === 'emblem.diamond')?.collection).toBe('cosmos');
     expect(HERO_PARTS.find((p) => p.id === 'emblem.sun')).toMatchObject({ name: 'Солнце', requiredLevel: 3 });
-    expect(HERO_PARTS.find((p) => p.id === 'emblem.sun')?.premium).not.toBe(true);
-    expect(HERO_PARTS.find((p) => p.id === 'emblem.snowflake')?.premium).not.toBe(true);
+    expect(HERO_PARTS.find((p) => p.id === 'emblem.sun')?.themed).not.toBe(true);
+    expect(HERO_PARTS.find((p) => p.id === 'emblem.snowflake')?.themed).not.toBe(true);
   });
 });
