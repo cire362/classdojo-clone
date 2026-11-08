@@ -10,6 +10,7 @@ import { GroupTeachersSection } from './GroupTeachers';
 import { archiveGroup, deleteGroup, renameGroup, setGroupHeroes, setParentsEnabled } from '../api';
 import { useTerms } from '../../auth';
 import { cap } from '@heroes/shared/terms';
+import { GroupSubjects } from '../../subjects';
 
 export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTerms();
@@ -22,6 +23,12 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
     <Modal open={open} title="Настройки группы" onClose={onClose}>
       <div className="space-y-8">
         <GroupTeachersSection groupId={data.group.id} isOwner={data.group.isOwner} />
+        <GroupSubjects
+          groupId={data.group.id}
+          subjects={data.subjects}
+          canEdit={data.group.isOwner && !data.group.archivedAt}
+          onChange={reload}
+        />
         {data.group.isOwner && !data.group.archivedAt && (
           <div className="space-y-3">
             <h3 className="text-base">Родители</h3>

@@ -62,6 +62,7 @@ export async function awardPoints(params: {
   groupId: string;
   studentIds: string[];
   reasonId: string;
+  subjectId?: string | null;
   awardedById: string;
 }) {
   const studentIds = [...new Set(params.studentIds)];
@@ -92,6 +93,7 @@ export async function awardPoints(params: {
         classGoalId: goal?.id ?? null,
         helpBadge: reason.value > 0 && reason.countsForHelpBadge,
         awardedGroupId: params.groupId,
+        subjectId: params.subjectId ?? null,
       })),
     });
   });

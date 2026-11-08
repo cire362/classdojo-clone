@@ -109,6 +109,36 @@ model School {
   reasons   SchoolReason[]
   goal      SchoolGoal?
   departments Department[]
+  subjects    Subject[]
+}
+
+/// Дисциплина (предмет) учреждения: общий каталог, из которого группы выбирают свои
+model Subject {
+  id        String         @id @default(cuid())
+  schoolId  String
+  school    School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime       @default(now())
+  groups    GroupSubject[]
+  points    PointEvent[]
+  sessions  AttendanceSession[]
+
+  @@unique([schoolId, name])
+}
+
+/// Дисциплина в группе и её преподаватель. Преподаватель получает доступ к группе как соавтор
+model GroupSubject {
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([groupId, subjectId])
+  @@index([teacherId])
 }
 
 /// Подразделение колледжа или вуза: отделение, факультет, институт или кафедра внутри факультета (не глубже)
@@ -258,6 +288,7 @@ model Teacher {
   groups   Group[]
   coGroups GroupTeacher[]
   posts    Post[]
+  subjects GroupSubject[]
 
   @@index([schoolId])
 }
@@ -282,6 +313,7 @@ model Group {
   course          Int?
   /// Специальность или направление подготовки
   specialty       String    @default("")
+  subjects        GroupSubject[]
   /// Дата переноса в архив; null — группа активна
   archivedAt      DateTime?
   createdAt       DateTime  @default(now())
@@ -559,6 +591,9 @@ model PointEvent {
   awardedGroup        Group? @relation("AwardedInGroup", fields: [awardedGroupId], references: [id], onDelete: SetNull)
   /// Баллы за принятый ответ на задание
   assignmentWork      StudentWork?
+  /// Дисциплина занятия, на котором начислено; пусто — без дисциплины
+  subjectId           String?
+  subject             Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
   @@index([awardedGroupId, createdAt])
   @@index([studentId, createdAt])
@@ -584,6 +619,9 @@ model AttendanceSession {
   /// Цель, действовавшая при первой отметке урока; переотметка не переносит вклад в другую цель
   classGoalId       String?
   classGoal         ClassGoal? @relation(fields: [classGoalId], references: [id], onDelete: SetNull)
+  /// Дисциплина урока
+  subjectId         String?
+  subject           Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
   records Attendance[]
   points  PointEvent[]

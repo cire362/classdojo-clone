@@ -6,6 +6,7 @@ import { dateKey, isDateKey } from '../../platform/dates.js';
 import { env } from '../../platform/env.js';
 import { HttpError, parse } from '../../platform/errors.js';
 import { teacherGroup } from '../access/index.js';
+import { checkGroupSubject } from '../subjects/index.js';
 import { countPeople } from './detector.js';
 import { MAX_LESSONS_PER_DAY, attendanceForDate, checkAttendanceDate, deleteAttendance, saveAttendance } from './service.js';
 
@@ -16,6 +17,7 @@ const AttendanceBody = z.object({
   presentStudentIds: z.array(z.string().min(1).max(64)).max(200),
   peopleOnPhoto: z.number().int().min(0).max(500).nullable(),
   subtractedTeacher: z.boolean(),
+  subjectId: z.string().min(1).max(64).nullable().optional(),
 });
 
 /** Посещаемость группы. Роль проверяет сборка routes/teacher.ts */
@@ -65,6 +67,7 @@ export const attendanceRoutes = new Hono<AppEnv>()
       presentStudentIds: body.presentStudentIds,
       peopleOnPhoto: body.peopleOnPhoto,
       subtractedTeacher: body.subtractedTeacher,
+      subjectId: await checkGroupSubject(group.id, body.subjectId),
       createdById: c.get('user').accountId,
     });
     return c.json(result, 201);

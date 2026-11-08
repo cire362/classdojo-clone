@@ -25,6 +25,7 @@ import { TeamSections } from './TeamSections';
 import { ThinkPairShare } from './ThinkPairShare';
 import { useTerms } from '../../auth';
 import { cap } from '@heroes/shared/terms';
+import { SubjectPicker } from '../../subjects';
 
 export function LessonBoard() {
   const t = useTerms();
@@ -60,6 +61,7 @@ export function LessonBoard() {
   const goalPanel = <ClassGoalPanel goal={data.classGoal} groupId={data.group.id} archived={archived} onChange={changeGoal} />;
   const tools = !archived && (
     <div className="flex flex-wrap items-start gap-2">
+      {!projector && <SubjectPicker key={`subject:${data.group.id}`} groupId={data.group.id} subjects={data.subjects} />}
       <LessonPlanPanel key={`plan:${data.group.id}`} projector={projector} target={timerTarget} />
       <LessonTimer key={data.group.id} groupId={data.group.id} projector={projector} target={timerTarget} />
       <ThinkPairShare key={`think-pair-share:${data.group.id}`} groupId={data.group.id} projector={projector} target={timerTarget} />

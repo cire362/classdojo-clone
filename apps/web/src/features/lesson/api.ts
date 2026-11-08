@@ -7,8 +7,8 @@ interface AwardResult {
   summaries: Record<string, CardSummary>;
 }
 
-export const awardPoints = (groupId: string, studentIds: string[], reasonId: string) =>
-  api<AwardResult>('POST', `/teacher/groups/${groupId}/points`, { studentIds, reasonId });
+export const awardPoints = (groupId: string, studentIds: string[], reasonId: string, subjectId: string | null = null) =>
+  api<AwardResult>('POST', `/teacher/groups/${groupId}/points`, { studentIds, reasonId, ...(subjectId ? { subjectId } : {}) });
 
 export const undoPoints = (eventIds: string[]) =>
   api<{ summaries: Record<string, CardSummary> }>('POST', '/teacher/points/undo', { eventIds });

@@ -9,6 +9,7 @@ import { WeeklyPoints } from './WeeklyPoints';
 import { fetchStats } from '../api';
 import { useTerms } from '../../auth';
 import { cap } from '@heroes/shared/terms';
+import { SubjectSummaryTable } from '../../subjects';
 
 function presets() {
   const now = new Date();
@@ -92,6 +93,7 @@ export function StatsBoard() {
       </div>
 
       <WeeklyPoints key={group.group.id} group={group} from={range.from} to={range.to} />
+      {group.subjects.length > 0 && <SubjectSummaryTable groupId={group.group.id} from={range.from} to={range.to} />}
 
       {error && <ErrorBox message={error} onRetry={reload} />}
       {loading && !data && <Skeleton className="h-96" />}

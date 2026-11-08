@@ -88,6 +88,8 @@ export interface LessonPlan {
 
 export interface GroupDetails {
   classGoal: ClassGoal | null;
+  /** Дисциплины группы и их преподаватели */
+  subjects: GroupSubject[];
   plan: LessonPlan;
   group: {
     id: string;
@@ -115,4 +117,29 @@ export interface GroupDetails {
   /** Ответы на задания, ждущие проверки */
   pendingAnswers: number;
   todayAttendance: { peopleOnPhoto: number | null; presentStudentIds: string[] } | null;
+}
+
+/** Дисциплина из каталога учреждения */
+export interface Subject {
+  id: string;
+  name: string;
+  /** В скольких группах ведётся */
+  groups: number;
+}
+
+/** Дисциплина в группе и её преподаватель */
+export interface GroupSubject {
+  id: string;
+  subject: { id: string; name: string };
+  teacher: { id: string; name: string };
+}
+
+/** Сводка по дисциплине за период: уроки, посещаемость и баллы; subject = null — без дисциплины */
+export interface SubjectSummary {
+  subject: { id: string; name: string } | null;
+  lessons: number;
+  /** Доля отмеченных присутствующими, 0–1; null — уроков не было */
+  attendance: number | null;
+  earned: number;
+  lost: number;
 }

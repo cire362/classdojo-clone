@@ -5,6 +5,7 @@ import { pluralize } from '../../../lib/hooks';
 import { useToast } from '../../../ui/Toast';
 import { awardPoints, fetchGoal, undoPoints } from '../api';
 import { useTerms } from '../../auth';
+import { currentSubject } from '../../../lib/subject';
 
 export interface Burst {
   key: number;
@@ -35,7 +36,7 @@ export function useAward(onAwarded: () => void) {
 
   async function award(ids: string[], reason: Reason) {
     try {
-      const res = await awardPoints(data.group.id, ids, reason.id);
+      const res = await awardPoints(data.group.id, ids, reason.id, currentSubject(data.group.id, data.subjects));
       const before = new Map(students.map((s) => [s.id, s.level]));
       applySummaries(res.summaries, res.classGoal);
       onAwarded();

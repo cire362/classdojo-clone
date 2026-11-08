@@ -14,7 +14,7 @@ test('соавтор группы: приглашение, работа и вы�
       await page.getByRole('button', { name: 'Настройки группы' }).click();
       await page.fill('#co-teacher-login', COLLEAGUE.login);
       await page.getByRole('dialog').getByRole('button', { name: 'Добавить', exact: true }).click();
-      await expect(page.getByRole('dialog').getByText('Игорь Павлович')).toBeVisible();
+      await expect(page.getByRole('dialog').getByText('Игорь Павлович').first()).toBeVisible();
     });
 
     await test.step('коллега видит группу, ведёт урок, но не может удалить группу', async () => {

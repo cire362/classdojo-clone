@@ -7,6 +7,7 @@ interface SaveBody {
   presentStudentIds: string[];
   peopleOnPhoto: number | null;
   subtractedTeacher: boolean;
+  subjectId?: string | null;
 }
 
 export const fetchAttendanceDay = (groupId: string, date: string, lesson: number | null) =>

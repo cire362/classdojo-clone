@@ -80,6 +80,7 @@ export async function saveAttendance(params: {
   presentStudentIds: string[];
   peopleOnPhoto: number | null;
   subtractedTeacher: boolean;
+  subjectId?: string | null;
   createdById: string;
 }) {
   const students = await prisma.student.findMany({ where: { groupId: params.groupId }, select: { id: true } });
@@ -112,11 +113,14 @@ export async function saveAttendance(params: {
         subtractedTeacher: params.subtractedTeacher,
         studentsTotal: students.length,
         createdById: params.createdById,
+        subjectId: params.subjectId ?? null,
       },
       update: {
         peopleOnPhoto: params.peopleOnPhoto,
         subtractedTeacher: params.subtractedTeacher,
         studentsTotal: students.length,
+        // Переотметка без дисциплины не стирает дисциплину урока
+        ...(params.subjectId ? { subjectId: params.subjectId } : {}),
       },
     });
     await tx.attendance.deleteMany({ where: { sessionId: session.id } });
@@ -134,6 +138,7 @@ export async function saveAttendance(params: {
         awardedById: params.createdById,
         attendanceSessionId: session.id,
         classGoalId: session.classGoalId,
+        subjectId: session.subjectId,
         awardedGroupId: params.groupId,
         // Повторная отметка сегодняшнего урока не меняет время его вклада в уровень.
         createdAt: params.date === dateKey() ? session.createdAt : pointsAt,

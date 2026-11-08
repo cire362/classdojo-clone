@@ -45,6 +45,8 @@ export interface Terms {
   course: string;
   /** Самый старший курс или класс */
   maxCourse: number;
+  /** Предмет в школе, дисциплина в колледже и вузе */
+  subject: Noun;
 }
 
 const noun = (one: string[], many: string[]): Noun => {
@@ -69,6 +71,15 @@ const DIVISION = noun(
   ['подразделения', 'подразделений', 'подразделениям', 'подразделения', 'подразделениями', 'подразделениях'],
 );
 
+const SUBJECT = noun(
+  ['предмет', 'предмета', 'предмету', 'предмет', 'предметом', 'предмете'],
+  ['предметы', 'предметов', 'предметам', 'предметы', 'предметами', 'предметах'],
+);
+const DISCIPLINE = noun(
+  ['дисциплина', 'дисциплины', 'дисциплине', 'дисциплину', 'дисциплиной', 'дисциплине'],
+  ['дисциплины', 'дисциплин', 'дисциплинам', 'дисциплины', 'дисциплинами', 'дисциплинах'],
+);
+
 const STUDENT = noun(
   ['студент', 'студента', 'студенту', 'студента', 'студентом', 'студенте'],
   ['студенты', 'студентов', 'студентам', 'студентов', 'студентами', 'студентах'],
@@ -88,6 +99,7 @@ export const TERMS: Record<InstitutionKind, Terms> = {
     departmentHead: 'Руководитель подразделения',
     course: 'Параллель',
     maxCourse: 11,
+    subject: SUBJECT,
   },
   COLLEGE: {
     kind: 'COLLEGE',
@@ -108,6 +120,7 @@ export const TERMS: Record<InstitutionKind, Terms> = {
     departmentHead: 'Заведующий отделением',
     course: 'Курс',
     maxCourse: 5,
+    subject: DISCIPLINE,
   },
   UNIVERSITY: {
     kind: 'UNIVERSITY',
@@ -125,6 +138,7 @@ export const TERMS: Record<InstitutionKind, Terms> = {
     departmentHead: 'Декан',
     course: 'Курс',
     maxCourse: 6,
+    subject: DISCIPLINE,
   },
 };
 

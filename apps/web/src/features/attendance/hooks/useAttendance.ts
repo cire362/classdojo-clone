@@ -6,6 +6,10 @@ import { CancelledError, withRetry, type RetryStatus } from '../../../lib/networ
 import { useToast } from '../../../ui/Toast';
 import { deleteAttendance, detectPeople, fetchAttendanceDay, saveAttendance, setSubtractTeacher } from '../api';
 import { prepareImage } from '../../../lib/photo';
+import { currentSubject } from '../../../lib/subject';
+
+/** Дисциплина уходит, только если выбрана: без неё запрос прежний */
+const withSubject = (subjectId: string | null) => (subjectId ? { subjectId } : {});
 
 /** Сервису подсчёта хватает 1600 точек, а загрузка с телефона идёт быстрее */
 const PHOTO_SIDE = 1600;
@@ -159,6 +163,7 @@ export function useAttendance() {
             presentStudentIds: [...present],
             peopleOnPhoto: detection?.count ?? null,
             subtractedTeacher: detection ? subtract : false,
+            ...withSubject(currentSubject(data.group.id, data.subjects)),
           }),
         { onStatus: setSaveStatus },
       );

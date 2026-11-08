@@ -4,10 +4,11 @@ import type { AppEnv } from '../../platform/auth.js';
 import { parse } from '../../platform/errors.js';
 import { teacherGroup } from '../access/index.js';
 import { classGoal } from '../goals/index.js';
+import { checkGroupSubject } from '../subjects/index.js';
 import { awardPoints, cardSummaries, deletePointEvents } from './service.js';
 
 const id = z.string().min(1).max(64);
-const AwardBody = z.object({ studentIds: z.array(id).min(1).max(200), reasonId: id });
+const AwardBody = z.object({ studentIds: z.array(id).min(1).max(200), reasonId: id, subjectId: id.nullable().optional() });
 const UndoBody = z.object({ eventIds: z.array(id).min(1).max(200) });
 
 /** Начисление и отмена баллов. Роль проверяет сборка routes/teacher.ts */
@@ -19,6 +20,7 @@ export const pointRoutes = new Hono<AppEnv>()
       groupId: group.id,
       studentIds: body.studentIds,
       reasonId: body.reasonId,
+      subjectId: await checkGroupSubject(group.id, body.subjectId),
       awardedById: c.get('user').accountId,
     });
     const summaries = await cardSummaries(body.studentIds);
