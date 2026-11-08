@@ -11,12 +11,12 @@ const api = vi.mocked((await import('../src/lib/api')).api);
 beforeEach(() => { api.mockReset(); });
 
 const SCHOOL: SchoolInfo = {
-  id: 's1', name: 'Моя школа', kind: 'SCHOOL', heroes: true, role: 'DIRECTOR', joinCode: 'ABCD2345', pendingTeachers: 1,
+  id: 's1', name: 'Моя школа', kind: 'SCHOOL', heroes: true, role: 'DIRECTOR', joinCode: 'ABCD2345', pendingTeachers: 1, department: null,
 };
 const REQUEST: TeacherRequest = { id: 't9', name: 'Анна Петровна', login: 'anna', createdAt: '2026-11-07T08:00:00.000Z' };
 const STAFF: StaffMember[] = [
-  { id: 'a1', name: 'Ирина Львовна', login: 'director', role: 'DIRECTOR', isMe: true },
-  { id: 'a2', name: 'Олег Ильич', login: 'oleg', role: 'DEPUTY', isMe: false },
+  { id: 'a1', name: 'Ирина Львовна', login: 'director', role: 'DIRECTOR', departmentId: null, isMe: true },
+  { id: 'a2', name: 'Олег Ильич', login: 'oleg', role: 'DEPUTY', departmentId: null, isMe: false },
 ];
 const GROUP = {
   id: 'g1', name: '3 «А»', archivedAt: null, studentsCount: 2, filesExpireAt: null, colleagues: [],
@@ -33,6 +33,7 @@ function backend(school: SchoolInfo, overrides: Record<string, unknown> = {}) {
     if (key === 'GET /admin/teachers') return { freeForAll: true, teachers: [] } as never;
     if (key === 'GET /admin/groups') return [GROUP] as never;
     if (key === 'GET /admin/staff') return STAFF as never;
+    if (key === 'GET /admin/departments') return [] as never;
     throw new Error(`unexpected ${key}`);
   });
 }

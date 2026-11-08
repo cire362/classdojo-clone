@@ -37,6 +37,14 @@ export interface Terms {
   student: Noun;
   /** Должности администрации: права одинаковы, названия зависят от типа */
   roles: { DIRECTOR: string; DEPUTY: string; STAFF: string };
+  /** Подразделение: факультет в вузе, отделение в колледже */
+  department: Noun;
+  /** Сотрудник, закреплённый за подразделением: декан, заведующий отделением */
+  departmentHead: string;
+  /** Год обучения группы: курс в колледже и вузе, параллель в школе */
+  course: string;
+  /** Самый старший курс или класс */
+  maxCourse: number;
 }
 
 const noun = (one: string[], many: string[]): Noun => {
@@ -56,6 +64,11 @@ const PUPIL = noun(
   ['ученик', 'ученика', 'ученику', 'ученика', 'учеником', 'ученике'],
   ['ученики', 'учеников', 'ученикам', 'учеников', 'учениками', 'учениках'],
 );
+const DIVISION = noun(
+  ['подразделение', 'подразделения', 'подразделению', 'подразделение', 'подразделением', 'подразделении'],
+  ['подразделения', 'подразделений', 'подразделениям', 'подразделения', 'подразделениями', 'подразделениях'],
+);
+
 const STUDENT = noun(
   ['студент', 'студента', 'студенту', 'студента', 'студентом', 'студенте'],
   ['студенты', 'студентов', 'студентам', 'студентов', 'студентами', 'студентах'],
@@ -71,6 +84,10 @@ export const TERMS: Record<InstitutionKind, Terms> = {
     groupFeminine: false,
     student: PUPIL,
     roles: { DIRECTOR: 'Директор', DEPUTY: 'Завуч', STAFF: 'Сотрудник' },
+    department: DIVISION,
+    departmentHead: 'Руководитель подразделения',
+    course: 'Параллель',
+    maxCourse: 11,
   },
   COLLEGE: {
     kind: 'COLLEGE',
@@ -84,6 +101,13 @@ export const TERMS: Record<InstitutionKind, Terms> = {
     groupFeminine: true,
     student: STUDENT,
     roles: { DIRECTOR: 'Директор', DEPUTY: 'Заместитель директора', STAFF: 'Сотрудник' },
+    department: noun(
+      ['отделение', 'отделения', 'отделению', 'отделение', 'отделением', 'отделении'],
+      ['отделения', 'отделений', 'отделениям', 'отделения', 'отделениями', 'отделениях'],
+    ),
+    departmentHead: 'Заведующий отделением',
+    course: 'Курс',
+    maxCourse: 5,
   },
   UNIVERSITY: {
     kind: 'UNIVERSITY',
@@ -94,6 +118,13 @@ export const TERMS: Record<InstitutionKind, Terms> = {
     groupFeminine: true,
     student: STUDENT,
     roles: { DIRECTOR: 'Ректор', DEPUTY: 'Проректор', STAFF: 'Сотрудник' },
+    department: noun(
+      ['факультет', 'факультета', 'факультету', 'факультет', 'факультетом', 'факультете'],
+      ['факультеты', 'факультетов', 'факультетам', 'факультеты', 'факультетами', 'факультетах'],
+    ),
+    departmentHead: 'Декан',
+    course: 'Курс',
+    maxCourse: 6,
   },
 };
 

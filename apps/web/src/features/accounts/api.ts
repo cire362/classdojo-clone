@@ -52,3 +52,9 @@ export const changePassword = (endpoint: string, currentPassword: string, newPas
 export const renameTeacher = (name: string) => api('PATCH', '/teacher/me', { name });
 
 export const fetchPlan = () => api<{ active: boolean; until: string | null; freeForAll: boolean }>('GET', '/teacher/plan');
+
+export const updateAdminGroup = (groupId: string, data: { departmentId: string | null; course: number | null; specialty: string }) =>
+  api<AdminGroup[]>('PATCH', `/admin/groups/${groupId}`, data);
+
+export const setStaffDepartment = (staffId: string, departmentId: string | null) =>
+  api<StaffMember[]>('PUT', `/admin/staff/${staffId}/department`, { departmentId });

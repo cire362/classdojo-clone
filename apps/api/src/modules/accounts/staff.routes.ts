@@ -4,7 +4,7 @@ import { requireRole, requireSchoolRole, type AppEnv } from '../../platform/auth
 import { parse } from '../../platform/errors.js';
 import { TeacherBody } from './admin.routes.js';
 import { approveTeacher, disableJoinCode, rejectTeacher, renewJoinCode, teacherRequests } from './join.service.js';
-import { createStaff, removeStaff, resetStaffPassword, schoolStaff, setStaffRole } from './staff.service.js';
+import { createStaff, removeStaff, resetStaffPassword, schoolStaff, setStaffDepartment, setStaffRole } from './staff.service.js';
 
 const SchoolRoleField = z.enum(['DIRECTOR', 'DEPUTY', 'STAFF'], { message: 'Выберите должность' });
 const StaffBody = TeacherBody.extend({ role: SchoolRoleField });
@@ -27,6 +27,10 @@ export const schoolStaffRoutes = new Hono<AppEnv>()
   .put('/staff/:id/role', DIRECTOR, async (c) => {
     const { role } = parse(RoleBody, await c.req.json().catch(() => null));
     return c.json(await setStaffRole(c.get('user'), c.req.param('id'), role));
+  })
+  .put('/staff/:id/department', DIRECTOR, async (c) => {
+    const { departmentId } = parse(z.object({ departmentId: z.string().min(1).nullable() }), await c.req.json().catch(() => null));
+    return c.json(await setStaffDepartment(c.get('user'), c.req.param('id'), departmentId));
   })
   .post('/staff/:id/reset-password', DIRECTOR, async (c) => c.json(await resetStaffPassword(c.get('user'), c.req.param('id'))))
   .delete('/staff/:id', DIRECTOR, async (c) => c.json(await removeStaff(c.get('user'), c.req.param('id'))))

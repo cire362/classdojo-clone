@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DownloadSimpleIcon, UsersThreeIcon } from '@phosphor-icons/react';
+import { DownloadSimpleIcon, PencilSimpleIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import type { AdminGroup } from '../../../lib/api';
 import { exportUrl, longDate } from '../../../lib/files';
 import { pluralize, useLoad } from '../../../lib/hooks';
@@ -7,26 +7,54 @@ import { ErrorBox, Skeleton } from '../../../ui';
 import { fetchAdminGroups } from '../api';
 import { cap } from '@heroes/shared/terms';
 import { useTerms } from '../../auth';
+import { departmentOptions, fetchDepartments } from '../../departments';
+import { GroupMetaModal } from './GroupMetaModal';
 
 const searchText = (g: AdminGroup) =>
-  [g.name, g.owner.name, g.owner.login, ...g.colleagues.map((t) => t.name)].join(' ').toLocaleLowerCase('ru');
+  [g.name, g.owner.name, g.owner.login, g.specialty, g.department?.name ?? '', ...g.colleagues.map((t) => t.name)]
+    .join(' ')
+    .toLocaleLowerCase('ru');
 
-/** Группы учреждения. Файлы группы скачивают руководитель и заместитель */
-export function SchoolGroups({ canExport }: { canExport: boolean }) {
-  const { data, error, reload } = useLoad(() => fetchAdminGroups(), []);
+/**
+ * Группы учреждения или подразделения смотрящего. Файлы группы скачивают и подразделение, курс и специальность
+ * задают директор и заместитель (сотрудник подразделения — для своих групп)
+ */
+export function SchoolGroups({ canExport, departmentId }: { canExport: boolean; departmentId: string | null }) {
+  const { data, error, reload, setData } = useLoad(() => fetchAdminGroups(), []);
   const t = useTerms();
+  const departments = useLoad(() => (t.kind === 'SCHOOL' ? Promise.resolve([]) : fetchDepartments()), [t.kind]);
   const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState('');
+  const [editing, setEditing] = useState<AdminGroup | null>(null);
   const search = query.trim().toLocaleLowerCase('ru');
-  const visible = data?.filter((g) => searchText(g).includes(search)) ?? [];
+  const courseWord = t.course.toLocaleLowerCase('ru');
+  const all = departmentOptions(departments.data ?? []);
+  // Сотрудник подразделения выбирает только его и вложенные подразделения
+  const scope = departmentId
+    ? new Set([departmentId, ...(departments.data ?? []).filter((d) => d.parentId === departmentId).map((d) => d.id)])
+    : null;
+  const options = scope ? all.filter((o) => scope.has(o.id)) : all;
+  const visible = data?.filter((g) => searchText(g).includes(search) && (!filter || g.department?.id === filter)) ?? [];
   return (
     <section className="space-y-4" aria-labelledby="school-groups-title">
       <h2 id="school-groups-title" className="text-lg">
         {cap(t.group.many.nom)} {t.org.one.gen} {data && <span className="text-ink-soft">({data.length})</span>}
       </h2>
-      <label className="block max-w-md">
-        <span className="label">Поиск группы или преподавателя</span>
-        <input type="search" className="input" value={query} onChange={(e) => setQuery(e.target.value)} />
-      </label>
+      <div className="flex flex-wrap gap-3">
+        <label className="block min-w-0 max-w-md flex-1 basis-60">
+          <span className="label">Поиск группы или преподавателя</span>
+          <input type="search" className="input" value={query} onChange={(e) => setQuery(e.target.value)} />
+        </label>
+        {options.length > 0 && (
+          <label className="block basis-60">
+            <span className="label">Подразделение</span>
+            <select className="input" value={filter} onChange={(e) => setFilter(e.target.value)}>
+              <option value="">Все</option>
+              {options.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+            </select>
+          </label>
+        )}
+      </div>
       {error && <ErrorBox message={error} onRetry={reload} />}
       {!data && !error && <Skeleton className="h-48" />}
       {data && (
@@ -41,6 +69,11 @@ export function SchoolGroups({ canExport }: { canExport: boolean }) {
                 <b>{g.owner.name}</b>
                 <span className="block break-all font-mono text-ink-soft">{g.owner.login}</span>
               </p>
+              {(g.department || g.course || g.specialty) && (
+                <p className="break-words text-sm">
+                  {[g.department?.name, g.course && `${courseWord} ${g.course}`, g.specialty].filter(Boolean).join(' · ')}
+                </p>
+              )}
               {g.colleagues.length > 0 && (
                 <p className="break-words text-sm text-ink-soft">Соавторы: {g.colleagues.map((t) => t.name).join(', ')}</p>
               )}
@@ -49,6 +82,11 @@ export function SchoolGroups({ canExport }: { canExport: boolean }) {
                 {g.studentsCount} {pluralize(g.studentsCount, t.student.one.nom, t.student.one.gen, t.student.many.gen)}
               </p>
               {g.filesExpireAt && <p className="text-sm">Фото и файлы удалятся {longDate(g.filesExpireAt)}</p>}
+              {canExport && (
+                <button className="btn btn-ghost btn-sm" aria-label={`Подразделение и курс: ${g.name}`} onClick={() => setEditing(g)}>
+                  <PencilSimpleIcon size={18} aria-hidden /> {t.kind === 'SCHOOL' ? t.course : 'Подразделение и курс'}
+                </button>
+              )}
               {canExport && (
                 <a
                   className="btn btn-secondary btn-sm"
@@ -68,6 +106,7 @@ export function SchoolGroups({ canExport }: { canExport: boolean }) {
           )}
         </ul>
       )}
+      <GroupMetaModal group={editing} options={options} onClose={() => setEditing(null)} onSaved={setData} />
     </section>
   );
 }

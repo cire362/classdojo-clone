@@ -1,9 +1,9 @@
 import { Hono, type Context } from 'hono';
-import { requireRole, requireSchoolRole, type AppEnv } from '../../platform/auth.js';
+import { requireRole, type AppEnv } from '../../platform/auth.js';
 import { dateKey } from '../../platform/dates.js';
 import { prisma } from '../../platform/db.js';
-import { notFound } from '../../platform/errors.js';
-import { parentChild, teacherGroup } from '../access/index.js';
+import { HttpError, notFound } from '../../platform/errors.js';
+import { adminGroupsWhere, parentChild, teacherGroup } from '../access/index.js';
 import { childArchive, groupArchive } from './service.js';
 import { zipStream, type ZipEntry } from './zip.js';
 
@@ -38,8 +38,10 @@ export const parentExportRoutes = new Hono<AppEnv>().get('/children/:id/export',
  */
 export const adminExportRoutes = new Hono<AppEnv>()
   .use(requireRole('ADMIN'))
-  .get('/groups/:id/export', requireSchoolRole('DIRECTOR', 'DEPUTY'), async (c) => {
-    const where = { id: c.req.param('id'), teacher: { schoolId: c.get('user').schoolId ?? '' } };
+  .get('/groups/:id/export', async (c) => {
+    // Директор и заместитель — любые группы учреждения, сотрудник подразделения — свои; рядовой сотрудник — никакие
+    if (c.get('user').schoolRole === 'STAFF') throw new HttpError(403, 'Это может сделать только директор или завуч');
+    const where = { id: c.req.param('id'), ...(await adminGroupsWhere(c.get('user'))) };
     const group = await prisma.group.findFirst({ where, select: { id: true } });
     if (!group) throw notFound('Группа не найдена');
     return download(c, await groupArchive(group.id));

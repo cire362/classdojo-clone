@@ -94,6 +94,10 @@ export interface AdminTeachers { freeForAll: boolean; teachers: AdminTeacher[] }
 
 export interface AdminGroup {
   id: string; name: string; archivedAt: string | null; studentsCount: number;
+  /** Подразделение, курс (параллель) и специальность */
+  department: { id: string; name: string } | null;
+  course: number | null;
+  specialty: string;
   /** Когда удалятся фото и файлы архивной группы */
   filesExpireAt: string | null;
   owner: { id: string; name: string; login: string };
@@ -115,6 +119,17 @@ export interface SchoolInfo {
   joinCode: string | null;
   /** Заявок преподавателей ждут проверки; сотруднику без прав на них — 0 */
   pendingTeachers: number;
+  /** Подразделение смотрящего: он видит только его группы. null — всё учреждение */
+  department: { id: string; name: string } | null;
+}
+
+/** Подразделение колледжа или вуза; кафедра лежит внутри факультета */
+export interface Department {
+  id: string;
+  name: string;
+  parentId: string | null;
+  groups: number;
+  admins: number;
 }
 
 /** Сотрудник администрации школы */
@@ -123,6 +138,8 @@ export interface StaffMember {
   name: string;
   login: string;
   role: SchoolRole;
+  /** Подразделение сотрудника; null — всё учреждение */
+  departmentId: string | null;
   /** Это сам смотрящий: себя изменить и удалить нельзя */
   isMe: boolean;
 }

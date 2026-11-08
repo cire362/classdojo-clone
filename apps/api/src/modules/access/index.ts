@@ -1,4 +1,6 @@
 export {
+  adminGroupsWhere,
+  departmentSubtree,
   ARCHIVED_MESSAGE,
   OWNER_ONLY_MESSAGE,
   assignmentReader,

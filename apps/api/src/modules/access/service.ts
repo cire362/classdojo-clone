@@ -93,6 +93,19 @@ export async function schoolThreadReader(user: AuthUser, thread: { schoolId: str
   throw notFound('Не найдено');
 }
 
+/** Подразделение и его кафедры: глубже одного уровня подразделения не вкладываются */
+export async function departmentSubtree(departmentId: string): Promise<string[]> {
+  const children = await prisma.department.findMany({ where: { parentId: departmentId }, select: { id: true } });
+  return [departmentId, ...children.map((c) => c.id)];
+}
+
+/** Группы, которые видит сотрудник администрации: всего учреждения или только своего подразделения */
+export async function adminGroupsWhere(user: AuthUser): Promise<Prisma.GroupWhereInput> {
+  const school = { teacher: { schoolId: user.schoolId ?? '' } };
+  if (!user.departmentId) return school;
+  return { ...school, departmentId: { in: await departmentSubtree(user.departmentId) } };
+}
+
 /** Конструктор героя и магазин наград закрыты, если в группе ученика герои выключены */
 export async function ensureHeroes(studentId: string) {
   const { group } = await prisma.student.findUniqueOrThrow({ where: { id: studentId }, select: { group: { select: { heroes: true } } } });

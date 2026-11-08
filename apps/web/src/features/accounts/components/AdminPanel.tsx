@@ -4,6 +4,7 @@ import { useNotifications } from '../../notifications';
 import { AdminSchoolFeed } from '../../schoolfeed';
 import { SchoolInbox } from '../../schoolinbox';
 import { SchoolPointsPanel } from '../../schoolpoints';
+import { Departments } from '../../departments';
 import { ErrorBox, Skeleton } from '../../../ui';
 import { fetchSchool } from '../api';
 import { cap, termsFor, type Terms } from '@heroes/shared/terms';
@@ -16,11 +17,12 @@ import { SchoolTeachers } from './SchoolTeachers';
 import { SchoolTitle } from './SchoolTitle';
 import { TeacherRequests } from './TeacherRequests';
 
-type Tab = 'teachers' | 'inbox' | 'groups' | 'points' | 'feed' | 'staff' | 'password';
+type Tab = 'teachers' | 'inbox' | 'groups' | 'departments' | 'points' | 'feed' | 'staff' | 'password';
 const tabs = (t: Terms): [Tab, string][] => [
   ['teachers', 'Преподаватели'],
   ['inbox', `Ящик ${t.org.one.gen}`],
   ['groups', `${cap(t.group.many.nom)} ${t.org.one.gen}`],
+  ...(t.kind === 'SCHOOL' ? [] : [['departments', cap(t.department.many.nom)] as [Tab, string]]),
   ['points', `Баллы ${t.org.one.gen}`],
   ['feed', `Лента ${t.org.one.gen}`],
   ['staff', 'Администрация'],
@@ -49,13 +51,17 @@ export function AdminPanel() {
   const auth = useOptionalAuth();
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!school) return <Skeleton className="h-64" />;
-  const manager = canManageTeachers(school.role);
+  // Сотрудник подразделения ведёт свои группы, но не управляет учреждением
+  const manager = canManageTeachers(school.role) && !school.department;
+  const groupEditor = school.role !== 'STAFF';
   const terms = termsFor(school.kind);
   return (
     <TermsProvider kind={school.kind}>
     <div className="space-y-6">
       <div>
-        <p className="mb-2 text-sm font-semibold text-ink-soft">{terms.roles[school.role]}</p>
+        <p className="mb-2 text-sm font-semibold text-ink-soft">
+          {school.department ? `${terms.departmentHead}: ${school.department.name}` : terms.roles[school.role]}
+        </p>
         <SchoolTitle
           school={school}
           onChange={(next) => {
@@ -90,7 +96,8 @@ export function AdminPanel() {
         </div>
       )}
       {tab === 'inbox' && <SchoolInbox />}
-      {tab === 'groups' && <SchoolGroups canExport={manager} />}
+      {tab === 'groups' && <SchoolGroups canExport={groupEditor} departmentId={school.department?.id ?? null} />}
+      {tab === 'departments' && <Departments canEdit={manager} />}
       {tab === 'points' && <SchoolPointsPanel canEdit={manager} />}
       {tab === 'feed' && <AdminSchoolFeed canWrite={manager} />}
       {tab === 'staff' && <SchoolStaff isDirector={school.role === 'DIRECTOR'} />}

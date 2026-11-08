@@ -16,10 +16,12 @@ export async function schoolStaff(user: AuthUser): Promise<StaffMember[]> {
   const rows = await prisma.admin.findMany({
     where: { schoolId: user.schoolId! },
     orderBy: [{ name: 'asc' }, { id: 'asc' }],
-    select: { id: true, name: true, role: true, accountId: true, account: { select: { login: true } } },
+    select: { id: true, name: true, role: true, departmentId: true, accountId: true, account: { select: { login: true } } },
   });
   return rows
-    .map((a) => ({ id: a.id, name: a.name, login: a.account.login, role: a.role, isMe: a.accountId === user.accountId }))
+    .map((a) => ({
+      id: a.id, name: a.name, login: a.account.login, role: a.role, departmentId: a.departmentId, isMe: a.accountId === user.accountId,
+    }))
     .sort((a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role]);
 }
 
@@ -88,6 +90,17 @@ export async function removeStaff(user: AuthUser, staffId: string) {
   await asDirector(user, staffId, async (tx) => {
     const { accountId } = await tx.admin.findUniqueOrThrow({ where: { id: staffId }, select: { accountId: true } });
     await tx.account.delete({ where: { id: accountId } });
+  });
+  return schoolStaff(user);
+}
+
+/** Закрепить сотрудника за подразделением: он увидит только его группы. null — всё учреждение */
+export async function setStaffDepartment(user: AuthUser, staffId: string, departmentId: string | null) {
+  await asDirector(user, staffId, async (tx) => {
+    if (departmentId && !(await tx.department.count({ where: { id: departmentId, schoolId: user.schoolId! } }))) {
+      throw notFound('Подразделение не найдено');
+    }
+    await tx.admin.update({ where: { id: staffId }, data: { departmentId } });
   });
   return schoolStaff(user);
 }

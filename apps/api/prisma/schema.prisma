@@ -108,6 +108,24 @@ model School {
   threads   SchoolThread[]
   reasons   SchoolReason[]
   goal      SchoolGoal?
+  departments Department[]
+}
+
+/// Подразделение колледжа или вуза: отделение, факультет, институт или кафедра внутри факультета (не глубже)
+model Department {
+  id        String       @id @default(cuid())
+  schoolId  String
+  school    School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name      String
+  parentId  String?
+  parent    Department?  @relation("DepartmentTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children  Department[] @relation("DepartmentTree")
+  createdAt DateTime     @default(now())
+  groups    Group[]
+  admins    Admin[]
+
+  @@index([schoolId])
+  @@index([parentId])
 }
 
 /// Общая причина школы: задаётся один раз, а в каждой группе школы появляется её копия в BehaviorReason
@@ -210,6 +228,9 @@ model Admin {
   name      String
   role      SchoolRole @default(DIRECTOR)
   createdAt DateTime   @default(now())
+  /// Сотрудник подразделения (декан, заведующий отделением): видит и ведёт только его группы. Пусто — всё учреждение
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: Restrict)
   /// По умолчанию — первая школа установки: её создаёт миграция
   schoolId  String  @default("school-default")
   school    School  @relation(fields: [schoolId], references: [id])
@@ -254,6 +275,13 @@ model Group {
   parentsEnabled  Boolean   @default(true)
   /// Герои, питомцы, уровни и магазин наград. Без них остаются баллы, посещаемость, задания, работы и отчёты
   heroes          Boolean   @default(true)
+  /// Подразделение колледжа или вуза
+  departmentId    String?
+  department      Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  /// Курс в колледже и вузе, параллель (год обучения) в школе
+  course          Int?
+  /// Специальность или направление подготовки
+  specialty       String    @default("")
   /// Дата переноса в архив; null — группа активна
   archivedAt      DateTime?
   createdAt       DateTime  @default(now())

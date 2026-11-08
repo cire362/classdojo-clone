@@ -4,8 +4,9 @@ import { requireRole, requireSchoolRole, type AppEnv } from '../../platform/auth
 import { LOGIN_PATTERN } from '../../platform/credentials.js';
 import { parse } from '../../platform/errors.js';
 import {
-  adminGroups, adminTeachers, createTeacher, resetTeacherPassword, schoolInfo, setTeacherPremium, updateSchool,
+  adminTeachers, createTeacher, resetTeacherPassword, schoolInfo, setTeacherPremium, updateSchool,
 } from './admin.service.js';
+import { adminGroups, updateAdminGroup } from './school-groups.service.js';
 import { changeOwnPassword } from './service.js';
 
 export const TeacherBody = z.object({
@@ -27,6 +28,11 @@ const PremiumBody = z.object({
 });
 
 const MANAGERS = requireSchoolRole('DIRECTOR', 'DEPUTY');
+const GroupBody = z.object({
+  departmentId: z.string().min(1).nullable(),
+  course: z.number().int().min(1, 'Курс от 1').max(11, 'Не больше 11').nullable(),
+  specialty: z.string().trim().max(120).default(''),
+});
 
 /**
  * Администрация школы: всё в пределах своей школы, остальным ролям маршруты закрыты.
@@ -54,4 +60,8 @@ export const adminRoutes = new Hono<AppEnv>()
     const { until } = parse(PremiumBody, await c.req.json().catch(() => null));
     return c.json(await setTeacherPremium(c.get('user').schoolId!, c.req.param('id'), until));
   })
-  .get('/groups', async (c) => c.json(await adminGroups(c.get('user').schoolId!)));
+  .get('/groups', async (c) => c.json(await adminGroups(c.get('user'))))
+  .patch('/groups/:id', async (c) => {
+    const body = parse(GroupBody, await c.req.json().catch(() => null));
+    return c.json(await updateAdminGroup(c.get('user'), c.req.param('id'), body));
+  });

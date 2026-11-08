@@ -4,7 +4,8 @@ import type { SchoolRole, StaffMember, TeacherCredentials } from '../../../lib/a
 import { useLoad } from '../../../lib/hooks';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
-import { createStaff, fetchStaff, removeStaff, resetStaffPassword, setStaffRole } from '../api';
+import { createStaff, fetchStaff, removeStaff, resetStaffPassword, setStaffDepartment, setStaffRole } from '../api';
+import { departmentOptions, fetchDepartments } from '../../departments';
 import { useTerms } from '../../auth';
 import { roleHints } from '../roles';
 import { AccountFields } from './AccountFields';
@@ -20,6 +21,9 @@ export function SchoolStaff({ isDirector }: { isDirector: boolean }) {
   const ROLE_NAMES = terms.roles;
   const ROLE_HINTS = roleHints(terms);
   const { data, error, reload, setData } = useLoad(() => fetchStaff(), []);
+  const departments = useLoad(() => (terms.kind === 'SCHOOL' ? Promise.resolve([]) : fetchDepartments()), [terms.kind]);
+  const options = departmentOptions(departments.data ?? []);
+  const departmentName = (id: string | null) => options.find((o) => o.id === id)?.label.replace(/^— /, '');
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [formError, setFormError] = useState('');
@@ -83,7 +87,11 @@ export function SchoolStaff({ isDirector }: { isDirector: boolean }) {
                   {m.name} {m.isMe && <span className="font-normal text-ink-soft">(вы)</span>}
                 </h3>
                 <p className="break-all font-mono text-sm text-ink-soft">{m.login}</p>
-                {(!isDirector || m.isMe) && <p className="mt-1 text-sm">{ROLE_NAMES[m.role]}</p>}
+                {(!isDirector || m.isMe) && (
+                  <p className="mt-1 text-sm">
+                    {m.departmentId ? `${terms.departmentHead}: ${departmentName(m.departmentId) ?? ''}` : ROLE_NAMES[m.role]}
+                  </p>
+                )}
               </div>
               {isDirector && !m.isMe && (
                 <div className="flex flex-wrap items-center gap-2">
@@ -100,6 +108,24 @@ export function SchoolStaff({ isDirector }: { isDirector: boolean }) {
                   >
                     {ROLES.map((role) => <option key={role} value={role}>{ROLE_NAMES[role]}</option>)}
                   </select>
+                  {options.length > 0 && (
+                    <>
+                      <label className="sr-only" htmlFor={`department-${m.id}`}>Подразделение: {m.name}</label>
+                      <select
+                        id={`department-${m.id}`}
+                        className="input w-auto py-2"
+                        value={m.departmentId ?? ''}
+                        disabled={busy}
+                        onChange={(e) => run(() => setStaffDepartment(m.id, e.target.value || null), (list) => {
+                          setData(list);
+                          toast({ text: 'Область сотрудника изменена', tone: 'ok' });
+                        })}
+                      >
+                        <option value="">Всё учреждение</option>
+                        {options.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                      </select>
+                    </>
+                  )}
                   <button
                     className="btn btn-secondary btn-sm"
                     disabled={busy}

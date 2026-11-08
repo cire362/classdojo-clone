@@ -6,7 +6,6 @@ import { addDays, localDayStart } from '../../platform/dates.js';
 import { env } from '../../platform/env.js';
 import { generatePassword, hashPassword } from '../../platform/credentials.js';
 import { HttpError, isUniqueViolation, notFound } from '../../platform/errors.js';
-import { filesExpireAt } from '../files/index.js';
 import { LOGIN_TAKEN, pendingTeacherCount } from './join.service.js';
 import { isActive } from './premium.service.js';
 
@@ -18,7 +17,11 @@ import { isActive } from './premium.service.js';
 export async function schoolInfo(user: AuthUser): Promise<SchoolInfo> {
   const select = { id: true, name: true, kind: true, heroes: true, joinCode: true } as const;
   const school = await prisma.school.findUniqueOrThrow({ where: { id: user.schoolId! }, select });
-  const checks = user.schoolRole !== 'STAFF';
+  const department = user.departmentId
+    ? await prisma.department.findUnique({ where: { id: user.departmentId }, select: { id: true, name: true } })
+    : null;
+  // Код подключения и заявки — дело администрации всего учреждения
+  const checks = user.schoolRole !== 'STAFF' && !user.departmentId;
   return {
     id: school.id,
     name: school.name,
@@ -27,6 +30,7 @@ export async function schoolInfo(user: AuthUser): Promise<SchoolInfo> {
     role: user.schoolRole!,
     joinCode: checks ? school.joinCode : null,
     pendingTeachers: checks ? await pendingTeacherCount(school.id) : 0,
+    department,
   };
 }
 
@@ -109,26 +113,4 @@ export async function setTeacherPremium(schoolId: string, teacherId: string, unt
   const { count } = await prisma.teacher.updateMany({ where: { id: teacherId, schoolId, pendingSince: null }, data: { premiumUntil } });
   if (!count) throw notFound('Преподаватель не найден');
   return { premiumUntil: premiumUntil?.toISOString() ?? null, premiumActive: isActive(premiumUntil), freeForAll: env.premiumForAll };
-}
-
-export async function adminGroups(schoolId: string): Promise<AdminGroup[]> {
-  const groups = await prisma.group.findMany({
-    where: { teacher: { schoolId } },
-    orderBy: [{ name: 'asc' }, { id: 'asc' }],
-    select: {
-      id: true, name: true, archivedAt: true,
-      teacher: { select: { id: true, name: true, account: { select: { login: true } } } },
-      coTeachers: { orderBy: { createdAt: 'asc' }, select: { teacher: { select: { id: true, name: true } } } },
-      _count: { select: { students: true } },
-    },
-  });
-  return groups.map((g) => ({
-    id: g.id,
-    name: g.name,
-    archivedAt: g.archivedAt?.toISOString() ?? null,
-    filesExpireAt: filesExpireAt(g.archivedAt)?.toISOString() ?? null,
-    owner: { id: g.teacher.id, name: g.teacher.name, login: g.teacher.account.login },
-    colleagues: g.coTeachers.map((t) => t.teacher),
-    studentsCount: g._count.students,
-  }));
 }

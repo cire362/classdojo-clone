@@ -24,6 +24,8 @@ export interface AuthUser {
   schoolId: string | null;
   /** Должность в администрации школы; только у роли ADMIN */
   schoolRole: SchoolRole | null;
+  /** Подразделение сотрудника администрации: он видит и ведёт только его группы. null — всё учреждение */
+  departmentId: string | null;
   /** Тип учебного заведения: от него зависят слова в ответах */
   institution: InstitutionKind | null;
   /** Студент: есть ли в его группе герои и награды; у остальных ролей null */
@@ -129,6 +131,7 @@ export async function loadUser(c: Context): Promise<AuthUser | null> {
     parentId: a.parent?.id ?? null,
     schoolId: a.teacher?.schoolId ?? a.admin?.schoolId ?? null,
     schoolRole: a.admin?.role ?? null,
+    departmentId: a.admin?.departmentId ?? null,
     institution: accountInstitution(a),
     heroes: a.student?.group.heroes ?? null,
   };
@@ -148,9 +151,13 @@ export function requireRole(role: Role): MiddlewareHandler<AppEnv> {
   };
 }
 
-/** Действие администрации школы, доступное только этим должностям. Роль ADMIN проверяется раньше */
+/**
+ * Действие администрации всего учреждения, доступное только этим должностям. Роль ADMIN проверяется раньше.
+ * Сотрудник подразделения (декан, заведующий отделением) таких действий не выполняет: он ведёт только свои группы
+ */
 export function requireSchoolRole(...roles: SchoolRole[]): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
+    if (c.get('user').departmentId) throw new HttpError(403, 'Это может сделать только администрация всего учреждения');
     const role = c.get('user').schoolRole;
     if (!role || !roles.includes(role)) {
       const who = roles.includes('DEPUTY') ? 'руководитель или его заместитель' : 'руководитель';
