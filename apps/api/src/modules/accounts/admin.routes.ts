@@ -7,6 +7,7 @@ import {
   adminTeachers, createTeacher, resetTeacherPassword, schoolInfo, setTeacherPremium, updateSchool,
 } from './admin.service.js';
 import { adminGroups, updateAdminGroup } from './school-groups.service.js';
+import { deleteTeacher, setTeacherDisabled, transferTeacherGroups } from './teacher-admin.service.js';
 import { changeOwnPassword } from './service.js';
 
 export const TeacherBody = z.object({
@@ -28,6 +29,8 @@ const PremiumBody = z.object({
 });
 
 const MANAGERS = requireSchoolRole('DIRECTOR', 'DEPUTY');
+const DisabledBody = z.object({ disabled: z.boolean() });
+const TransferBody = z.object({ toTeacherId: z.string().min(1).max(64) });
 const GroupBody = z.object({
   departmentId: z.string().min(1).nullable(),
   course: z.number().int().min(1, 'Курс от 1').max(11, 'Не больше 11').nullable(),
@@ -59,6 +62,20 @@ export const adminRoutes = new Hono<AppEnv>()
   .put('/teachers/:id/premium', MANAGERS, async (c) => {
     const { until } = parse(PremiumBody, await c.req.json().catch(() => null));
     return c.json(await setTeacherPremium(c.get('user').schoolId!, c.req.param('id'), until));
+  })
+  .put('/teachers/:id/disabled', MANAGERS, async (c) => {
+    const { disabled } = parse(DisabledBody, await c.req.json().catch(() => null));
+    await setTeacherDisabled(c.get('user').schoolId!, c.req.param('id'), disabled);
+    return c.json(await adminTeachers(c.get('user').schoolId!));
+  })
+  .post('/teachers/:id/transfer', MANAGERS, async (c) => {
+    const { toTeacherId } = parse(TransferBody, await c.req.json().catch(() => null));
+    const { moved } = await transferTeacherGroups(c.get('user').schoolId!, c.req.param('id'), toTeacherId);
+    return c.json({ moved, ...(await adminTeachers(c.get('user').schoolId!)) });
+  })
+  .delete('/teachers/:id', MANAGERS, async (c) => {
+    await deleteTeacher(c.get('user').schoolId!, c.req.param('id'));
+    return c.json(await adminTeachers(c.get('user').schoolId!));
   })
   .get('/groups', async (c) => c.json(await adminGroups(c.get('user'))))
   .patch('/groups/:id', async (c) => {

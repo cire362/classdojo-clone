@@ -12,7 +12,7 @@ export async function portfolioItems(studentId: string): Promise<PortfolioItem[]
       createdBy: { select: { teacher: { select: { name: true } } } },
     },
   });
-  return items.map(({ createdBy, ...p }) => ({ ...p, createdAt: p.createdAt.toISOString(), author: createdBy.teacher?.name ?? '' }));
+  return items.map(({ createdBy, ...p }) => ({ ...p, createdAt: p.createdAt.toISOString(), author: createdBy?.teacher?.name ?? '' }));
 }
 
 export async function addPortfolioItem(

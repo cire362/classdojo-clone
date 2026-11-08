@@ -88,6 +88,8 @@ export interface TeacherCredentials { id: string; name: string; login: string; p
 export interface AdminTeacher {
   id: string; name: string; login: string; ownedGroups: number; sharedGroups: number;
   premiumUntil: string | null; premiumActive: boolean;
+  /** Вход отключён администрацией */
+  disabled: boolean;
 }
 
 export interface AdminTeachers { freeForAll: boolean; teachers: AdminTeacher[] }

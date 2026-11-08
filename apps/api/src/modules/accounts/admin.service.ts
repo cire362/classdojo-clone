@@ -53,7 +53,7 @@ export async function adminTeachers(schoolId: string): Promise<AdminTeachers> {
     where: { schoolId, pendingSince: null },
     orderBy: [{ name: 'asc' }, { id: 'asc' }],
     select: {
-      id: true, name: true, premiumUntil: true, account: { select: { login: true } },
+      id: true, name: true, premiumUntil: true, disabledAt: true, account: { select: { login: true } },
       _count: { select: { groups: true, coGroups: true } },
     },
   });
@@ -67,6 +67,7 @@ export async function adminTeachers(schoolId: string): Promise<AdminTeachers> {
       sharedGroups: t._count.coGroups,
       premiumUntil: t.premiumUntil?.toISOString() ?? null,
       premiumActive: isActive(t.premiumUntil),
+      disabled: !!t.disabledAt,
     })),
   };
 }

@@ -311,6 +311,8 @@ model Teacher {
   quietTo   Int?
   /// Подключился по коду школы и ждёт проверки администрацией; null — подтверждён. До проверки войти нельзя
   pendingSince DateTime?
+  /// Вход отключён администрацией; группы и записи сохраняются
+  disabledAt   DateTime?
 
   groups   Group[]
   coGroups GroupTeacher[]
@@ -838,8 +840,9 @@ model PortfolioItem {
   title       String
   description String   @default("")
   emoji       String   @default("🏆")
-  createdById String
-  createdBy   Account  @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  /// Автор; при удалении преподавателя запись остаётся без автора
+  createdById String?
+  createdBy   Account? @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now())
 
   @@index([studentId, createdAt])

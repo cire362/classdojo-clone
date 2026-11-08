@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { KeyIcon, MagnifyingGlassIcon, PlusIcon } from '@phosphor-icons/react';
+import { KeyIcon, MagnifyingGlassIcon, PlusIcon, UserGearIcon } from '@phosphor-icons/react';
 import type { AdminTeacher, TeacherCredentials } from '../../../lib/api';
 import { useLoad } from '../../../lib/hooks';
 import { ErrorBox, Modal, Skeleton } from '../../../ui';
@@ -7,6 +7,7 @@ import { useToast } from '../../../ui/Toast';
 import { createTeacher, fetchTeachers, resetTeacherPassword, setTeacherPremium } from '../api';
 import { IssuedCredentials } from './IssuedCredentials';
 import { AccountFields } from './AccountFields';
+import { TeacherAccessModal } from './TeacherAccessModal';
 
 /** Преподаватели школы. Добавлять, выдавать пароль и премиум могут директор и завуч, сотрудник только смотрит */
 export function SchoolTeachers({ canManage }: { canManage: boolean }) {
@@ -16,6 +17,7 @@ export function SchoolTeachers({ canManage }: { canManage: boolean }) {
   const [creating, setCreating] = useState(false);
   const [reset, setReset] = useState<AdminTeacher | null>(null);
   const [plan, setPlan] = useState<AdminTeacher | null>(null);
+  const [access, setAccess] = useState<AdminTeacher | null>(null);
   const [issued, setIssued] = useState<TeacherCredentials | null>(null);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({ name: '', login: '' });
@@ -106,7 +108,10 @@ export function SchoolTeachers({ canManage }: { canManage: boolean }) {
           {visible.map((t) => (
             <li key={t.id} className="flex flex-wrap items-center gap-3 p-4">
               <div className="min-w-0 flex-1 basis-52">
-                <h3 className="break-words font-sans text-base font-semibold tracking-normal">{t.name}</h3>
+                <h3 className="break-words font-sans text-base font-semibold tracking-normal">
+                  {t.name}
+                  {t.disabled && <span className="chip ml-2 bg-surface-2 align-middle text-xs text-ink-soft">Вход отключён</span>}
+                </h3>
                 <p className="break-all font-mono text-sm text-ink-soft">{t.login}</p>
                 <p className="mt-1 text-sm text-ink-soft">Свои группы: {t.ownedGroups} · Соавтор: {t.sharedGroups}</p>
               </div>
@@ -117,6 +122,9 @@ export function SchoolTeachers({ canManage }: { canManage: boolean }) {
                   </button>
                   <button className="btn btn-secondary btn-sm" onClick={() => setReset(t)} aria-label={`Новый пароль: ${t.name}`}>
                     <KeyIcon size={18} /> Новый пароль
+                  </button>
+                  <button className="btn btn-secondary btn-sm" onClick={() => setAccess(t)} aria-label={`Доступ и группы: ${t.name}`}>
+                    <UserGearIcon size={18} /> Доступ и группы
                   </button>
                 </div>
               )}
@@ -143,6 +151,14 @@ export function SchoolTeachers({ canManage }: { canManage: boolean }) {
           <button className="btn btn-primary" disabled={busy} onClick={resetPassword}>{busy ? 'Меняем…' : 'Выдать новый пароль'}</button>
         </div>
       </Modal>
+      {access && data && (
+        <TeacherAccessModal
+          teacher={data.teachers.find((x) => x.id === access.id) ?? access}
+          colleagues={data.teachers}
+          onClose={() => setAccess(null)}
+          onChanged={reload}
+        />
+      )}
       <IssuedCredentials issued={issued} title="Передайте данные преподавателю" onClose={() => setIssued(null)} />
       <Modal open={!!plan} title="Срок премиума" onClose={() => { if (!busy) setPlan(null); }}>
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); void savePlan(until); }}>

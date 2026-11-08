@@ -31,7 +31,9 @@ export async function groupTeachers(groupId: string, me: string): Promise<GroupT
  */
 export async function addCoTeacher(group: { id: string; teacherId: string }, login: string) {
   const { schoolId } = await prisma.teacher.findUniqueOrThrow({ where: { id: group.teacherId }, select: { schoolId: true } });
-  const teacher = await prisma.teacher.findFirst({ where: { account: { login, role: 'TEACHER' }, schoolId, pendingSince: null } });
+  const teacher = await prisma.teacher.findFirst({
+    where: { account: { login, role: 'TEACHER' }, schoolId, pendingSince: null, disabledAt: null },
+  });
   if (!teacher) throw notFound('Преподаватель с таким логином не найден');
   if (teacher.id === group.teacherId) throw new HttpError(400, 'Это создатель группы');
   const exists = await prisma.groupTeacher.findUnique({ where: { groupId_teacherId: { groupId: group.id, teacherId: teacher.id } } });

@@ -106,8 +106,9 @@ export const pendingTeacherCount = (schoolId: string) => prisma.teacher.count({ 
 export async function ensureVerified(accountId: string) {
   const teacher = await prisma.teacher.findUnique({
     where: { accountId },
-    select: { pendingSince: true, school: { select: { name: true } } },
+    select: { pendingSince: true, disabledAt: true, school: { select: { name: true } } },
   });
+  if (teacher?.disabledAt) throw new HttpError(403, 'Вход отключён администрацией учреждения');
   if (teacher?.pendingSince) {
     throw new HttpError(403, `Заявка на подключение к школе «${teacher.school.name}» ещё ждёт проверки. Войти можно будет после неё`);
   }

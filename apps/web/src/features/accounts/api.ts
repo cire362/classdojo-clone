@@ -58,3 +58,11 @@ export const updateAdminGroup = (groupId: string, data: { departmentId: string |
 
 export const setStaffDepartment = (staffId: string, departmentId: string | null) =>
   api<StaffMember[]>('PUT', `/admin/staff/${staffId}/department`, { departmentId });
+
+export const setTeacherDisabled = (teacherId: string, disabled: boolean) =>
+  api<AdminTeachers>('PUT', `/admin/teachers/${teacherId}/disabled`, { disabled });
+
+export const transferTeacherGroups = (teacherId: string, toTeacherId: string) =>
+  api<AdminTeachers & { moved: number }>('POST', `/admin/teachers/${teacherId}/transfer`, { toTeacherId });
+
+export const deleteTeacher = (teacherId: string) => api<AdminTeachers>('DELETE', `/admin/teachers/${teacherId}`);

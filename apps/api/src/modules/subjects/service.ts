@@ -48,7 +48,7 @@ export async function deleteSubject(schoolId: string, id: string) {
 /** Подтверждённые преподаватели учреждения — для выбора преподавателя дисциплины */
 export async function schoolTeachers(schoolId: string) {
   return prisma.teacher.findMany({
-    where: { schoolId, pendingSince: null },
+    where: { schoolId, pendingSince: null, disabledAt: null },
     orderBy: [{ name: 'asc' }, { id: 'asc' }],
     select: { id: true, name: true },
   });
