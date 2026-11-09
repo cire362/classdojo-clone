@@ -7,7 +7,9 @@ const headers = { 'x-heroes-client': '1' };
 
 test('все сезонные детали помещаются в холст, четыре оригинальных образа', async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 440 });
-  const seasonal = HERO_PARTS.filter((p) => p.collection && p.collection !== 'cosmos');
+  // Сезоны — четыре коллекции; «Космос» и «Искатели» проверяются своими тестами
+  const SEASONS = ['spring', 'summer', 'autumn', 'winter'];
+  const seasonal = HERO_PARTS.filter((p) => p.collection && SEASONS.includes(p.collection));
   const outfit = (collection: string) => {
     const parts = { ...DEFAULT_HERO };
     for (const [slot, layer] of Object.entries(HERO_SLOTS)) {
@@ -17,7 +19,7 @@ test('все сезонные детали помещаются в холст, �
     parts.accentColor = ({ spring: 'color.pink', summer: 'color.yellow', autumn: 'color.orange', winter: 'color.navy' } as Record<string, string>)[collection];
     return parts;
   };
-  const examples = HERO_COLLECTIONS.filter((c) => c.id !== 'cosmos');
+  const examples = HERO_COLLECTIONS.filter((c) => SEASONS.includes(c.id));
   await page.setContent(`<main style="font-family:sans-serif;color:#1b1f4b;background:#f3f4fa;padding:24px"><h1 style="font-size:22px;margin:0 0 16px">Сезонные коллекции · примеры образов</h1><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">${examples.map((c) => `<figure style="margin:0;text-align:center"><div>${renderHeroSvg(outfit(c.id), { level: 5 })}</div><figcaption>${c.name}</figcaption></figure>`).join('')}</div></main>`);
   await page.screenshot({ path: test.info().outputPath('seasons-outfits.png'), animations: 'disabled' });
   await page.setContent(`<main>${seasonal.map((p) => {

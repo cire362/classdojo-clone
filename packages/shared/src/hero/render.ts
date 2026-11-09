@@ -1,30 +1,9 @@
 import { DEFAULT_HERO, HERO_PARTS_BY_ID, HERO_SLOTS, type HeroPartDef, type HeroParts, type HeroSlot } from './catalog.js';
 import { renderPetFragment } from './pets.js';
 
-const OUTLINE = '#1b1f4b';
-const O = `stroke="${OUTLINE}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
+import { HERO_INK, HERO_BODY, HERO_HEAD, heroBrows, heroEyes, heroMouth } from './body.js';
 
-/** Ноги, ботинки и торс — общая основа для всех героев */
-const BASE_BODY =
-  `<path d="M76 154 L98 154 L97 204 L77 204 Z" fill="{suit}" ${O}/>` +
-  `<path d="M102 154 L124 154 L123 204 L103 204 Z" fill="{suit}" ${O}/>` +
-  `<path d="M75 194 L99 194 L99 213 Q99 220 92 220 L71 220 Q66 220 68 213 Z" fill="{accent}" ${O}/>` +
-  `<path d="M101 194 L125 194 L132 213 Q134 220 129 220 L108 220 Q101 220 101 213 Z" fill="{accent}" ${O}/>` +
-  `<path d="M70 113 Q70 102 82 102 L118 102 Q130 102 130 113 L126 160 L74 160 Z" fill="{suit}" ${O}/>`;
-
-const BASE_HEAD =
-  `<rect x="91" y="90" width="18" height="16" rx="4" fill="{skinDark}" ${O}/>` +
-  `<circle cx="64" cy="68" r="7" fill="{skin}" ${O}/><circle cx="136" cy="68" r="7" fill="{skin}" ${O}/>` +
-  `<ellipse cx="100" cy="64" rx="36" ry="34" fill="{skin}" ${O}/>`;
-
-const EYES =
-  `<ellipse cx="86" cy="66" rx="7" ry="8" fill="#ffffff" ${O}/><ellipse cx="114" cy="66" rx="7" ry="8" fill="#ffffff" ${O}/>` +
-  `<circle cx="87" cy="67" r="3.8" fill="${OUTLINE}"/><circle cx="115" cy="67" r="3.8" fill="${OUTLINE}"/>` +
-  `<circle cx="88.4" cy="65.3" r="1.3" fill="#ffffff"/><circle cx="116.4" cy="65.3" r="1.3" fill="#ffffff"/>`;
-
-const MOUTH =
-  `<circle cx="77" cy="80" r="5" fill="#ff7a8a" opacity="0.35"/><circle cx="123" cy="80" r="5" fill="#ff7a8a" opacity="0.35"/>` +
-  `<path d="M90 83 Q100 91 110 83" fill="none" ${O}/>`;
+const OUTLINE = HERO_INK;
 
 /** Затемнение цвета #rrggbb на долю amount (0..1) */
 export function shade(hex: string, amount: number): string {
@@ -48,6 +27,12 @@ export function normalizeHero(input: unknown): HeroParts {
     if (part && part.layer === layer) result[slot] = part.id;
   }
   return result;
+}
+
+function tint(hex: string, amount: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return '#' + [n >> 16, (n >> 8) & 255, n & 255]
+    .map((c) => Math.round(c + (255 - c) * amount).toString(16).padStart(2, '0')).join('');
 }
 
 function get(id: string): HeroPartDef {
@@ -76,22 +61,19 @@ export function renderHeroSvg(input: unknown, opts: { title?: string; level?: nu
   // Слои размечены классами для анимации живого героя на сайте (дыхание, моргание, сияние, питомец);
   // без стилей классы ни на что не влияют, поэтому SVG годится и для файлов, и для PDF
   const layers = [
-    cape.back,
-    showHair ? hair.back : '',
-    BASE_BODY,
+    HERO_BODY,
     suit.front,
-    emblem.front,
+    emblem.front ? `<g transform="translate(35 42) scale(.65)">${emblem.front}</g>` : '',
     cape.front,
     pose.front,
-    BASE_HEAD,
   ];
   // Порядок лица: маска поверх головы, затем глаза/рот (если маска их не закрывает), затем волосы.
   // Шлемы (hidesHair) рисуются после глаз — визор и «окно» шлема оставляют глаза видимыми.
   // Корона и нимб (overHair) рисуются последними, поверх причёски.
   const face: string[] = [];
   if (!mask.hidesHair && !mask.overHair) face.push(mask.front ?? '');
-  if (!mask.hidesEyes) face.push(`<g class="hero-eyes">${EYES}</g>`);
-  if (!mask.hidesMouth) face.push(MOUTH);
+  if (!mask.hidesEyes) face.push(heroBrows(h.pose), `<g class="hero-eyes">${heroEyes()}</g>`);
+  if (!mask.hidesMouth) face.push(heroMouth(h.pose));
   if (mask.hidesHair) face.push(mask.front ?? '');
   else if (showHair) face.push(hair.front ?? '');
   if (mask.overHair) face.push(mask.front ?? '');
@@ -99,16 +81,26 @@ export function renderHeroSvg(input: unknown, opts: { title?: string; level?: nu
   const pet = renderPetFragment(h.pet, opts.level);
   const body = [
     aura.back ? `<g class="hero-aura">${aura.back}</g>` : '',
-    `<g class="hero-body">${[...layers, ...face].filter(Boolean).join('')}</g>`,
+    `<g class="hero-body">` +
+      `<g transform="translate(6 15) scale(.94 .9)">${cape.back ?? ''}</g>` +
+      `<g transform="translate(-12 -4) scale(1.12 1.08)">${showHair ? hair.back ?? '' : ''}</g>` +
+      `<g transform="translate(6 15) scale(.94 .9)">${layers.filter(Boolean).join('')}</g>` +
+      `<g transform="translate(-12 -4) scale(1.12 1.08)">${HERO_HEAD}${face.join('')}</g></g>`,
     pet ? `<g transform="translate(136 162)"><g class="hero-pet">${pet}</g></g>` : '',
   ]
     .join('')
+    .replace(/\{suitLight\}/g, tint(suitC, .34))
+    .replace(/\{accentLight\}/g, tint(accentC, .42))
+    .replace(/\{skinLight\}/g, tint(skinC, .28))
+    .replace(/\{hairLight\}/g, tint(hairC, .25))
+    .replace(/\{iris\}/g, shade(accentC, .48))
     .replace(/\{suitDark\}/g, shade(suitC, 0.22))
     .replace(/\{suit\}/g, suitC)
     .replace(/\{accentDark\}/g, shade(accentC, 0.25))
     .replace(/\{accent\}/g, accentC)
     .replace(/\{skinDark\}/g, shade(skinC, 0.12))
     .replace(/\{skin\}/g, skinC)
+    .replace(/\{brow\}/g, shade(hairC, 0.5))
     .replace(/\{hairDark\}/g, shade(hairC, 0.2))
     .replace(/\{hair\}/g, hairC)
     .replace(/\{outline\}/g, OUTLINE);

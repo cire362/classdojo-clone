@@ -1,3 +1,4 @@
+import { HeroLooks } from './HeroLooks';
 import { useMemo, useRef, useState } from 'react';
 import { DiceFiveIcon, LockSimpleIcon, MinusCircleIcon, PawPrintIcon, SparkleIcon } from '@phosphor-icons/react';
 import {
@@ -32,7 +33,6 @@ export function HeroEditor({
 }: {
   initial: { name: string; parts: HeroParts };
   level: number;
-  /** Открыта ли премиум-коллекция (премиум у создателя группы) */
   onSave: (name: string, parts: HeroParts) => Promise<void>;
   ownerLabel?: string;
   /** Детали, открывшиеся с прошлого визита: помечаются «новое» */
@@ -138,6 +138,7 @@ export function HeroEditor({
       </div>
 
       <div className="min-w-0 space-y-4">
+        <HeroLooks parts={parts} level={level} lockOf={lockOf} onPick={setParts} />
         <div>
           <label className="label" htmlFor="hero-collection">Коллекция</label>
           <select id="hero-collection" className="input max-w-sm" value={collection} onChange={(e) => {
@@ -206,7 +207,7 @@ export function HeroEditor({
                   <span className="mt-1 size-12 rounded-full ring-1 ring-line" style={{ background: p.color }} />
                 ) : (
                   <span className="block w-full overflow-hidden rounded-xl bg-surface-2">
-                    <HeroAvatar parts={{ ...parts, [slot]: p.id }} level={level} className={`aspect-[5/6] w-full ${lock ? 'opacity-35 grayscale' : ''}`} />
+                    <HeroAvatar parts={{ ...parts, [slot]: p.id }} level={level} className="aspect-[5/6] w-full" />
                   </span>
                 )}
                 <span className={`text-xs font-medium leading-tight ${lock ? 'text-ink-soft' : ''}`}>
@@ -227,7 +228,10 @@ export function HeroEditor({
                   </span>
                 )}
                 {collectionName && (
-                  <span aria-hidden className="absolute bottom-[1.9rem] right-1.5 inline-flex items-center gap-0.5 rounded-full bg-[#2a2470] px-1.5 py-0.5 text-[11px] font-bold text-white">
+                  <span
+                    aria-hidden
+                    className="inline-flex max-w-full items-center gap-0.5 rounded-full bg-ink px-1.5 py-0.5 text-[11px] font-bold text-bg"
+                  >
                     <SparkleIcon size={11} weight="fill" /> {collectionName}
                   </span>
                 )}
@@ -237,7 +241,7 @@ export function HeroEditor({
         </div>
         <p className="text-sm text-ink-soft">
           Детали с замком открываются на новых уровнях. Уровень растёт от заработанных баллов.
-          {' '}Коллекции «Космос», «Весна», «Лето», «Осень» и «Зима» тоже открываются по уровню.
+          {' '}Все коллекции, включая «Искателей», бесплатны. На высоких уровнях открываются крылья, снаряжение и новые позы.
         </p>
       </div>
     </div>

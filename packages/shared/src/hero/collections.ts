@@ -1,6 +1,7 @@
 import type { HeroPartDef } from './catalog.js';
 
 export const HERO_COLLECTIONS = [
+  { id: 'expedition', name: 'Искатели', description: 'Походные куртки, мастерская за спиной и крылья-паруса.' },
   { id: 'cosmos', name: 'Космос', description: 'Скафандр, орбиты и далёкие планеты.' },
   { id: 'spring', name: 'Весна', description: 'Цветы, ростки и лёгкие лепестки.' },
   { id: 'summer', name: 'Лето', description: 'Солнце, морские волны и парус.' },
@@ -66,7 +67,7 @@ export const SEASONAL_PARTS: readonly HeroPartDef[] = [
   { id: 'suit.frost', layer: 'suit', name: 'Полярный', requiredLevel: 2, themed: true, collection: 'winter', front:
     `<path d="M79 103 Q100 114 121 103 L121 151 L79 151 Z" fill="{accent}" ${O}/><path d="M82 118 L118 118 M80 137 L120 137 M100 111 L100 150" fill="none" stroke="{accentDark}" stroke-width="2.5"/><path d="M76 103 Q100 113 124 103" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/><path d="M78 184 L96 184 M104 184 L122 184" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>` },
   { id: 'mask.winterHat', layer: 'mask', name: 'Зимняя шапка', requiredLevel: 2, themed: true, collection: 'winter', hidesHair: true, front:
-    `<path d="M65 49 Q63 20 100 20 Q137 20 135 49 Z" fill="{accent}" ${O}/><path d="M80 43 Q80 28 91 24 M109 24 Q120 28 120 43" fill="none" stroke="{accentDark}" stroke-width="3"/><rect x="63" y="44" width="74" height="12" rx="5" fill="#ffffff" ${O}/><circle cx="100" cy="14" r="9" fill="#ffffff" ${O}/>` },
+    `<path d="M65 49 Q63 20 100 20 Q137 20 135 49 Z" fill="{accent}" ${O}/><path d="M80 43 Q80 28 91 24 M109 24 Q120 28 120 43" fill="none" stroke="{accentDark}" stroke-width="3"/><rect x="63" y="44" width="74" height="12" rx="5" fill="#ffffff" ${O}/><circle cx="100" cy="15" r="8.5" fill="#ffffff" ${O}/>` },
   { id: 'cape.snow', layer: 'cape', name: 'Снежная мантия', requiredLevel: 3, themed: true, collection: 'winter', back:
     `<path d="M76 103 L124 103 L151 219 Q100 235 49 219 Z" fill="{accent}" ${O}/><path d="M51 213 Q63 220 74 216 Q86 227 100 220 Q114 227 126 216 Q137 220 149 213 L151 219 Q100 235 49 219 Z" fill="#ffffff" ${O}/>` + snow(64, 189, 0.65) + snow(136, 189, 0.65), front: CLASPS },
   { id: 'aura.snowfall', layer: 'aura', name: 'Снегопад', requiredLevel: 5, themed: true, collection: 'winter', back:

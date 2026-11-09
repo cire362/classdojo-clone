@@ -1,3 +1,6 @@
+import { WARDROBE_ART } from './wardrobe.js';
+import { HAIR_ART } from './hair-art.js';
+import { EXPEDITION_PARTS } from './expedition.js';
 import { PET_COMPANIONS } from './pets.js';
 import { SEASONAL_PARTS, type HeroCollectionId } from './collections.js';
 
@@ -6,9 +9,9 @@ import { SEASONAL_PARTS, type HeroCollectionId } from './collections.js';
  * и бэкенда (проверка выбора, синхронизация таблицы HeroPart).
  *
  * Все детали — собственные оригинальные SVG-фрагменты в едином стиле:
- * холст 200×240, контур {outline} толщиной 3, плоская заливка.
+ * холст 200×240, контур {outline} толщиной 2–3, объём из локальных теней и бликов.
  * В разметке можно использовать плейсхолдеры цветов:
- *   {suit} {suitDark} {accent} {accentDark} {skin} {skinDark} {hair} {hairDark} {outline}
+ *   {suit} {suitDark} {accent} {accentDark} {skin} {skinDark} {hair} {hairDark} {suitLight} {accentLight} {skinLight} {hairLight} {outline}
  * Как добавить новую деталь — см. README, раздел «Новые детали героев».
  */
 
@@ -72,7 +75,7 @@ export const HERO_SLOT_LABELS: Record<HeroSlot, string> = {
   suit: 'Костюм',
   suitColor: 'Цвет костюма',
   accentColor: 'Цвет плаща и деталей',
-  cape: 'Плащ',
+  cape: 'Плащ и снаряжение',
   mask: 'Маска',
   emblem: 'Эмблема',
   aura: 'Сияние',
@@ -82,17 +85,23 @@ export const HERO_SLOT_LABELS: Record<HeroSlot, string> = {
   hairColor: 'Цвет волос',
 };
 
-const O = 'stroke="{outline}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
+const O = 'stroke="{outline}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"';
 
 /** Рука-«трубка» с контуром: сначала толстый контур, сверху цвет костюма */
 function arm(d: string): string {
   return (
     `<path d="${d}" fill="none" stroke="{outline}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>` +
-    `<path d="${d}" fill="none" stroke="{suit}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>`
+    `<path d="${d}" fill="none" stroke="{suit}" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<path d="${d}" fill="none" stroke="{suitLight}" stroke-width="3" stroke-linecap="round" opacity=".65" transform="translate(-2 -1)"/>`
   );
 }
 function glove(cx: number, cy: number, r = 9): string {
-  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="{accent}" ${O}/>`;
+  return `<g transform="translate(${cx} ${cy}) scale(${r / 9})">
+    <path d="M-7-7Q0-10 7-6L9 1Q8 9 1 10L-6 8L-9 3Z" fill="{accent}" ${O}/>
+    <path d="M-7-4Q-11-3-9 2L-5 4L-3 0" fill="{accentDark}" ${O}/>
+    <path d="M-3-4L4-4M-1 2L5 1" fill="none" stroke="{accentLight}" stroke-width="2" stroke-linecap="round"/>
+    <path d="M-7-6L6-7" stroke="{outline}" stroke-width="2"/>
+  </g>`;
 }
 function star(cx: number, cy: number, R: number, r: number, attrs: string): string {
   const pts: string[] = [];
@@ -769,7 +778,8 @@ const parts: HeroPartDef[] = [
 export const HERO_PARTS: ReadonlyArray<HeroPartDef> = [
   ...parts.map((p) => p.themed ? { ...p, collection: 'cosmos' as const } : p),
   ...SEASONAL_PARTS,
-];
+  ...EXPEDITION_PARTS,
+].map((p) => ({ ...p, ...WARDROBE_ART[p.id], ...HAIR_ART[p.id] }));
 
 export const HERO_PARTS_BY_ID: ReadonlyMap<string, HeroPartDef> = new Map(HERO_PARTS.map((p) => [p.id, p]));
 

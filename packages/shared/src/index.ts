@@ -6,3 +6,4 @@ export * from './hero/validate.js';
 export * from './hero/pets.js';
 export * from './badges.js';
 export * from './feed.js';
+export { HERO_LOOKS } from './hero/expedition.js';
