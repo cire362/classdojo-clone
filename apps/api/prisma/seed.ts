@@ -10,6 +10,7 @@ import { addDays, dateKey, dbDate, startOfDay } from '../src/platform/dates.js';
 import { syncHeroParts } from '../src/modules/hero/index.js';
 import { attendanceReason, createDefaultReasons } from '../src/modules/reasons/index.js';
 import { createDefaultRewards } from '../src/modules/rewards/index.js';
+import { ensureDemoCollege } from './seed-college.js';
 
 const TEACHER_LOGIN = process.env.SEED_TEACHER_LOGIN ?? 'teacher';
 const TEACHER_PASSWORD = process.env.SEED_TEACHER_PASSWORD ?? 'teacher123';
@@ -103,6 +104,7 @@ async function main() {
   await syncHeroParts();
   await ensureDemoAdmin();
   await ensureDemoNetwork();
+  await ensureDemoCollege(TEACHER_PASSWORD, STUDENT_PASSWORD);
 
   if (await prisma.account.findUnique({ where: { login: TEACHER_LOGIN } })) {
     console.log(`Seed: преподаватель «${TEACHER_LOGIN}» уже есть — пропускаю.`);
