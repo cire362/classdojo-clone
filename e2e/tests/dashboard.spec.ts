@@ -1,6 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { loginUi, tempGroup, uniq } from './helpers';
+import { animationsDone, loginUi, tempGroup, uniq } from './helpers';
 
 const ADMIN = { login: process.env.E2E_ADMIN_LOGIN ?? 'admin', password: process.env.E2E_ADMIN_PASSWORD ?? 'admin12345' };
 
@@ -16,7 +16,7 @@ test('панель руководителя: обзор по классам и �
 
     await page.getByLabel('Разрез').selectOption({ label: 'Параллели' });
     await expect(table.getByRole('columnheader').first()).toHaveText('Параллели');
-    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+    await animationsDone(page);
     const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
     expect(axe.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(376);

@@ -38,3 +38,18 @@ export async function tempGroup(request: APIRequestContext, name: string, studen
 }
 
 export const uniq = (prefix: string) => `${prefix} ${Date.now().toString(36)}`;
+
+/**
+ * Ждёт конца анимаций появления перед проверкой доступности и скриншотом. Бесконечные анимации
+ * (дыхание живого героя, таймеры) не ждём: они не заканчиваются
+ */
+export async function animationsDone(page: Page) {
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished.catch(() => undefined)),
+    ),
+  );
+}

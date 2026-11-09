@@ -1,6 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { TEACHER, loginUi, tempGroup, uniq } from './helpers';
+import { animationsDone, loginUi, TEACHER, tempGroup, uniq } from './helpers';
 
 for (const colorScheme of ['light', 'dark'] as const) {
   test(`музыка на уроке: включение, смена мелодии, проектор и телефон (${colorScheme})`, async ({ page, request }) => {
@@ -20,7 +20,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Проектор', exact: true }).click();
       const projector = page.locator('.fixed.inset-0.z-40').filter({ has: page.getByRole('button', { name: 'Выйти из режима проектора' }) });
       await expect(projector.getByRole('status').filter({ hasText: 'Играет' })).toHaveText('Играет: Дождь за окном');
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+      await animationsDone(page);
       await page.screenshot({ path: test.info().outputPath(`lesson-music-projector-${colorScheme}.png`) });
       const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
       expect(result.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);

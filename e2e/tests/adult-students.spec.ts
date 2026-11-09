@@ -1,10 +1,10 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { TEACHER, loginUi, tempGroup, uniq } from './helpers';
+import { animationsDone, loginUi, TEACHER, tempGroup, uniq } from './helpers';
 
 const ADMIN = { login: process.env.E2E_ADMIN_LOGIN ?? 'admin', password: process.env.E2E_ADMIN_PASSWORD ?? 'admin12345' };
 const axe = async (page: Page) => {
-  await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+  await animationsDone(page);
   const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
   expect(result.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
 };

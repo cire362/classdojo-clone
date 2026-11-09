@@ -5,6 +5,8 @@ import { useHeroes } from '../../auth';
 /**
  * SVG собирается из собственного каталога деталей (без пользовательского ввода),
  * поэтому вставка разметки безопасна. crop="head" — портрет для списков.
+ * alive — живой герой: дышит, моргает, питомец покачивается. Только для крупного героя, не в списках:
+ * десятки одновременных анимаций на экране урока отвлекали бы и грузили слабые устройства.
  */
 export const HeroAvatar = memo(function HeroAvatar({
   parts,
@@ -12,12 +14,14 @@ export const HeroAvatar = memo(function HeroAvatar({
   className = '',
   crop = 'full',
   level = 1,
+  alive = false,
 }: {
   parts: HeroParts | Record<string, string>;
   title?: string;
   className?: string;
   crop?: 'full' | 'head';
   level?: number;
+  alive?: boolean;
 }) {
   const heroes = useHeroes();
   const svg = useMemo(() => {
@@ -29,10 +33,11 @@ export const HeroAvatar = memo(function HeroAvatar({
   // файлам, попала бы в ядро приложения (+3 КБ), а имя и так подписано рядом
   if (!heroes) return <div className={`hero-avatar rounded-xl bg-surface-2 ${className}`} aria-hidden="true" />;
   // Без подписи герой — просто украшение рядом с именем, экранный диктор его пропускает
+  const classes = `hero-avatar ${alive ? 'hero-alive ' : ''}${className}`;
   return title ? (
-    <div className={`hero-avatar ${className}`} role="img" aria-label={title} dangerouslySetInnerHTML={{ __html: svg }} />
+    <div className={classes} role="img" aria-label={title} dangerouslySetInnerHTML={{ __html: svg }} />
   ) : (
-    <div className={`hero-avatar ${className}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: svg }} />
+    <div className={classes} aria-hidden="true" dangerouslySetInnerHTML={{ __html: svg }} />
   );
 });
 

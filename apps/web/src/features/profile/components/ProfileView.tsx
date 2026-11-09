@@ -68,6 +68,7 @@ export function ProfileView({
             parts={hero.parts}
             level={level.level}
             title={hero.name || profile.student.name}
+            alive
             className="relative mx-auto aspect-[5/6] max-w-[280px]"
           />
         </div>}

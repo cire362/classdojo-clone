@@ -105,7 +105,7 @@ export function HeroEditor({
       <div className="space-y-4 lg:sticky lg:top-24 lg:h-fit">
         <div className="relative mx-auto max-w-[320px] rounded-2xl bg-surface-2 px-6 pt-4 lg:max-w-none">
           <div key={JSON.stringify(parts)} className="anim-pop">
-            <HeroAvatar parts={parts} level={level} title={name || 'Герой'} className="mx-auto aspect-[5/6] max-w-[300px]" />
+            <HeroAvatar parts={parts} level={level} title={name || 'Герой'} alive className="mx-auto aspect-[5/6] max-w-[300px]" />
           </div>
           <button className="icon-btn absolute right-2 top-2 bg-surface" onClick={randomize} aria-label="Случайный герой" title="Случайный герой">
             <DiceFiveIcon size={22} />

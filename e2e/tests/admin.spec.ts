@@ -1,6 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { loginUi } from './helpers';
+import { animationsDone, loginUi } from './helpers';
 
 const ADMIN = { login: process.env.E2E_ADMIN_LOGIN ?? 'admin', password: process.env.E2E_ADMIN_PASSWORD ?? 'admin12345' };
 
@@ -66,7 +66,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     for (const section of ['Преподаватели', 'Классы школы', 'Администрация']) {
       await page.getByRole('button', { name: section, exact: true }).click();
       await expect(page.locator('main li').first()).toBeVisible();
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+      await animationsDone(page);
       const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
       expect(violations.map((v) => `${v.id}: ${v.help}: ${v.nodes.map((n) => n.target.join(',') + ':' + n.failureSummary).join(';')}`)).toEqual([]);
       await page.setViewportSize({ width: 375, height: 812 });

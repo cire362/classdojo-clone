@@ -1,6 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { TEACHER, loginUi, tempGroup, uniq } from './helpers';
+import { animationsDone, loginUi, TEACHER, tempGroup, uniq } from './helpers';
 
 
 for (const colorScheme of ['light', 'dark'] as const) {
@@ -33,14 +33,14 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await expect(projector.getByRole('region', { name: 'Цель класса' })).toContainText('Цель достигнута!');
       await expect(projector.getByRole('button', { name: 'Изменить цель' })).toHaveCount(0);
       await expect(page.getByRole('dialog')).toHaveCount(0);
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+      await animationsDone(page);
       await page.screenshot({ path: test.info().outputPath(`goal-projector-${colorScheme}.png`), fullPage: true });
       await page.getByRole('button', { name: 'Выйти из режима проектора' }).click();
       await expect(projector).toHaveCount(0);
 
       await page.setViewportSize({ width: 375, height: 812 });
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(376);
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+      await animationsDone(page);
       const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
       expect(violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
       await page.screenshot({ path: test.info().outputPath(`goal-mobile-${colorScheme}.png`), fullPage: true });

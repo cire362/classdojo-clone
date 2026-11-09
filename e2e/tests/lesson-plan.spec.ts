@@ -1,6 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { TEACHER, loginUi, tempGroup, uniq } from './helpers';
+import { animationsDone, loginUi, TEACHER, tempGroup, uniq } from './helpers';
 
 for (const colorScheme of ['light', 'dark'] as const) {
   test(`план урока: шаги, сохранение, проектор и телефон (${colorScheme})`, async ({ page, request }) => {
@@ -29,7 +29,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await expect(shown.getByText('Дальше: Итоги урока')).toBeVisible();
       await shown.getByRole('button', { name: 'Следующий шаг', exact: true }).click();
       await expect(shown.getByRole('status')).toHaveText('Сейчас, шаг 3 из 3');
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+      await animationsDone(page);
       await page.screenshot({ path: test.info().outputPath(`lesson-plan-projector-${colorScheme}.png`) });
       const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
       expect(result.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);

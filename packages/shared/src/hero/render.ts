@@ -73,8 +73,9 @@ export function renderHeroSvg(input: unknown, opts: { title?: string; level?: nu
   const hairC = get(h.hairColor).color!;
 
   const showHair = !mask.hidesHair;
+  // Слои размечены классами для анимации живого героя на сайте (дыхание, моргание, сияние, питомец);
+  // без стилей классы ни на что не влияют, поэтому SVG годится и для файлов, и для PDF
   const layers = [
-    aura.back,
     cape.back,
     showHair ? hair.back : '',
     BASE_BODY,
@@ -89,15 +90,18 @@ export function renderHeroSvg(input: unknown, opts: { title?: string; level?: nu
   // Корона и нимб (overHair) рисуются последними, поверх причёски.
   const face: string[] = [];
   if (!mask.hidesHair && !mask.overHair) face.push(mask.front ?? '');
-  if (!mask.hidesEyes) face.push(EYES);
+  if (!mask.hidesEyes) face.push(`<g class="hero-eyes">${EYES}</g>`);
   if (!mask.hidesMouth) face.push(MOUTH);
   if (mask.hidesHair) face.push(mask.front ?? '');
   else if (showHair) face.push(hair.front ?? '');
   if (mask.overHair) face.push(mask.front ?? '');
 
   const pet = renderPetFragment(h.pet, opts.level);
-  const body = [...layers, ...face, pet ? `<g transform="translate(136 162)">${pet}</g>` : '']
-    .filter(Boolean)
+  const body = [
+    aura.back ? `<g class="hero-aura">${aura.back}</g>` : '',
+    `<g class="hero-body">${[...layers, ...face].filter(Boolean).join('')}</g>`,
+    pet ? `<g transform="translate(136 162)"><g class="hero-pet">${pet}</g></g>` : '',
+  ]
     .join('')
     .replace(/\{suitDark\}/g, shade(suitC, 0.22))
     .replace(/\{suit\}/g, suitC)

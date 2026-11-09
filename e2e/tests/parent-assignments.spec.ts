@@ -1,6 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { loginApi, loginUi, tempGroup, uniq } from './helpers';
+import { animationsDone, loginApi, loginUi, tempGroup, uniq } from './helpers';
 
 const H = { 'x-heroes-client': '1' };
 
@@ -37,7 +37,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await expect(accepted.getByText('Выучила наизусть')).toBeVisible();
       await expect(list.getByRole('listitem').filter({ hasText: 'Прочитать рассказ' }).first().getByText('Не сдано')).toBeVisible();
       expect(await home.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(376);
-      await home.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+      await animationsDone(home);
       const { violations } = await new AxeBuilder({ page: home }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
       expect(violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
       await home.screenshot({ path: test.info().outputPath(`parent-assignments-${colorScheme}.png`), fullPage: true });

@@ -1,6 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { loginApi, tempGroup, uniq } from './helpers';
+import { animationsDone, loginApi, tempGroup, uniq } from './helpers';
 
 const headers = { 'x-heroes-client': '1' };
 
@@ -31,7 +31,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       for (const width of [1280, 375]) {
         await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
-        await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+        await animationsDone(page);
         const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
         expect(violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
         await page.screenshot({ path: test.info().outputPath(`notifications-${width}-${colorScheme}.png`), fullPage: true });

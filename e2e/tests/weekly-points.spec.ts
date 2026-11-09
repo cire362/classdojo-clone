@@ -1,6 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { TEACHER, loginUi, tempGroup, uniq } from './helpers';
+import { animationsDone, loginUi, TEACHER, tempGroup, uniq } from './helpers';
 
 for (const colorScheme of ['light', 'dark'] as const) {
   test(`недельный график: группа, ученик, команда и клавиатура (${colorScheme})`, async ({ page, request }) => {
@@ -42,7 +42,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await chart.getByLabel('Кого показать').selectOption(`team:${team.id}`);
       await expect(chart.getByText(/Кометы · 1 ученик/)).toBeVisible();
       await expect(chart.getByText(/за период:/)).toContainText('−1');
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+      await animationsDone(page);
       await page.screenshot({ path: test.info().outputPath(`trends-desktop-${colorScheme}.png`) });
       await chart.screenshot({ path: test.info().outputPath(`trends-panel-${colorScheme}.png`) });
       let result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice']).analyze();
@@ -57,7 +57,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await chart.getByRole('button', { name: 'Минусы', exact: true }).click();
       await expect(weeks.getByRole('button', { name: /: −3/ })).toBeVisible();
       // Вкладка только что нажата: посреди перехода цвета дают ложное нарушение контраста
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+      await animationsDone(page);
       result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice']).analyze();
       expect(result.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.failureSummary) }))).toEqual([]);
     } finally { await group.remove(); }

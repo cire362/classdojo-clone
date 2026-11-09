@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { TEACHER, loginUi, tempGroup, uniq } from './helpers';
+import { animationsDone, loginUi, TEACHER, tempGroup, uniq } from './helpers';
 
 for (const colorScheme of ['light', 'dark'] as const) {
   test(`PDF ученика: период, скачивание, ошибка и повтор (${colorScheme})`, async ({ page, request }) => {
@@ -39,7 +39,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await panel.getByRole('button', { name: 'Скачать PDF', exact: true }).click();
       await retry;
       await expect(panel.getByRole('alert')).toHaveCount(0);
-      await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => undefined))));
+      await animationsDone(page);
       await page.screenshot({ path: test.info().outputPath(`report-desktop-${colorScheme}.png`) });
       let result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice']).analyze();
       expect(result.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.failureSummary) }))).toEqual([]);

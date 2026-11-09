@@ -1,6 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { loginUi } from './helpers';
+import { animationsDone, loginUi } from './helpers';
 
 const NETWORK = { login: process.env.E2E_NETWORK_LOGIN ?? 'network', password: process.env.E2E_NETWORK_PASSWORD ?? 'network12345' };
 
@@ -11,7 +11,7 @@ test('руководитель сети видит сводку по учреж�
   const table = page.getByRole('region', { name: 'Учреждения сети' });
   await expect(table.getByRole('row', { name: /^Всего/ })).toBeVisible();
   await expect(table.getByRole('row')).toHaveCount(3);
-  await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+  await animationsDone(page);
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
   expect(axe.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(376);

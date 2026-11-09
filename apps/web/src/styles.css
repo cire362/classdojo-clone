@@ -172,6 +172,69 @@
   }
 }
 
+/* Живой герой: дыхание, моргание, мерцание сияния и покачивание питомца. Только у .hero-alive */
+.hero-alive .hero-body {
+  transform-box: view-box;
+  transform-origin: 100px 236px;
+  animation: hero-breathe 4.2s ease-in-out infinite;
+}
+.hero-alive .hero-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hero-blink 5.6s ease-in-out infinite;
+}
+.hero-alive .hero-aura {
+  animation: hero-glow 3.6s ease-in-out infinite;
+}
+.hero-alive .hero-pet {
+  animation: hero-pet-bob 2.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-alive .hero-body,
+  .hero-alive .hero-eyes,
+  .hero-alive .hero-aura,
+  .hero-alive .hero-pet {
+    animation: none;
+  }
+}
+@keyframes hero-breathe {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(1.006, 1.016);
+  }
+}
+@keyframes hero-blink {
+  0%,
+  93%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+@keyframes hero-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+@keyframes hero-pet-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

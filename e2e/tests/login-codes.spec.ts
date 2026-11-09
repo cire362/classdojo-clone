@@ -1,6 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { TEACHER, loginUi, tempGroup, uniq } from './helpers';
+import { animationsDone, loginUi, TEACHER, tempGroup, uniq } from './helpers';
 
 const axe = async (page: import('@playwright/test').Page) => {
   const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
@@ -50,7 +50,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
       await page.getByRole('button', { name: 'Проектор', exact: true }).click();
       await expect(page.getByText(code, { exact: true })).toBeVisible();
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+      await animationsDone(page);
       await page.screenshot({ path: test.info().outputPath(`class-code-projector-${colorScheme}.png`) });
       await axe(page);
       await page.getByRole('button', { name: 'Выйти из режима проектора' }).click();

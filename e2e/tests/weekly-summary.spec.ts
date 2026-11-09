@@ -1,6 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { loginUi, tempGroup, uniq } from './helpers';
+import { animationsDone, loginUi, tempGroup, uniq } from './helpers';
 
 for (const colorScheme of ['light', 'dark'] as const) {
   test(`итог недели родителю: баллы, уроки, прошлые недели и дети (${colorScheme})`, async ({ page, request }) => {
@@ -33,7 +33,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await expect(summary.getByText('Пропуск', { exact: true })).toBeVisible();
       await expect(summary.getByRole('button', { name: 'Следующая неделя' })).toBeDisabled();
       expect((await page.request.get(`/api/parent/children/${foreign.id}/weekly-summary`)).status()).toBe(404);
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+      await animationsDone(page);
       await page.screenshot({ path: test.info().outputPath(`weekly-desktop-${colorScheme}.png`) });
       await page.screenshot({ path: test.info().outputPath(`weekly-full-${colorScheme}.png`), fullPage: true });
       let result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
@@ -61,7 +61,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await expect(summary.getByText(plus.name, { exact: true })).toHaveCount(0);
       await expect(summary.getByText('1 из 2', { exact: true })).toBeVisible();
       await expect(summary.getByRole('button', { name: 'Следующая неделя' })).toBeDisabled();
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
+      await animationsDone(page);
       result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
       expect(result.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => ({ target: n.target, details: n.failureSummary })) }))).toEqual([]);
     } finally {
