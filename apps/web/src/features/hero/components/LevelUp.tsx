@@ -6,7 +6,7 @@ import { pluralize } from '../../../lib/hooks';
 import { HeroAvatar } from './HeroAvatar';
 import { PartPreview } from './PartPreview';
 
-const CONFETTI_COLORS = ['#ffc233', '#2f6fde', '#e63946', '#2a9d55', '#7b4fd6', '#ec5f9e', '#14a3a3'];
+const CONFETTI_COLORS = ['#ee6a3c', '#ffc233', '#2f6fde', '#e63946', '#2a9d55', '#7b4fd6', '#ec5f9e', '#14a3a3'];
 
 /** Конфетти из простых прямоугольников; при «уменьшении движения» не показывается */
 function Confetti() {

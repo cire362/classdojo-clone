@@ -1,8 +1,8 @@
 /**
- * Иконки приложения (PWA) из логотипа: жёлтый круг со звездой.
+ * Иконки приложения (PWA) из логотипа: кирпичный круг с белой звездой.
  * Запуск из корня репозитория (нужен Chrome или Chromium Playwright):
  *   node apps/web/scripts/make-icons.mjs
- * Обычная иконка — круг на прозрачном фоне; maskable — на тёмном квадрате с запасом под обрезку.
+ * Обычная иконка — круг на прозрачном фоне; maskable — на тёмно-оливковом квадрате с запасом под обрезку.
  */
 import { chromium } from '@playwright/test';
 
@@ -10,14 +10,14 @@ const OUT = new URL('../public/', import.meta.url).pathname;
 const STAR = 'M18 8.5l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L18 22.3l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z';
 const logo = (bg) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">${bg ? `<rect width="36" height="36" fill="${bg}"/>` : ''}` +
-  `<circle cx="18" cy="18" r="${bg ? 12.5 : 18}" fill="#ffc233"/>` +
-  `<g transform="${bg ? 'translate(18 18) scale(0.7) translate(-18 -17)' : 'translate(0 1)'}"><path d="${STAR}" fill="#161a33"/></g></svg>`;
+  `<circle cx="18" cy="18" r="${bg ? 12.5 : 18}" fill="#c4471f"/>` +
+  `<g transform="${bg ? 'translate(18 18) scale(0.7) translate(-18 -17)' : 'translate(0 1)'}"><path d="${STAR}" fill="#ffffff"/></g></svg>`;
 
 const icons = [
   ['icon-192.png', 192, null],
   ['icon-512.png', 512, null],
-  ['icon-maskable-512.png', 512, '#1b1f4b'],
-  ['apple-touch-icon.png', 180, '#1b1f4b'],
+  ['icon-maskable-512.png', 512, '#1e211a'],
+  ['apple-touch-icon.png', 180, '#1e211a'],
 ];
 
 const browser = await chromium.launch({ channel: process.env.PW_CHANNEL ?? 'chrome' });

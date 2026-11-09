@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test';
 import { animationsDone, loginUi, TEACHER, tempGroup, uniq } from './helpers';
 
 const axe = async (page: import('@playwright/test').Page) => {
+  // Контраст проверяется после переходов: кнопка плавно становится активной после ошибки
+  await animationsDone(page);
   const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']).analyze();
   expect(result.violations.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
 };

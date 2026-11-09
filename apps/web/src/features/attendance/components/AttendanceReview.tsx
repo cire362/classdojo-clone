@@ -37,8 +37,8 @@ export function AttendanceReview({ flow }: { flow: AttendanceFlow }) {
                   width={b.w}
                   height={b.h}
                   rx={8}
-                  fill="rgb(255 194 51 / 0.12)"
-                  stroke="#ffc233"
+                  fill="rgb(238 106 60 / 0.14)"
+                  stroke="#ee6a3c"
                   strokeWidth={Math.max(3, detection.width / 300)}
                 />
               ))}

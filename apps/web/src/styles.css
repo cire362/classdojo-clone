@@ -1,43 +1,47 @@
 @import 'tailwindcss';
 
 /*
- * Дизайн-токены «Героев класса».
- * Один акцент — жёлтый «геройский» (#ffc233). Зелёный и красный используются
- * только как семантика (плюсы / минусы), а не как акценты.
+ * Дизайн-токены «Героев класса». Палитра «Олива и кирпич» (решение владельца 10.11.2026).
+ * Один акцент — кирпично-оранжевый. Зелёный и малиновый используются только как семантика
+ * (плюсы / минусы), а не как акценты. Фон — тёплый оливково-серый, без синего оттенка.
+ * В светлой теме акцент темнее, чем в тёмной: белый текст на кнопке держит контраст 4,5:1.
  * Скругления (единое правило): карточки 16px (rounded-2xl), поля ввода 12px (rounded-xl),
  * кнопки и чипы — «пилюли» (rounded-full).
  * Тема — по системной настройке (prefers-color-scheme), светлая и тёмная.
  */
 :root {
-  --bg: #f3f4f8;
-  --surface: #fcfcfe;
-  --surface-2: #eaecf4;
-  --ink: #161a33;
-  --ink-soft: #4b5072;
-  --line: #d8dbe8;
-  --accent: #ffc233;
-  --accent-hover: #ffb703;
-  --on-accent: #161a33;
-  --plus: #0f7547;
-  --plus-bg: #d9f3e6;
-  --minus: #b8304a;
-  --minus-bg: #fbe3e8;
-  --shadow-rgb: 22 26 51;
+  --bg: #f1f1ea;
+  --surface: #fafaf5;
+  --surface-2: #e5e5da;
+  --ink: #1c1e17;
+  --ink-soft: #575a4c;
+  --line: #d6d6c8;
+  --accent: #c4471f;
+  --accent-hover: #ad3c18;
+  --on-accent: #ffffff;
+  --plus: #276b3f;
+  --plus-bg: #dcecdc;
+  --minus: #a32745;
+  --minus-bg: #f3dde2;
+  --shadow-rgb: 28 30 23;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0e1122;
-    --surface: #171b31;
-    --surface-2: #222842;
-    --ink: #eef0fa;
-    --ink-soft: #a9aecb;
-    --line: #2e3454;
-    --plus: #55d6a0;
-    --plus-bg: #12392b;
-    --minus: #ff8a9c;
-    --minus-bg: #43202b;
+    --bg: #151712;
+    --surface: #1e211a;
+    --surface-2: #292d23;
+    --ink: #ecede4;
+    --ink-soft: #a8ab9b;
+    --line: #34382d;
+    --accent: #ee6a3c;
+    --accent-hover: #f27f55;
+    --on-accent: #1c0e08;
+    --plus: #72c48a;
+    --plus-bg: #1b2e1d;
+    --minus: #f0849a;
+    --minus-bg: #3a1e25;
     --shadow-rgb: 0 0 0;
     color-scheme: dark;
   }
@@ -110,6 +114,12 @@
   }
   .btn-primary {
     @apply bg-accent text-on-accent shadow-[0_1px_0_rgb(var(--shadow-rgb)/0.25)] hover:bg-accent-hover;
+  }
+  /* Неактивная основная кнопка — приглушённая поверхность, а не полупрозрачный акцент:
+     белый текст на полупрозрачном кирпиче не читается */
+  .btn-primary:disabled,
+  fieldset:disabled .btn-primary {
+    @apply bg-surface-2 text-ink-soft opacity-100 shadow-none;
   }
   .btn-secondary {
     @apply border border-line bg-surface text-ink hover:bg-surface-2;

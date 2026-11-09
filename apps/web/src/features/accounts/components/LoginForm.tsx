@@ -92,7 +92,7 @@ function HeroSlider() {
         {/* «Сцена»: мягкий свет за героями и пол под ногами, чтобы тёмный контур читался на тёмном фоне */}
         <div
           aria-hidden
-          className="absolute inset-x-[4%] bottom-[2%] top-[6%] rounded-[50%] bg-[radial-gradient(closest-side,rgb(255_194_51/0.16),transparent)]"
+          className="absolute inset-x-[4%] bottom-[2%] top-[6%] rounded-[50%] bg-[radial-gradient(closest-side,rgb(238_106_60/0.16),transparent)]"
         />
         <div aria-hidden className="absolute inset-x-[10%] -bottom-[3%] h-[10%] rounded-[50%] bg-white/10 blur-md" />
         {leaving !== null && leaving !== index && <Slide key={`out-${leaving}`} index={leaving} phase="out" />}
@@ -198,11 +198,11 @@ export function LoginForm() {
       </div>
 
       {/* Панель всегда тёмная, независимо от темы, чтобы герои читались одинаково */}
-      <div className="relative hidden overflow-hidden bg-[#161a33] lg:block dark:bg-[#1c2140]">
+      <div className="relative hidden overflow-hidden bg-[#1e211a] lg:block dark:bg-[#23271e]">
         <div
           aria-hidden
           className="absolute inset-0 opacity-[0.08]"
-          style={{ backgroundImage: 'radial-gradient(#ffc233 1.5px, transparent 1.5px)', backgroundSize: '22px 22px' }}
+          style={{ backgroundImage: 'radial-gradient(#ee6a3c 1.5px, transparent 1.5px)', backgroundSize: '22px 22px' }}
         />
         <HeroSlider />
       </div>
