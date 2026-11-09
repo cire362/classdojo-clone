@@ -24,6 +24,14 @@
   --minus: #a32745;
   --minus-bg: #f3dde2;
   --shadow-rgb: 28 30 23;
+  /* Рисунок карты Сада маяков: земля, холмы, вода и дерево; огни — акцентом */
+  --map-land: #dfe2cc;
+  --map-hill: #d0d6b6;
+  --map-tree: #98a874;
+  --map-water: #b4c7bf;
+  --map-wood: #c8b28c;
+  --map-rock: #b7b4a1;
+  --map-path: #7f8270;
   color-scheme: light;
 }
 
@@ -43,6 +51,13 @@
     --minus: #f0849a;
     --minus-bg: #3a1e25;
     --shadow-rgb: 0 0 0;
+    --map-land: #21251b;
+    --map-hill: #2a3122;
+    --map-tree: #3d4b30;
+    --map-water: #1c2c2a;
+    --map-wood: #5b4d39;
+    --map-rock: #45453a;
+    --map-path: #7b7e6d;
     color-scheme: dark;
   }
 }

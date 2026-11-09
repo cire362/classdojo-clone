@@ -1,43 +1,58 @@
 import { GARDEN_LEVELS } from '@heroes/shared/world';
-import { CheckCircleIcon, LockSimpleIcon, SunIcon } from '@phosphor-icons/react';
-const PLACES = [[16, 76], [39, 66], [23, 38], [52, 34], [76, 53], [84, 18]];
+import { CheckIcon, LockSimpleIcon } from '@phosphor-icons/react';
+import { GardenScene, MAP_H, MAP_W, PLACES } from './GardenScene';
 
-/** Карта сада — оригинальная игровая сцена, а подписи и управление остаются обычными HTML-кнопками. */
+/**
+ * Карта сада: рисунок с тропой через шесть мест, метки мест — обычные кнопки поверх рисунка. Тропа светится
+ * до следующего невосстановленного места, восстановленные ориентиры зажигаются. Подписи мест видны, когда карта шире 512 px,
+ * на узкой карте название выбранного места стоит над полем головоломки.
+ */
 export function WorldMap({ completed, selected, onSelect, preview = false }: {
   completed: string[]; selected: number; onSelect: (index: number) => void;
   /** Просмотр преподавателем: все места открыты для знакомства */
   preview?: boolean;
 }) {
-  return <div className="space-y-4">
-    <div className="relative overflow-hidden rounded-3xl border border-line bg-surface-2">
-      <svg viewBox="0 0 600 250" className="w-full" role="img" aria-label={`Сад маяков: восстановлено ${completed.length} из 6 мест`}>
-        <path d="M0 175 Q110 75 260 170 T600 115 V250 H0Z" fill="var(--plus)" opacity=".12" />
-        <path d="M0 220 Q150 160 320 210 T600 150 V250 H0Z" fill="var(--plus)" opacity=".15" />
-        <path d="M96 190 Q260 200 234 165 T138 95 Q200 32 312 85 T456 132 Q560 150 504 45"
-          fill="none" stroke="var(--ink-soft)" strokeWidth="3" strokeDasharray="5 7" opacity=".4" />
-        {PLACES.map(([x, y], i) => <g key={i} transform={`translate(${x * 6} ${y * 2.5})`}>
-          {completed.includes(GARDEN_LEVELS[i].id) && <circle cy="-14" r="25" fill="var(--accent)" opacity=".3" />}
-          <path d="M-10 8 L-7-23 L7-23 L10 8Z" fill="var(--surface)" stroke="var(--ink)" strokeWidth="2" />
-          <path d="M-11-23 L0-35 L11-23Z" fill="var(--accent)" stroke="var(--ink)" strokeWidth="2" />
-          <rect x="-4" y="-19" width="8" height="9" rx="2" fill={completed.includes(GARDEN_LEVELS[i].id)
-            ? 'var(--accent)' : 'var(--ink-soft)'} />
-          <text y="26" textAnchor="middle" fill="var(--ink)" fontSize="14" fontWeight="700">{i + 1}</text>
-        </g>)}
-      </svg>
+  const lit = GARDEN_LEVELS.map((l) => completed.includes(l.id));
+  const done = lit.indexOf(false) < 0 ? lit.length : lit.indexOf(false);
+  return (
+    <div className="@container relative overflow-hidden rounded-2xl border border-line shadow-card">
+      <GardenScene lit={lit} done={preview ? 0 : done} />
+      <p className="sr-only">Сад маяков: восстановлено {completed.length} из {GARDEN_LEVELS.length} мест</p>
+      <div role="group" aria-label="Места сада">
+        {GARDEN_LEVELS.map((level, i) => {
+          const locked = !preview && i > done;
+          const current = selected === i;
+          const name = `${i + 1}. ${level.title}`;
+          const marker = current
+            ? 'bg-accent text-on-accent border-accent ring-4 ring-accent/25'
+            : lit[i]
+              ? 'bg-surface text-accent border-accent'
+              : locked
+                ? 'bg-surface-2 text-ink-soft border-line'
+                : 'bg-surface text-ink border-ink';
+          return (
+            <button
+              key={level.id}
+              type="button"
+              className="group absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center disabled:cursor-not-allowed"
+              style={{ left: `${(PLACES[i][0] / MAP_W) * 100}%`, top: `${(PLACES[i][1] / MAP_H) * 100}%` }}
+              disabled={locked}
+              aria-pressed={current}
+              aria-label={`${name}${lit[i] ? ', восстановлено' : locked ? ', закрыто' : ''}`}
+              onClick={() => onSelect(i)}
+            >
+              <span className={`flex size-8 items-center justify-center rounded-full border-2 font-display text-sm font-bold
+                shadow-card @lg:size-11 transition group-enabled:group-hover:scale-105 group-active:scale-95 ${marker}`}>
+                {lit[i] && !current ? <CheckIcon size={18} weight="bold" /> : locked ? <LockSimpleIcon size={16} /> : i + 1}
+              </span>
+              <span className={`pointer-events-none absolute top-full mt-1 hidden whitespace-nowrap rounded-full px-2 py-0.5
+                text-xs font-semibold shadow-card @lg:block ${current ? 'bg-ink text-surface' : 'bg-surface text-ink'}`}>
+                {level.title}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3" aria-label="Места сада">
-      {GARDEN_LEVELS.map((level, i) => {
-        const done = completed.includes(level.id);
-        const locked = !preview && GARDEN_LEVELS.slice(0, i).some((l) => !completed.includes(l.id));
-        const Icon = locked ? LockSimpleIcon : done ? CheckCircleIcon : SunIcon;
-        const name = `${i + 1}. ${level.title}`;
-        return <button key={level.id} className={`btn justify-start ${selected === i ? 'btn-primary' : 'btn-secondary'}`}
-          disabled={locked} aria-pressed={selected === i} onClick={() => onSelect(i)}
-          aria-label={`${name}${done ? ', восстановлено' : locked ? ', закрыто' : ''}`}>
-          <Icon size={20} className="shrink-0" aria-hidden />
-          <span>{name}</span>
-        </button>;
-      })}
-    </div>
-  </div>;
+  );
 }
