@@ -61,6 +61,8 @@ export function StudentCabinet() {
         }
       />
 
+      {heroes && <Link to="/world" className="btn btn-secondary">В Сад маяков</Link>}
+
       <StudentSchoolGoal />
 
       <HomePoints path="/student/home" />

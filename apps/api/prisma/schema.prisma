@@ -425,6 +425,7 @@ model Student {
 
   loginCard LoginCard?
   parentInvites ParentInvite[]
+  worldProgress WorldProgress?
   homeGoals  HomeGoal[]
   homePoints HomePoint[]
   files      StoredFile[]
@@ -1058,4 +1059,11 @@ model NetworkAdmin {
   createdAt DateTime @default(now())
 
   @@index([networkId])
+}
+
+/// Восстановленные места «Сада маяков»; прогресс следует за учеником при переводе
+model WorldProgress {
+  studentId String @id
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  completed String[] @default([])
 }

@@ -8,7 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./api": "./src/api/index.ts",
-    "./terms": "./src/terms.ts"
+    "./terms": "./src/terms.ts",
+    "./world": "./src/world.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

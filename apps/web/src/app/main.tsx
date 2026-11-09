@@ -25,6 +25,8 @@ import {
   SchoolNewsPage,
   SchoolMessagesPage,
   StudentChatPage,
+  StudentWorldPage,
+  TeacherWorldPage,
   LessonPage,
   JoinClassPage,
   LoginPage,
@@ -133,6 +135,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/g/:groupId/print" element={teacher(<PrintPage />)} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Home />} />
+              <Route path="/world" element={student(<StudentWorldPage />)} />
               <Route path="/hero" element={student(<MyHeroPage />)} />
               <Route path="/school" element={<RequireRole role={['TEACHER', 'PARENT', 'STUDENT']}><SchoolNewsPage /></RequireRole>} />
               <Route path="/chat" element={student(<StudentChatPage />)} />
@@ -147,6 +150,7 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="calendar" element={<GroupCalendarPage />} />
                 <Route path="rewards" element={<RewardsPage />} />
                 <Route path="works" element={<GroupWorksPage />} />
+                <Route path="world" element={<TeacherWorldPage />} />
                 <Route path="assignments" element={<GroupAssignmentsPage />} />
                 <Route path="assignments/:assignmentId" element={<GroupAssignmentsPage />} />
               </Route>

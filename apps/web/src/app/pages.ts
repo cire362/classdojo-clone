@@ -49,6 +49,8 @@ const loaders: Record<PageKey, () => Promise<any>> = {
   settings: remember(() => import('../pages/teacher/Settings')),
   cabinet: remember(() => import('../pages/student/Cabinet')),
   myHero: remember(() => import('../pages/student/MyHero')),
+  studentWorld: remember(() => import('../pages/student/World')),
+  teacherWorld: remember(() => import('../pages/teacher/World')),
   parentHome: remember(() => import('../pages/parent/ParentHome')),
   studentFeed: remember(() => import('../pages/student/StudentFeed')),
   studentCalendar: remember(() => import('../pages/student/Calendar')),
@@ -97,6 +99,8 @@ export const StudentViewPage = page(loaders.studentView, 'StudentViewPage');
 export const StudentHeroPage = page(loaders.studentView, 'StudentHeroPage');
 export const SettingsPage = page(loaders.settings, 'SettingsPage');
 export const CabinetPage = page(loaders.cabinet, 'CabinetPage');
+export const StudentWorldPage = page(loaders.studentWorld, 'StudentWorldPage');
+export const TeacherWorldPage = page(loaders.teacherWorld, 'TeacherWorldPage');
 export const MyHeroPage = page(loaders.myHero, 'MyHeroPage');
 export const ParentHomePage = page(loaders.parentHome, 'ParentHomePage');
 export const GroupFeedPage = page(loaders.groupFeed, 'GroupFeedPage');
@@ -121,12 +125,12 @@ const byRole = {
     loaders.groups, loaders.groupLayout, loaders.lesson, loaders.students, loaders.print, loaders.reasons,
     loaders.attendance, loaders.stats, loaders.studentView, loaders.settings, loaders.groupFeed, loaders.groupCalendar,
     loaders.messages, loaders.rewards, loaders.rewardRequests, loaders.groupWorks, loaders.groupAssignments, loaders.schoolNews,
-    loaders.stream,
+    loaders.stream, loaders.teacherWorld,
   ],
   STUDENT: [
     loaders.cabinet, loaders.myHero, loaders.studentFeed, loaders.studentCalendar,
     loaders.shop, loaders.notifications, loaders.studentWorks, loaders.studentAssignments, loaders.schoolNews, loaders.schoolMessages,
-    loaders.studentChat,
+    loaders.studentChat, loaders.studentWorld,
   ],
   PARENT: [loaders.parentHome, loaders.schoolNews, loaders.schoolMessages],
 };

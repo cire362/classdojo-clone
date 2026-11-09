@@ -23,8 +23,11 @@ const TABS = [
   { to: 'feed', label: 'Лента', icon: MegaphoneIcon },
   { to: 'calendar', label: 'Календарь', icon: CalendarBlankIcon },
   { to: 'assignments', label: 'Задания', icon: ClipboardTextIcon },
+  { to: 'world', label: 'Мир', icon: SparkleIcon },
   { to: 'works', label: 'Работы', icon: NotebookIcon },
 ];
+/** Разделы, которых нет в группе без героев */
+const HERO_TABS = ['rewards', 'world'];
 
 export function GroupShell() {
   const t = useTerms();
@@ -77,7 +80,7 @@ export function GroupShell() {
           aria-label="Разделы группы"
           className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0"
         >
-          {TABS.filter(({ to }) => to !== 'rewards' || !data || data.group.heroes).map(({ to, end, label, icon: Icon }) => (
+          {TABS.filter(({ to }) => !HERO_TABS.includes(to) || !data || data.group.heroes).map(({ to, end, label, icon: Icon }) => (
             <NavLink key={to} to={to} end={end} className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}>
               <Icon size={18} weight="bold" />
               {to === 'students' ? cap(t.student.many.nom) : label}

@@ -12,10 +12,12 @@ import { studentAssignmentRoutes } from '../modules/assignments/index.js';
 import { studentSchoolPointsRoutes } from '../modules/schoolpoints/index.js';
 import { studentMessageRoutes } from '../modules/messages/index.js';
 import { readerSchoolInboxRoutes } from '../modules/schoolinbox/index.js';
+import { studentWorldRoutes } from '../modules/world/index.js';
 
 /** Кабинет ученика: всё строго по studentId из сессии, параметров с чужими id нет */
 export const studentRoutes = new Hono<AppEnv>()
   .use(requireRole('STUDENT'))
+  .route('/', studentWorldRoutes)
   .route('/', studentProfileRoutes)
   .route('/', studentNotificationRoutes)
   .route('/', studentHeroRoutes)
