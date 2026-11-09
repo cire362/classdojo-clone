@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { DEFAULT_HERO } from '@heroes/shared';
 import { TermsProvider } from '../src/features/auth';
@@ -83,9 +83,13 @@ it('занятие потока: баллы всему потоку и отме�
 
   fireEvent.click(screen.getByRole('button', { name: 'Посещаемость' }));
   expect(await screen.findByText('Занятие ещё не отмечено')).toBeVisible();
-  fireEvent.click(screen.getByLabelText('Петя Смирнов'));
+  // Отметки из ответа сервера подставляет эффект: под нагрузкой он может сработать после клика, поэтому ждём его
+  await act(async () => {});
+  const petya = screen.getByLabelText('Петя Смирнов');
+  fireEvent.click(petya);
+  expect(petya).toBeChecked();
   await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Сохранить отметку' })));
   const marked = expect.objectContaining({ lesson: 1, presentStudentIds: ['s2'] });
-  expect(api).toHaveBeenCalledWith('POST', '/teacher/streams/st1/attendance', marked);
+  await waitFor(() => expect(api).toHaveBeenCalledWith('POST', '/teacher/streams/st1/attendance', marked));
   expect(await screen.findByText('Отмечено: 1 из 2')).toBeInTheDocument();
 });
