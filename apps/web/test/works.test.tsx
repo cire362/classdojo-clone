@@ -6,6 +6,7 @@ import { MyWorks } from '../src/features/works/components/MyWorks';
 import type { GroupWork, StudentWork } from '../src/lib/api';
 import { groupData, renderInGroup } from './group-harness';
 import { renderApp } from './render';
+import { TermsProvider } from '../src/features/auth';
 
 vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
 vi.mock('../src/lib/photo', () => ({ prepareImage: vi.fn(async (file: File) => new Blob([`мал-${file.name}`], { type: 'image/jpeg' })) }));
@@ -14,8 +15,13 @@ beforeEach(() => { api.mockReset(); });
 
 const WORK: StudentWork = {
   id: 'w1', title: 'Доклад о космосе', text: 'Мой доклад', status: 'PENDING', comment: '', createdAt: '2026-11-06T10:00:00.000Z',
-  decidedAt: null, decidedBy: null, files: [], unseen: false,
+  decidedAt: null, decidedBy: null, files: [], unseen: false, to: { subject: null, teacher: 'Анна Сергеевна' },
 };
+const NO_SUBJECTS = { curator: 'Анна Сергеевна', subjects: [] };
+/** Ответы ученику: адресаты, список работ и результат изменения */
+const student = (works: StudentWork[], after: StudentWork[], recipients: object = NO_SUBJECTS) =>
+  api.mockImplementation(async (method, path) =>
+    (path === '/student/works/recipients' ? recipients : method === 'GET' ? works : after) as never);
 const click = (name: string) => fireEvent.click(screen.getByRole('button', { name }));
 
 it('адреса страниц работ', () => {
@@ -24,10 +30,12 @@ it('адреса страниц работ', () => {
 });
 
 it('ученик сдаёт работу: без названия и содержимого отправить нельзя, фото уходит уменьшенным', async () => {
-  api.mockImplementation(async (method) => (method === 'GET' ? [] : [WORK]) as never);
+  student([], [WORK]);
   renderApp(<MyWorks />);
   expect(await screen.findByText('Работ пока нет')).toBeVisible();
-  const send = screen.getByRole('button', { name: 'Отправить преподавателю' });
+  expect(await screen.findByText('Классный руководитель — Анна Сергеевна')).toBeVisible();
+  expect(screen.queryByLabelText('Кому')).not.toBeInTheDocument();
+  const send = screen.getByRole('button', { name: 'Отправить' });
   fireEvent.change(screen.getByLabelText('Название'), { target: { value: ' Доклад о космосе ' } });
   expect(send).toBeDisabled();
   const photo = new File(['x'], 'ракета.heic', { type: 'image/heic' });
@@ -38,15 +46,33 @@ it('ученик сдаёт работу: без названия и содер�
   expect(path).toBe('/student/works');
   const data = body as FormData;
   expect([data.get('title'), data.get('text'), (data.get('file') as File).name]).toEqual(['Доклад о космосе', '', 'ракета.jpg']);
-  expect(await screen.findByText('Работа отправлена преподавателю')).toBeVisible();
+  expect(data.get('subjectId')).toBeNull();
+  expect(await screen.findByText('Работа отправлена: Классный руководитель — Анна Сергеевна')).toBeVisible();
   expect(screen.getByLabelText('Название')).toHaveValue('');
   expect(screen.getByRole('list', { name: 'Мои работы' })).toHaveTextContent('На проверке');
+  expect(screen.getByRole('list', { name: 'Мои работы' })).toHaveTextContent('Кому: Классный руководитель — Анна Сергеевна');
+});
+
+it('студент выбирает, кому отправить: куратору или преподавателю дисциплины', async () => {
+  const recipients = { curator: 'Анна Сергеевна', subjects: [{ id: 'math', name: 'Математика', teacher: 'Пётр Ильич' }] };
+  student([], [{ ...WORK, to: { subject: 'Математика', teacher: 'Пётр Ильич' } }], recipients);
+  renderApp(<TermsProvider kind="COLLEGE"><MyWorks /></TermsProvider>);
+  const to = await screen.findByLabelText('Кому');
+  expect(to).toHaveValue('');
+  expect(within(to).getByRole('option', { name: 'Куратор группы — Анна Сергеевна' })).toBeInTheDocument();
+  fireEvent.change(to, { target: { value: 'math' } });
+  fireEvent.change(screen.getByLabelText('Название'), { target: { value: 'Контрольная' } });
+  fireEvent.change(screen.getByLabelText('Текст, если нужен'), { target: { value: 'Решение' } });
+  await act(async () => click('Отправить'));
+  const [, , body] = api.mock.calls.find(([method]) => method === 'POST')!;
+  expect((body as FormData).get('subjectId')).toBe('math');
+  expect(await screen.findByText('Работа отправлена: Математика — Пётр Ильич')).toBeVisible();
 });
 
 it('решения преподавателя видны ученику; убрать можно только неопубликованную работу', async () => {
   const returned = { ...WORK, status: 'RETURNED' as const, comment: 'Допиши вывод', decidedBy: 'Анна Сергеевна', unseen: true };
   const approved = { ...WORK, id: 'w2', title: 'Рисунок', status: 'APPROVED' as const };
-  api.mockImplementation(async (method) => (method === 'GET' ? [returned, approved] : [approved]) as never);
+  student([returned, approved], [approved]);
   renderApp(<MyWorks />);
   const list = await screen.findByRole('list', { name: 'Мои работы' });
   expect(within(list).getByText('Вернули на доработку')).toBeVisible();

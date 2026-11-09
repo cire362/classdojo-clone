@@ -19,6 +19,23 @@ export interface StudentWork {
   files: FileInfo[];
   /** Решение новое: ученик его ещё не видел */
   unseen: boolean;
+  /** Кому отправлена; null — ответ на задание или работа в портфолио у родителей */
+  to: WorkAddress | null;
+}
+
+/** Адресат работы: дисциплина и её преподаватель или, без дисциплины, куратор группы */
+export interface WorkAddress {
+  /** null — куратору группы */
+  subject: string | null;
+  /** null — дисциплину из группы убрали */
+  teacher: string | null;
+}
+
+/** Кому студент может отправить работу: куратору или преподавателю дисциплины группы */
+export interface WorkRecipients {
+  /** Создатель группы: классный руководитель в школе, куратор в колледже и вузе */
+  curator: string;
+  subjects: { id: string; name: string; teacher: string }[];
 }
 
 /** Работа в очереди преподавателя: с именем ученика */

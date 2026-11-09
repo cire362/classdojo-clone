@@ -46,7 +46,8 @@ function draw(canvas: HTMLElement) {
 }
 
 it('рисунок прикладывается к работе как PNG без пережатия и уходит вместе с ней', async () => {
-  api.mockResolvedValue([] as never);
+  api.mockImplementation(async (_, path) =>
+    (path === '/student/works/recipients' ? { curator: 'Анна Сергеевна', subjects: [] } : []) as never);
   renderApp(<WorkForm onSubmitted={() => {}} />);
   fireEvent.click(screen.getByRole('button', { name: 'Нарисовать' }));
   const dialog = await screen.findByRole('dialog', { name: 'Рисунок' });
@@ -68,8 +69,8 @@ it('рисунок прикладывается к работе как PNG бе�
   expect(screen.getByRole('list', { name: 'Выбранные файлы' })).toHaveTextContent('рисунок.png');
   expect(screen.getByLabelText('Название')).toHaveValue('Рисунок');
   expect(screen.getByRole('button', { name: 'Нарисовать' })).toBeVisible();
-  await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Отправить преподавателю' })));
-  const file = (api.mock.calls[0][2] as FormData).get('file') as File;
+  await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Отправить' })));
+  const file = (api.mock.calls.find(([method]) => method === 'POST')![2] as FormData).get('file') as File;
   expect([file.name, file.type]).toEqual(['рисунок.png', 'image/png']);
   expect(prepareImage).not.toHaveBeenCalled();
 });

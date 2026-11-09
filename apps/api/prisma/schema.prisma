@@ -132,6 +132,7 @@ model Subject {
   points    PointEvent[]
   sessions  AttendanceSession[]
   streams   Stream[]
+  works     StudentWork[]
 
   @@unique([schoolId, name])
 }
@@ -900,6 +901,9 @@ model StudentWork {
   /// Баллы за принятый ответ: снимаются, если ответ вернули на доработку
   pointEventId String?     @unique
   pointEvent   PointEvent? @relation(fields: [pointEventId], references: [id], onDelete: SetNull)
+  /// Кому работа: дисциплина группы и её преподаватель; без неё — куратору (создателю группы)
+  subjectId    String?
+  subject      Subject?    @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
   @@index([studentId, createdAt])
   @@index([status])

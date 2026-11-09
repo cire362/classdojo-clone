@@ -1,9 +1,11 @@
-import type { GroupWork, GroupWorks, StudentWork } from '@heroes/shared/api';
+import type { GroupWork, GroupWorks, StudentWork, WorkRecipients } from '@heroes/shared/api';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { prisma } from '../../platform/db.js';
 import { HttpError, notFound } from '../../platform/errors.js';
 import { groupsOf, lockGroup } from '../access/index.js';
 import { addFileRows, fileView, prepareUpload, purgeDeletedFiles, writeUploads, type Upload } from '../files/index.js';
+import { checkGroupSubject } from '../subjects/index.js';
+import { addressOf, studentRecipients, workRecipients } from './recipients.service.js';
 
 /**
  * Работы учеников: ученик сдаёт текст и фото или PDF, преподаватель группы публикует работу или возвращает
@@ -18,11 +20,13 @@ const INCLUDE = {
   files: { orderBy: { position: 'asc' } },
   decidedBy: { select: { teacher: { select: { name: true } } } },
   student: { select: { id: true, name: true } },
+  subject: { select: { id: true, name: true } },
 } as const satisfies Prisma.StudentWorkInclude;
 
 type LoadedWork = Prisma.StudentWorkGetPayload<{ include: typeof INCLUDE }>;
 
-function workView(w: LoadedWork): StudentWork {
+/** recipients — состав группы для адреса работы; без него адрес не показывается */
+function workView(w: LoadedWork, recipients?: WorkRecipients): StudentWork {
   return {
     id: w.id,
     title: w.title,
@@ -34,10 +38,11 @@ function workView(w: LoadedWork): StudentWork {
     decidedBy: w.decidedBy?.teacher?.name ?? null,
     files: w.files.map(fileView),
     unseen: !!w.decidedAt && !w.seenAt,
+    to: recipients && !w.assignmentId ? addressOf(w.subject, recipients) : null,
   };
 }
 
-const groupWorkView = (w: LoadedWork): GroupWork => ({ ...workView(w), student: w.student });
+const groupWorkView = (recipients: WorkRecipients) => (w: LoadedWork): GroupWork => ({ ...workView(w, recipients), student: w.student });
 
 /** Работы для портфолио; ответы на задания живут в модуле assignments */
 const PORTFOLIO = { assignmentId: null };
@@ -53,9 +58,12 @@ export async function findWorks(
 /** Работы ученика для него самого. Открытый список отмечает решения увиденными */
 export async function ownWorks(studentId: string): Promise<StudentWork[]> {
   const where = { studentId, ...PORTFOLIO };
-  const works = await prisma.studentWork.findMany({ where, orderBy: { createdAt: 'desc' }, include: INCLUDE });
+  const [works, recipients] = await Promise.all([
+    prisma.studentWork.findMany({ where, orderBy: { createdAt: 'desc' }, include: INCLUDE }),
+    studentRecipients(studentId),
+  ]);
   await prisma.studentWork.updateMany({ where: { ...where, decidedAt: { not: null }, seenAt: null }, data: { seenAt: new Date() } });
-  return works.map(workView);
+  return works.map((w) => workView(w, recipients));
 }
 
 /** Одобренные работы: их видят и родители, в портфолио профиля */
@@ -72,11 +80,12 @@ export async function approvedWorks(studentId: string): Promise<StudentWork[]> {
  * Сдача работы или ответа на задание: файлы проверяются и пересобираются до транзакции, строки появляются вместе
  * с работой под блокировкой группы, поэтому место группы и пределы не обойти параллельными запросами.
  * На задание у ученика может быть только один ответ на проверке или принятый; новый — после возврата.
+ * subjectId — дисциплина группы, чьему преподавателю адресована работа; без неё работа уходит куратору.
  */
 export async function createWork(
   studentId: string,
   accountId: string,
-  work: { title: string; text: string; files: File[] },
+  work: { title: string; text: string; files: File[]; subjectId?: string | null },
   assignmentId: string | null = null,
 ) {
   if (!work.text && !work.files.length) throw new HttpError(400, 'Напишите текст работы или приложите фото или файл');
@@ -84,6 +93,7 @@ export async function createWork(
   const uploads: Upload[] = [];
   for (const file of work.files) uploads.push(await prepareUpload(file));
   const { groupId } = await prisma.student.findUniqueOrThrow({ where: { id: studentId }, select: { groupId: true } });
+  const subjectId = await checkGroupSubject(groupId, work.subjectId);
   const { created, rows } = await prisma.$transaction(async (tx) => {
     await lockGroup(tx, groupId);
     if (assignmentId) {
@@ -92,7 +102,7 @@ export async function createWork(
     } else if ((await tx.studentWork.count({ where: { studentId, status: 'PENDING', ...PORTFOLIO } })) >= MAX_PENDING) {
       throw new HttpError(409, `На проверке уже ${MAX_PENDING} работ. Подождите, пока преподаватель их посмотрит`);
     }
-    const created = await tx.studentWork.create({ data: { studentId, title: work.title, text: work.text, assignmentId } });
+    const created = await tx.studentWork.create({ data: { studentId, title: work.title, text: work.text, assignmentId, subjectId } });
     return { created, rows: await addFileRows(tx, groupId, { studentId }, accountId, uploads, { workId: created.id }) };
   });
   try {
@@ -105,7 +115,11 @@ export async function createWork(
   return created.id;
 }
 
-export async function submitWork(studentId: string, accountId: string, work: { title: string; text: string; files: File[] }) {
+export async function submitWork(
+  studentId: string,
+  accountId: string,
+  work: { title: string; text: string; files: File[]; subjectId: string | null },
+) {
   await createWork(studentId, accountId, work);
   return ownWorks(studentId);
 }
@@ -120,7 +134,7 @@ export async function deleteOwnWork(studentId: string, id: string) {
 
 /** Очередь преподавателя: ждущие проверки (старые сверху) и последние решённые */
 export async function groupWorks(groupId: string): Promise<GroupWorks> {
-  const [pending, decided] = await Promise.all([
+  const [pending, decided, recipients] = await Promise.all([
     prisma.studentWork.findMany({
       where: { student: { groupId }, status: 'PENDING', ...PORTFOLIO },
       orderBy: { createdAt: 'asc' },
@@ -132,8 +146,10 @@ export async function groupWorks(groupId: string): Promise<GroupWorks> {
       take: DECIDED_SHOWN,
       include: INCLUDE,
     }),
+    workRecipients(groupId),
   ]);
-  return { pending: pending.map(groupWorkView), decided: decided.map(groupWorkView) };
+  const view = groupWorkView(recipients);
+  return { pending: pending.map(view), decided: decided.map(view) };
 }
 
 export const pendingWorkCount = (groupId: string) =>

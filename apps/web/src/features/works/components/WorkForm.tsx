@@ -8,10 +8,13 @@ import { useToast } from '../../../ui/Toast';
 import { submitWork } from '../api';
 import { EMPTY, type Drawing } from '../drawing';
 import { DrawingPad } from './DrawingPad';
+import { RecipientField } from './RecipientField';
+import { addressText } from '../address';
 import { useTerms } from '../../auth';
 
 /**
  * Сдача работы: название, текст и до пяти фото, PDF или рисунков с холста. Хотя бы текст или файл.
+ * Работа уходит куратору группы или преподавателю выбранной дисциплины.
  * answerTo — ответ на задание: название берёт задание, отправляет его send, заголовок формы ниже уровнем.
  */
 export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
@@ -25,6 +28,7 @@ export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
   const toast = useToast();
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
+  const [subjectId, setSubjectId] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [drawing, setDrawing] = useState<Drawing>(EMPTY);
@@ -43,11 +47,18 @@ export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
     try {
       const ready = await prepareAttachments(files);
       const work = { title: title.trim(), text: text.trim(), files: ready };
-      onSubmitted(answerTo ? await answerTo.send(work) : ((await submitWork(work)) as T));
+      let done = 'Ответ отправлен преподавателю';
+      if (answerTo) onSubmitted(await answerTo.send(work));
+      else {
+        const works = await submitWork({ ...work, subjectId });
+        // Новая работа первая в списке: тост называет того, кто её получил
+        done = works[0]?.to ? `Работа отправлена: ${addressText(works[0].to, t)}` : 'Работа отправлена';
+        onSubmitted(works as T);
+      }
       setTitle('');
       setText('');
       setFiles([]);
-      toast({ text: answerTo ? 'Ответ отправлен преподавателю' : 'Работа отправлена преподавателю', tone: 'ok' });
+      toast({ text: done, tone: 'ok' });
     } catch (err) {
       toast({ text: (err as Error).message, tone: 'error' });
     } finally {
@@ -64,9 +75,10 @@ export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
           <h2 id={`${id}-title`} className="text-lg">Новая работа</h2>
           <p className="text-sm text-ink-soft">
             {school
-              ? 'Её увидит преподаватель. Родители увидят работу, когда преподаватель её опубликует.'
-              : 'Её увидит преподаватель. После проверки работа попадёт в портфолио.'}
+              ? 'Родители увидят работу, когда преподаватель её опубликует.'
+              : 'После проверки работа попадёт в портфолио.'}
           </p>
+          <RecipientField value={subjectId} onChange={setSubjectId} />
           <div>
             <label className="label" htmlFor={`${id}-name`}>Название</label>
             <input id={`${id}-name`} className="input" maxLength={100} value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -100,7 +112,7 @@ export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
         <DrawingPad drawing={drawing} onChange={setDrawing} onDone={attachDrawing} />
       </Modal>
       <button className="btn btn-primary" disabled={busy || (!answerTo && !title.trim()) || (!text.trim() && !files.length)}>
-        {answerTo ? 'Сдать ответ' : 'Отправить преподавателю'}
+        {answerTo ? 'Сдать ответ' : 'Отправить'}
       </button>
     </form>
   );

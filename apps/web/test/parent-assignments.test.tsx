@@ -18,7 +18,7 @@ const LIST: ParentAssignment[] = [
     ...BASE, id: 'a2', title: 'Выучить стих', points: 2, status: 'APPROVED', overdue: false, comment: 'Молодец!',
     accepted: {
       id: 'w1', title: 'Выучить стих', text: 'Выучила', status: 'APPROVED', comment: 'Молодец!', createdAt: BASE.createdAt,
-      decidedAt: BASE.createdAt, decidedBy: 'Анна Сергеевна', files: [], unseen: false,
+      decidedAt: BASE.createdAt, decidedBy: 'Анна Сергеевна', files: [], unseen: false, to: null,
     },
   },
 ];

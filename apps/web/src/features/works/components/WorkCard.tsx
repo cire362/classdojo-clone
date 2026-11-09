@@ -3,6 +3,8 @@ import { ArrowUUpLeftIcon, CheckCircleIcon, HourglassIcon } from '@phosphor-icon
 import type { StudentWork, WorkStatus } from '../../../lib/api';
 import { formatDateTime } from '../../../lib/hooks';
 import { AttachedFiles } from '../../../ui/Attachments';
+import { useTerms } from '../../auth';
+import { addressText } from '../address';
 
 const STATUS: Record<WorkStatus, { label: string; icon: typeof CheckCircleIcon; className: string }> = {
   PENDING: { label: 'На проверке', icon: HourglassIcon, className: 'bg-surface-2 text-ink' },
@@ -22,6 +24,7 @@ export function WorkCard({ work, heading, showStatus = true, level = 3, answer =
   showStatus?: boolean;
   children?: ReactNode;
 }) {
+  const t = useTerms();
   const { icon: Icon, className } = STATUS[work.status];
   const label = answer && work.status === 'APPROVED' ? 'Принят' : STATUS[work.status].label;
   const Title = level === 3 ? 'h3' : 'h4';
@@ -37,7 +40,10 @@ export function WorkCard({ work, heading, showStatus = true, level = 3, answer =
           </span>
         )}
       </div>
-      <p className="text-sm text-ink-soft">{formatDateTime(work.createdAt)}</p>
+      <p className="text-sm text-ink-soft">
+        {formatDateTime(work.createdAt)}
+        {work.to && <> · Кому: {addressText(work.to, t)}</>}
+      </p>
       {work.text && <p className="whitespace-pre-line break-words">{work.text}</p>}
       {work.files.length > 0 && <AttachedFiles files={work.files} />}
       {work.comment && (

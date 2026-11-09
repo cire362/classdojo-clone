@@ -36,7 +36,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
       await expect(page.getByRole('list', { name: 'Выбранные файлы' })).toContainText('рисунок.png');
       await expect(page.getByLabel('Название')).toHaveValue('Рисунок');
-      await page.getByRole('button', { name: 'Отправить преподавателю' }).click();
+      await page.getByRole('button', { name: 'Отправить', exact: true }).click();
       await expect(page.getByRole('list', { name: 'Мои работы' }).getByText('На проверке')).toBeVisible();
 
       // Сохранённый файл — PNG листа 1200×900: посередине красная линия, в углу белая бумага

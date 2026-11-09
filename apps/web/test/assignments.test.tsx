@@ -20,7 +20,7 @@ const TASK: TeacherAssignment = {
 };
 const WORK: StudentWork = {
   id: 'w1', title: TASK.title, text: 'Ответы: 12, 7, 3', status: 'PENDING', comment: '', createdAt: '2026-11-13T10:00:00.000Z',
-  decidedAt: null, decidedBy: null, files: [], unseen: false,
+  decidedAt: null, decidedBy: null, files: [], unseen: false, to: null,
 };
 
 it('адреса страниц заданий', () => {

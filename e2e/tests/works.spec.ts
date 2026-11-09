@@ -30,9 +30,12 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await pupil.getByLabel('Текст, если нужен').fill('Склеила ракету');
       await pupil.locator('input[type=file]').setInputFiles([PHOTO]);
       await axe(pupil);
-      await pupil.getByRole('button', { name: 'Отправить преподавателю' }).click();
+      // Без предметов в классе работа уходит классному руководителю — форма называет его
+      await expect(pupil.getByText(/^Кому: Классный руководитель — .+/)).toBeVisible();
+      await pupil.getByRole('button', { name: 'Отправить', exact: true }).click();
       const mine = pupil.getByRole('list', { name: 'Мои работы' }).getByRole('listitem').filter({ hasText: 'Поделка из бумаги' });
       await expect(mine.getByText('На проверке')).toBeVisible();
+      await expect(mine).toContainText(/Кому: Классный руководитель — /);
       await loaded(mine.getByRole('img', { name: /поделка\.jpg/ }));
       expect(await pupil.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(376);
       await axe(pupil);
