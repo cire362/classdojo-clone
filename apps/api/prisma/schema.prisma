@@ -328,6 +328,8 @@ model Teacher {
 
   @@index([schoolId])
   materials Material[]
+  /// Работы студентов, отправленные этому преподавателю
+  receivedWorks StudentWork[] @relation("WorkRecipient")
 }
 
 model Group {
@@ -901,13 +903,16 @@ model StudentWork {
   /// Баллы за принятый ответ: снимаются, если ответ вернули на доработку
   pointEventId String?     @unique
   pointEvent   PointEvent? @relation(fields: [pointEventId], references: [id], onDelete: SetNull)
-  /// Кому работа: дисциплина группы и её преподаватель; без неё — куратору (создателю группы)
+  /// Кому работа: преподаватель группы, который её проверяет, и, если выбрана, его дисциплина
+  recipientId  String?
+  recipient    Teacher?    @relation("WorkRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
   subjectId    String?
   subject      Subject?    @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
   @@index([studentId, createdAt])
   @@index([status])
   @@index([assignmentId])
+  @@index([recipientId, status])
 }
 
 /// Задание группе: всему классу, команде или выбранным ученикам. Кому выдано — снимок в AssignmentStudent

@@ -23,24 +23,30 @@ export interface StudentWork {
   to: WorkAddress | null;
 }
 
-/** Адресат работы: дисциплина и её преподаватель или, без дисциплины, куратор группы */
+/** Адресат работы: преподаватель группы и, если выбрана, его дисциплина */
 export interface WorkAddress {
-  /** null — куратору группы */
-  subject: string | null;
-  /** null — дисциплину из группы убрали */
+  /** null — преподавателя удалили */
+  teacherId: string | null;
   teacher: string | null;
+  subject: string | null;
+  /** Адресат — куратор группы (в школе — классный руководитель), её создатель */
+  curator: boolean;
 }
 
-/** Кому студент может отправить работу: куратору или преподавателю дисциплины группы */
-export interface WorkRecipients {
-  /** Создатель группы: классный руководитель в школе, куратор в колледже и вузе */
-  curator: string;
-  subjects: { id: string; name: string; teacher: string }[];
+/** Кому студент может отправить работу: первым идёт куратор, затем дисциплины и остальные преподаватели группы */
+export interface WorkRecipient {
+  teacherId: string;
+  teacher: string;
+  subjectId: string | null;
+  subject: string | null;
+  curator: boolean;
 }
 
 /** Работа в очереди преподавателя: с именем ученика */
 export interface GroupWork extends StudentWork {
   student: { id: string; name: string };
+  /** Работа адресована тому, кто смотрит очередь */
+  mine: boolean;
 }
 
 export interface GroupWorks {

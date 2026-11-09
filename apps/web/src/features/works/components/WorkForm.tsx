@@ -14,7 +14,7 @@ import { useTerms } from '../../auth';
 
 /**
  * Сдача работы: название, текст и до пяти фото, PDF или рисунков с холста. Хотя бы текст или файл.
- * Работа уходит куратору группы или преподавателю выбранной дисциплины.
+ * Работа уходит выбранному преподавателю группы, по умолчанию куратору.
  * answerTo — ответ на задание: название берёт задание, отправляет его send, заголовок формы ниже уровнем.
  */
 export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
@@ -28,7 +28,7 @@ export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
   const toast = useToast();
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
-  const [subjectId, setSubjectId] = useState('');
+  const [to, setTo] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [drawing, setDrawing] = useState<Drawing>(EMPTY);
@@ -50,7 +50,7 @@ export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
       let done = 'Ответ отправлен преподавателю';
       if (answerTo) onSubmitted(await answerTo.send(work));
       else {
-        const works = await submitWork({ ...work, subjectId });
+        const works = await submitWork({ ...work, to });
         // Новая работа первая в списке: тост называет того, кто её получил
         done = works[0]?.to ? `Работа отправлена: ${addressText(works[0].to, t)}` : 'Работа отправлена';
         onSubmitted(works as T);
@@ -78,7 +78,7 @@ export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
               ? 'Родители увидят работу, когда преподаватель её опубликует.'
               : 'После проверки работа попадёт в портфолио.'}
           </p>
-          <RecipientField value={subjectId} onChange={setSubjectId} />
+          <RecipientField value={to} onChange={setTo} />
           <div>
             <label className="label" htmlFor={`${id}-name`}>Название</label>
             <input id={`${id}-name`} className="input" maxLength={100} value={title} onChange={(e) => setTitle(e.target.value)} />

@@ -6,6 +6,7 @@ import { renderApp } from './render';
 
 vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
 vi.mock('../src/lib/photo', () => ({ prepareImage: vi.fn(async () => new Blob(['jpeg'], { type: 'image/jpeg' })) }));
+const CURATOR = [{ teacherId: 't1', teacher: 'Анна Сергеевна', subjectId: null, subject: null, curator: true }];
 const api = vi.mocked((await import('../src/lib/api')).api);
 const { prepareImage } = vi.mocked(await import('../src/lib/photo'));
 
@@ -47,7 +48,7 @@ function draw(canvas: HTMLElement) {
 
 it('рисунок прикладывается к работе как PNG без пережатия и уходит вместе с ней', async () => {
   api.mockImplementation(async (_, path) =>
-    (path === '/student/works/recipients' ? { curator: 'Анна Сергеевна', subjects: [] } : []) as never);
+    (path === '/student/works/recipients' ? CURATOR : []) as never);
   renderApp(<WorkForm onSubmitted={() => {}} />);
   fireEvent.click(screen.getByRole('button', { name: 'Нарисовать' }));
   const dialog = await screen.findByRole('dialog', { name: 'Рисунок' });

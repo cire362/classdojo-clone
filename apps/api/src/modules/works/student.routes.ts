@@ -18,9 +18,9 @@ const limit = bodyLimit({
 /** Свои работы ученика. Роль проверяет routes/student.ts, чужих id в адресах нет */
 export const studentWorkRoutes = new Hono<AppEnv>()
   .get('/works', async (c) => c.json(await ownWorks(c.get('user').studentId!)))
-  /** Кому можно отправить работу: куратору или преподавателю дисциплины группы */
+  /** Кому можно отправить работу: преподаватели группы, с дисциплинами */
   .get('/works/recipients', async (c) => c.json(await studentRecipients(c.get('user').studentId!)))
-  /** multipart: поля title, text и subjectId (кому; пусто — куратору), файлы file */
+  /** multipart: поля title, text, teacherId и subjectId (кому; пусто — куратору), файлы file */
   .post('/works', limit, async (c) => {
     const user = c.get('user');
     const body = await c.req.parseBody({ all: true }).catch(() => {
@@ -28,7 +28,10 @@ export const studentWorkRoutes = new Hono<AppEnv>()
     });
     const field = (name: string) => (typeof body[name] === 'string' ? (body[name] as string) : undefined);
     const files = [body.file ?? []].flat().filter((f): f is File => f instanceof File);
-    const { title, text, subjectId } = parse(WorkBody, { title: field('title'), text: field('text'), subjectId: field('subjectId') });
-    return c.json(await submitWork(user.studentId!, user.accountId, { title, text, files, subjectId: subjectId || null }), 201);
+    const { title, text, teacherId, subjectId } = parse(WorkBody, {
+      title: field('title'), text: field('text'), teacherId: field('teacherId'), subjectId: field('subjectId'),
+    });
+    const to = { teacherId: teacherId || null, subjectId: subjectId || null };
+    return c.json(await submitWork(user.studentId!, user.accountId, { title, text, files, to }), 201);
   })
   .delete('/works/:id', async (c) => c.json(await deleteOwnWork(c.get('user').studentId!, c.req.param('id'))));

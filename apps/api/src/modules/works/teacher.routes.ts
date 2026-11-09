@@ -9,12 +9,12 @@ import { decideWork, deleteWork, groupWorks } from './service.js';
 export const teacherWorkRoutes = new Hono<AppEnv>()
   .get('/groups/:id/works', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
-    return c.json(await groupWorks(group.id));
+    return c.json(await groupWorks(group.id, c.get('user').teacherId!));
   })
   .put('/groups/:id/works/:workId', async (c) => {
     const user = c.get('user');
     const group = await teacherGroup(user, c.req.param('id'));
     const decision = parse(DecisionBody, await c.req.json().catch(() => null));
-    return c.json(await decideWork(group.id, user.accountId, c.req.param('workId'), decision));
+    return c.json(await decideWork(group.id, { id: user.teacherId!, accountId: user.accountId }, c.req.param('workId'), decision));
   })
   .delete('/works/:id', async (c) => c.json(await deleteWork(c.get('user').teacherId!, c.req.param('id'))));

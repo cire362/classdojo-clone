@@ -54,6 +54,26 @@ async function ensureDemoCoTeacher() {
   console.log(`Seed: соавтор группы «${group.name}»: ${CO_TEACHER_LOGIN} / ${TEACHER_PASSWORD}`);
 }
 
+/**
+ * Предметы демо-класса с разными учителями: ученик выбирает, кому сдать работу. Добавляются и в уже
+ * существующую демо-базу, если у класса ещё нет предметов.
+ */
+async function ensureDemoSubjects() {
+  const group = await prisma.group.findFirst({
+    where: { teacher: { account: { login: TEACHER_LOGIN } } },
+    orderBy: { createdAt: 'asc' },
+    select: { id: true, teacher: { select: { id: true, schoolId: true } }, _count: { select: { subjects: true } } },
+  });
+  const co = await prisma.teacher.findFirst({ where: { account: { login: CO_TEACHER_LOGIN } }, select: { id: true } });
+  if (!group || !co || group._count.subjects) return;
+  const schoolId = group.teacher.schoolId;
+  for (const [name, teacherId] of [['Математика', group.teacher.id], ['Литература', co.id]] as const) {
+    const subject = await prisma.subject.upsert({ where: { schoolId_name: { schoolId, name } }, create: { schoolId, name }, update: {} });
+    await prisma.groupSubject.create({ data: { groupId: group.id, subjectId: subject.id, teacherId } });
+  }
+  console.log('Seed: предметы демо-класса — математика и литература');
+}
+
 /** Демо-родитель добавляется и в уже существующую демо-базу (роль появилась позже) */
 async function ensureDemoParent() {
   if (await prisma.account.findUnique({ where: { login: PARENT_LOGIN } })) return;
@@ -110,6 +130,7 @@ async function main() {
     console.log(`Seed: преподаватель «${TEACHER_LOGIN}» уже есть — пропускаю.`);
     await ensureDemoParent();
     await ensureDemoCoTeacher();
+    await ensureDemoSubjects();
     await ensureDemoRewards();
     return;
   }
@@ -191,6 +212,7 @@ async function main() {
   for (const s of students) console.log(`    ${s.name.padEnd(18)} ${s.account.login}`);
   await ensureDemoParent();
   await ensureDemoCoTeacher();
+  await ensureDemoSubjects();
   await ensureDemoRewards();
 }
 

@@ -6,11 +6,12 @@ import { MyWorks } from '../src/features/works';
 import { renderApp } from './render';
 
 vi.mock('../src/lib/api', async (orig) => ({ ...(await orig<typeof import('../src/lib/api')>()), api: vi.fn() }));
+const CURATOR = [{ teacherId: 't1', teacher: 'Анна Сергеевна', subjectId: null, subject: null, curator: true }];
 const api = vi.mocked((await import('../src/lib/api')).api);
 beforeEach(() => {
   api.mockReset();
   api.mockImplementation(async (_, path) =>
-    (path === '/student/works/recipients' ? { curator: 'Анна Сергеевна', subjects: [] } : []) as never);
+    (path === '/student/works/recipients' ? CURATOR : []) as never);
 });
 
 const works = (kind: InstitutionKind) => renderApp(<TermsProvider kind={kind}><MyWorks /></TermsProvider>);

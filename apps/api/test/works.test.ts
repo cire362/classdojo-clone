@@ -8,10 +8,9 @@ type Teacher = Awaited<ReturnType<typeof setupTeacher>>;
 const PDF = Buffer.from('%PDF-1.7 доклад');
 const JPEG = await picture(40, 30, 'image/jpeg');
 
-function submit(cookie: string, fields: { title?: string; text?: string; subjectId?: string; files?: [string, Uint8Array][] }) {
+function submit(cookie: string, fields: { title?: string; text?: string; files?: [string, Uint8Array][] }) {
   const data = new FormData();
   if (fields.title !== undefined) data.append('title', fields.title);
-  if (fields.subjectId !== undefined) data.append('subjectId', fields.subjectId);
   if (fields.text !== undefined) data.append('text', fields.text);
   for (const [name, bytes] of fields.files ?? []) data.append('file', new File([bytes as BlobPart], name));
   return call('POST', '/api/student/works', { cookie, raw: data });
@@ -20,6 +19,12 @@ function submit(cookie: string, fields: { title?: string; text?: string; subject
 async function parentOf(t: Teacher, i = 0) {
   const issued = (await call('POST', `/api/teacher/students/${t.students[i].id}/parents`, { cookie: t.cookie })).body;
   return login(issued.login, issued.password);
+}
+
+function submitTo(cookie: string, fields: { title: string; text: string; teacherId?: string; subjectId?: string }) {
+  const data = new FormData();
+  for (const [key, value] of Object.entries(fields)) if (value !== undefined) data.append(key, value);
+  return call('POST', '/api/student/works', { cookie, raw: data });
 }
 
 const queue = (t: Teacher, cookie = t.cookie) => call('GET', `/api/teacher/groups/${t.group.id}/works`, { cookie });
@@ -114,35 +119,48 @@ it('проверки: название, пустая работа, число ф
   expect((await decide(t, first.id, 'RETURNED')).status).toBe(200);
 });
 
-it('студент выбирает, кому работа: куратору или преподавателю дисциплины своей группы', async () => {
+it('студент выбирает преподавателя группы: куратора, преподавателя дисциплины или коллегу без дисциплины', async () => {
   const school = await prisma.school.create({ data: { name: 'Колледж связи', kind: 'COLLEGE' } });
   const curator = await setupTeacher(['Маша Иванова'], school.id);
   const physicist = await setupTeacher(['Чужой Студент'], school.id);
+  const colleague = await setupTeacher(['Ещё Студент'], school.id);
+  const stranger = await setupTeacher(['Другой Студент'], school.id);
   await prisma.teacher.update({ where: { id: curator.teacher.id }, data: { name: 'Анна Куратор' } });
   await prisma.teacher.update({ where: { id: physicist.teacher.id }, data: { name: 'Пётр Физик' } });
+  await prisma.teacher.update({ where: { id: colleague.teacher.id }, data: { name: 'Игорь Коллега' } });
   const physics = await prisma.subject.create({ data: { schoolId: school.id, name: 'Физика' } });
-  const chemistry = await prisma.subject.create({ data: { schoolId: school.id, name: 'Химия' } });
   await call('POST', `/api/teacher/groups/${curator.group.id}/subjects`, {
     cookie: curator.cookie, body: { subjectId: physics.id, teacherId: physicist.teacher.id },
   });
+  await prisma.groupTeacher.create({ data: { groupId: curator.group.id, teacherId: colleague.teacher.id } });
   const masha = await curator.studentCookie(0);
 
-  const recipients = await call('GET', '/api/student/works/recipients', { cookie: masha });
-  expect(recipients.body).toEqual({ curator: 'Анна Куратор', subjects: [{ id: physics.id, name: 'Физика', teacher: 'Пётр Физик' }] });
-  // Дисциплина не из своей группы не подходит
-  expect((await submit(masha, { title: 'Лабораторная', text: 'Отчёт', subjectId: chemistry.id })).status).toBe(404);
+  const recipients = (await call('GET', '/api/student/works/recipients', { cookie: masha })).body;
+  expect(recipients.map((r: { teacher: string; subject: string | null; curator: boolean }) => [r.teacher, r.subject, r.curator])).toEqual([
+    ['Анна Куратор', null, true],
+    ['Пётр Физик', 'Физика', false],
+    ['Игорь Коллега', null, false],
+  ]);
+  // Преподаватель не из группы и чужая пара «преподаватель — дисциплина» не подходят
+  const send = (title: string, to: { teacherId?: string; subjectId?: string }) =>
+    submitTo(masha, { title, text: 'Текст', ...to });
+  expect((await send('Мимо', { teacherId: stranger.teacher.id })).status).toBe(404);
+  expect((await send('Мимо', { teacherId: colleague.teacher.id, subjectId: physics.id })).status).toBe(404);
 
-  await submit(masha, { title: 'Реферат', text: 'Текст' });
-  const sent = await submit(masha, { title: 'Лабораторная', text: 'Отчёт', subjectId: physics.id });
+  await send('Реферат', {});
+  await send('Эссе', { teacherId: colleague.teacher.id });
+  const sent = await send('Лабораторная', { teacherId: physicist.teacher.id, subjectId: physics.id });
   expect(sent.status).toBe(201);
-  expect(sent.body.map((w: { title: string; to: unknown }) => [w.title, w.to])).toEqual([
-    ['Лабораторная', { subject: 'Физика', teacher: 'Пётр Физик' }],
-    ['Реферат', { subject: null, teacher: 'Анна Куратор' }],
-  ]);
-  // Работу видят все преподаватели группы, адрес говорит, кто её ждёт
-  const pending = (await queue(curator, physicist.cookie)).body.pending;
-  expect(pending.map((w: { title: string; to: { teacher: string } }) => [w.title, w.to.teacher])).toEqual([
-    ['Реферат', 'Анна Куратор'],
-    ['Лабораторная', 'Пётр Физик'],
-  ]);
+  expect(sent.body.map((w: { title: string; to: { teacher: string; subject: string | null } }) => [w.title, w.to.teacher, w.to.subject]))
+    .toEqual([['Лабораторная', 'Пётр Физик', 'Физика'], ['Эссе', 'Игорь Коллега', null], ['Реферат', 'Анна Куратор', null]]);
+
+  // Работу видят все преподаватели группы, но «своя» она только у адресата — и в его счётчике
+  const mine = async (cookie: string) => (await queue(curator, cookie)).body.pending
+    .filter((w: { mine: boolean }) => w.mine).map((w: { title: string }) => w.title);
+  expect(await mine(curator.cookie)).toEqual(['Реферат']);
+  expect(await mine(physicist.cookie)).toEqual(['Лабораторная']);
+  expect(await mine(colleague.cookie)).toEqual(['Эссе']);
+  expect((await queue(curator, physicist.cookie)).body.pending).toHaveLength(3);
+  const counter = async (cookie: string) => (await call('GET', `/api/teacher/groups/${curator.group.id}`, { cookie })).body.pendingWorks;
+  expect([await counter(curator.cookie), await counter(physicist.cookie)]).toEqual([1, 1]);
 });

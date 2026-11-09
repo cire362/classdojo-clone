@@ -61,7 +61,8 @@ export async function createGroup(teacherId: string, name: string): Promise<Omit
   return { id: group.id, name: group.name, subtractTeacher: group.subtractTeacher, archivedAt: null, studentsCount: 0, previewHeroes: [] };
 }
 
-export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
+/** teacherId — кто смотрит: счётчик работ считает адресованные ему */
+export async function groupDetails(group: OwnedGroup, teacherId: string): Promise<GroupDetails> {
   const [students, reasons, today] = await Promise.all([
     prisma.student.findMany({
       where: { groupId: group.id },
@@ -75,7 +76,7 @@ export async function groupDetails(group: OwnedGroup): Promise<GroupDetails> {
     cardSummaries(students.map((s) => s.id)),
     groupTeams(group.id),
     pendingRequestCount(group.id),
-    pendingWorkCount(group.id),
+    pendingWorkCount(group.id, teacherId),
     pendingAnswerCount(group.id),
     classGoal(group.id),
     lessonPlan(group.id),

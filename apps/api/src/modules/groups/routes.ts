@@ -16,7 +16,7 @@ export const groupRoutes = new Hono<AppEnv>()
   })
   .get('/groups/:id', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));
-    return c.json(await groupDetails(group));
+    return c.json(await groupDetails(group, c.get('user').teacherId!));
   })
   .patch('/groups/:id', async (c) => {
     const group = await teacherGroup(c.get('user'), c.req.param('id'));

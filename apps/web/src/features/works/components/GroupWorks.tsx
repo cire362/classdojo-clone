@@ -33,7 +33,7 @@ export function GroupWorks() {
       const works = await request();
       setData(works);
       // Значок на вкладке группы: сколько работ ещё ждёт
-      setGroup((current) => current && { ...current, pendingWorks: works.pending.length });
+      setGroup((current) => current && { ...current, pendingWorks: works.pending.filter((w) => w.mine).length });
       toast({ text: done, tone: 'ok' });
     } catch (err) {
       toast({ text: (err as Error).message, tone: 'error' });
@@ -49,38 +49,46 @@ export function GroupWorks() {
 
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <Skeleton className="h-48 max-w-2xl" />;
+  const mine = data.pending.filter((w) => w.mine);
+  const others = data.pending.filter((w) => !w.mine);
+  const pendingCard = (w: GroupWork) => (
+    <WorkCard key={w.id} work={w} heading={student(w)} showStatus={false}>
+      <label className="label" htmlFor={`${id}-${w.id}`}>Комментарий {t.student.one.dat}</label>
+      <textarea
+        id={`${id}-${w.id}`}
+        className="input min-h-16 resize-y"
+        maxLength={500}
+        placeholder="Похвала или что доделать"
+        value={comments[w.id] ?? ''}
+        onChange={(e) => setComments({ ...comments, [w.id]: e.target.value })}
+      />
+      <div className="flex flex-wrap gap-2">
+        <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => decide(w, 'APPROVED')}>Опубликовать</button>
+        <button className="btn btn-secondary btn-sm" disabled={busy} onClick={() => decide(w, 'RETURNED')}>
+          Вернуть на доработку
+        </button>
+      </div>
+    </WorkCard>
+  );
   return (
     <div className="max-w-2xl space-y-8">
       <section className="space-y-3" aria-labelledby={`${id}-pending`}>
-        <h2 id={`${id}-pending`} className="text-lg">На проверке: {data.pending.length}</h2>
-        {data.pending.length === 0 && (
+        <h2 id={`${id}-pending`} className="text-lg">На проверке: {mine.length}</h2>
+        {mine.length === 0 && (
           <EmptyState icon={<NotebookIcon size={28} />} title="Новых работ нет">
-            {cap(t.student.many.nom)} сдают работы в своём кабинете, во вкладке «Мои работы». До публикации их видите только вы
-            и сам {t.student.one.nom}.
+            {cap(t.student.many.nom)} сдают работы в своём кабинете, во вкладке «Мои работы», и выбирают, кому из
+            преподавателей их отправить. До публикации работу видят только преподаватели группы и сам {t.student.one.nom}.
           </EmptyState>
         )}
-        <ul className="space-y-3">
-          {data.pending.map((w) => (
-            <WorkCard key={w.id} work={w} heading={student(w)} showStatus={false}>
-              <label className="label" htmlFor={`${id}-${w.id}`}>Комментарий {t.student.one.dat}</label>
-              <textarea
-                id={`${id}-${w.id}`}
-                className="input min-h-16 resize-y"
-                maxLength={500}
-                placeholder="Похвала или что доделать"
-                value={comments[w.id] ?? ''}
-                onChange={(e) => setComments({ ...comments, [w.id]: e.target.value })}
-              />
-              <div className="flex flex-wrap gap-2">
-                <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => decide(w, 'APPROVED')}>Опубликовать</button>
-                <button className="btn btn-secondary btn-sm" disabled={busy} onClick={() => decide(w, 'RETURNED')}>
-                  Вернуть на доработку
-                </button>
-              </div>
-            </WorkCard>
-          ))}
-        </ul>
+        <ul className="space-y-3">{mine.map(pendingCard)}</ul>
       </section>
+      {others.length > 0 && (
+        <section className="space-y-3" aria-labelledby={`${id}-others`}>
+          <h2 id={`${id}-others`} className="text-lg">У других преподавателей: {others.length}</h2>
+          <p className="text-sm text-ink-soft">Эти работы отправлены коллегам. Проверить их можно, если коллега попросил.</p>
+          <ul className="space-y-3">{others.map(pendingCard)}</ul>
+        </section>
+      )}
       {data.decided.length > 0 && (
         <section className="space-y-3" aria-labelledby={`${id}-decided`}>
           <h2 id={`${id}-decided`} className="text-lg">Проверенные</h2>

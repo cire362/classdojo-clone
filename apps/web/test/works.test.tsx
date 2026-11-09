@@ -15,9 +15,11 @@ beforeEach(() => { api.mockReset(); });
 
 const WORK: StudentWork = {
   id: 'w1', title: 'Доклад о космосе', text: 'Мой доклад', status: 'PENDING', comment: '', createdAt: '2026-11-06T10:00:00.000Z',
-  decidedAt: null, decidedBy: null, files: [], unseen: false, to: { subject: null, teacher: 'Анна Сергеевна' },
+  decidedAt: null, decidedBy: null, files: [], unseen: false,
+  to: { teacherId: 't1', subject: null, teacher: 'Анна Сергеевна', curator: true },
 };
-const NO_SUBJECTS = { curator: 'Анна Сергеевна', subjects: [] };
+const CURATOR = { teacherId: 't1', teacher: 'Анна Сергеевна', subjectId: null, subject: null, curator: true };
+const NO_SUBJECTS = [CURATOR];
 /** Ответы ученику: адресаты, список работ и результат изменения */
 const student = (works: StudentWork[], after: StudentWork[], recipients: object = NO_SUBJECTS) =>
   api.mockImplementation(async (method, path) =>
@@ -53,19 +55,25 @@ it('ученик сдаёт работу: без названия и содер�
   expect(screen.getByRole('list', { name: 'Мои работы' })).toHaveTextContent('Кому: Классный руководитель — Анна Сергеевна');
 });
 
-it('студент выбирает, кому отправить: куратору или преподавателю дисциплины', async () => {
-  const recipients = { curator: 'Анна Сергеевна', subjects: [{ id: 'math', name: 'Математика', teacher: 'Пётр Ильич' }] };
-  student([], [{ ...WORK, to: { subject: 'Математика', teacher: 'Пётр Ильич' } }], recipients);
+it('студент выбирает, кому отправить: куратору, преподавателю дисциплины или коллеге без дисциплины', async () => {
+  const recipients = [
+    CURATOR,
+    { teacherId: 't2', teacher: 'Пётр Ильич', subjectId: 'math', subject: 'Математика', curator: false },
+    { teacherId: 't3', teacher: 'Игорь Павлович', subjectId: null, subject: null, curator: false },
+  ];
+  const sent = { teacherId: 't2', subject: 'Математика', teacher: 'Пётр Ильич', curator: false };
+  student([], [{ ...WORK, to: sent }], recipients);
   renderApp(<TermsProvider kind="COLLEGE"><MyWorks /></TermsProvider>);
   const to = await screen.findByLabelText('Кому');
-  expect(to).toHaveValue('');
+  expect(to).toHaveValue('t1:');
   expect(within(to).getByRole('option', { name: 'Куратор группы — Анна Сергеевна' })).toBeInTheDocument();
-  fireEvent.change(to, { target: { value: 'math' } });
+  expect(within(to).getByRole('option', { name: 'Игорь Павлович' })).toBeInTheDocument();
+  fireEvent.change(to, { target: { value: 't2:math' } });
   fireEvent.change(screen.getByLabelText('Название'), { target: { value: 'Контрольная' } });
   fireEvent.change(screen.getByLabelText('Текст, если нужен'), { target: { value: 'Решение' } });
   await act(async () => click('Отправить'));
   const [, , body] = api.mock.calls.find(([method]) => method === 'POST')!;
-  expect((body as FormData).get('subjectId')).toBe('math');
+  expect([(body as FormData).get('teacherId'), (body as FormData).get('subjectId')]).toEqual(['t2', 'math']);
   expect(await screen.findByText('Работа отправлена: Математика — Пётр Ильич')).toBeVisible();
 });
 
@@ -84,9 +92,9 @@ it('решения преподавателя видны ученику; убр�
   expect(screen.queryByText('Допиши вывод')).not.toBeInTheDocument();
 });
 
-const pending: GroupWork = { ...WORK, student: { id: 's1', name: 'Маша Иванова' } };
+const pending: GroupWork = { ...WORK, student: { id: 's1', name: 'Маша Иванова' }, mine: true };
 const decided: GroupWork = { ...WORK, id: 'w2', title: 'Рисунок', status: 'APPROVED', comment: 'Молодец', decidedBy: 'Анна Сергеевна',
-  student: { id: 's2', name: 'Петя Смирнов' } };
+  student: { id: 's2', name: 'Петя Смирнов' }, mine: true };
 
 it('преподаватель публикует работу с комментарием; очередь пустеет', async () => {
   api.mockImplementation(async (method) =>
@@ -112,4 +120,14 @@ it('проверенную работу можно снять с публика�
   await act(async () => click('Точно удалить'));
   expect(api).toHaveBeenCalledWith('DELETE', '/teacher/works/w2');
   expect(screen.queryByText('Рисунок')).not.toBeInTheDocument();
+});
+
+it('работы коллег — отдельно от своих: счётчик и «На проверке» только про свои', async () => {
+  const colleague = { teacherId: 't2', subject: 'Математика', teacher: 'Пётр Ильич', curator: false };
+  const theirs: GroupWork = { ...pending, id: 'w3', title: 'Задачи', mine: false, to: colleague };
+  api.mockImplementation(async () => ({ pending: [pending, theirs], decided: [] }) as never);
+  renderInGroup(<GroupWorks />, groupData());
+  expect(await screen.findByRole('heading', { name: 'На проверке: 1' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'У других преподавателей: 1' })).toBeVisible();
+  expect(screen.getByText(/Кому: Математика — Пётр Ильич/)).toBeVisible();
 });
