@@ -9,7 +9,7 @@ test('методичка Word: загрузка, просмотр без ска�
   await page.setViewportSize({ width: 375, height: 812 });
   await loginUi(page, TEACHER.login, TEACHER.password);
   await expect(page.getByRole('heading', { name: /Здравствуйте/ })).toBeVisible();
-  await page.getByRole('link', { name: /Методички/ }).click();
+  await page.getByRole('link', { name: 'Открыть методички' }).click();
   await page.getByLabel('Файл до 25 МБ').setInputFiles(DOCX);
   await page.getByLabel('Название').fill(title);
   await page.getByRole('button', { name: 'Добавить' }).click();

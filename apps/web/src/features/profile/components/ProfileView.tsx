@@ -11,14 +11,12 @@ import { EmptyState, ProgressBar } from '../../../ui';
 import { WorkCard } from '../../works';
 import { useHeroes, useTerms } from '../../auth';
 
-function PointsTile({ label, sum, featured = false }: { label: string; sum: PointsSum; featured?: boolean }) {
+function PointsTile({ label, sum }: { label: string; sum: PointsSum }) {
   return (
-    <div className={`rounded-2xl p-4 ${featured ? 'bg-ink text-bg' : 'bg-surface-2'}`}>
-      <div className={`text-sm font-medium ${featured ? 'opacity-75' : 'text-ink-soft'}`}>{label}</div>
-      <div className="mt-1 font-display text-3xl tabular-nums">+{sum.earned}</div>
-      <div className={`mt-1 text-sm tabular-nums ${featured ? 'opacity-75' : 'text-ink-soft'}`}>
-        {sum.lost > 0 ? `списано ${sum.lost}, итого ${sum.net}` : 'без списаний'}
-      </div>
+    <div className="min-w-0 px-3 py-3 sm:px-4">
+      <dt className="text-sm text-ink-soft">{label}</dt>
+      <dd className="mt-0.5 text-2xl font-semibold tabular-nums">+{sum.earned}</dd>
+      <dd className="text-xs text-ink-soft tabular-nums">{sum.lost > 0 ? `списано ${sum.lost}, итого ${sum.net}` : 'без списаний'}</dd>
     </div>
   );
 }
@@ -101,11 +99,11 @@ export function ProfileView({
             <ProgressBar className="mt-4" value={level.progress} label={`Прогресс до ${Math.min(level.level + 1, MAX_LEVEL)} уровня`} />
           </div>}
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <dl className="grid grid-cols-3 divide-x divide-line rounded-2xl border border-line">
             <PointsTile label="Сегодня" sum={points.today} />
             <PointsTile label="Неделя" sum={points.week} />
-            <PointsTile label="Всего" sum={points.total} featured />
-          </div>
+            <PointsTile label="Всего" sum={points.total} />
+          </dl>
           <PetCompanion parts={hero.parts} level={level.level} />
           {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
         </div>

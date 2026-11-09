@@ -50,7 +50,7 @@ export function GroupsList() {
             <Link
               key={g.id}
               to={`/g/${g.id}`}
-              className="card group flex min-h-36 flex-col justify-between p-5 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-pop)] active:translate-y-0"
+              className="card group flex min-h-36 flex-col justify-between p-5 transition-shadow hover:shadow-[var(--shadow-pop)]"
             >
               <span className="flex items-start justify-between gap-3">
                 <span className="min-w-0">
@@ -95,7 +95,7 @@ export function GroupsList() {
           <input
             id="group-name"
             className="input"
-            placeholder="Например, 5 «Б»"
+            placeholder={t.kind === 'SCHOOL' ? 'Например, 5 «Б»' : 'Например, ИС-22'}
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={60}

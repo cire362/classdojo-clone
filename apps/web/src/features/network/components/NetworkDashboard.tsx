@@ -67,11 +67,11 @@ export function NetworkDashboard() {
       {!data && !error && <Skeleton className="h-64" />}
       {data && tiles && (
         <>
-          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <dl className="grid grid-cols-2 rounded-2xl border border-line sm:grid-cols-4 sm:divide-x sm:divide-line">
             {tiles.map(([label, value]) => (
-              <div key={label} className="card p-4">
+              <div key={label} className="px-4 py-3">
                 <dt className="text-sm text-ink-soft">{label}</dt>
-                <dd className="mt-1 font-display text-2xl tabular-nums">{value}</dd>
+                <dd className="mt-0.5 text-xl font-semibold tabular-nums">{value}</dd>
               </div>
             ))}
           </dl>

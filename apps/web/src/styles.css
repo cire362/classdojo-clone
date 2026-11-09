@@ -80,6 +80,14 @@
     outline: 3px solid var(--accent);
     outline-offset: 2px;
   }
+  ::selection {
+    background: color-mix(in srgb, var(--accent) 40%, transparent);
+    color: var(--ink);
+  }
+  html {
+    accent-color: var(--accent);
+    scrollbar-color: var(--line) transparent;
+  }
   input,
   textarea,
   select {

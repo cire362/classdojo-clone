@@ -1,6 +1,6 @@
 import { Suspense, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PaintBrushIcon, SparkleIcon } from '@phosphor-icons/react';
+import { PaintBrushIcon } from '@phosphor-icons/react';
 import { LevelUpOverlay, PartPreview, fetchStudentProfile } from '../../hero';
 import { HomePoints } from '../../home';
 import { StudentSchoolGoal } from '../../schoolpoints';
@@ -30,9 +30,6 @@ export function StudentCabinet() {
           to="/hero"
           className="card flex flex-wrap items-center gap-4 border-accent/60 bg-accent/15 p-4 transition hover:shadow-[var(--shadow-pop)] sm:flex-nowrap"
         >
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent">
-            <SparkleIcon size={26} weight="fill" />
-          </span>
           <span className="min-w-0 flex-1">
             <span className="block font-semibold">
               {pluralize(newIds.length, 'Открылась', 'Открылись', 'Открылось')} {newIds.length}{' '}

@@ -125,10 +125,12 @@ export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () =
 
 export function EmptyState({ icon, title, children }: { icon: ReactNode; title: string; children?: ReactNode }) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-line px-6 py-10 sm:items-center sm:text-center">
-      <span className="flex size-14 items-center justify-center rounded-full bg-accent/25 text-ink">{icon}</span>
-      <h3 className="text-lg">{title}</h3>
-      {children && <div className="max-w-[46ch] text-ink-soft">{children}</div>}
+    <div className="flex items-start gap-3 rounded-2xl bg-surface-2/60 px-5 py-5">
+      <span className="mt-0.5 shrink-0 text-ink-soft [&>svg]:size-5" aria-hidden>{icon}</span>
+      <div className="min-w-0">
+        <h3 className="font-sans text-base font-semibold tracking-normal">{title}</h3>
+        {children && <div className="mt-1 max-w-[65ch] text-ink-soft">{children}</div>}
+      </div>
     </div>
   );
 }

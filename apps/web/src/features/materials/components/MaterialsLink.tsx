@@ -1,15 +1,16 @@
 import { Link } from 'react-router-dom';
-import { BooksIcon } from '@phosphor-icons/react';
 
-/** Вход в методички с главной преподавателя */
+/** Вход в методички с главной преподавателя: такой же раздел, как потоки */
 export function MaterialsLink() {
   return (
-    <Link to="/materials" className="card flex items-center gap-4 p-5 transition hover:shadow-[var(--shadow-pop)]">
-      <BooksIcon size={32} className="shrink-0" aria-hidden />
-      <span className="min-w-0">
-        <span className="block font-display text-xl">Методички</span>
-        <span className="block text-sm text-ink-soft">Свои материалы к урокам и материалы коллег: Word, PDF, презентации</span>
-      </span>
-    </Link>
+    <section className="space-y-3" aria-labelledby="materials-title">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="materials-title" className="text-lg">Методички</h2>
+        <Link to="/materials" className="btn btn-secondary">Открыть методички</Link>
+      </div>
+      <p className="text-sm text-ink-soft">
+        Свои материалы к урокам и материалы коллег: Word, PDF, презентации. Открываются без скачивания.
+      </p>
+    </section>
   );
 }
