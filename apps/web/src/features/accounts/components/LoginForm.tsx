@@ -9,24 +9,24 @@ const h = (p: Partial<HeroParts>): HeroParts => ({ ...DEFAULT_HERO, ...p });
 /** Слайды витрины: по три героя, включая детали старших уровней — чтобы было к чему стремиться */
 const SLIDES: HeroParts[][] = [
   [
-    h({ pose: 'pose.stand', suit: 'suit.classic', suitColor: 'color.purple', accentColor: 'color.yellow', hair: 'hair.curly', skin: 'skin.4', emblem: 'emblem.bolt', hairColor: 'hairColor.black', cape: 'cape.short' }),
+    h({ pose: 'pose.stand', suit: 'suit.classic', suitColor: 'color.purple', accentColor: 'color.yellow', hair: 'hair.curly', skin: 'skin.3', emblem: 'emblem.bolt', hairColor: 'hairColor.black', cape: 'cape.short' }),
     h({ pose: 'pose.victory', suitColor: 'color.navy', accentColor: 'color.yellow', hair: 'hair.spiky', skin: 'skin.2', emblem: 'emblem.star', mask: 'mask.domino', hairColor: 'hairColor.blonde' }),
-    h({ pose: 'pose.hips', suit: 'suit.armor', suitColor: 'color.green', accentColor: 'color.pink', hair: 'hair.buns', skin: 'skin.5', emblem: 'emblem.leaf', mask: 'mask.none', hairColor: 'hairColor.brown', cape: 'cape.split' }),
+    h({ pose: 'pose.hips', suit: 'suit.armor', suitColor: 'color.green', accentColor: 'color.pink', hair: 'hair.buns', skin: 'skin.1', emblem: 'emblem.leaf', mask: 'mask.none', hairColor: 'hairColor.brown', cape: 'cape.split' }),
   ],
   [
     h({ pose: 'pose.hips', suit: 'suit.sport', suitColor: 'color.orange', accentColor: 'color.navy', hair: 'hair.ponytail', skin: 'skin.1', emblem: 'emblem.flame', mask: 'mask.bandana', hairColor: 'hairColor.red', cape: 'cape.none' }),
-    h({ pose: 'pose.flex', suit: 'suit.lightning', suitColor: 'color.teal', accentColor: 'color.gold', hair: 'hair.short', skin: 'skin.6', emblem: 'emblem.crown', mask: 'mask.helmet', cape: 'cape.collar' }),
+    h({ pose: 'pose.flex', suit: 'suit.lightning', suitColor: 'color.teal', accentColor: 'color.gold', hair: 'hair.short', skin: 'skin.2', emblem: 'emblem.crown', mask: 'mask.helmet', cape: 'cape.collar' }),
     h({ pose: 'pose.stand', suit: 'suit.classic', suitColor: 'color.pink', accentColor: 'color.purple', hair: 'hair.long', skin: 'skin.3', emblem: 'emblem.heart', mask: 'mask.domino', hairColor: 'hairColor.black', cape: 'cape.classic' }),
   ],
   [
-    h({ pose: 'pose.fist', suit: 'suit.armor', suitColor: 'color.silver', accentColor: 'color.red', hair: 'hair.spiky', skin: 'skin.4', emblem: 'emblem.rocket', mask: 'mask.visor', hairColor: 'hairColor.blue', cape: 'cape.short' }),
+    h({ pose: 'pose.fist', suit: 'suit.armor', suitColor: 'color.silver', accentColor: 'color.red', hair: 'hair.spiky', skin: 'skin.3', emblem: 'emblem.rocket', mask: 'mask.visor', hairColor: 'hairColor.blue', cape: 'cape.short' }),
     h({ pose: 'pose.victory', suit: 'suit.starry', suitColor: 'color.obsidian', accentColor: 'color.lime', hair: 'hair.curly', skin: 'skin.2', emblem: 'emblem.atom', mask: 'mask.winged', cape: 'cape.stars' }),
-    h({ pose: 'pose.hips', suit: 'suit.sport', suitColor: 'color.yellow', accentColor: 'color.teal', hair: 'hair.buns', skin: 'skin.5', emblem: 'emblem.sun', mask: 'mask.none', hairColor: 'hairColor.pink', cape: 'cape.split' }),
+    h({ pose: 'pose.hips', suit: 'suit.sport', suitColor: 'color.yellow', accentColor: 'color.teal', hair: 'hair.buns', skin: 'skin.1', emblem: 'emblem.sun', mask: 'mask.none', hairColor: 'hairColor.pink', cape: 'cape.split' }),
   ],
   [
     h({ pose: 'pose.stand', suit: 'suit.cosmic', suitColor: 'color.navy', accentColor: 'color.white', hair: 'hair.short', skin: 'skin.3', emblem: 'emblem.planet', mask: 'mask.visor', hairColor: 'hairColor.brown', cape: 'cape.classic' }),
     h({ pose: 'pose.fist', suit: 'suit.classic', suitColor: 'color.red', accentColor: 'color.navy', hair: 'hair.long', skin: 'skin.1', emblem: 'emblem.note', mask: 'mask.domino', hairColor: 'hairColor.blonde', cape: 'cape.stars' }),
-    h({ pose: 'pose.flex', suit: 'suit.lightning', suitColor: 'color.green', accentColor: 'color.orange', hair: 'hair.ponytail', skin: 'skin.6', emblem: 'emblem.snowflake', mask: 'mask.half', hairColor: 'hairColor.black', cape: 'cape.none' }),
+    h({ pose: 'pose.flex', suit: 'suit.lightning', suitColor: 'color.green', accentColor: 'color.orange', hair: 'hair.ponytail', skin: 'skin.2', emblem: 'emblem.snowflake', mask: 'mask.half', hairColor: 'hairColor.black', cape: 'cape.none' }),
   ],
 ];
 
@@ -68,11 +68,7 @@ function HeroSlider() {
     setMoved(true);
   };
 
-  useEffect(() => {
-    if (paused) return;
-    const t = window.setTimeout(() => go((index + 1) % SLIDES.length), INTERVAL_MS);
-    return () => window.clearTimeout(t);
-  }, [index, paused]);
+  const progress = { animationDuration: `${INTERVAL_MS}ms`, animationPlayState: paused ? 'paused' : 'running' } as const;
 
   useEffect(() => {
     if (leaving === null) return;
@@ -99,7 +95,8 @@ function HeroSlider() {
         <Slide key={index} index={index} phase={moved ? 'in' : 'still'} />
       </div>
 
-      <div className="mt-10 flex gap-2" role="tablist" aria-label="Слайды">
+      {/* Полоски прогресса: текущая заполняется за время показа слайда, замирает при наведении и, заполнившись, листает слайд */}
+      <div className="mt-10 flex w-full max-w-[360px] gap-2" role="tablist" aria-label="Слайды">
         {SLIDES.map((_, i) => (
           <button
             key={i}
@@ -107,13 +104,18 @@ function HeroSlider() {
             aria-selected={i === index}
             aria-label={`Слайд ${i + 1}`}
             onClick={() => go(i)}
-            className="flex h-6 min-w-6 items-center justify-center"
+            className="group flex h-6 flex-1 items-center"
           >
-            <span
-              className={`block h-2 rounded-full transition-all duration-300 ${
-                i === index ? 'w-8 bg-accent' : 'w-2 bg-white/30 hover:bg-white/60'
-              }`}
-            />
+            <span className="block h-1 w-full overflow-hidden rounded-full bg-white/20 transition-colors group-hover:bg-white/35">
+              {i <= index && (
+                <span
+                  key={i === index ? `run-${index}` : 'done'}
+                  className={`block h-full w-full origin-left rounded-full bg-accent ${i === index ? 'anim-slide-progress' : ''}`}
+                  style={i === index ? progress : undefined}
+                  onAnimationEnd={i === index ? () => go((index + 1) % SLIDES.length) : undefined}
+                />
+              )}
+            </span>
           </button>
         ))}
       </div>
