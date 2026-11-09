@@ -150,7 +150,9 @@ export function ProfileView({
         {tab === 'history' &&
           (historyByDay.length === 0 ? (
             <EmptyState icon={<StarIcon size={28} weight="fill" />} title="Баллов пока нет">
-              {isOwn ? 'Работай на уроке, и здесь появятся первые звёзды.' : 'Начисления появятся здесь.'}
+              {isOwn
+                ? `Работай на ${t.kind === 'SCHOOL' ? 'уроке' : 'занятиях'}, и здесь появятся первые звёзды.`
+                : 'Начисления появятся здесь.'}
             </EmptyState>
           ) : (
             <div className="space-y-3">

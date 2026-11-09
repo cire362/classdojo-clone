@@ -161,7 +161,14 @@ export function RewardsManager() {
                 <label className="label" htmlFor="reward-title">
                   Награда
                 </label>
-                <input id="reward-title" className="input" maxLength={60} placeholder="Например, выбрать игру на перемене" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                <input
+                  id="reward-title"
+                  className="input"
+                  maxLength={60}
+                  placeholder={t.kind === 'SCHOOL' ? 'Например, выбрать игру на перемене' : 'Например, сдать задание на день позже'}
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                />
               </div>
               <div>
                 <label className="label" htmlFor="reward-cost">

@@ -37,8 +37,8 @@ test('поток колледжа: лекция у двух групп, балл
 
     await expect(page.getByRole('heading', { name: stream })).toBeVisible();
     await page.getByRole('button', { name: 'Всему потоку' }).click();
-    await page.getByRole('dialog', { name: 'Весь поток' }).getByRole('button', { name: /Помог другу/ }).click();
-    await expect(page.getByText('Весь поток: +1, помог другу')).toBeVisible();
+    await page.getByRole('dialog', { name: 'Весь поток' }).getByRole('button', { name: /Помощь одногруппнику/ }).click();
+    await expect(page.getByText('Весь поток: +1, помощь одногруппнику')).toBeVisible();
     await expect(page.getByText('всего 1')).toHaveCount(2);
     await axe(page);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(376);

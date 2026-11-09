@@ -1,10 +1,12 @@
 import { CalendarCheckIcon, HandshakeIcon, TrophyIcon } from '@phosphor-icons/react';
 import type { BadgeId, StudentBadge } from '@heroes/shared';
 import { ProgressBar } from '../../../ui';
+import { useTerms } from '../../auth';
 
 const ICONS = { 'attendance.streak10': CalendarCheckIcon, 'help.20': HandshakeIcon, 'level.first5': TrophyIcon } satisfies Record<BadgeId, typeof TrophyIcon>;
 
 export function BadgeSummary({ badges, onOpen }: { badges: StudentBadge[]; onOpen: () => void }) {
+  const t = useTerms();
   const earned = badges.filter((b) => b.earnedOn);
   return (
     <section aria-label="Значки достижений" className="flex flex-wrap items-center justify-between gap-4 border-y border-line py-5">
@@ -14,7 +16,9 @@ export function BadgeSummary({ badges, onOpen }: { badges: StudentBadge[]; onOpe
           <ul className="mt-3 flex flex-wrap gap-2">
             {earned.map((b) => { const Icon = ICONS[b.id]; return <li key={b.id} className="chip gap-2 bg-accent/30"><Icon size={18} aria-hidden />{b.title}</li>; })}
           </ul>
-        ) : <p className="mt-1 text-sm text-ink-soft">За посещаемость, помощь друзьям и рост героя.</p>}
+        ) : <p className="mt-1 text-sm text-ink-soft">
+          За посещаемость, помощь {t.kind === 'SCHOOL' ? 'друзьям' : 'одногруппникам'} и рост героя.
+        </p>}
       </div>
       <button className="btn btn-secondary btn-sm" onClick={onOpen}>Все значки</button>
     </section>

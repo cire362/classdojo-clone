@@ -1,4 +1,5 @@
 import { BADGES, LEVELS, type StudentBadge } from '@heroes/shared';
+import { terms } from '../../platform/terms.js';
 import { prisma } from '../../platform/db.js';
 import { dateKey, dbDateKey } from '../../platform/dates.js';
 
@@ -83,6 +84,10 @@ export async function studentBadges(
     const earnedOn = badge.id === 'attendance.streak10' ? streakDate
       : badge.id === 'help.20' ? (help[19] ? dateKey(help[19].createdAt) : null)
       : winningEvent ? dateKey(winningEvent.createdAt) : null;
-    return { ...badge, progress, earnedOn, note: first ? firstNote : null, groupName: first && winningEvent ? ranking!.name : null };
+    const { adult, ...base } = badge;
+    return {
+      ...base, ...(terms().kind === 'SCHOOL' ? {} : adult), progress, earnedOn,
+      note: first ? firstNote : null, groupName: first && winningEvent ? ranking!.name : null,
+    };
   });
 }

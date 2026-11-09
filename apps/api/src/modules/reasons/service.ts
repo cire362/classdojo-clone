@@ -6,6 +6,7 @@ import { ARCHIVED_MESSAGE, groupsOf } from '../access/index.js';
 import { copySchoolReasons } from './school.service.js';
 
 type Tx = Prisma.TransactionClient | typeof prisma;
+const KIND = { select: { kind: true } } as const;
 
 export const DEFAULT_REASONS: ReadonlyArray<{ name: string; emoji: string; value: number }> = [
   { name: 'Работал на уроке', emoji: '💪', value: 1 },
@@ -20,6 +21,22 @@ export const DEFAULT_REASONS: ReadonlyArray<{ name: string; emoji: string; value
   { name: 'Шумел', emoji: '📢', value: -1 },
 ];
 
+/** Колледж и вуз: занятия вместо уроков, одногруппники вместо друзей, без детских формулировок */
+export const ADULT_REASONS: ReadonlyArray<{ name: string; emoji: string; value: number }> = [
+  { name: 'Активная работа на занятии', emoji: '💪', value: 1 },
+  { name: 'Правильный ответ', emoji: '💡', value: 1 },
+  { name: 'Помощь одногруппнику', emoji: '🤝', value: 1 },
+  { name: 'Работа в команде', emoji: '🧩', value: 1 },
+  { name: 'Задание сдано в срок', emoji: '📅', value: 1 },
+  { name: 'Отличный проект', emoji: '⭐', value: 2 },
+  { name: 'Опоздание', emoji: '⏰', value: -1 },
+  { name: 'Посторонние дела на занятии', emoji: '📵', value: -1 },
+  { name: 'Задание не сдано', emoji: '📕', value: -1 },
+  { name: 'Шум на занятии', emoji: '📢', value: -1 },
+];
+/** Причины, которые считаются помощью для значка «Надёжный друг» */
+const HELP_REASONS = new Set(['Помог другу', 'Помощь одногруппнику']);
+
 type ReasonData = Omit<Reason, 'id'>;
 
 const reasonView = (r: Reason & { schoolReasonId?: string | null }): Reason => ({
@@ -30,9 +47,11 @@ export const ATTENDANCE_REASON = { name: 'Посещение', emoji: '✅', val
 
 /** Создаёт набор причин по умолчанию, общие причины школы и системную причину «Посещение» */
 export async function createDefaultReasons(tx: Prisma.TransactionClient, groupId: string): Promise<void> {
+  const { teacher } = await tx.group.findUniqueOrThrow({ where: { id: groupId }, select: { teacher: { select: { school: KIND } } } });
+  const defaults = teacher.school.kind === 'SCHOOL' ? DEFAULT_REASONS : ADULT_REASONS;
   await tx.behaviorReason.createMany({
     data: [
-      ...DEFAULT_REASONS.map((r, i) => ({ ...r, groupId, sortOrder: i, countsForHelpBadge: r.name === 'Помог другу' })),
+      ...defaults.map((r, i) => ({ ...r, groupId, sortOrder: i, countsForHelpBadge: HELP_REASONS.has(r.name) })),
       { ...ATTENDANCE_REASON, groupId, kind: 'ATTENDANCE' as const, sortOrder: 1000 },
     ],
   });

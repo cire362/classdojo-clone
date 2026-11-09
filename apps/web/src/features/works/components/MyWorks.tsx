@@ -7,9 +7,11 @@ import { useNotifications } from '../../notifications';
 import { deleteOwnWork, fetchOwnWorks } from '../api';
 import { WorkCard } from './WorkCard';
 import { WorkForm } from './WorkForm';
+import { useTerms } from '../../auth';
 
 /** Работы ученика: форма сдачи и список с решениями преподавателя. Открытый список снимает значок новых решений */
 export function MyWorks() {
+  const t = useTerms();
   const toast = useToast();
   const { refresh } = useNotifications();
   const { data, setData, error, reload } = useLoad(async () => {
@@ -34,7 +36,9 @@ export function MyWorks() {
       {!data && !error && <Skeleton className="h-32" />}
       {data?.length === 0 && (
         <EmptyState icon={<NotebookIcon size={28} />} title="Работ пока нет">
-          Отправьте рисунок, доклад или фото поделки: после проверки работа появится в портфолио.
+          {t.kind === 'SCHOOL'
+            ? 'Отправьте рисунок, доклад или фото поделки: после проверки работа появится в портфолио.'
+            : 'Отправьте доклад, проект или отчёт: после проверки работа появится в портфолио.'}
         </EmptyState>
       )}
       {data && data.length > 0 && (

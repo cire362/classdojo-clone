@@ -41,8 +41,16 @@ export const DEFAULT_REWARDS = [
   { emoji: '⏰', title: 'Отсрочка домашнего задания', cost: 50 },
 ];
 
+/** Колледж и вуз: школьные награды (место на уроке, музыка на перемене, помощник учителя) студентам не подходят */
+export const ADULT_REWARDS = [{ emoji: '⏰', title: 'Сдать задание на день позже', cost: 50 }];
+
 export async function createDefaultRewards(db: Tx, groupId: string) {
-  await db.reward.createMany({ data: DEFAULT_REWARDS.map((r, i) => ({ ...r, groupId, sortOrder: i })) });
+  const { teacher } = await db.group.findUniqueOrThrow({
+    where: { id: groupId },
+    select: { teacher: { select: { school: { select: { kind: true } } } } },
+  });
+  const defaults = teacher.school.kind === 'SCHOOL' ? DEFAULT_REWARDS : ADULT_REWARDS;
+  await db.reward.createMany({ data: defaults.map((r, i) => ({ ...r, groupId, sortOrder: i })) });
 }
 
 export async function balance(studentId: string, db: Tx = prisma): Promise<number> {

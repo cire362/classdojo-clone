@@ -8,6 +8,7 @@ import { useToast } from '../../../ui/Toast';
 import { submitWork } from '../api';
 import { EMPTY, type Drawing } from '../drawing';
 import { DrawingPad } from './DrawingPad';
+import { useTerms } from '../../auth';
 
 /**
  * Сдача работы: название, текст и до пяти фото, PDF или рисунков с холста. Хотя бы текст или файл.
@@ -17,6 +18,9 @@ export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
   onSubmitted: (result: T) => void;
   answerTo?: { send: (answer: { text: string; files: File[] }) => Promise<T> };
 }) {
+  const t = useTerms();
+  /** В колледже и вузе холста для рисования нет: студенты сдают документы и фото */
+  const school = t.kind === 'SCHOOL';
   const id = useId();
   const toast = useToast();
   const [title, setTitle] = useState('');
@@ -58,7 +62,11 @@ export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
       ) : (
         <>
           <h2 id={`${id}-title`} className="text-lg">Новая работа</h2>
-          <p className="text-sm text-ink-soft">Её увидит преподаватель. Родители увидят работу, когда преподаватель её опубликует.</p>
+          <p className="text-sm text-ink-soft">
+            {school
+              ? 'Её увидит преподаватель. Родители увидят работу, когда преподаватель её опубликует.'
+              : 'Её увидит преподаватель. После проверки работа попадёт в портфолио.'}
+          </p>
           <div>
             <label className="label" htmlFor={`${id}-name`}>Название</label>
             <input id={`${id}-name`} className="input" maxLength={100} value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -77,14 +85,16 @@ export function WorkForm<T = StudentWork[]>({ onSubmitted, answerTo }: {
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <AttachmentPicker files={files} onChange={setFiles} disabled={busy} />
-        <button
-          type="button"
-          className="btn btn-secondary btn-sm"
-          disabled={busy || files.length >= MAX_ATTACHMENTS}
-          onClick={() => setDrawingOpen(true)}
-        >
-          <PaintBrushIcon size={18} aria-hidden /> {drawing.strokes.length ? 'Продолжить рисунок' : 'Нарисовать'}
-        </button>
+        {school && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            disabled={busy || files.length >= MAX_ATTACHMENTS}
+            onClick={() => setDrawingOpen(true)}
+          >
+            <PaintBrushIcon size={18} aria-hidden /> {drawing.strokes.length ? 'Продолжить рисунок' : 'Нарисовать'}
+          </button>
+        )}
       </div>
       <Modal open={drawingOpen} title="Рисунок" size="lg" onClose={() => setDrawingOpen(false)}>
         <DrawingPad drawing={drawing} onChange={setDrawing} onDone={attachDrawing} />
