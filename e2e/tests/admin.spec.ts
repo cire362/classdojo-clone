@@ -21,7 +21,8 @@ test('администратор создаёт преподавателя и в
   await expect(title).toHaveText(original);
 
   const login = `e2e.${Date.now().toString(36)}`;
-  const name = 'E2E Новый преподаватель';
+  // Имя уникально, а в конце вход удаляется: тест повторяем и на стенде, где уже были прогоны
+  const name = `E2E Преподаватель ${login}`;
   await page.getByRole('button', { name: 'Добавить преподавателя' }).click();
   await page.fill('#teacher-name', name);
   await page.fill('#teacher-login', login);
@@ -50,6 +51,9 @@ test('администратор создаёт преподавателя и в
     await expect(page.getByText('Анна Сергеевна', { exact: true }).first()).toBeVisible();
   } finally {
     await teacher.context().close();
+    const { teachers } = await (await page.request.get('/api/admin/teachers')).json();
+    const created = teachers.find((t: { login: string }) => t.login === login);
+    if (created) await page.request.delete(`/api/admin/teachers/${created.id}`, { headers: { 'x-heroes-client': '1' } });
   }
 });
 
