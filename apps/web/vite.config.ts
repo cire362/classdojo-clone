@@ -5,6 +5,7 @@ import { build } from 'esbuild';
 import { defineConfig, type Plugin } from 'vite';
 import type { OutputChunk } from 'rollup';
 import { PAGE_MODULES } from './src/app/routes';
+import { createManualChunks } from './build/chunks';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
@@ -172,25 +173,7 @@ export default defineConfig({
       treeshake: { moduleSideEffects: (id) => !/[\\/]src[\\/]features[\\/]/.test(id) },
       output: {
         // Библиотеки — в отдельных файлах: они редко меняются и дольше живут в кэше браузера
-        manualChunks(id, { getModuleInfo }) {
-          // Одним файлом, а не россыпью мелких
-          if (APP_CHUNK.test(id)) {
-            return 'app';
-          }
-          if (!id.includes('node_modules')) return undefined;
-          // Иконки: основа Phosphor и иконки, нужные нескольким файлам, — в ядро (каждая меньше 1 КБ,
-          // а отдельный файл по HTTP/1.1 стоит лишнего запроса); иконка одной страницы — в коде этой страницы.
-          // Проверяем до react: путь @phosphor-icons/react иначе попал бы в чанк react
-          if (id.includes('@phosphor-icons')) {
-            if (/[\\/]dist[\\/]lib[\\/]/.test(id)) return 'app';
-            if (/[\\/]dist[\\/]csr[\\/]/.test(id) && (getModuleInfo(id)?.importers.length ?? 0) > 1) return 'app';
-            return undefined;
-          }
-          if (/[\\/](react-router|react-router-dom)[\\/]/.test(id)) return 'router';
-          if (/[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react';
-          if (/[\\/](motion|framer-motion|motion-dom|motion-utils)[\\/]/.test(id)) return 'motion';
-          return undefined;
-        },
+        manualChunks: createManualChunks(APP_CHUNK),
       },
     },
   },
