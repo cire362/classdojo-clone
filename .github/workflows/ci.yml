@@ -76,6 +76,14 @@ jobs:
       # На машинах CI процессор слабее — даём запас по времени ответа
       - run: docker compose run --rm --no-deps -e MAX_SECONDS=6 detector pytest -q
 
+  converter:
+    name: Сервис просмотра документов
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build converter
+      - run: docker compose run --rm --no-deps converter python3 -m unittest -v tests.test_convert
+
   e2e:
     name: Сквозные тесты
     runs-on: ubuntu-latest
@@ -97,7 +105,7 @@ jobs:
           python3 services/detector/scripts/fetch_model.py yolox_s services/detector/models
       - name: Поднять стенд
         run: |
-          docker compose up -d --build db detector api web
+          docker compose up -d --build db detector converter api web
           for i in $(seq 1 90); do curl -sf http://localhost:8080/api/health && break; sleep 2; done
           curl -sf http://localhost:8080/api/health
       - run: npx playwright install --with-deps chromium

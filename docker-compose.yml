@@ -32,6 +32,19 @@ services:
       retries: 30
     restart: unless-stopped
 
+  # Просмотр методичек: Word, Excel, PowerPoint и OpenDocument → PDF. Документы только во временной папке
+  converter:
+    build: ./services/converter
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
   api:
     build:
       context: .
@@ -39,6 +52,7 @@ services:
     environment:
       DATABASE_URL: postgresql://heroes:heroes@db:5432/heroes?schema=public
       DETECTOR_URL: http://detector:8000
+      CONVERTER_URL: http://converter:8000
       TZ: Europe/Moscow
       PORT: "3000"
       FILES_DIR: /data/files
@@ -57,6 +71,8 @@ services:
       db:
         condition: service_healthy
       detector:
+        condition: service_started
+      converter:
         condition: service_started
     restart: unless-stopped
 

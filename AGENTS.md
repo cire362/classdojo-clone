@@ -4,7 +4,8 @@
 
 ## Архитектура
 
-Проект остаётся модульным монолитом: `apps/api`, `apps/web`, `packages/shared`, `services/detector`, `e2e`. Новые сервисы и npm-пакеты ради разделения кода не заводим: внутри одного продукта их цена выше пользы. Отдельный сервис оправдан только другой средой выполнения или требованиями изоляции, как у `services/detector`.
+Проект остаётся модульным монолитом: `apps/api`, `apps/web`, `packages/shared`, `services/detector`, `services/converter`, `e2e`. Новые сервисы и npm-пакеты ради разделения кода не заводим: внутри одного продукта их цена выше пользы. Отдельный сервис оправдан только другой средой выполнения или требованиями изоляции, как у `services/detector` (подсчёт людей на фото)
+и `services/converter` (LibreOffice делает PDF из документов для просмотра).
 
 Перенос на эту схему завершён: новый код сразу пишется по ней, а новый домен получает свой модуль и свою фичу.
 
@@ -21,7 +22,7 @@ routes/          сборки ролей: teacher.ts, student.ts, parent.ts
 app.ts           сборка приложения
 ```
 
-Домены: `access`, `accounts`, `codes`, `groups`, `students`, `parents`, `reasons`, `points`, `attendance`, `rewards`, `teams`, `goals`, `plan`, `calendar`, `home`, `files`, `exports`, `feed`, `moderation`, `messages`, `notifications`, `hero`, `badges`, `portfolio`, `works`, `assignments`, `profile`, `reports`, `schoolfeed`, `schoolinbox`, `schoolpoints`, `departments`, `subjects`, `streams`, `dashboard`, `schoolyear`, `schoolimport`, `network`, `world`.
+Домены: `access`, `accounts`, `codes`, `groups`, `students`, `parents`, `reasons`, `points`, `attendance`, `rewards`, `teams`, `goals`, `plan`, `calendar`, `home`, `files`, `exports`, `feed`, `moderation`, `messages`, `notifications`, `hero`, `badges`, `portfolio`, `works`, `assignments`, `profile`, `reports`, `schoolfeed`, `schoolinbox`, `schoolpoints`, `departments`, `subjects`, `streams`, `dashboard`, `schoolyear`, `schoolimport`, `network`, `world`, `materials`.
 
 - `routes/*.ts` только собирают кабинет роли: роль проверяется один раз, модули подключаются через `.route()`. Запросов и правил там нет.
 - `routes` не обращается к Prisma напрямую: запросы и правила живут в `service`.

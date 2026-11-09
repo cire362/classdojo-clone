@@ -17,4 +17,5 @@ export type * from './dashboard.js';
 export type * from './schoolyear.js';
 export type * from './schoolimport.js';
 export type * from './network.js';
+export type * from './materials.js';
 export type * from './world.js';

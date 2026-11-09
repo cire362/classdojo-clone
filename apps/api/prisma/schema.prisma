@@ -118,6 +118,7 @@ model School {
   /// Сеть, в которую входит учреждение; её руководитель видит сводку по всем учреждениям сети
   networkId String?
   network   Network? @relation(fields: [networkId], references: [id], onDelete: SetNull)
+  materials Material[]
 }
 
 /// Дисциплина (предмет) учреждения: общий каталог, из которого группы выбирают свои
@@ -325,6 +326,7 @@ model Teacher {
   streams  Stream[]
 
   @@index([schoolId])
+  materials Material[]
 }
 
 model Group {
@@ -1066,4 +1068,30 @@ model WorldProgress {
   studentId String @id
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   completed String[] @default([])
+}
+
+/// Методичка преподавателя: файл в томе, PDF-копия для просмотра у документов Office
+model Material {
+  id          String   @id @default(cuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  /// Автор; после удаления преподавателя открытые коллегам методички остаются
+  teacherId   String?
+  teacher     Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  title       String
+  description String   @default("")
+  /// Видят коллеги учреждения
+  shared      Boolean  @default(true)
+  name        String
+  mime        String
+  kind        String
+  size        Int
+  fileKey     String
+  /// Расширение для сервиса просмотра; пусто — браузер показывает файл сам
+  convert     String?
+  previewKey  String?
+  createdAt   DateTime @default(now())
+
+  @@index([schoolId, createdAt])
+  @@index([teacherId])
 }

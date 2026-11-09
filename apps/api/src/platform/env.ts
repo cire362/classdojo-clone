@@ -23,4 +23,6 @@ export const env = {
   /** Сколько дней хранятся фото и файлы группы после переноса в архив; потом удаляются, сама группа остаётся */
   archivedFilesDays: num('ARCHIVED_FILES_DAYS', 365),
   loginRateLimit: num('LOGIN_RATE_LIMIT', 10),
+  /** Сервис просмотра документов (Word, Excel, PowerPoint → PDF); пусто — документы только скачиваются */
+  converterUrl: process.env.CONVERTER_URL ?? '',
 };

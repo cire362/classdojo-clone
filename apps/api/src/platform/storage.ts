@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { mkdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { Readable } from 'node:stream';
 import { env } from './env.js';
@@ -28,6 +28,11 @@ export async function sizeOf(key: string): Promise<number | null> {
 /** Поток байтов целиком или части: end включительно, как в заголовке Range */
 export function streamBytes(key: string, range?: { start: number; end: number }): ReadableStream<Uint8Array> {
   return Readable.toWeb(createReadStream(location(key), range)) as ReadableStream<Uint8Array>;
+}
+
+/** Файл целиком в память: только для небольших файлов, например чтобы отдать документ сервису просмотра */
+export async function readBytes(key: string): Promise<Uint8Array> {
+  return new Uint8Array(await readFile(location(key)));
 }
 
 export async function removeBytes(key: string) {

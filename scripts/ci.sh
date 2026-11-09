@@ -34,10 +34,14 @@ if [ "$ONLY" = all ]; then
   step "Тесты сервиса подсчёта"
   $COMPOSE build detector
   $COMPOSE run --rm --no-deps detector pytest -q
+
+  step "Тесты сервиса просмотра документов"
+  $COMPOSE build converter
+  $COMPOSE run --rm --no-deps converter python3 -m unittest -v tests.test_convert
 fi
 
 step "Сквозные тесты (Playwright) на http://localhost:$WEB_PORT"
-$COMPOSE up -d --build db detector api web
+$COMPOSE up -d --build db detector converter api web
 printf 'Ждём, пока поднимется API'
 i=0
 until curl -sf "http://localhost:$WEB_PORT/api/health" >/dev/null; do
