@@ -15,6 +15,7 @@ import { ProfileSkeleton } from '../../profile';
 import { CredentialsTable } from './CredentialsTable';
 import { addPortfolioItem, deletePointEvent, deletePortfolioItem, fetchStudentProfile, resetStudentPassword, saveStudentHero } from '../api';
 import { HeroesProvider, useTerms } from '../../auth';
+import { Glyph } from '../../../ui/Glyph';
 
 export function StudentProfileView() {
   const t = useTerms();
@@ -101,9 +102,7 @@ export function StudentProfileView() {
         {toDelete && (
           <div className="space-y-5">
             <div className="flex items-center gap-3 rounded-xl bg-surface-2 px-4 py-3">
-              <span className="text-2xl" aria-hidden>
-                {toDelete.emoji}
-              </span>
+              <Glyph name={toDelete.emoji} size={26} className={`${toDelete.value > 0 ? 'text-plus' : 'text-minus'}`} />
               <span className="min-w-0 flex-1">
                 <span className="block font-medium">{toDelete.reasonName}</span>
                 <span className="block text-sm text-ink-soft">{formatDateTime(toDelete.createdAt)}</span>

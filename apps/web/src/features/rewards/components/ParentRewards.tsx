@@ -4,6 +4,7 @@ import type { ParentRewards as Rewards, RewardRequest } from '../../../lib/api';
 import { formatDateTime, points, useLoad } from '../../../lib/hooks';
 import { EmptyState, ErrorBox, Skeleton } from '../../../ui';
 import { fetchChildRewards } from '../api';
+import { Glyph } from '../../../ui/Glyph';
 
 const STATUS = {
   PENDING: { text: 'Ждёт ответа', cls: 'bg-accent/25 text-ink' },
@@ -14,7 +15,7 @@ const STATUS = {
 function RequestList({ requests }: { requests: RewardRequest[] }) {
   return <ul className="card divide-y divide-line overflow-hidden">
     {requests.map((r) => <li key={r.id} className="flex flex-wrap items-start gap-3 px-4 py-4">
-      <span className="text-2xl leading-none" aria-hidden>{r.emoji}</span>
+      <Glyph name={r.emoji} size={26} className="text-accent" />
       <div className="min-w-0 flex-1 basis-40">
         <span className="block break-words font-semibold">{r.title}</span>
         <span className="mt-1 block text-sm text-ink-soft">{points(r.cost)} · Запрос {formatDateTime(r.createdAt)}</span>
@@ -106,7 +107,7 @@ export function ParentRewards({ childId }: { childId: string }) {
         <summary className="cursor-pointer font-semibold">Награды группы ({data.rewards.length})</summary>
         {data.rewards.length ? <ul className="mt-3 divide-y divide-line">
           {data.rewards.map((r) => <li key={r.id} className="flex items-start gap-3 py-3">
-            <span aria-hidden className="text-xl">{r.emoji}</span>
+            <Glyph name={r.emoji} size={22} className="text-accent" />
             <span className="min-w-0 flex-1 break-words font-medium">{r.title}</span>
             <span className="shrink-0 text-sm text-ink-soft">{points(r.cost)}</span>
           </li>)}

@@ -9,30 +9,30 @@ type Tx = Prisma.TransactionClient | typeof prisma;
 const KIND = { select: { kind: true } } as const;
 
 export const DEFAULT_REASONS: ReadonlyArray<{ name: string; emoji: string; value: number }> = [
-  { name: 'Работал на уроке', emoji: '💪', value: 1 },
-  { name: 'Правильный ответ', emoji: '💡', value: 1 },
-  { name: 'Помог другу', emoji: '🤝', value: 1 },
-  { name: 'Командная работа', emoji: '🧩', value: 1 },
-  { name: 'Аккуратность', emoji: '✨', value: 1 },
-  { name: 'Отличная работа', emoji: '⭐', value: 2 },
-  { name: 'Опоздал', emoji: '⏰', value: -1 },
-  { name: 'Отвлекался', emoji: '💤', value: -1 },
-  { name: 'Не выполнил задание', emoji: '📕', value: -1 },
-  { name: 'Шумел', emoji: '📢', value: -1 },
+  { name: 'Работал на уроке', emoji: 'lightning', value: 1 },
+  { name: 'Правильный ответ', emoji: 'lightbulb', value: 1 },
+  { name: 'Помог другу', emoji: 'handshake', value: 1 },
+  { name: 'Командная работа', emoji: 'puzzle', value: 1 },
+  { name: 'Аккуратность', emoji: 'sparkle', value: 1 },
+  { name: 'Отличная работа', emoji: 'star', value: 2 },
+  { name: 'Опоздал', emoji: 'alarm', value: -1 },
+  { name: 'Отвлекался', emoji: 'moon', value: -1 },
+  { name: 'Не выполнил задание', emoji: 'notebook', value: -1 },
+  { name: 'Шумел', emoji: 'megaphone', value: -1 },
 ];
 
 /** Колледж и вуз: занятия вместо уроков, одногруппники вместо друзей, без детских формулировок */
 export const ADULT_REASONS: ReadonlyArray<{ name: string; emoji: string; value: number }> = [
-  { name: 'Активная работа на занятии', emoji: '💪', value: 1 },
-  { name: 'Правильный ответ', emoji: '💡', value: 1 },
-  { name: 'Помощь одногруппнику', emoji: '🤝', value: 1 },
-  { name: 'Работа в команде', emoji: '🧩', value: 1 },
-  { name: 'Задание сдано в срок', emoji: '📅', value: 1 },
-  { name: 'Отличный проект', emoji: '⭐', value: 2 },
-  { name: 'Опоздание', emoji: '⏰', value: -1 },
-  { name: 'Посторонние дела на занятии', emoji: '📵', value: -1 },
-  { name: 'Задание не сдано', emoji: '📕', value: -1 },
-  { name: 'Шум на занятии', emoji: '📢', value: -1 },
+  { name: 'Активная работа на занятии', emoji: 'lightning', value: 1 },
+  { name: 'Правильный ответ', emoji: 'lightbulb', value: 1 },
+  { name: 'Помощь одногруппнику', emoji: 'handshake', value: 1 },
+  { name: 'Работа в команде', emoji: 'puzzle', value: 1 },
+  { name: 'Задание сдано в срок', emoji: 'calendar-check', value: 1 },
+  { name: 'Отличный проект', emoji: 'star', value: 2 },
+  { name: 'Опоздание', emoji: 'alarm', value: -1 },
+  { name: 'Посторонние дела на занятии', emoji: 'phone-slash', value: -1 },
+  { name: 'Задание не сдано', emoji: 'notebook', value: -1 },
+  { name: 'Шум на занятии', emoji: 'megaphone', value: -1 },
 ];
 /** Причины, которые считаются помощью для значка «Надёжный друг» */
 const HELP_REASONS = new Set(['Помог другу', 'Помощь одногруппнику']);
@@ -43,7 +43,7 @@ const reasonView = (r: Reason & { schoolReasonId?: string | null }): Reason => (
   id: r.id, name: r.name, emoji: r.emoji, value: r.value, countsForHelpBadge: r.countsForHelpBadge, school: !!r.schoolReasonId,
 });
 
-export const ATTENDANCE_REASON = { name: 'Посещение', emoji: '✅', value: 1 } as const;
+export const ATTENDANCE_REASON = { name: 'Посещение', emoji: 'check', value: 1 } as const;
 
 /** Создаёт набор причин по умолчанию, общие причины школы и системную причину «Посещение» */
 export async function createDefaultReasons(tx: Prisma.TransactionClient, groupId: string): Promise<void> {

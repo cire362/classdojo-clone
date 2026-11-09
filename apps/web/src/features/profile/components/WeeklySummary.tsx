@@ -4,6 +4,7 @@ import type { ParentChild } from '../../../lib/api';
 import { formatDate, pluralize, useLoad } from '../../../lib/hooks';
 import { ErrorBox, Skeleton } from '../../../ui';
 import { fetchWeeklySummary } from '../api';
+import { Glyph } from '../../../ui/Glyph';
 
 const signed = (value: number) => value > 0 ? `+${value}` : value < 0 ? `−${Math.abs(value)}` : '0';
 const fullDate = (key: string) => new Date(`${key}T12:00:00Z`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Moscow' });
@@ -51,7 +52,7 @@ export function WeeklySummary({ child }: { child: Pick<ParentChild, 'id' | 'name
         <h2 id="weekly-reasons" className="font-sans text-lg font-semibold">За что начислены и списаны баллы</h2>
         {!report.reasons.length ? <p className="text-ink-soft">За эту неделю начислений и списаний пока нет.</p> : <ul className="divide-y divide-line">
           {report.reasons.map((reason) => <li key={JSON.stringify([reason.name, reason.emoji])} className="flex items-center gap-3 py-3">
-            <span aria-hidden className="w-7 shrink-0 text-center text-xl">{reason.emoji}</span>
+            <Glyph name={reason.emoji} size={24} className={`w-7 ${reason.earned > 0 ? 'text-plus' : 'text-minus'}`} />
             <div className="min-w-0 flex-1"><p className="break-words font-medium">{reason.name}</p><p className="text-sm text-ink-soft">{reason.count} {pluralize(reason.count, 'запись', 'записи', 'записей')}</p></div>
             <div className="flex shrink-0 flex-col items-end gap-1 text-sm font-semibold tabular-nums">
               {reason.earned > 0 && <span className="text-plus">+{reason.earned}</span>}

@@ -8,7 +8,7 @@ import { addPortfolioItem, deletePortfolioItem } from './service.js';
 const PortfolioBody = z.object({
   title: z.string().trim().min(1, 'Введите название').max(100),
   description: z.string().trim().max(1000).default(''),
-  emoji: z.string().trim().min(1).max(16).default('🏆'),
+  emoji: z.string().trim().min(1).max(16).default('trophy'),
 });
 
 /** Портфолио ученика. Роль проверяет сборка routes/teacher.ts */

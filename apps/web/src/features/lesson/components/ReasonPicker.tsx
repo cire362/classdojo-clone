@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { Reason } from '../../../lib/api';
 import { Modal } from '../../../ui';
+import { Glyph } from '../../../ui/Glyph';
 
 export function ReasonPicker({
   open,
@@ -25,9 +26,7 @@ export function ReasonPicker({
       onClick={() => onPick(r)}
       className="flex min-h-24 flex-col items-start justify-between gap-2 rounded-2xl border border-line bg-surface p-3 text-left transition hover:border-ink active:scale-[0.97]"
     >
-      <span className="text-3xl leading-none" aria-hidden>
-        {r.emoji}
-      </span>
+      <Glyph name={r.emoji} size={30} className={r.value > 0 ? 'text-plus' : 'text-minus'} />
       <span className="flex w-full items-end justify-between gap-2">
         <span className="text-sm font-semibold leading-tight">{r.name}</span>
         <span className={`chip shrink-0 ${r.value > 0 ? 'bg-plus-bg text-plus' : 'bg-minus-bg text-minus'}`}>

@@ -9,7 +9,8 @@
     ".": "./src/index.ts",
     "./api": "./src/api/index.ts",
     "./terms": "./src/terms.ts",
-    "./world": "./src/world.ts"
+    "./world": "./src/world.ts",
+    "./icons": "./src/icons.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

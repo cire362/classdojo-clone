@@ -5,20 +5,22 @@ import { formatDate } from '../../../lib/hooks';
 import { useToast } from '../../../ui/Toast';
 import { EmptyState } from '../../../ui';
 import { useTerms } from '../../auth';
+import { Glyph } from '../../../ui/Glyph';
+import { IconPicker } from '../../../ui/IconPicker';
+import { PORTFOLIO_ICONS } from '@heroes/shared/icons';
 
 export interface PortfolioEdit {
   add: (item: { title: string; description: string; emoji: string }) => Promise<void>;
   remove: (id: string) => Promise<void>;
 }
 
-const EMOJI = ['🏆', '🥇', '🥈', '🥉', '🎓', '📚', '🔬', '🎨', '🎭', '🎵', '⚽', '💡'];
 
 /** Портфолио ученика: достижения, которые записывает преподаватель. edit — только у преподавателя */
 export function Portfolio({ items, edit }: { items: PortfolioItem[]; edit?: PortfolioEdit }) {
   const t = useTerms();
   const toast = useToast();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '', emoji: EMOJI[0] });
+  const [form, setForm] = useState({ title: '', description: '', emoji: PORTFOLIO_ICONS[0] });
   const [busy, setBusy] = useState(false);
 
   async function submit(e: FormEvent) {
@@ -27,7 +29,7 @@ export function Portfolio({ items, edit }: { items: PortfolioItem[]; edit?: Port
     setBusy(true);
     try {
       await edit.add({ ...form, title: form.title.trim(), description: form.description.trim() });
-      setForm({ title: '', description: '', emoji: EMOJI[0] });
+      setForm({ title: '', description: '', emoji: PORTFOLIO_ICONS[0] });
       setOpen(false);
     } catch (err) {
       toast({ text: (err as Error).message, tone: 'error' });
@@ -41,23 +43,7 @@ export function Portfolio({ items, edit }: { items: PortfolioItem[]; edit?: Port
       {edit &&
         (open ? (
           <form onSubmit={submit} className="space-y-3 rounded-2xl border border-line p-4">
-            <fieldset>
-              <legend className="label">Значок</legend>
-              <div className="flex flex-wrap gap-1.5">
-                {EMOJI.map((em) => (
-                  <button
-                    key={em}
-                    type="button"
-                    aria-pressed={form.emoji === em}
-                    aria-label={`Значок ${em}`}
-                    className={`flex size-10 items-center justify-center rounded-xl text-xl ${form.emoji === em ? 'bg-accent/30 ring-2 ring-ink' : 'bg-surface-2'}`}
-                    onClick={() => setForm({ ...form, emoji: em })}
-                  >
-                    {em}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
+            <IconPicker options={PORTFOLIO_ICONS} value={form.emoji} onChange={(emoji) => setForm({ ...form, emoji })} />
             <div>
               <label className="label" htmlFor="portfolio-title">
                 Достижение
@@ -94,9 +80,7 @@ export function Portfolio({ items, edit }: { items: PortfolioItem[]; edit?: Port
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {items.map((it) => (
             <li key={it.id} className="card flex gap-3 p-4">
-              <span className="text-3xl leading-none" aria-hidden>
-                {it.emoji}
-              </span>
+              <Glyph name={it.emoji} size={30} className="text-accent" />
               <div className="min-w-0 flex-1">
                 <div className="font-semibold">{it.title}</div>
                 {it.description && <p className="mt-1 whitespace-pre-line break-words text-sm">{it.description}</p>}

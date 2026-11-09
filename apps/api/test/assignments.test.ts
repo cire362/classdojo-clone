@@ -58,7 +58,7 @@ it('задание всей группе: ученик сдаёт ответ, п
   await decide(t, id, workId, 'APPROVED');
   expect(await points(t.students[0].id)).toBe(before + 3);
   const event = await prisma.pointEvent.findFirst({ where: { studentId: t.students[0].id, reasonName: 'Задание: Решить задачи 1–5' } });
-  expect(event).toMatchObject({ value: 3, emoji: '📝', awardedGroupId: t.group.id });
+  expect(event).toMatchObject({ value: 3, emoji: 'clipboard', awardedGroupId: t.group.id });
 
   await decide(t, id, workId, 'RETURNED', 'Проверь пятую');
   expect(await points(t.students[0].id)).toBe(before);

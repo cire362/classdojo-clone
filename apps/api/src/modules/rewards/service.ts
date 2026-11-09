@@ -35,14 +35,14 @@ export async function pendingRewardGroups(teacherId: string): Promise<PendingRew
 }
 
 export const DEFAULT_REWARDS = [
-  { emoji: '🪑', title: 'Выбрать место на уроке', cost: 15 },
-  { emoji: '🎵', title: 'Музыка на перемене', cost: 20 },
-  { emoji: '🧑‍🏫', title: 'Помощник учителя на урок', cost: 30 },
-  { emoji: '⏰', title: 'Отсрочка домашнего задания', cost: 50 },
+  { emoji: 'chair', title: 'Выбрать место на уроке', cost: 15 },
+  { emoji: 'music', title: 'Музыка на перемене', cost: 20 },
+  { emoji: 'chalkboard', title: 'Помощник учителя на урок', cost: 30 },
+  { emoji: 'alarm', title: 'Отсрочка домашнего задания', cost: 50 },
 ];
 
 /** Колледж и вуз: школьные награды (место на уроке, музыка на перемене, помощник учителя) студентам не подходят */
-export const ADULT_REWARDS = [{ emoji: '⏰', title: 'Сдать задание на день позже', cost: 50 }];
+export const ADULT_REWARDS = [{ emoji: 'alarm', title: 'Сдать задание на день позже', cost: 50 }];
 
 export async function createDefaultRewards(db: Tx, groupId: string) {
   const { teacher } = await db.group.findUniqueOrThrow({

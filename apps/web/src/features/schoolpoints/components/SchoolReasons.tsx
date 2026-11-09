@@ -7,9 +7,12 @@ import { useToast } from '../../../ui/Toast';
 import { addSchoolReason, deleteSchoolReason, fetchSchoolReasons, updateSchoolReason } from '../api';
 import { cap } from '@heroes/shared/terms';
 import { useTerms } from '../../auth';
+import { Glyph } from '../../../ui/Glyph';
+import { IconPicker } from '../../../ui/IconPicker';
+import { REASON_ICONS } from '@heroes/shared/icons';
 
 const VALUES = [5, 4, 3, 2, 1, -1, -2, -3, -4, -5];
-const EMPTY = { name: '', emoji: '⭐', value: 1 };
+const EMPTY = { name: '', emoji: 'star', value: 1 };
 const signed = (v: number) => (v > 0 ? `+${v}` : `−${Math.abs(v)}`);
 
 /**
@@ -68,8 +71,8 @@ export function SchoolReasons({ canEdit }: { canEdit: boolean }) {
         <ul className="card divide-y divide-line overflow-hidden" aria-label={`Общие причины ${t.org.one.gen}`}>
           {data.map((r) => (
             <li key={r.id} className="flex items-center gap-3 p-3">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-2xl" aria-hidden>
-                {r.emoji}
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface-2" aria-hidden>
+                <Glyph name={r.emoji} size={24} className={r.value > 0 ? 'text-plus' : 'text-minus'} />
               </span>
               <span className="min-w-0 flex-1 break-words font-medium">{r.name}</span>
               <span className={`chip ${r.value > 0 ? 'bg-plus-bg text-plus' : 'bg-minus-bg text-minus'}`}>{signed(r.value)}</span>
@@ -98,17 +101,8 @@ export function SchoolReasons({ canEdit }: { canEdit: boolean }) {
         onClose={() => { if (!busy) setEditing(null); }}
       >
         <form onSubmit={save} className="space-y-4">
-          <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3">
-            <div>
-              <label className="label" htmlFor="school-reason-emoji">Значок</label>
-              <input
-                id="school-reason-emoji"
-                className="input text-center text-2xl"
-                maxLength={16}
-                value={form.emoji}
-                onChange={(e) => setForm({ ...form, emoji: e.target.value })}
-              />
-            </div>
+          <IconPicker options={REASON_ICONS} value={form.emoji} onChange={(emoji) => setForm({ ...form, emoji })} />
+          <div>
             <div>
               <label className="label" htmlFor="school-reason-name">Название</label>
               <input

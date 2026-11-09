@@ -8,8 +8,10 @@ import { useGroup } from '../../groups';
 import { createReason, deleteReason, saveReasonOrder, updateReason } from '../api';
 import { cap } from '@heroes/shared/terms';
 import { useTerms } from '../../auth';
+import { Glyph } from '../../../ui/Glyph';
+import { IconPicker } from '../../../ui/IconPicker';
+import { REASON_ICONS } from '@heroes/shared/icons';
 
-const EMOJI = ['💪', '💡', '🤝', '🧩', '✨', '⭐', '🏆', '📚', '🎯', '🚀', '🎨', '🙋', '⏰', '💤', '📕', '📢', '📱', '🙊'];
 
 type Draft = { name: string; emoji: string; value: number; countsForHelpBadge: boolean };
 
@@ -164,8 +166,8 @@ function ReasonRow({
       >
         <DotsSixVerticalIcon size={22} weight="bold" />
       </button>}
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-2xl" aria-hidden>
-        {r.emoji}
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface-2" aria-hidden>
+        <Glyph name={r.emoji} size={24} className={r.value > 0 ? 'text-plus' : 'text-minus'} />
       </span>
       <span className="min-w-0 flex-1 truncate font-medium">{r.name}</span>
       {r.school && <span className="chip bg-surface-2 text-ink-soft" title="Общая причина: её меняет администрация">{schoolLabel}</span>}
@@ -203,14 +205,18 @@ function ReasonModal({
   onClose: () => void;
   onSave: (d: Draft) => Promise<void>;
 }) {
-  const [draft, setDraft] = useState<Draft>({ name: '', emoji: '⭐', value: 1, countsForHelpBadge: false });
+  const [draft, setDraft] = useState<Draft>({ name: '', emoji: 'star', value: 1, countsForHelpBadge: false });
   const [error, setError] = useState<string | null>(null);
   const [key, setKey] = useState<string | null>(null);
   const currentKey = reason === 'new' ? 'new' : reason?.id ?? null;
   if (currentKey !== key) {
     setKey(currentKey);
     setError(null);
-    setDraft(reason && reason !== 'new' ? { name: reason.name, emoji: reason.emoji, value: reason.value, countsForHelpBadge: reason.countsForHelpBadge ?? false } : { name: '', emoji: '⭐', value: 1, countsForHelpBadge: false });
+    setDraft(
+      reason && reason !== 'new'
+        ? { name: reason.name, emoji: reason.emoji, value: reason.value, countsForHelpBadge: reason.countsForHelpBadge ?? false }
+        : { name: '', emoji: 'star', value: 1, countsForHelpBadge: false },
+    );
   }
 
   async function submit(e: FormEvent) {
@@ -238,31 +244,7 @@ function ReasonModal({
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           />
         </div>
-        <fieldset>
-          <legend className="label">Значок</legend>
-          <div className="flex flex-wrap gap-1.5">
-            {EMOJI.map((em) => (
-              <button
-                type="button"
-                key={em}
-                onClick={() => setDraft({ ...draft, emoji: em })}
-                aria-pressed={draft.emoji === em}
-                className={`flex size-11 items-center justify-center rounded-xl text-2xl transition ${
-                  draft.emoji === em ? 'bg-accent' : 'bg-surface-2 hover:bg-line'
-                }`}
-              >
-                {em}
-              </button>
-            ))}
-            <input
-              aria-label="Свой эмодзи"
-              className="input h-11 w-20 px-2 text-center text-xl"
-              value={EMOJI.includes(draft.emoji) ? '' : draft.emoji}
-              placeholder="свой"
-              onChange={(e) => setDraft({ ...draft, emoji: e.target.value.trim() || '⭐' })}
-            />
-          </div>
-        </fieldset>
+        <IconPicker options={REASON_ICONS} value={draft.emoji} onChange={(emoji) => setDraft({ ...draft, emoji })} />
         <fieldset>
           <legend className="label">Баллы</legend>
           <div className="flex items-center gap-3">

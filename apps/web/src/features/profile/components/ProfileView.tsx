@@ -10,6 +10,7 @@ import { PetCompanion } from '../../hero';
 import { EmptyState, ProgressBar } from '../../../ui';
 import { WorkCard } from '../../works';
 import { useHeroes, useTerms } from '../../auth';
+import { Glyph } from '../../../ui/Glyph';
 
 function PointsTile({ label, sum }: { label: string; sum: PointsSum }) {
   return (
@@ -166,9 +167,7 @@ export function ProfileView({
                   <ul className="space-y-1.5">
                     {g.items.map((e) => (
                       <li key={e.id} className="flex items-center gap-3">
-                        <span className="w-7 text-center text-xl" aria-hidden>
-                          {e.emoji}
-                        </span>
+                        <Glyph name={e.emoji} size={24} className={`w-7 ${e.value > 0 ? 'text-plus' : 'text-minus'}`} />
                         <span className="min-w-0 flex-1 break-words">
                           <span className="block">{e.reasonName}</span>
                           <span className="block text-xs text-ink-soft">{e.author ?? 'Автор не указан'}</span>

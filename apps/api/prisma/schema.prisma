@@ -845,7 +845,7 @@ model PortfolioItem {
   student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   title       String
   description String   @default("")
-  emoji       String   @default("🏆")
+  emoji       String   @default("trophy")
   /// Автор; при удалении преподавателя запись остаётся без автора
   createdById String?
   createdBy   Account? @relation(fields: [createdById], references: [id], onDelete: SetNull)

@@ -58,8 +58,11 @@ it('директор ставит цель школы и добавляет об
   const dialog = await screen.findByRole('dialog', { name: 'Новая общая причина' });
   fireEvent.change(within(dialog).getByLabelText('Название'), { target: { value: 'Дежурство' } });
   fireEvent.change(within(dialog).getByLabelText('Баллы'), { target: { value: '2' } });
+  // Значок выбирается из рисованных иконок, а не вводится эмодзи
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Значок: поднятая рука' }));
+  expect(within(dialog).getByRole('button', { name: 'Значок: поднятая рука' })).toHaveAttribute('aria-pressed', 'true');
   await act(async () => fireEvent.click(within(dialog).getByRole('button', { name: 'Сохранить' })));
-  expect(api).toHaveBeenCalledWith('POST', '/admin/school-reasons', { name: 'Дежурство', emoji: '⭐', value: 2 });
+  expect(api).toHaveBeenCalledWith('POST', '/admin/school-reasons', { name: 'Дежурство', emoji: 'hand', value: 2 });
   expect(within(screen.getByRole('list', { name: 'Общие причины школы' })).getByText('+2')).toBeVisible();
 });
 

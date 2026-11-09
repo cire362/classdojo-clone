@@ -6,6 +6,7 @@ import { formatDateTime, pluralize, useLoad } from '../../../lib/hooks';
 import { useNotifications } from '../../notifications';
 import { cancelRequest, fetchShop, requestReward } from '../api';
 import { useTerms } from '../../auth';
+import { Glyph } from '../../../ui/Glyph';
 
 const STATUS = {
   PENDING: { text: 'ждёт ответа преподавателя', cls: 'bg-accent/25 text-ink' },
@@ -60,9 +61,7 @@ export function StudentShop() {
             return (
               <li key={r.id} className="card flex flex-col gap-3 p-4">
                 <div className="flex items-start gap-3">
-                  <span className="text-3xl leading-none" aria-hidden>
-                    {r.emoji}
-                  </span>
+                  <Glyph name={r.emoji} size={30} className="text-accent" />
                   <span className="min-w-0 flex-1 font-semibold">{r.title}</span>
                   <span className="chip bg-accent/25 text-ink">
                     {r.cost}
@@ -88,9 +87,7 @@ export function StudentShop() {
           <ul className="card divide-y divide-line overflow-hidden">
             {data.requests.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center gap-3 px-4 py-2.5">
-                <span className="text-xl" aria-hidden>
-                  {r.emoji}
-                </span>
+                <Glyph name={r.emoji} size={22} className="text-accent" />
                 <span className="min-w-0 flex-1">
                   <span className="block font-medium">{r.title}</span>
                   <span className="block text-xs text-ink-soft">

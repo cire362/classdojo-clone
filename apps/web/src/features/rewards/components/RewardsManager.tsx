@@ -9,8 +9,10 @@ import { useNotifications } from '../../notifications';
 import { addReward, decideRequest, fetchGroupRewards, removeReward } from '../api';
 import { useTerms } from '../../auth';
 import { cap } from '@heroes/shared/terms';
+import { Glyph } from '../../../ui/Glyph';
+import { IconPicker } from '../../../ui/IconPicker';
+import { REWARD_ICONS } from '@heroes/shared/icons';
 
-const EMOJI = ['🎁', '🪑', '🎵', '🧑‍🏫', '⏰', '🎮', '🍬', '📖', '🎨', '⚽', '🌟', '🏅'];
 const STATUS = { PENDING: 'ждёт ответа', APPROVED: 'выдано', REJECTED: 'отказано' } as const;
 
 /** Магазин наград группы: запросы учеников и список наград */
@@ -24,7 +26,7 @@ export function RewardsManager() {
     () => fetchGroupRewards(group.group.id),
     [group.group.id],
   );
-  const [form, setForm] = useState({ title: '', emoji: EMOJI[0], cost: 10 });
+  const [form, setForm] = useState({ title: '', emoji: REWARD_ICONS[0], cost: 10 });
   const [busy, setBusy] = useState(false);
 
   async function run(fn: () => Promise<void>) {
@@ -53,7 +55,7 @@ export function RewardsManager() {
     void run(async () => {
       const rewards = await addReward(group.group.id, { ...form, title: form.title.trim() });
       setData({ ...data!, rewards });
-      setForm({ title: '', emoji: EMOJI[0], cost: 10 });
+      setForm({ title: '', emoji: REWARD_ICONS[0], cost: 10 });
     });
   };
 
@@ -80,9 +82,7 @@ export function RewardsManager() {
           <ul className="card divide-y divide-line overflow-hidden">
             {pending.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                <span className="text-2xl" aria-hidden>
-                  {r.emoji}
-                </span>
+                <Glyph name={r.emoji} size={26} className="text-accent" />
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold">{r.student?.name}</span>
                   <span className="block text-sm text-ink-soft">
@@ -109,7 +109,7 @@ export function RewardsManager() {
             <ul className="mt-3 space-y-2 text-sm">
               {done.map((r) => (
                 <li key={r.id} className="flex flex-wrap gap-x-2">
-                  <span aria-hidden>{r.emoji}</span>
+                  <Glyph name={r.emoji} size={18} className="self-center text-accent" />
                   <b>{r.student?.name}</b> {r.title}, {r.cost} — <span className="text-ink-soft">{STATUS[r.status]}</span>
                 </li>
               ))}
@@ -123,9 +123,7 @@ export function RewardsManager() {
         <ul className="card divide-y divide-line overflow-hidden">
           {data.rewards.map((r) => (
             <li key={r.id} className="flex items-center gap-3 px-4 py-2.5">
-              <span className="text-2xl" aria-hidden>
-                {r.emoji}
-              </span>
+              <Glyph name={r.emoji} size={26} className="text-accent" />
               <span className="min-w-0 flex-1 font-medium">{r.title}</span>
               <span className="chip bg-accent/25 text-ink">{r.cost}</span>
               {!archived && (
@@ -139,23 +137,7 @@ export function RewardsManager() {
         </ul>
         {!archived && (
           <form onSubmit={add} className="space-y-3 rounded-2xl border border-dashed border-line p-4">
-            <fieldset>
-              <legend className="label">Значок</legend>
-              <div className="flex flex-wrap gap-1.5">
-                {EMOJI.map((em) => (
-                  <button
-                    key={em}
-                    type="button"
-                    aria-pressed={form.emoji === em}
-                    aria-label={`Значок ${em}`}
-                    className={`flex size-10 items-center justify-center rounded-xl text-xl ${form.emoji === em ? 'bg-accent/30 ring-2 ring-ink' : 'bg-surface-2'}`}
-                    onClick={() => setForm({ ...form, emoji: em })}
-                  >
-                    {em}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
+            <IconPicker options={REWARD_ICONS} value={form.emoji} onChange={(emoji) => setForm({ ...form, emoji })} />
             <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-2">
               <div>
                 <label className="label" htmlFor="reward-title">

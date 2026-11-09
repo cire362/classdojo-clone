@@ -100,7 +100,7 @@ export async function decideAnswer(
         data: {
           studentId: work.studentId,
           reasonName: `Задание: ${work.assignment!.title}`,
-          emoji: '📝',
+          emoji: 'clipboard',
           value: work.assignment!.points,
           awardedById: accountId,
           classGoalId: goal?.id ?? null,
