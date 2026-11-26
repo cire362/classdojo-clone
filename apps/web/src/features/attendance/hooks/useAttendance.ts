@@ -42,7 +42,7 @@ export function useAttendance() {
   // На телефоне статус отправки и ошибка ниже края экрана — прокручиваем к ним
   const statusRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (phase === 'detecting' || error) statusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    if (phase === 'detecting' || error) statusRef.current?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
   }, [phase, error]);
   const existing = useLoad(() => fetchAttendanceDay(data.group.id, date, lesson), [data.group.id, date, lesson]);
   const isToday = date === dateKey();

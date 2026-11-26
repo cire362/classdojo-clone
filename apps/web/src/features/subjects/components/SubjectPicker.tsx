@@ -10,10 +10,10 @@ export function SubjectPicker({ groupId, subjects }: { groupId: string; subjects
   const [value, setValue] = useState(() => currentSubject(groupId, subjects) ?? '');
   if (!subjects.length) return null;
   return (
-    <label className="inline-flex items-center gap-2 text-sm">
+    <label className="flex w-full min-w-0 flex-wrap items-center gap-2 text-sm sm:w-auto">
       <span className="font-semibold">{cap(t.subject.one.nom)}</span>
       <select
-        className="input w-auto py-2"
+        className="input min-w-0 max-w-full flex-1 py-2 sm:w-auto sm:flex-none"
         value={value}
         onChange={(e) => {
           setValue(e.target.value);

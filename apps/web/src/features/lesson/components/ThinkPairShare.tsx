@@ -146,7 +146,7 @@ export function ThinkPairShare({ groupId, projector, target }: { groupId: string
         </button>
       ) : (
         <div className={`rounded-2xl border p-4 sm:p-5 ${finished ? 'border-accent bg-accent/15' : 'border-line bg-surface'}`}>
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 font-sans text-base font-semibold">
               <ChatsCircleIcon size={22} aria-hidden /> {TITLE}
             </h2>

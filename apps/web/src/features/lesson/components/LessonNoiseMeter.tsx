@@ -26,7 +26,7 @@ export function LessonNoiseMeter({ groupId, projector, target }: { groupId: stri
   const panel = <section aria-label="Шумомер урока" className={projector ? 'mb-6' : open ? 'w-full' : ''}>
     {!open ? <button ref={toggle} className="btn btn-secondary btn-sm" aria-expanded={false} onClick={() => setOpen(true)}><WaveformIcon size={20} aria-hidden /> Шумомер</button> : (
       <div className="rounded-2xl border border-line bg-surface p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 font-sans text-base font-semibold"><WaveformIcon size={22} aria-hidden /> Шумомер</h2>
           <button className="icon-btn -mr-2 -mt-2" aria-label="Скрыть шумомер" onClick={() => { control.stop(); focusToggle.current = true; setOpen(false); }}><XIcon size={20} aria-hidden /></button>
         </div>

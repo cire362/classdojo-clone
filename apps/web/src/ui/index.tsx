@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { WarningIcon, XIcon } from '@phosphor-icons/react';
 import { usePresence } from '../lib/presence';
 
@@ -47,23 +48,21 @@ export function Modal({
       }
     };
     window.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     requestAnimationFrame(() => {
       // Не уводим фокус из поля, если пользователь уже начал заполнять окно.
-      if (ref.current && !ref.current.contains(document.activeElement)) ref.current.focus();
+      if (ref.current && !ref.current.contains(document.activeElement)) ref.current.focus({ preventScroll: true });
     });
     return () => {
       window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prev;
-      if (opener && document.contains(opener)) opener.focus();
+      if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
     };
   }, [open]);
 
   if (!mounted) return null;
-  return (
+  return createPortal(
     <div
-      className={`fixed inset-0 z-40 flex items-end justify-center bg-[rgb(14_17_34/0.55)] sm:items-center sm:p-6 ${
+      className={`fixed left-0 top-0 z-40 flex h-dvh w-dvw max-w-full items-end justify-center overflow-clip
+        bg-[rgb(14_17_34/0.55)] sm:items-center sm:p-6 ${
         closing ? 'anim-fade-out pointer-events-none' : 'anim-fade-in'
       }`}
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
@@ -74,23 +73,26 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-surface shadow-[var(--shadow-pop)] outline-none sm:rounded-2xl ${
+        className={`flex max-h-full w-full min-w-0 max-w-full flex-col overflow-clip rounded-t-2xl
+          bg-surface shadow-[var(--shadow-pop)] outline-none sm:rounded-2xl ${
           size === 'lg' ? 'sm:max-w-3xl' : 'sm:max-w-lg'
         } ${closing ? 'anim-sheet-out' : 'anim-sheet-in'}`}
       >
-        <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3">
-          <h2 id={titleId} className="text-lg">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line px-4 py-2 sm:px-5 sm:py-3">
+          <h2 id={titleId} className="min-w-0 text-lg">
             {title}
           </h2>
           <button className="icon-btn -mr-2" onClick={onClose} aria-label="Закрыть">
             <XIcon size={22} />
           </button>
         </div>
-        <div className="overflow-y-auto overscroll-contain px-5 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className="relative min-h-0 min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain px-4 pt-4
+          pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-5">
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

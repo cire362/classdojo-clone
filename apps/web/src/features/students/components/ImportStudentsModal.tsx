@@ -92,7 +92,7 @@ export function ImportStudentsModal({
             </span>
           </div>
 
-          <ul className="card max-h-[45dvh] divide-y divide-line overflow-y-auto">
+          <ul className="card divide-y divide-line sm:max-h-[45dvh] sm:overflow-y-auto">
             {names.map((name, i) => {
               const on = checked.has(i);
               const dup = preview.names[i].alreadyInGroup;

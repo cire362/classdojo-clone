@@ -114,7 +114,7 @@ export function StudentProfileView() {
             <p className="text-sm text-ink-soft">
               Запись исчезнет из истории {t.student.one.gen} и статистики, баллы пересчитаются.
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 className="btn btn-danger"
                 disabled={deleting}

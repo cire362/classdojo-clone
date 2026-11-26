@@ -74,26 +74,13 @@ export function AppLayout() {
     </NavLink>
   );
   return (
-    <div className="min-h-[100dvh]">
+    <div className="relative min-h-[100dvh] w-full overflow-x-clip">
       <header className="no-print sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
-          <Link to="/" className="shrink-0" aria-label="Герои класса — главная">
-            <Logo hideNameOnMobile={user?.role === 'TEACHER' || adultStudent} />
+        <div className="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center gap-x-2 gap-y-1 py-1 px-4 sm:px-6">
+          <Link to="/" className="min-w-0 shrink-0" aria-label="Герои класса — главная">
+            <Logo hideNameOnMobile />
           </Link>
-          {user?.role === 'STUDENT' && (
-            <nav className="ml-2 hidden gap-1 sm:flex" aria-label="Разделы">
-              <NavLink to="/" end className={navClass}>
-                {heroes ? 'Мой герой' : 'Профиль'}
-              </NavLink>
-              {heroes && heroLink}
-              {heroes && shopLink}
-              {feedLink}
-              {worksLink}
-              {assignmentsLink}
-              {calendarLink}
-            </nav>
-          )}
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-1">
             {user?.role === 'TEACHER' && (
               <NavLink to="/reward-requests" className={({ isActive }) => `icon-btn relative w-auto gap-1 px-2.5 ${isActive ? 'bg-surface-2 text-ink' : ''}`} title="Запросы наград">
                 <GiftIcon size={22} aria-hidden />
@@ -183,7 +170,7 @@ export function AppLayout() {
           </div>
         </div>
         {user?.role === 'STUDENT' && (
-          <nav className="relative mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:hidden" aria-label="Разделы">
+          <nav className="relative mx-auto flex w-full min-w-0 max-w-7xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6" aria-label="Разделы">
             <NavLink to="/" end className={navClass}>
               {heroes ? 'Мой герой' : 'Профиль'}
             </NavLink>

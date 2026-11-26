@@ -63,7 +63,7 @@ export function NewYearModal({ onClose, onDone }: { onClose: () => void; onDone:
             <p>Нет групп с указанным курсом. Задайте его в карточках групп.</p>
           ) : (
             <ul
-              className="max-h-80 divide-y divide-line overflow-y-auto rounded-xl border border-line"
+              className="divide-y divide-line sm:max-h-80 sm:overflow-y-auto rounded-xl border border-line"
               aria-label="Что произойдёт с группами"
             >
               {data.groups.map((g) => (

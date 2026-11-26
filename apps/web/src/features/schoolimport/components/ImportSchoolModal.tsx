@@ -100,7 +100,7 @@ export function ImportSchoolModal({ onClose, onDone }: { onClose: () => void; on
                 {plan.departments.length > 0 && `, новые подразделения: ${plan.departments.join(', ')}`}
                 {plan.teachers.length > 0 && `, новые преподаватели: ${plan.teachers.map((x) => x.name).join(', ')}`}.
               </p>
-              <ul className="max-h-64 divide-y divide-line overflow-y-auto rounded-xl border border-line" aria-label="Группы из файла">
+              <ul className="divide-y divide-line sm:max-h-64 sm:overflow-y-auto rounded-xl border border-line" aria-label="Группы из файла">
                 {plan.groups.map((g) => (
                   <li key={g.name} className="px-3 py-2 text-sm">
                     <b className="break-words">{g.name}</b> {g.exists ? '(уже есть)' : '(новая)'}

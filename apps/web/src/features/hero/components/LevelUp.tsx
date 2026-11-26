@@ -73,7 +73,7 @@ export function LevelUpOverlay({
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[rgb(14_17_34/0.72)] p-4"
+            className="fixed inset-0 z-50 flex flex-col overflow-x-hidden overflow-y-auto overscroll-contain bg-[rgb(14_17_34/0.72)] p-4"
             role="dialog"
             aria-modal="true"
             aria-label={`Новый уровень: ${level}`}
@@ -83,7 +83,7 @@ export function LevelUpOverlay({
           >
             {!reduce && <Confetti />}
             <motion.div
-              className="relative w-full max-w-md overflow-hidden rounded-2xl bg-surface text-center shadow-[var(--shadow-pop)]"
+              className="relative m-auto w-full min-w-0 max-w-md shrink-0 overflow-hidden rounded-2xl bg-surface text-center shadow-[var(--shadow-pop)]"
               initial={{ scale: 0.85, y: 24 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0 }}

@@ -18,7 +18,7 @@ export function DeleteStudentModal({ student, onClose, onDeleted }: {
           <p>
             <b>{student.name}</b> будет удалён вместе с героем, баллами и посещаемостью. Это нельзя отменить.
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <button
               className="btn btn-danger"
               onClick={async () => {

@@ -15,7 +15,7 @@ export function AttendanceReview({ flow }: { flow: AttendanceFlow }) {
   const mismatch = expected !== null && expected !== present.size;
 
   return (
-    <div className="grid grid-cols-1 gap-6 pb-24 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:pb-0">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
       {(!isToday || multi) && (
         <p className="flex items-center gap-2 font-semibold lg:col-span-2">
           <CalendarBlankIcon size={20} weight="bold" /> Отметка за {dayLabel(date)}
@@ -23,10 +23,21 @@ export function AttendanceReview({ flow }: { flow: AttendanceFlow }) {
         </p>
       )}
       {detection && preview ? (
-        <section className="space-y-4">
-          <div className="relative overflow-hidden rounded-2xl bg-surface-2">
-            <img src={preview} alt="Фото группы" className="block w-full" />
-            <svg className="absolute inset-0 size-full" viewBox={`0 0 ${detection.width} ${detection.height}`} preserveAspectRatio="none" aria-hidden>
+        <section className="min-w-0 space-y-4">
+          <div
+            className="relative mx-auto overflow-hidden rounded-2xl bg-surface-2"
+            style={{
+              aspectRatio: `${detection.width} / ${detection.height}`,
+              width: `min(100%, ${65 * detection.width / detection.height}dvh)`,
+            }}
+          >
+            <img src={preview} alt="Фото группы" className="absolute inset-0 size-full object-contain" />
+            <svg
+              className="pointer-events-none absolute inset-0 size-full"
+              viewBox={`0 0 ${detection.width} ${detection.height}`}
+              preserveAspectRatio="none"
+              aria-hidden
+            >
               {detection.boxes.map((b, i) => (
                 <rect
                   key={i}
@@ -62,8 +73,8 @@ export function AttendanceReview({ flow }: { flow: AttendanceFlow }) {
         </section>
       )}
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
+      <section className="min-w-0 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-lg">
             Отмечено {present.size} из {total}
           </h3>
@@ -89,9 +100,9 @@ export function AttendanceReview({ flow }: { flow: AttendanceFlow }) {
             const on = present.has(s.id);
             return (
               <li key={s.id}>
-                <label className="flex cursor-pointer items-center gap-3 px-3 py-2 transition hover:bg-surface-2">
+                <label className="relative flex cursor-pointer items-center gap-3 px-3 py-2 transition hover:bg-surface-2">
                   <HeroHead parts={s.hero.parts} className={`size-11 transition ${on ? '' : 'opacity-40 grayscale'}`} />
-                  <span className={`flex-1 font-medium ${on ? '' : 'text-ink-soft line-through decoration-1'}`}>{s.name}</span>
+                  <span className={`min-w-0 flex-1 font-medium ${on ? '' : 'text-ink-soft line-through decoration-1'}`}>{s.name}</span>
                   <span className={`text-sm font-semibold ${on ? 'text-plus' : 'text-ink-soft'}`}>{on ? 'был' : 'не был'}</span>
                   <Switch
                     checked={on}
@@ -110,7 +121,9 @@ export function AttendanceReview({ flow }: { flow: AttendanceFlow }) {
             );
           })}
         </ul>
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+        <div className="sticky bottom-0 z-20 -mx-4 border-t border-line bg-surface/95 px-4
+          pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:-mx-6 sm:px-6
+          lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
           <div className="mx-auto flex max-w-7xl gap-2">
             <button className="btn btn-primary btn-lg flex-1 lg:flex-none" onClick={save} disabled={saving}>
               {saving ? (saveStatus?.state === 'offline' ? 'Ждём интернет…' : saveStatus?.state === 'retrying' ? 'Повторяем…' : 'Сохраняем…') : 'Сохранить'}

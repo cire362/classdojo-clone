@@ -189,7 +189,6 @@ export function LessonBoard() {
       {grid}
 
       <SelectBar active={selectMode} count={selected.size} onAward={(label) => setTarget({ ids: [...selected], label })} />
-      {selectMode && <div className="h-20" />}
 
       {/* Режим проектора */}
       {projector && (
