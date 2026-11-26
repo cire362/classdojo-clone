@@ -135,7 +135,7 @@ test('сверка посещаемости не создаёт пустую о�
     await page.goto(`/g/${group.id}/attendance`);
     await page.getByRole('button', { name: 'Без фото' }).click();
     const save = page.getByRole('button', { name: 'Сохранить', exact: true });
-    const last = page.locator('ul.card label').filter({ hasText: 'Второй ученик' });
+    const last = page.locator('ul.card label').last();
     await expect(save).toBeVisible();
     await expect(last).toBeVisible();
     const saveBox = (await save.boundingBox())!;
