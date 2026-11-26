@@ -27,3 +27,23 @@ test('страницы помещаются в 375 px', async ({ page, request, 
     await g.remove();
   }
 });
+
+test('владелец удаляет класс из шапки после подтверждения названия', async ({ page, request }) => {
+  const name = uniq('E2E удаление');
+  const group = await tempGroup(request, name);
+  try {
+    await loginUi(page, TEACHER.login, TEACHER.password);
+    await expect(page.getByRole('heading', { name: /Здравствуйте/ })).toBeVisible();
+    await page.goto(`/g/${group.id}`);
+    await page.getByRole('button', { name: /^Удалить (класс|группу)$/ }).click();
+    const dialog = page.getByRole('dialog');
+    const confirm = dialog.getByRole('button', { name: /^Удалить (класс|группу)$/ });
+    await expect(confirm).toBeDisabled();
+    await dialog.getByRole('textbox').fill(name);
+    await confirm.click();
+    await expect(page).toHaveURL('/');
+    expect((await request.get(`/api/teacher/groups/${group.id}`)).ok()).toBe(false);
+  } finally {
+    await group.remove();
+  }
+});
