@@ -35,7 +35,7 @@ it('ученик не видит общую очередь преподават�
   auth.user = { login: 'masha', role: 'STUDENT', name: 'Маша' };
   renderApp(<AppLayout />);
   expect(screen.queryByRole('link', { name: /Запросы наград/ })).not.toBeInTheDocument();
-  expect(screen.getAllByRole('link', { name: 'Награды' })).toHaveLength(2);
+  expect(screen.getByRole('link', { name: 'Награды' })).toBeInTheDocument();
 });
 
 it('список групп восстанавливается после ошибки, а обновление показывает пустую очередь', async () => {

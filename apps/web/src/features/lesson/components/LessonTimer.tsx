@@ -58,7 +58,7 @@ export function LessonTimer({ groupId, projector, target }: { groupId: string; p
     {!expanded ? <button ref={toggle} className="btn btn-secondary btn-sm" aria-expanded={false} onClick={() => { focusCommand.current = true; setOpen(true); }}>
       <TimerIcon size={20} aria-hidden /> Таймер{timer.status !== 'idle' && <span className="tabular-nums">{timer.status === 'finished' ? '· Время вышло' : formatTimer(remaining)}</span>}
     </button> : <div id={id} className={`relative rounded-2xl border p-4 sm:p-5 ${timer.status === 'finished' ? 'border-accent bg-accent/15' : 'border-line bg-surface'}`}>
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-sans text-base font-semibold"><TimerIcon size={22} aria-hidden /> Таймер</h2>
         {(!projector || timer.status === 'idle') && <button className="icon-btn -mr-2 -mt-2" aria-label="Скрыть таймер" onClick={() => { focusToggle.current = true; setOpen(false); }}><XIcon size={20} aria-hidden /></button>}
       </div>

@@ -9,8 +9,9 @@ export function SelectBar({ active, count, onAward }: { active: boolean; count: 
   if (!bar.mounted) return null;
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur ${
-        bar.closing ? 'anim-bar-out' : 'anim-bar-in'
+      className={`sticky bottom-0 z-30 -mx-4 border-t border-line bg-surface/95 px-4
+        pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:-mx-6 sm:px-6 ${
+        bar.closing ? 'anim-fade-out' : 'anim-fade-in'
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">

@@ -64,7 +64,7 @@ export function StreamForm({ stream, onClose, onSaved }: {
         <fieldset>
           <legend className="label">Группы</legend>
           {!groups.data && !groups.error && <Skeleton className="h-20" />}
-          <ul className="max-h-64 space-y-1 overflow-y-auto">
+          <ul className="space-y-1 sm:max-h-64 sm:overflow-y-auto">
             {active.map((g) => (
               <li key={g.id}>
                 <label className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-2">

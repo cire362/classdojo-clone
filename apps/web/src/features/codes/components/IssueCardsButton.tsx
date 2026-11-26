@@ -39,7 +39,7 @@ export function IssueCardsButton({ groupId, studentId, className }: { groupId: s
               : ' Выданные раньше карточки всей группы перестанут работать.'}
           </p>
           <p className="text-sm text-ink-soft">Карточка заменяет пароль, поэтому показать её повторно нельзя: распечатайте сразу.</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button className="btn btn-primary" disabled={busy} onClick={issue}>{busy ? 'Создаём…' : 'Выпустить'}</button>
             <button className="btn btn-secondary" onClick={() => setConfirm(false)}>Отмена</button>
           </div>

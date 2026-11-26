@@ -1,5 +1,6 @@
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
+import { dateKey } from '../src/lib/hooks';
 import { pagesFor } from '../src/app/routes';
 import { AssignmentForm } from '../src/features/assignments/components/AssignmentForm';
 import { AssignmentReview } from '../src/features/assignments/components/AssignmentReview';
@@ -34,11 +35,14 @@ it('задание выбранным ученикам: без названия 
   const created = vi.fn();
   renderInGroup(<AssignmentForm onCreated={created} />, groupData());
   const give = screen.getByRole('button', { name: 'Выдать задание' });
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dueOn = dateKey(tomorrow);
   fireEvent.change(screen.getByLabelText('Что сделать'), { target: { value: ' Решить задачи 1–5 ' } });
   fireEvent.click(screen.getByLabelText('Выбранным ученикам'));
   expect(give).toBeDisabled();
   fireEvent.click(within(screen.getByRole('list', { name: 'Ученики' })).getByLabelText('Петя Смирнов'));
-  fireEvent.change(screen.getByLabelText('Сдать до'), { target: { value: '2026-11-12' } });
+  fireEvent.change(screen.getByLabelText('Сдать до'), { target: { value: dueOn } });
   fireEvent.change(screen.getByLabelText('Баллы за выполнение'), { target: { value: '3' } });
   fireEvent.change(document.querySelector('input[type=file]')!, { target: { files: [new File(['%PDF'], 'задачи.pdf', { type: 'application/pdf' })] } });
   await act(async () => fireEvent.click(give));
@@ -46,7 +50,7 @@ it('задание выбранным ученикам: без названия 
   expect([method, path]).toEqual(['POST', '/teacher/groups/g1/assignments']);
   const data = body as FormData;
   expect(Object.fromEntries(['title', 'dueOn', 'points', 'target', 'studentId'].map((k) => [k, data.get(k)]))).toEqual({
-    title: 'Решить задачи 1–5', dueOn: '2026-11-12', points: '3', target: 'students', studentId: 's2',
+    title: 'Решить задачи 1–5', dueOn, points: '3', target: 'students', studentId: 's2',
   });
   expect((data.get('file') as File).name).toBe('задачи.pdf');
   expect(created).toHaveBeenCalledWith([TASK]);

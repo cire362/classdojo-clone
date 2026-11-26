@@ -89,6 +89,7 @@
   body {
     @apply bg-bg text-ink font-sans antialiased;
     font-feature-settings: 'tnum' 0;
+    overflow-wrap: anywhere;
   }
   h1,
   h2,
@@ -107,6 +108,10 @@
     accent-color: var(--accent);
     scrollbar-color: var(--line) transparent;
   }
+  html:has([role="dialog"][aria-modal="true"]) {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
   input,
   textarea,
   select {
@@ -116,10 +121,10 @@
 
 @layer components {
   .card {
-    @apply rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)];
+    @apply min-w-0 rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)];
   }
   .btn {
-    @apply inline-flex min-h-11 select-none items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-[15px] font-semibold transition-[transform,background-color,box-shadow,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex min-h-11 select-none items-center justify-center gap-2 min-w-0 max-w-full rounded-full px-5 py-1 text-center text-[15px] font-semibold transition-[transform,background-color,box-shadow,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
   }
   .btn-sm {
     @apply min-h-9 px-4 text-sm;
@@ -149,7 +154,7 @@
     @apply inline-flex size-11 shrink-0 items-center justify-center rounded-full text-ink-soft transition hover:bg-surface-2 hover:text-ink active:scale-95;
   }
   .input {
-    @apply w-full rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink placeholder:text-ink-soft/80 transition focus:border-ink focus:outline-none focus:ring-4 focus:ring-accent/40;
+    @apply min-w-0 w-full max-w-full rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink placeholder:text-ink-soft/80 transition focus:border-ink focus:outline-none focus:ring-4 focus:ring-accent/40;
   }
   .label {
     @apply mb-2 block text-sm font-semibold text-ink;
@@ -394,13 +399,6 @@
     --to-scale: 0.96;
     animation: sink-out 0.18s ease-in both;
   }
-  /* Панель внизу экрана: выезжает целиком, без исчезновения */
-  .anim-bar-in {
-    animation: bar-in 0.36s var(--ease-spring) both;
-  }
-  .anim-bar-out {
-    animation: bar-out 0.2s ease-in both;
-  }
   /* Слайдер героев на странице входа */
   .anim-slide-in {
     animation: slide-x-in 0.6s var(--ease-out) both;
@@ -436,17 +434,6 @@
     animation: points-burst 1.3s var(--ease-out) both;
   }
 }
-@keyframes bar-in {
-  from {
-    translate: 0 calc(100% * var(--move));
-  }
-}
-@keyframes bar-out {
-  to {
-    translate: 0 calc(100% * var(--move));
-  }
-}
-
 .hero-avatar svg {
   display: block;
   width: 100%;

@@ -14,7 +14,7 @@ export function AttendanceStart({ flow }: { flow: AttendanceFlow }) {
     cameraInput, galleryInput, day, lessons, currentLesson, nextLesson, multi, lessonLabel, removeLesson, startReview, sendPhoto, onFile,
   } = flow;
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
       <input ref={cameraInput} type="file" accept="image/*" capture="environment" aria-label="Сфотографировать группу" tabIndex={-1} className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
       <input ref={galleryInput} type="file" accept="image/*" aria-label="Выбрать фото группы" tabIndex={-1} className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
       <div className="space-y-5">
@@ -34,7 +34,7 @@ export function AttendanceStart({ flow }: { flow: AttendanceFlow }) {
                 {o.label}
               </button>
             ))}
-            <label className={`tab cursor-pointer ${date < shiftDays(-1) ? 'active' : 'bg-surface-2'}`}>
+            <label className={`tab relative cursor-pointer ${date < shiftDays(-1) ? 'active' : 'bg-surface-2'}`}>
               <CalendarBlankIcon size={18} weight="bold" />
               {date < shiftDays(-1) ? formatDate(date) : 'Другой день'}
               <input
@@ -108,7 +108,7 @@ export function AttendanceStart({ flow }: { flow: AttendanceFlow }) {
               Отметка за {dayLabel(date)}
               {lessonLabel} и баллы «Посещение» за этот урок будут удалены у всех {t.student.many.gen}.
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button className="btn btn-danger" onClick={removeLesson}>
                 Удалить
               </button>

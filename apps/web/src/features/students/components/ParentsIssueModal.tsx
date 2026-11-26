@@ -45,7 +45,7 @@ export function ParentsIssueModal({ open, groupId, withoutParents, onClose, onIs
         <p className="text-sm text-ink-soft">
           Родители увидят героя, баллы, историю и посещаемость только своего ребёнка. Пароли показываются один раз.
         </p>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <button className="btn btn-primary" disabled={busy} onClick={invite}>
             {busy ? 'Создаём…' : 'Приглашения с QR-кодом'}
           </button>

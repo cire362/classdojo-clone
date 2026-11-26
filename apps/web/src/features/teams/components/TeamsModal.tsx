@@ -97,7 +97,7 @@ export function TeamsModal({
             </ul>
           )}
           {list.length < 6 && (
-            <form onSubmit={add} className="flex gap-2">
+            <form onSubmit={add} className="flex flex-col gap-2 sm:flex-row">
               <label className="sr-only" htmlFor="new-team">
                 Новая команда
               </label>
@@ -117,15 +117,15 @@ export function TeamsModal({
                 <ShuffleIcon size={18} /> Распределить поровну случайно
               </button>
             </div>
-            <ul className="card max-h-[40dvh] divide-y divide-line overflow-y-auto">
+            <ul className="card divide-y divide-line sm:max-h-[40dvh] sm:overflow-y-auto">
               {students.map((s) => (
-                <li key={s.id} className="flex items-center gap-3 px-4 py-2">
+                <li key={s.id} className="flex flex-col items-stretch gap-2 px-4 py-2 sm:flex-row sm:items-center">
                   <label className="min-w-0 flex-1 truncate font-medium" htmlFor={`assign-${s.id}`}>
                     {s.name}
                   </label>
                   <select
                     id={`assign-${s.id}`}
-                    className="input w-44 py-2"
+                    className="input py-2 sm:w-44"
                     value={assign[s.id] ?? ''}
                     onChange={(e) => setAssign({ ...assign, [s.id]: e.target.value || null })}
                   >

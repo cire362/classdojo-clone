@@ -44,7 +44,7 @@ export function LessonRandomGroups({ students, presentIds, projector, target }: 
   }
   const panel = <section aria-label="Пары и группы урока" className={projector ? 'mb-6' : expanded ? 'w-full' : ''}>
     {!expanded ? <button ref={toggle} className="btn btn-secondary btn-sm" aria-expanded={false} onClick={() => { setOpen(true); setProjectorHidden(false); }}><UsersThreeIcon size={20} aria-hidden /> Пары и группы{fresh && <span>· {result.groups.length}</span>}</button> : <div className="rounded-2xl border border-line bg-surface p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className={`flex items-center gap-2 font-sans font-semibold ${projector ? 'text-2xl' : 'text-base'}`}><UsersThreeIcon size={22} aria-hidden /> Пары и группы на урок</h2>
         <button className="icon-btn -mr-2 -mt-2" aria-label="Скрыть пары и группы" onClick={() => { focusToggle.current = true; setOpen(false); if (projector) setProjectorHidden(true); }}><XIcon size={20} aria-hidden /></button>
       </div>

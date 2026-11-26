@@ -33,18 +33,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={push}>
       {children}
+      {/* Live region остаётся в DOM, но без уведомлений не создаёт фиксированную панель и область прокрутки. */}
       <div
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-2 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+        className={items.length
+          ? 'pointer-events-none fixed inset-0 z-50 flex flex-col items-center justify-end gap-2 overflow-clip px-4 ' +
+            'pb-[max(1rem,env(safe-area-inset-bottom))]'
+          : 'sr-only left-0 top-0'}
         aria-live="polite"
       >
         {items.map((t) => (
           <div
             key={t.id}
-            className={`flex max-w-md items-center gap-4 rounded-full py-2.5 pl-5 pr-2.5 text-[15px] font-medium shadow-[var(--shadow-pop)] ${toneClass[t.tone]} ${
+            className={`flex min-w-0 max-w-[min(100%,28rem)] items-center gap-4 rounded-full py-2.5 pl-5 pr-2.5 text-[15px] font-medium shadow-[var(--shadow-pop)] ${toneClass[t.tone]} ${
               t.leaving ? 'anim-toast-out' : 'pointer-events-auto anim-toast-in'
             }`}
           >
-            <span>{t.text}</span>
+            <span className="min-w-0">{t.text}</span>
             {t.action ? (
               <button
                 className="rounded-full bg-accent px-3 py-1.5 text-sm font-bold text-on-accent"

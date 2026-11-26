@@ -209,7 +209,7 @@ export function ParentAccessCard({ student, groupId, archived }: { student: { id
                 ? `Вход ${unlinking.login} останется для: ${unlinking.otherChildren.map((c) => c.name).join(', ')}.`
                 : `Других детей у этого входа нет, поэтому ${unlinking.login} будет удалён.`}
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button className="btn btn-danger" disabled={busy} onClick={() => unlink(unlinking)}>
                 Отвязать
               </button>

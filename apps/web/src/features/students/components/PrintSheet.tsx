@@ -143,7 +143,7 @@ function StudentsSheet() {
             Старые пароли и QR-карточки всех {t.student.many.gen} группы перестанут работать, {t.student.many.nom} выйдут из
             аккаунтов на всех устройствах.
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button className="btn btn-primary" disabled={busy} onClick={resetAll}>
               {busy ? 'Создаём…' : 'Да, выдать новые'}
             </button>

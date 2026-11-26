@@ -72,7 +72,7 @@ export function ProfileView({
           />
         </div>}
 
-        <div className="flex flex-col gap-5">
+        <div className="flex min-w-0 flex-col gap-5">
           <div>
             <p className="text-sm font-medium text-ink-soft">
               {profile.student.name}, {profile.student.group.name}
@@ -106,7 +106,7 @@ export function ProfileView({
             <PointsTile label="Всего" sum={points.total} />
           </dl>
           <PetCompanion parts={hero.parts} level={level.level} />
-          {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+          {actions && <div className="flex min-w-0 flex-wrap gap-2">{actions}</div>}
         </div>
       </section>
 

@@ -73,7 +73,7 @@ export function StatsBoard() {
             );
           })}
         </div>
-        <div className="flex items-end gap-2">
+        <div className="grid w-full grid-cols-1 gap-2 min-[400px]:w-auto min-[400px]:grid-cols-2">
           <div>
             <label className="label text-xs" htmlFor="from">
               С

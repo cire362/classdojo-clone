@@ -6,8 +6,9 @@ import { pluralize } from '../../../lib/hooks';
 import { Modal, Switch } from '../../../ui';
 import { useToast } from '../../../ui/Toast';
 import { useGroup } from '../hooks/useGroup';
+import { DeleteGroupForm } from './DeleteGroupForm';
 import { GroupTeachersSection } from './GroupTeachers';
-import { archiveGroup, deleteGroup, renameGroup, setGroupHeroes, setParentsEnabled } from '../api';
+import { archiveGroup, renameGroup, setGroupHeroes, setParentsEnabled } from '../api';
 import { useTerms } from '../../auth';
 import { cap } from '@heroes/shared/terms';
 import { GroupSubjects } from '../../subjects';
@@ -18,7 +19,6 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
   const navigate = useNavigate();
   const toast = useToast();
   const [name, setName] = useState(data.group.name);
-  const [confirmDelete, setConfirmDelete] = useState('');
   return (
     <Modal open={open} title="Настройки группы" onClose={onClose}>
       <div className="space-y-8">
@@ -129,20 +129,7 @@ export function GroupSettingsModal({ open, onClose }: { open: boolean; onClose: 
             )}
             <div className="space-y-3 rounded-2xl border border-minus/30 p-4">
               <h3 className="text-base text-minus">Удаление группы</h3>
-              <p className="text-sm text-ink-soft">
-                Удалятся все {t.student.many.nom} группы, их аккаунты, баллы и посещаемость. Введите название группы, чтобы подтвердить.
-              </p>
-              <input className="input" aria-label="Название группы для подтверждения" value={confirmDelete} onChange={(e) => setConfirmDelete(e.target.value)} />
-              <button
-                className="btn btn-danger"
-                disabled={confirmDelete !== data.group.name}
-                onClick={async () => {
-                  await deleteGroup(data.group.id);
-                  navigate('/');
-                }}
-              >
-                Удалить группу
-              </button>
+              <DeleteGroupForm group={data.group} />
             </div>
           </>
         )}

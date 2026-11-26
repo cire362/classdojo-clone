@@ -1,14 +1,15 @@
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router-dom';
 import { ChunkErrorBoundary } from '../../../ui/ChunkErrorBoundary';
 import {
   ArchiveIcon, ArrowLeftIcon, CalendarBlankIcon, CameraIcon, ChartBarIcon, ClipboardTextIcon, GiftIcon, ListChecksIcon,
   MegaphoneIcon, NotebookIcon, SparkleIcon, UsersThreeIcon,
 } from '@phosphor-icons/react';
-import { CardGridSkeleton, ErrorBox, Skeleton } from '../../../ui';
+import { CardGridSkeleton, ErrorBox, Modal, Skeleton } from '../../../ui';
 import { exportUrl, longDate } from '../../../lib/files';
 import { pluralize, useLoad } from '../../../lib/hooks';
 import type { GroupCtx } from '../hooks/useGroup';
+import { DeleteGroupForm } from './DeleteGroupForm';
 import { fetchGroup, restoreGroup } from '../api';
 import { HeroesProvider, useTerms } from '../../auth';
 import { cap } from '@heroes/shared/terms';
@@ -32,6 +33,7 @@ const HERO_TABS = ['rewards', 'world'];
 export function GroupShell() {
   const t = useTerms();
   const { groupId } = useParams();
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const location = useLocation();
   const { data, setData, error, loading, reload } = useLoad(() => fetchGroup(groupId!), [groupId]);
 
@@ -40,12 +42,24 @@ export function GroupShell() {
   return (
     <div className="space-y-6">
       <div className="no-print space-y-4">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link to="/" className="icon-btn -ml-2" aria-label="Все группы">
             <ArrowLeftIcon size={22} />
           </Link>
-          {data ? <h1 className="truncate text-2xl sm:text-3xl">{data.group.name}</h1> : <Skeleton className="h-9 w-48" />}
+          {data ? <h1 className="min-w-0 flex-1 text-2xl sm:text-3xl">{data.group.name}</h1> : <Skeleton className="h-9 w-48" />}
         </div>
+        {data?.group.isOwner && (
+          <>
+            <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(data.group.id)}>
+              Удалить {t.group.one.acc}
+            </button>
+            {deleteId === data.group.id && (
+              <Modal open title={`Удаление ${t.group.one.gen}`} onClose={() => setDeleteId(null)}>
+                <DeleteGroupForm group={data.group} />
+              </Modal>
+            )}
+          </>
+        )}
         {data?.group.archivedAt && (
           <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface-2 px-4 py-3">
             <ArchiveIcon size={22} className="shrink-0" />

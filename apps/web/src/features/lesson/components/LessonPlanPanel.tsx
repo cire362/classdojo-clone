@@ -176,7 +176,7 @@ export function LessonPlanPanel({ projector, target }: { projector: boolean; tar
         </button>
       ) : (
         <div className="rounded-2xl border border-line bg-surface p-4 sm:p-5">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 font-sans text-base font-semibold">
               <ListNumbersIcon size={22} aria-hidden /> План урока
             </h2>
