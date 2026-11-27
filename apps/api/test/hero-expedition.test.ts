@@ -31,3 +31,15 @@ it('ученик первого уровня может заменить зад�
   const profile = await call('GET', '/api/student/profile', { cookie });
   expect(profile.body.hero).toEqual({ name: 'Искатель', parts: next });
 });
+
+it('старая вкладка сохраняет выбранный пол героя, неизвестное значение отклоняется', async () => {
+  const t = await setupTeacher(['Женя']);
+  const cookie = await t.studentCookie(0);
+  const parts = { ...DEFAULT_HERO, gender: 'gender.girl' };
+  const save = (value: Record<string, string>) => call('PUT', '/api/student/hero', { cookie, body: { name: '', parts: value } });
+  expect((await save(parts)).status).toBe(200);
+  const legacy: Record<string, string> = { ...parts, hair: 'hair.long' };
+  delete legacy.gender;
+  expect((await save(legacy)).body.parts).toEqual({ ...legacy, gender: 'gender.girl' });
+  expect((await save({ ...parts, gender: 'skin.1' })).status).toBe(422);
+});

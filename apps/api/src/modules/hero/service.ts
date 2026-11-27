@@ -42,10 +42,12 @@ async function validateHeroForLevel(parts: unknown, level: number): Promise<Hero
 export async function saveHero(studentId: string, body: unknown): Promise<Hero> {
   const { name, parts } = parse(HeroBody, body);
   const level = await studentLevel(studentId);
-  // Вкладка старой версии может ещё не знать о питомце: сохраняем выбор из БД.
-  if (parts.pet === undefined) {
+  // Старая вкладка может прислать героя без новых слотов.
+  if (parts.pet === undefined || parts.gender === undefined) {
     const saved = await prisma.hero.findUnique({ where: { studentId }, select: { parts: true } });
-    parts.pet = normalizeHero(saved?.parts).pet;
+    const previous = normalizeHero(saved?.parts);
+    parts.pet ??= previous.pet;
+    parts.gender ??= previous.gender;
   }
   const check = await validateHeroForLevel(parts, level.level);
   if (!check.ok) throw new HttpError(422, check.error);

@@ -3,6 +3,7 @@ import { HeroAvatar } from './HeroAvatar';
 
 /** В какой слот героя «примерять» деталь данного слоя для превью */
 export const LAYER_PREVIEW_SLOT: Record<HeroLayer, HeroSlot> = {
+  gender: 'gender',
   pose: 'pose',
   suit: 'suit',
   mask: 'mask',

@@ -117,3 +117,13 @@ it('объясняет скрытую под шлемом причёску и с
   await user.click(screen.getByRole('button', { name: 'Сохранить героя' }));
   expect(onSave).toHaveBeenCalledWith('', { ...parts, mask: 'mask.none' });
 });
+
+it('переключение пола само по себе сохраняется; случайный наряд сохраняет выбранный пол', async () => {
+  const onSave = vi.fn().mockResolvedValue(undefined);
+  const { user } = renderApp(<HeroEditor initial={{ name: 'Лис', parts: DEFAULT_HERO }} level={1} onSave={onSave} />);
+  await user.click(screen.getByRole('button', { name: 'Девочка' }));
+  await user.click(screen.getByRole('button', { name: 'Сохранить героя' }));
+  expect(onSave).toHaveBeenCalledWith('Лис', { ...DEFAULT_HERO, gender: 'gender.girl' });
+  await user.click(screen.getByRole('button', { name: 'Случайный герой' }));
+  expect(screen.getByRole('button', { name: 'Девочка' })).toHaveAttribute('aria-pressed', 'true');
+});

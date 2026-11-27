@@ -23,7 +23,7 @@ import { PetAvatar } from './PetCompanion';
 import { fetchPartAccess } from '../api';
 
 const SWATCH_LAYERS: HeroLayer[] = ['color', 'skin', 'hairColor'];
-const SLOTS = Object.keys(HERO_SLOTS) as HeroSlot[];
+const SLOTS = (Object.keys(HERO_SLOTS) as HeroSlot[]).filter((s) => s !== 'gender');
 const APPEARANCE: HeroSlot[] = ['hair', 'hairColor', 'skin'];
 
 export function HeroEditor({
@@ -66,7 +66,7 @@ export function HeroEditor({
     return required > level ? required : null;
   };
 
-  const dirty = name !== initial.name || SLOTS.some((s) => parts[s] !== initialParts[s]);
+  const dirty = name !== initial.name || parts.gender !== initialParts.gender || SLOTS.some((s) => parts[s] !== initialParts[s]);
   const inCollection = (p: HeroPartDef) => collection === 'all' || (collection === 'base' ? !p.collection : p.collection === collection);
   const personal = APPEARANCE.includes(slot);
   const options = partsForLayer(HERO_SLOTS[slot]).filter((p) => personal || inCollection(p));
@@ -115,6 +115,16 @@ export function HeroEditor({
             <DiceFiveIcon size={22} />
           </button>
         </div>
+        <fieldset>
+          <legend className="label">Пол персонажа</legend>
+          <div className="grid grid-cols-2 gap-1 rounded-2xl bg-surface-2 p-1">
+            {partsForLayer('gender').map((g) => (
+              <button key={g.id} type="button" aria-pressed={parts.gender === g.id}
+                className={`tab justify-center ${parts.gender === g.id ? 'active' : ''}`}
+                onClick={() => setParts({ ...parts, gender: g.id })}>{g.name}</button>
+            ))}
+          </div>
+        </fieldset>
         <button className="btn btn-secondary w-full" onClick={() => {
           setSlot('hair');
           hairTab.current?.focus();
