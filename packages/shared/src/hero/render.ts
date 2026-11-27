@@ -1,7 +1,9 @@
 import { DEFAULT_HERO, HERO_PARTS_BY_ID, HERO_SLOTS, type HeroPartDef, type HeroParts, type HeroSlot } from './catalog.js';
 import { renderPetFragment } from './pets.js';
 
-import { HERO_INK, HERO_BODY, HERO_HEAD, heroBrows, heroEyes, heroMouth } from './body.js';
+import { HERO_INK, HERO_BODY, heroHead, heroBrows, heroEyes, heroMouth } from './body.js';
+
+import { GIRL_JACKETS, TUNIC } from './girl-wardrobe.js';
 
 const OUTLINE = HERO_INK;
 
@@ -45,6 +47,7 @@ function get(id: string): HeroPartDef {
  */
 export function renderHeroSvg(input: unknown, opts: { title?: string; level?: number } = {}): string {
   const h = normalizeHero(input);
+  const girl = h.gender === 'gender.girl';
   const pose = get(h.pose);
   const suit = get(h.suit);
   const cape = get(h.cape);
@@ -62,7 +65,8 @@ export function renderHeroSvg(input: unknown, opts: { title?: string; level?: nu
   // без стилей классы ни на что не влияют, поэтому SVG годится и для файлов, и для PDF
   const layers = [
     HERO_BODY,
-    suit.front,
+    girl ? TUNIC : '',
+    girl ? GIRL_JACKETS[h.suit] ?? suit.front : suit.front,
     emblem.front ? `<g transform="translate(35 42) scale(.65)">${emblem.front}</g>` : '',
     cape.front,
     pose.front,
@@ -72,7 +76,7 @@ export function renderHeroSvg(input: unknown, opts: { title?: string; level?: nu
   // Корона и нимб (overHair) рисуются последними, поверх причёски.
   const face: string[] = [];
   if (!mask.hidesHair && !mask.overHair) face.push(mask.front ?? '');
-  if (!mask.hidesEyes) face.push(heroBrows(h.pose), `<g class="hero-eyes">${heroEyes()}</g>`);
+  if (!mask.hidesEyes) face.push(heroBrows(h.pose), `<g class="hero-eyes">${heroEyes(girl)}</g>`);
   if (!mask.hidesMouth) face.push(heroMouth(h.pose));
   if (mask.hidesHair) face.push(mask.front ?? '');
   else if (showHair) face.push(hair.front ?? '');
@@ -85,7 +89,7 @@ export function renderHeroSvg(input: unknown, opts: { title?: string; level?: nu
       `<g transform="translate(6 15) scale(.94 .9)">${cape.back ?? ''}</g>` +
       `<g transform="translate(-12 -4) scale(1.12 1.08)">${showHair ? hair.back ?? '' : ''}</g>` +
       `<g transform="translate(6 15) scale(.94 .9)">${layers.filter(Boolean).join('')}</g>` +
-      `<g transform="translate(-12 -4) scale(1.12 1.08)">${HERO_HEAD}${face.join('')}</g></g>`,
+      `<g transform="translate(-12 -4) scale(1.12 1.08)">${heroHead(girl)}${face.join('')}</g></g>`,
     pet ? `<g transform="translate(136 162)"><g class="hero-pet">${pet}</g></g>` : '',
   ]
     .join('')

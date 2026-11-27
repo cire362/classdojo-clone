@@ -16,6 +16,7 @@ import { SEASONAL_PARTS, type HeroCollectionId } from './collections.js';
  */
 
 export type HeroLayer =
+  | 'gender'
   | 'pose'
   | 'suit'
   | 'mask'
@@ -53,6 +54,7 @@ export interface HeroPartDef {
 
 /** Слоты героя → тип слоя. Порядок = порядок вкладок в конструкторе. */
 export const HERO_SLOTS = {
+  gender: 'gender',
   pose: 'pose',
   suit: 'suit',
   suitColor: 'color',
@@ -71,6 +73,7 @@ export type HeroSlot = keyof typeof HERO_SLOTS;
 export type HeroParts = Record<HeroSlot, string>;
 
 export const HERO_SLOT_LABELS: Record<HeroSlot, string> = {
+  gender: 'Пол персонажа',
   pose: 'Поза',
   suit: 'Костюм',
   suitColor: 'Цвет костюма',
@@ -127,6 +130,8 @@ const CAPE_CLASPS =
   `<circle cx="79" cy="106" r="5" fill="#ffd23f" ${O}/><circle cx="121" cy="106" r="5" fill="#ffd23f" ${O}/>`;
 
 const parts: HeroPartDef[] = [
+  { id: 'gender.boy', layer: 'gender', name: 'Мальчик', requiredLevel: 1 },
+  { id: 'gender.girl', layer: 'gender', name: 'Девочка', requiredLevel: 1 },
   { id: 'pet.none', layer: 'pet', name: 'Без питомца', requiredLevel: 1 },
   ...PET_COMPANIONS.map((p) => ({ ...p, layer: 'pet' as const, requiredLevel: 1 })),
   // ───────── Позы (руки) ─────────
@@ -788,6 +793,7 @@ export function partsForLayer(layer: HeroLayer): HeroPartDef[] {
 }
 
 export const DEFAULT_HERO: HeroParts = {
+  gender: 'gender.boy',
   pose: 'pose.hips',
   suit: 'suit.sport',
   suitColor: 'color.teal',

@@ -38,12 +38,13 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await expect(panel.getByRole('alert')).toContainText('максимум по двое');
       await panel.getByRole('spinbutton').fill('3');
       await panel.getByRole('button', { name: 'Сформировать', exact: true }).click();
-      const before = await distribution.textContent();
+      const members = distribution.locator(':scope > li > ul');
+      const before = await members.allTextContents();
       await page.getByRole('button', { name: 'Проектор', exact: true }).click();
-      await expect(distribution).toHaveText(before!);
+      await expect(members).toHaveText(before);
       await page.screenshot({ path: test.info().outputPath(`groups-projector-${colorScheme}.png`), animations: 'disabled' });
       await page.getByRole('button', { name: 'Выйти из режима проектора', exact: true }).click();
-      await expect(distribution).toHaveText(before!);
+      await expect(members).toHaveText(before);
       await page.setViewportSize({ width: 375, height: 812 });
       await panel.evaluate((el) => scrollTo(0, Math.max(0, el.getBoundingClientRect().top + scrollY - 80)));
       await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));

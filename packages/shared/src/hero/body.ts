@@ -28,16 +28,21 @@ export const HERO_BODY = `
  * Голова и лицо симметричны относительно x = 100 — оси масок и причёсок: глаза в центрах прорезей масок
  * (85 и 115), нос и рот по центру. Свет падает слева, поэтому правая щека чуть темнее.
  */
-export const HERO_HEAD = `
+export function heroHead(girl: boolean) {
+  const cheeks = girl
+    ? 'M64 57 Q63 29 100 29 Q137 29 136 57 Q137 81 118 91 Q105 98 100 99 Q95 98 82 91 Q63 81 64 57Z'
+    : 'M64 57 Q63 29 100 29 Q137 29 136 57 L134.5 76 Q130 95 100 98.5 Q70 95 65.5 76Z';
+  return `
   <path d="M91 88 L109 88 L109 103 Q100 110 91 103Z" fill="{skinDark}" ${O}/>
   <path d="M92 98 Q100 102 108 98 L108 102 Q100 107 92 102Z" fill="{skin}"/>
   <path d="M65 61 Q54 57 56 70 Q58 77 66 73 M135 61 Q146 57 144 70 Q142 77 134 73" fill="{skin}" ${O}/>
   <path d="M61 64.5 Q58 67 62 70 M139 64.5 Q142 67 138 70" fill="none" stroke="{skinDark}" stroke-width="2" stroke-linecap="round"/>
-  <path d="M64 57 Q63 29 100 29 Q137 29 136 57 L134.5 76 Q130 95 100 98.5 Q70 95 65.5 76Z" fill="{skin}" ${O}/>
+  <path d="${cheeks}" fill="{skin}" ${O}/>
   <path d="M128 44 Q138 62 130 81 Q122 93 100 96.5 Q125 95 132.5 78 L135 57Z" fill="{skinDark}" opacity=".55"/>
   <path d="M70 60 Q69 43 86 38" fill="none" stroke="{skinLight}" stroke-width="4" stroke-linecap="round" opacity=".7"/>
   <path d="M97 77.5 Q100 80 103 77.5" fill="none" stroke="{skinDark}" stroke-width="2" stroke-linecap="round"/>
 `;
+}
 
 /**
  * Брови отдельно от глаз: моргание сжимает только глаза. Цвет — заметно темнее волос, чтобы брови читались и на
@@ -50,8 +55,11 @@ export function heroBrows(pose: string) {
 }
 
 /** Глаза одинаковые и смотрят прямо: белок, радужка цвета акцента, зрачок, блик и верхнее веко */
-export function heroEyes() {
-  return [85, 115].map((x) => `
+export function heroEyes(girl: boolean) {
+  const lashes = girl
+    ? '<path d="M80 63L77 60M120 63L123 60" fill="none" stroke="{outline}" stroke-width="1.8" stroke-linecap="round"/>'
+    : '';
+  return lashes + [85, 115].map((x) => `
     <ellipse cx="${x}" cy="66.5" rx="5.8" ry="6.6" fill="#fff9ef" stroke="{outline}" stroke-width="1.5"/>
     <ellipse cx="${x}" cy="67.3" rx="3.9" ry="4.6" fill="{iris}"/>
     <circle cx="${x}" cy="67.6" r="2.3" fill="{outline}"/>

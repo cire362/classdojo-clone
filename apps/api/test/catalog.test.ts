@@ -35,10 +35,13 @@ describe('каталог деталей героя', () => {
   });
 
   it('старый герой без новых слотов дополняется значениями по умолчанию', () => {
-    const { aura: _omit, ...old } = DEFAULT_HERO;
-    expect(normalizeHero(old).aura).toBe('aura.none');
+    const { aura: _omit, gender: _gender, ...old } = DEFAULT_HERO;
+    const normalized = normalizeHero(old);
+    expect(normalized.aura).toBe('aura.none');
+    expect(normalized.gender).toBe('gender.boy');
     const r = randomHero();
     expect(HERO_PARTS.find((p) => p.id === r.aura)!.requiredLevel).toBe(1);
+    expect(HERO_PARTS.find((p) => p.id === r.gender)!.requiredLevel).toBe(1);
   });
 
   it('каждый сезон имеет шесть совместимых деталей, а прежние особые детали относятся к Космосу', () => {

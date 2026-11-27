@@ -16,6 +16,15 @@ it('все старые и новые детали образуют коррек
     expect(svg).not.toMatch(/undefined|NaN|\{[a-zA-Z]+\}/);
     expect(doc.querySelector('script, image, use, foreignObject, [id]')).toBeNull();
   }
+  for (const look of HERO_LOOKS) {
+    const boy = renderHeroSvg({ ...DEFAULT_HERO, ...look.parts, gender: 'gender.boy' }, { level: 10 });
+    const girl = renderHeroSvg({ ...DEFAULT_HERO, ...look.parts, gender: 'gender.girl' }, { level: 10 });
+    expect(girl).not.toBe(boy);
+    expect(girl).not.toMatch(/undefined|NaN|\{[a-zA-Z]+\}/);
+    const doc = new DOMParser().parseFromString(girl, 'image/svg+xml');
+    expect(doc.querySelector('parsererror'), look.name).toBeNull();
+    expect(doc.querySelector('script, image, use, foreignObject, [id]')).toBeNull();
+  }
 });
 
 it('примеры состоят из реальных совместимых деталей, а новые вещи открываются постепенно', () => {
