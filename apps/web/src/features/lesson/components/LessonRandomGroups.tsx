@@ -7,11 +7,12 @@ import { Switch } from '../../../ui';
 import { useTerms } from '../../auth';
 
 interface Participant { id: string; name: string }
-export function LessonRandomGroups({ students, presentIds, projector, target }: {
+export function LessonRandomGroups({ students, presentIds, projector, target, onAward }: {
   students: Participant[];
   presentIds: readonly string[] | null;
   projector: boolean;
   target: HTMLElement | null;
+  onAward?: (ids: string[], label: string) => void;
 }) {
   const t = useTerms();
   const tooFew = `Для распределения нужны хотя бы два ${t.student.one.gen}.`;
@@ -78,10 +79,17 @@ export function LessonRandomGroups({ students, presentIds, projector, target }: 
           {result.groups.map((group, index) => <li key={index} className="min-w-0 rounded-xl bg-surface-2 p-4">
             <h3 className={`font-sans font-semibold ${projector ? 'text-2xl' : 'text-base'}`}>{mode === 'pairs' ? group.length === 3 ? 'Тройка' : 'Пара' : 'Группа'} {index + 1}</h3>
             <ul className={`mt-2 space-y-1 ${projector ? 'text-2xl leading-snug' : 'text-sm'}`}>{group.map((studentId) => <li key={studentId} className="break-words">{names.get(studentId)}</li>)}</ul>
+            {!projector && onAward && <button className="btn btn-secondary btn-sm mt-3"
+              onClick={() => onAward([...group], `Группа урока ${index + 1} · участников: ${group.length}`)}>
+              Наградить участников
+            </button>}
           </li>)}
         </ol>
       </> : null}
-      <p className="mt-4 text-sm text-ink-soft">Только для текущего урока. Постоянные команды и баллы не меняются; после ухода со страницы распределение исчезнет.</p>
+      <p className="mt-4 text-sm text-ink-soft">
+        Распределение временное и не меняет постоянные команды. После ухода со страницы оно исчезнет.
+        {onAward && ' Награда начисляет выбранные баллы каждому участнику; записи в истории сохранятся.'}
+      </p>
     </div>}
   </section>;
   return projector ? target ? createPortal(panel, target) : null : panel;

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { LessonRandomGroups } from '../src/features/lesson/components/LessonRandomGroups';
 
 const students = Array.from({ length: 5 }, (_, i) => ({ id: `s${i}`, name: `Ученик ${i + 1}` }));
@@ -67,4 +67,22 @@ it('сворачивание и проектор сохраняют резуль
   open(); expect(result().textContent).toBe(names);
   view.rerender(panel()); expect(result().textContent).toBe(names); view.unmount(); target.remove();
   render(panel()); open(); expect(screen.queryByRole('list', { name: 'Случайное распределение' })).not.toBeInTheDocument();
+});
+
+
+it('награждает ровно участников подгруппы; проектор и устаревший состав не дают начислить', () => {
+  const onAward = vi.fn();
+  const view = render(panel({ onAward })); open();
+  fireEvent.click(screen.getByRole('button', { name: 'Сформировать' }));
+  const group = within(result()).getAllByRole('listitem')[0];
+  const members = students.filter((s) => within(group).queryByText(s.name)).map((s) => s.id);
+  fireEvent.click(within(group).getByRole('button', { name: 'Наградить участников' }));
+  expect(new Set(onAward.mock.calls[0][0])).toEqual(new Set(members));
+  expect(onAward.mock.calls[0][1]).toContain(`участников: ${members.length}`);
+  const target = document.createElement('div'); document.body.append(target);
+  view.rerender(panel({ onAward, projector: true, target }));
+  expect(screen.queryByRole('button', { name: 'Наградить участников' })).not.toBeInTheDocument();
+  view.rerender(panel({ onAward, students: students.slice(0, 4) }));
+  expect(screen.queryByRole('button', { name: 'Наградить участников' })).not.toBeInTheDocument();
+  target.remove();
 });

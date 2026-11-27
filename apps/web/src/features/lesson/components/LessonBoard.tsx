@@ -74,6 +74,7 @@ export function LessonBoard() {
         presentIds={data.todayAttendance?.presentStudentIds ?? null}
         projector={projector}
         target={timerTarget}
+        onAward={(ids, label) => setTarget({ ids, label })}
       />
     </div>
   );
