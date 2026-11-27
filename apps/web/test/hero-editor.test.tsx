@@ -87,3 +87,33 @@ describe('конструктор героя', () => {
     expect(screen.getByRole('button', { name: 'Искрик' })).toBeVisible();
   });
 });
+
+it('внешность доступна внутри любой коллекции и сохраняется вместе с прежним нарядом', async () => {
+  const onSave = vi.fn().mockResolvedValue(undefined);
+  const parts = { ...DEFAULT_HERO, hair: 'hair.long', pet: 'pet.fox' };
+  const { user } = renderApp(<HeroEditor initial={{ name: 'Мой герой', parts }} level={1} onSave={onSave} />);
+  await user.selectOptions(screen.getByLabelText('Коллекция'), 'winter');
+  await user.click(screen.getByRole('button', { name: 'Изменить внешность' }));
+  expect(tab('Причёска')).toHaveFocus();
+  await user.click(screen.getByRole('button', { name: 'Короткая' }));
+  await user.click(tab('Тон кожи'));
+  await user.click(screen.getByRole('button', { name: 'Смуглый' }));
+  await user.click(tab('Цвет волос'));
+  await user.click(screen.getByRole('button', { name: 'Чёрный' }));
+  await user.click(screen.getByRole('button', { name: 'Сохранить героя' }));
+  expect(onSave).toHaveBeenCalledWith('Мой герой', {
+    ...parts, hair: 'hair.short', skin: 'skin.4', hairColor: 'hairColor.black',
+  });
+});
+
+it('объясняет скрытую под шлемом причёску и снимает его только по нажатию', async () => {
+  const onSave = vi.fn().mockResolvedValue(undefined);
+  const parts = { ...DEFAULT_HERO, mask: 'mask.helmet' };
+  const { user } = renderApp(<HeroEditor initial={{ name: '', parts }} level={5} onSave={onSave} />);
+  await user.click(screen.getByRole('button', { name: 'Изменить внешность' }));
+  expect(screen.getByText('Причёска скрыта головным убором.')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Сохранено' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Снять головной убор' }));
+  await user.click(screen.getByRole('button', { name: 'Сохранить героя' }));
+  expect(onSave).toHaveBeenCalledWith('', { ...parts, mask: 'mask.none' });
+});

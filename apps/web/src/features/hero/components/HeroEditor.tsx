@@ -5,6 +5,7 @@ import {
   HERO_SLOT_LABELS,
   HERO_SLOTS,
   HERO_COLLECTIONS,
+  HERO_PARTS_BY_ID,
   type HeroCollectionId,
   partsForLayer,
   normalizeHero,
@@ -23,6 +24,7 @@ import { fetchPartAccess } from '../api';
 
 const SWATCH_LAYERS: HeroLayer[] = ['color', 'skin', 'hairColor'];
 const SLOTS = Object.keys(HERO_SLOTS) as HeroSlot[];
+const APPEARANCE: HeroSlot[] = ['hair', 'hairColor', 'skin'];
 
 export function HeroEditor({
   initial,
@@ -42,6 +44,7 @@ export function HeroEditor({
   const initialParts = useMemo(() => normalizeHero(initial.parts), [initial.parts]);
   const [parts, setParts] = useState<HeroParts>(initialParts);
   const petTab = useRef<HTMLButtonElement>(null);
+  const hairTab = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState(initial.name);
   const slotHasNew = (s: HeroSlot) => !!newIds?.size && partsForLayer(HERO_SLOTS[s]).some((p) => newIds.has(p.id));
   const [slot, setSlot] = useState<HeroSlot>('pose');
@@ -65,7 +68,8 @@ export function HeroEditor({
 
   const dirty = name !== initial.name || SLOTS.some((s) => parts[s] !== initialParts[s]);
   const inCollection = (p: HeroPartDef) => collection === 'all' || (collection === 'base' ? !p.collection : p.collection === collection);
-  const options = partsForLayer(HERO_SLOTS[slot]).filter(inCollection);
+  const personal = APPEARANCE.includes(slot);
+  const options = partsForLayer(HERO_SLOTS[slot]).filter((p) => personal || inCollection(p));
   const selectedCollection = HERO_COLLECTIONS.find((c) => c.id === collection);
   const isSwatch = SWATCH_LAYERS.includes(HERO_SLOTS[slot]);
   const petStage = petStageForLevel(level);
@@ -112,6 +116,11 @@ export function HeroEditor({
           </button>
         </div>
         <button className="btn btn-secondary w-full" onClick={() => {
+          setSlot('hair');
+          hairTab.current?.focus();
+          hairTab.current?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+        }}>Изменить внешность</button>
+        <button className="btn btn-secondary w-full" onClick={() => {
           setSlot('pet');
           setCollection('all');
           petTab.current?.focus();
@@ -145,7 +154,7 @@ export function HeroEditor({
             const next = e.target.value as typeof collection;
             setCollection(next);
             const matches = (p: HeroPartDef) => next === 'all' || (next === 'base' ? !p.collection : p.collection === next);
-            if (!partsForLayer(HERO_SLOTS[slot]).some(matches)) {
+            if (!personal && !partsForLayer(HERO_SLOTS[slot]).some(matches)) {
               const first = SLOTS.find((s) => partsForLayer(HERO_SLOTS[s]).some(matches));
               if (first) setSlot(first);
             }
@@ -156,14 +165,25 @@ export function HeroEditor({
           </select>
           <p className="mt-2 text-sm text-ink-soft">{selectedCollection ? `${selectedCollection.description} Можно носить круглый год и сочетать с другими коллекциями.` : 'Сочетай детали любых коллекций. Выбор коллекции фильтрует список, сохраняя твоего героя.'}</p>
         </div>
-        <nav className="relative -mx-4 flex gap-1 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0" aria-label="Детали героя">
+        <nav className="flex flex-wrap gap-1" aria-label="Детали героя">
           {SLOTS.map((s) => (
-            <button key={s} ref={s === 'pet' ? petTab : undefined} className={`tab ${slot === s ? 'active' : 'bg-surface-2'}`} onClick={() => setSlot(s)} aria-pressed={slot === s}>
+            <button key={s} ref={s === 'pet' ? petTab : s === 'hair' ? hairTab : undefined}
+              className={`tab ${slot === s ? 'active' : 'bg-surface-2'}`} onClick={() => setSlot(s)} aria-pressed={slot === s}>
               {HERO_SLOT_LABELS[s]}
               {slotHasNew(s) && <span className="size-2 rounded-full bg-accent" aria-label="есть новые детали" />}
             </button>
           ))}
         </nav>
+        {personal && <div className="space-y-2 text-sm text-ink-soft">
+          <p>Внешность можно менять с первого уровня: выбери причёску, цвет волос и тон кожи.
+            {' '}Они доступны независимо от коллекции. Одежда и питомец сохранятся.</p>
+          {HERO_PARTS_BY_ID.get(parts.mask)?.hidesHair && <div>
+            <p>Причёска скрыта головным убором.</p>
+            <button className="btn btn-secondary btn-sm mt-2" onClick={() => setParts({ ...parts, mask: 'mask.none' })}>
+              Снять головной убор
+            </button>
+          </div>}
+        </div>}
 
         {slot === 'pet' && <section aria-label="Рост питомца" className="space-y-3">
           <div>
